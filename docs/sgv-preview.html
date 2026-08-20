@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es-PA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGV — Previsualización con identidad SGP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* --- heredados del SGP (valores medidos del código) --- */
+  --navy:#1D293D;        /* slate-800 · marca */
+  --navy-deep:#0F172B;   /* slate-900 */
+  --navy-soft:#314158;   /* slate-700 */
+  --orange:#FE9A00;      /* amber-500 · activo en navegación */
+  --bg:#F8FAFC;          /* slate-50 */
+  --surface:#FFFFFF;
+  --ink:#0F172B;         /* slate-900 */
+  --ink-soft:#45556C;    /* slate-600 */
+  --ink-faint:#90A1B9;   /* slate-400 */
+  --line:#E2E8F0;        /* slate-200 */
+  --green:#00A63E;       /* green-600 */
+  --red:#E7000B;         /* red-600 */
+  --green-bg:#DBFCE7;    /* green-100 */
+  --orange-bg:#FEF3C6;   /* amber-100 */
+  --red-bg:#FFE2E2;      /* red-100 */
+  --navy-bg:#F1F5F9;     /* slate-100 */
+  --r:12px;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9EDF2;color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;padding:30px 18px 80px}
+.wrap{max-width:1340px;margin:0 auto}
+
+.masthead{border-bottom:3px solid var(--navy);padding-bottom:14px;margin-bottom:8px}
+.masthead h1{font-size:32px;font-weight:700;letter-spacing:-.02em}
+.masthead p{color:var(--ink-soft);font-size:14px;margin-top:5px;max-width:66ch;line-height:1.55}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);font-weight:600}
+.section-title{font-size:20px;font-weight:700;margin:44px 0 4px;letter-spacing:-.01em}
+.section-note{color:var(--ink-soft);font-size:13.5px;margin-bottom:20px;max-width:74ch;line-height:1.55}
+
+.tokens{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0 8px}
+.swatch{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:10px;min-width:172px}
+.dot{width:26px;height:26px;border-radius:7px;flex:none}
+.swatch b{display:block;font-size:12.5px;font-weight:600}
+.swatch span{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
+
+/* ---------- ESCRITORIO ---------- */
+.desk{background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 14px 34px rgba(15,23,42,.14);display:flex;min-height:660px}
+
+.side{width:250px;background:var(--navy);flex:none;padding:20px 0;display:flex;flex-direction:column}
+.brand{padding:0 20px 16px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:16px}
+.brand h2{color:#fff;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.brand p{color:#94A3B8;font-size:12.5px;margin-top:3px}
+.sess{padding:0 20px 16px}
+.sess .lb{color:#7C8DA6;font-size:11.5px}
+.sess .nm{color:#fff;font-size:15px;font-weight:600;margin-top:2px}
+.sess .rl{color:#94A3B8;font-size:12px}
+.selector{margin:14px 20px 18px;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 12px}
+.selector .lb{color:#7C8DA6;font-size:10.5px;letter-spacing:.06em}
+.selector .vl{color:#fff;font-size:14.5px;font-weight:600;display:flex;justify-content:space-between;margin-top:1px}
+.nav{flex:1}
+.nav a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:#B6C2D2;font-size:14.5px;text-decoration:none;border-left:4px solid transparent}
+.nav a.on{background:rgba(255,255,255,.07);color:#fff;border-left-color:var(--orange);font-weight:600}
+.nav a i{font-style:normal;width:18px;text-align:center;opacity:.85}
+
+.main{flex:1;background:var(--bg);display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--surface);border-bottom:1px solid var(--line);padding:16px 24px}
+.topbar h1{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.topbar .sub{color:var(--ink-faint);font-size:13.5px;margin-top:2px}
+.tabs{display:flex;gap:26px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.tabs div{padding:13px 0 11px;font-size:14.5px;color:var(--ink-faint);border-bottom:3px solid transparent}
+.tabs div.on{color:var(--ink);font-weight:600;border-bottom-color:var(--orange)}
+.content{padding:22px 24px;overflow:hidden}
+
+.pulse{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:18px}
+.pulse-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.pulse-h h3{font-size:17px;font-weight:700}
+.pulse-h span{font-size:12.5px;color:var(--ink-faint)}
+.pulse-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
+.pcard{background:var(--bg);border-radius:10px;padding:13px 14px}
+.pcard .lb{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;line-height:1.35}
+.pcard .vl{font-family:var(--mono);font-size:29px;font-weight:600;margin-top:7px;letter-spacing:-.03em;line-height:1}
+.pcard .ds{font-size:11.5px;color:var(--ink-faint);margin-top:6px;line-height:1.4}
+.v-red{color:var(--red)} .v-org{color:var(--orange)} .v-grn{color:var(--green)}
+
+.cols{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:17px}
+.card h3{font-size:16px;font-weight:700;margin-bottom:13px}
+table{width:100%;border-collapse:collapse}
+th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);text-align:left;padding-bottom:8px;border-bottom:1px solid var(--line);font-weight:500}
+td{padding:9px 0;font-size:13px;border-bottom:1px solid var(--line)}
+tr:last-child td{border:0}
+td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.linea{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.linea b{font-family:var(--mono);font-weight:600}
+.bar{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin-bottom:13px}
+.bar i{display:block;height:100%;background:var(--navy);border-radius:5px}
+.cross{background:var(--navy-bg);border-left:4px solid var(--navy);border-radius:8px;padding:13px;margin-top:14px;font-size:12.5px;line-height:1.55}
+.cross b{color:var(--navy)}
+.btn{display:block;width:100%;background:var(--navy);color:#fff;border:0;border-radius:9px;padding:12px;font-family:var(--sans);font-size:14px;font-weight:600;text-align:center;cursor:pointer}
+.btn.sec{background:var(--surface);color:var(--navy);border:1.5px solid var(--navy)}
+.btn.sm{padding:9px;font-size:12.5px}
+.btn-row{display:flex;gap:9px;margin-top:11px}
+.btn-row .btn{flex:1}
+
+/* ---------- TELÉFONOS ---------- */
+.phones{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.phone-col{width:308px}
+.phone-cap{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:9px;font-weight:500}
+.phone{width:308px;height:636px;background:var(--bg);border:9px solid var(--navy-deep);border-radius:34px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 14px 32px rgba(15,23,42,.18)}
+.status{background:var(--navy);padding:8px 16px 3px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:#94A3B8}
+.appbar{padding:9px 15px 13px;background:var(--navy)}
+.appbar h2{font-size:19px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.appbar .sub{font-size:12px;color:#94A3B8;margin-top:2px}
+.screen{flex:1;overflow:hidden;position:relative;background:var(--bg)}
+.scroll{height:100%;overflow:hidden;padding:12px}
+.offline{background:var(--orange-bg);border-bottom:1px solid #F5DDB0;color:#B45309;font-size:11.5px;padding:8px 15px;display:flex;gap:7px;align-items:center;font-weight:500}
+
+.map{position:absolute;inset:0;background:#E4E8ED}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:2px}
+.pin i{width:19px;height:19px;border-radius:50% 50% 50% 2px;transform:rotate(45deg);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(15,23,42,.35);display:block}
+.pin b{font-family:var(--mono);font-size:9px;background:rgba(255,255,255,.95);padding:1px 4px;border-radius:3px;font-weight:500;white-space:nowrap}
+.map-chips{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:500;box-shadow:0 1px 4px rgba(15,23,42,.1)}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* ficha de punto */
+.ficha{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--ink-faint);border-radius:10px;padding:12px;margin-bottom:9px}
+.ficha.s-ok{border-left-color:var(--green)}
+.ficha.s-warn{border-left-color:var(--orange)}
+.ficha.s-bad{border-left-color:var(--red)}
+.ficha.s-new{border-left-color:var(--navy)}
+.ficha-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.ficha h3{font-size:14.5px;font-weight:600;line-height:1.25}
+.ficha .meta{font-size:11.5px;color:var(--ink-soft);margin-top:3px}
+.pot{font-size:10px;color:var(--ink-faint);text-align:right;white-space:nowrap;text-transform:uppercase;letter-spacing:.05em}
+.pot b{display:block;font-family:var(--mono);font-size:17px;color:var(--ink);letter-spacing:-.02em}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:20px;margin-top:9px}
+.t-ok{background:var(--green-bg);color:var(--green)}
+.t-warn{background:var(--orange-bg);color:#B45309}
+.t-bad{background:var(--red-bg);color:var(--red)}
+.t-new{background:var(--navy-bg);color:var(--navy)}
+.t-off{background:#EEF1F5;color:var(--ink-soft)}
+.ficha-foot{display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:10px;color:var(--ink-faint);font-family:var(--mono);letter-spacing:.03em}
+
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:16px 16px 0 0;padding:12px 12px 14px;box-shadow:0 -8px 26px rgba(15,23,42,.16)}
+.grab{width:34px;height:4px;background:var(--line);border-radius:4px;margin:0 auto 11px}
+
+.tabbar{display:flex;background:var(--navy)}
+.tabbar div{flex:1;text-align:center;padding:9px 0 11px;font-size:10px;color:#7C8DA6;font-weight:500;border-top:3px solid transparent}
+.tabbar div.on{color:#fff;border-top-color:var(--orange)}
+.tabbar .ic{display:block;font-size:15px;margin-bottom:3px}
+
+.exp-head{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:13px;margin-bottom:12px}
+.kv{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv span{color:var(--ink-soft)}
+.kv b{font-family:var(--mono);font-weight:600;font-size:12px}
+.log-item{display:flex;gap:10px;margin-bottom:13px}
+.log-rail{display:flex;flex-direction:column;align-items:center;flex:none;padding-top:3px}
+.log-rail i{width:9px;height:9px;border-radius:50%;background:var(--navy);flex:none}
+.log-rail u{flex:1;width:1.5px;background:var(--line);margin-top:4px}
+.log-body{flex:1;font-size:12.5px}
+.log-body .when{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em}
+.log-body p{margin-top:3px;line-height:1.45}
+.log-body .who{font-weight:600}
+.bubble{background:var(--navy-bg);border-radius:9px;padding:9px 11px;margin-top:6px;font-size:12px;line-height:1.45}
+.bubble .who{color:var(--navy)}
+
+.note{margin-top:14px;font-size:13px;color:var(--ink-soft);line-height:1.6;max-width:78ch}
+.note b{color:var(--ink)}
+@media(max-width:980px){.pulse-grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="eyebrow">Previsualización · identidad heredada del SGP</div>
+    <h1>SGV · Sistema de Gestión de Ventas</h1>
+    <p>Misma familia visual que el SGP: barra lateral azul marino, naranja como color de identidad, tarjetas blancas sobre gris claro y cifras en tipografía monoespaciada. Datos ilustrativos.</p>
+  </div>
+
+  <div class="tokens">
+    <div class="swatch"><i class="dot" style="background:#1D293D"></i><div><b>Marca · acción</b><span>slate-800 #1D293D</span></div></div>
+    <div class="swatch"><i class="dot" style="background:#FE9A00"></i><div><b>Activo · riesgo</b><span>amber-500 #FE9A00</span></div></div>
+    <div class="swatch"><i class="dot" style="background:#00A63E"></i><div><b>Activo · ganado</b><span>green-600 #00A63E</span></div></div>
+    <div class="swatch"><i class="dot" style="background:#E7000B"></i><div><b>Vencido · perdido</b><span>red-600 #E7000B</span></div></div>
+    <div class="swatch"><i class="dot" style="background:#90A1B9"></i><div><b>Descartado</b><span>slate-400 #90A1B9</span></div></div>
+    <div class="swatch"><i class="dot" style="background:#F8FAFC;border:1px solid #E2E8F0"></i><div><b>Fondo</b><span>#F8FAFC</span></div></div>
+  </div>
+  <p class="note"><b>Regla del naranja:</b> en el cromo (barra lateral, pestaña activa) significa identidad; en los datos significa riesgo o dormido. Nunca como botón de acción — esa función la toma el azul marino de la barra lateral, para que no compitan.</p>
+
+  <h2 class="section-title">1 · Tablero de gerencia</h2>
+  <p class="section-note">Misma estructura que el Panel de Área del SGP: bloque de pulso con tarjetas de cifra grande, y debajo el detalle. Aquí el "pulso" es lo que requiere atención de gerencia.</p>
+
+  <div class="desk">
+    <aside class="side">
+      <div class="brand">
+        <h2>Papelería Comercial</h2>
+        <p>SGV · Gerencia</p>
+      </div>
+      <div class="sess">
+        <div class="lb">Sesión</div>
+        <div class="nm">Gerencia</div>
+        <div class="rl">Acceso total</div>
+      </div>
+      <div class="selector">
+        <div class="lb">PERÍODO</div>
+        <div class="vl"><span>Agosto 2026</span><span>⌄</span></div>
+      </div>
+      <nav class="nav">
+        <a class="on" href="#"><i>▦</i>Tablero</a>
+        <a href="#"><i>◉</i>Mapa de cobertura</a>
+        <a href="#"><i>▤</i>Pipeline</a>
+        <a href="#"><i>✓</i>Aprobaciones</a>
+        <a href="#"><i>◷</i>Planes y cumplimiento</a>
+        <a href="#"><i>▲</i>Inteligencia comercial</a>
+        <a href="#"><i>☰</i>Consultas del equipo</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <h1>Tablero de Gerencia</h1>
+        <div class="sub">Escritorio · 19 de agosto de 2026</div>
+      </div>
+      <div class="tabs">
+        <div class="on">Requiere Atención</div>
+        <div>Venta por Canal</div>
+        <div>Cobertura</div>
+        <div>Equipo</div>
+      </div>
+
+      <div class="content">
+
+        <div class="pulse">
+          <div class="pulse-h">
+            <h3>Pulso Comercial</h3>
+            <span>Actualizado: 13:51</span>
+          </div>
+          <div class="pulse-grid">
+            <div class="pcard">
+              <div class="lb">Precios por aprobar</div>
+              <div class="vl v-red">3</div>
+              <div class="ds">el más antiguo lleva 2 días</div>
+            </div>
+            <div class="pcard">
+              <div class="lb">Compromisos vencidos</div>
+              <div class="vl v-red">7</div>
+              <div class="ds">en 3 vendedores</div>
+            </div>
+            <div class="pcard">
+              <div class="lb">Cotizaciones sin respuesta</div>
+              <div class="vl v-org">5</div>
+              <div class="ds">más de 10 días · $6,180</div>
+            </div>
+            <div class="pcard">
+              <div class="lb">Por reponer esta semana</div>
+              <div class="vl v-org">12</div>
+              <div class="ds">clientes en ciclo de recompra</div>
+            </div>
+            <div class="pcard">
+              <div class="lb">Consultas abiertas</div>
+              <div class="vl v-org">2</div>
+              <div class="ds">esperan respuesta de gerencia →</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pulse" style="margin-bottom:18px">
+          <div class="pulse-h"><h3>Mes en Curso</h3><span>vs. julio 2026</span></div>
+          <div class="pulse-grid">
+            <div class="pcard"><div class="lb">Venta del mes</div><div class="vl">$84,320</div><div class="ds"><span class="v-grn">▲ 6.2%</span></div></div>
+            <div class="pcard"><div class="lb">Clientes nuevos</div><div class="vl v-org">9</div><div class="ds">meta 12 · 75%</div></div>
+            <div class="pcard"><div class="lb">Dormidos recuperados</div><div class="vl v-grn">4</div><div class="ds"><span class="v-grn">▲ 2</span></div></div>
+            <div class="pcard"><div class="lb">Ciclo de cierre</div><div class="vl">23d</div><div class="ds">prospecto a 1ª factura</div></div>
+            <div class="pcard"><div class="lb">Tasa de cierre</div><div class="vl">34%</div><div class="ds">promedio del equipo</div></div>
+          </div>
+        </div>
+
+        <div class="cols">
+          <div class="card">
+            <h3>Venta por canal</h3>
+            <table>
+              <thead><tr><th>Canal</th><th style="text-align:right">Venta</th><th style="text-align:right">% total</th><th style="text-align:right">Cierre</th></tr></thead>
+              <tbody>
+                <tr><td>Clientes de casa (oficina)</td><td class="num">$41,180</td><td class="num">48.8%</td><td class="num">—</td></tr>
+                <tr><td>Líder · cuentas clave</td><td class="num">$22,640</td><td class="num">26.9%</td><td class="num">41%</td></tr>
+                <tr><td>Ejecutivo de ruta</td><td class="num">$11,900</td><td class="num">14.1%</td><td class="num">28%</td></tr>
+                <tr><td>Interior · Chorrera–Chiriquí</td><td class="num">$8,600</td><td class="num">10.2%</td><td class="num">33%</td></tr>
+              </tbody>
+            </table>
+
+            <h3 style="margin-top:20px">Cobertura por zona</h3>
+            <table>
+              <thead><tr><th>Zona</th><th style="text-align:right">Venta</th><th style="text-align:right">Clientes</th></tr></thead>
+              <tbody>
+                <tr><td>Ciudad de Panamá</td><td class="num">$52,410</td><td class="num">186</td></tr>
+                <tr><td>Panamá Oeste</td><td class="num">$18,720</td><td class="num">74</td></tr>
+                <tr><td>Interior</td><td class="num">$13,190</td><td class="num">61</td></tr>
+                <tr><td style="color:var(--ink-faint)">Panamá Este · Colón norte</td><td class="num" style="color:var(--ink-faint)">$0</td><td class="num" style="color:var(--ink-faint)">0</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h3>Venta por línea de producto</h3>
+            <div class="linea"><span>Rollos fiscales</span><b>$38,940</b></div>
+            <div class="bar"><i style="width:46%"></i></div>
+            <div class="linea"><span>Bolsas de papel</span><b>$26,110</b></div>
+            <div class="bar"><i style="width:31%"></i></div>
+            <div class="linea"><span>Hojas antigrasa</span><b>$12,480</b></div>
+            <div class="bar"><i style="width:15%"></i></div>
+            <div class="linea"><span>Tubos de cartón</span><b>$6,790</b></div>
+            <div class="bar"><i style="width:8%"></i></div>
+
+            <div class="cross">
+              <b>Venta cruzada detectada:</b> 47 clientes compran rollos fiscales y ninguna otra línea. Potencial estimado $14,200/mes.
+              <div style="margin-top:10px"><button class="btn sm">Enviar como lista de trabajo</button></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">2 · Aplicación de campo</h2>
+  <p class="section-note">Hereda los mismos colores, pero con densidad de una sola mano: barra superior marino, una acción principal por pantalla y áreas táctiles grandes. Se usa a pleno sol.</p>
+
+  <div class="phones">
+
+    <div class="phone-col">
+      <div class="phone-cap">Mapa · cartera y prospectos</div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>▮▮▮ 4G</span></div>
+        <div class="appbar"><h2>Mi zona</h2><div class="sub">Ejecutivo de ruta · 38 puntos visibles</div></div>
+        <div class="screen">
+          <div class="map">
+            <svg viewBox="0 0 308 500" preserveAspectRatio="none">
+              <rect width="308" height="500" fill="#E4E8ED"/>
+              <path d="M0 140 H308 M0 290 H308 M0 415 H308" stroke="#D5DBE3" stroke-width="14" fill="none"/>
+              <path d="M68 0 V500 M178 0 V500 M262 0 V500" stroke="#D5DBE3" stroke-width="11" fill="none"/>
+              <path d="M0 208 H308" stroke="#CBD2DC" stroke-width="20" fill="none"/>
+              <rect x="12" y="320" width="44" height="58" fill="#DCE1E8"/>
+              <rect x="198" y="56" width="50" height="50" fill="#DCE1E8"/>
+              <rect x="88" y="430" width="68" height="44" fill="#DCE1E8"/>
+            </svg>
+            <div class="map-chips">
+              <span class="chip on">Todos</span>
+              <span class="chip">Dormidos</span>
+              <span class="chip">Prospectos</span>
+              <span class="chip">Sin visitar</span>
+            </div>
+            <div class="pin" style="left:24%;top:31%"><i style="background:#16A34A"></i><b>Súper Las Garzas</b></div>
+            <div class="pin" style="left:62%;top:25%"><i style="background:#F59E0B"></i><b>Panadería Doña Y.</b></div>
+            <div class="pin" style="left:80%;top:43%"><i style="background:#16A34A"></i><b>Farmacia Central</b></div>
+            <div class="pin" style="left:37%;top:51%"><i style="background:#1E293B"></i><b>Mini Súper 24/7</b></div>
+            <div class="pin" style="left:16%;top:61%"><i style="background:#DC2626"></i><b>Rest. El Fogón</b></div>
+            <div class="pin" style="left:68%;top:59%"><i style="background:#1E293B"></i><b>Abarrotería JM</b></div>
+
+            <div class="sheet">
+              <div class="grab"></div>
+              <div style="border-left:4px solid var(--orange);padding-left:12px">
+                <div class="ficha-top">
+                  <div>
+                    <h3 style="font-size:15px;font-weight:600">Panadería Doña Yolanda</h3>
+                    <div class="meta">Panadería · Las Garzas · 340 m</div>
+                  </div>
+                  <div class="pot">Potencial<b>3/5</b></div>
+                </div>
+                <span class="tag t-warn">● Dormido · 74 días sin comprar</span>
+                <div class="ficha-foot"><span>ÚLT. COMPRA 06 JUN</span><span>8 BULTOS / MES</span></div>
+              </div>
+              <div class="btn-row">
+                <button class="btn sec">Ver expediente</button>
+                <button class="btn">Registrar visita</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><span class="ic">◉</span>Mapa</div>
+          <div><span class="ic">☰</span>Mi día</div>
+          <div><span class="ic">⚲</span>Buscar</div>
+          <div><span class="ic">▤</span>Pipeline</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone-cap">Búsqueda de prospectos calificados</div>
+      <div class="phone">
+        <div class="status"><span>10:12</span><span>▮▮▯ 3G</span></div>
+        <div class="appbar"><h2>Aguadulce</h2><div class="sub">Minisúper, farmacias, panaderías · 23 resultados</div></div>
+        <div class="screen">
+          <div class="scroll">
+            <div class="ficha s-new">
+              <div class="ficha-top"><div><h3>Súper Centro Aguadulce</h3><div class="meta">Supermercado · 412 reseñas</div></div><div class="pot">Potencial<b>5/5</b></div></div>
+              <span class="tag t-new">✚ Nuevo · no registrado</span>
+              <div class="ficha-foot"><span>CADENA · 3 SUCURSALES</span><span>EST. 40 BULTOS/MES</span></div>
+            </div>
+            <div class="ficha s-ok">
+              <div class="ficha-top"><div><h3>Farmacia San José</h3><div class="meta">Farmacia · 96 reseñas</div></div><div class="pot">Potencial<b>4/5</b></div></div>
+              <span class="tag t-ok">✓ Ya es cliente · compró hace 21 d</span>
+              <div class="ficha-foot"><span>ATIENDE: OFICINA</span><span>ROLLOS FISCALES</span></div>
+            </div>
+            <div class="ficha s-new">
+              <div class="ficha-top"><div><h3>Mini Súper La Bendición</h3><div class="meta">Minisúper · 58 reseñas</div></div><div class="pot">Potencial<b>3/5</b></div></div>
+              <span class="tag t-new">✚ Nuevo · no registrado</span>
+              <div class="ficha-foot"><span>RUC VERIFICADO</span><span>EST. 9 BULTOS/MES</span></div>
+            </div>
+            <div class="ficha">
+              <div class="ficha-top"><div><h3>Panadería El Trigal</h3><div class="meta">Panadería · 11 reseñas</div></div><div class="pot">Potencial<b>1/5</b></div></div>
+              <span class="tag t-off">✕ Descartado · bajo pedido mínimo</span>
+              <div class="ficha-foot"><span>DESCARTÓ: J. PÉREZ</span><span>14 AGO</span></div>
+            </div>
+            <div class="ficha s-warn">
+              <div class="ficha-top"><div><h3>Abarrotería Los Santos</h3><div class="meta">Abarrotería · 74 reseñas</div></div><div class="pot">Potencial<b>3/5</b></div></div>
+              <span class="tag t-warn">◷ Visitado hace 8 meses · no cerró</span>
+              <div class="ficha-foot"><span>MOTIVO: PRECIO</span><span>REINTENTAR</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:11px;background:var(--surface);border-top:1px solid var(--line)">
+          <button class="btn">Agregar 3 al plan de gira</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone-cap">Expediente · bitácora y consultas</div>
+      <div class="phone">
+        <div class="status"><span>11:03</span><span>▮▯▯ SIN RED</span></div>
+        <div class="offline">⇅ Sin conexión · 2 visitas pendientes de sincronizar</div>
+        <div class="appbar"><h2>Mini Súper 24/7</h2><div class="sub">Minisúper · Las Garzas · Prospecto</div></div>
+        <div class="screen">
+          <div class="scroll">
+            <div class="exp-head">
+              <div class="kv"><span>Etapa</span><b style="color:var(--navy)">COTIZADO</b></div>
+              <div class="kv"><span>Potencial estimado</span><b>12 BULTOS/MES</b></div>
+              <div class="kv"><span>Proveedor actual</span><b>COMPETENCIA B</b></div>
+              <div class="kv"><span>Próximo compromiso</span><b style="color:var(--red)">HOY · LLAMADA</b></div>
+            </div>
+
+            <div class="log-item">
+              <div class="log-rail"><i></i><u></u></div>
+              <div class="log-body">
+                <div class="when">Hoy · 10:48</div>
+                <p><span class="who">Yo:</span> Pide 2% adicional por pago de contado. ¿Autorizo?</p>
+                <div class="bubble"><span class="who">Gerencia:</span> Autorizado 2% solo contado. Aplica a rollos, no a bolsas impresas.
+                  <div style="margin-top:7px"><span class="tag t-ok" style="margin:0">✓ Convertido en aprobación de precio</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="log-item">
+              <div class="log-rail"><i style="background:var(--orange)"></i><u></u></div>
+              <div class="log-body"><div class="when">12 Ago · Cotización</div><p>COT-2041 enviada por administración · $412.00</p></div>
+            </div>
+
+            <div class="log-item">
+              <div class="log-rail"><i style="background:var(--green)"></i><u></u></div>
+              <div class="log-body"><div class="when">08 Ago · Muestra</div><p>Entregada muestra de bolsa kraft #12 · 25 unidades</p></div>
+            </div>
+
+            <div class="log-item">
+              <div class="log-rail"><i></i></div>
+              <div class="log-body"><div class="when">02 Ago · Visita · check-in ✓</div><p>Interesado en rollos fiscales. Tiene 3 cajas registradoras. Compra actual quincenal.</p></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:11px;background:var(--surface);border-top:1px solid var(--line)">
+          <button class="btn">Registrar interacción</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="note"><b>Continuidad con el SGP:</b> mismo bloque de marca en la barra lateral, mismo patrón de tarjetas de pulso con etiqueta en mayúsculas sobre cifra grande, mismo subrayado naranja en la pestaña activa y misma barra naranja en el ítem de navegación activo. Un coordinador que usa el SGP reconoce el SGV de inmediato.</p>
+  <p class="note"><b>Nota sobre el mapa:</b> aquí es un esquema dibujado. En la aplicación real serán mapas con tiles reales, con las mismas fichas y el mismo semáforo encima.</p>
+
+</div>
+</body>
+</html>
