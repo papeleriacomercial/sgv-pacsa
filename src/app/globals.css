@@ -1,26 +1,37 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Tokens del sistema de diseño. Ver docs/04-design-system.md.
+   Ningún color, tamaño ni radio se escribe suelto en el JSX: todo sale de aquí. */
+@theme {
+  /* Marca y superficie */
+  --color-marca: #1d293d;
+  --color-marca-suave: #314158;
+  --color-fondo: #f8fafc;
+  --color-superficie: #ffffff;
+  --color-borde: #e2e8f0;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Texto */
+  --color-texto: #1d293d;
+  --color-texto-secundario: #45556c;
+  --color-texto-atenuado: #90a1b9;
+
+  /* Estados. El color significa estado, no decora. */
+  --color-aviso: #fe9a00;
+  --color-ok: #00a63e;
+  --color-error: #e7000b;
+  --color-info: #155dfc;
+
+  /* Tipografía: una sans para todo, una mono para identificadores y cifras. */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Alto táctil mínimo: 44px. Innegociable, se usa en la calle con una mano. */
+  --spacing-tactil: 2.75rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Un solo tema claro en Fase 1: la app se lee a pleno sol y un tema oscuro
+   automático empeora el contraste justo cuando más se necesita (D-006). */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
 }

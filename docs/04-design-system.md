@@ -60,18 +60,30 @@ una sola vez, en `src/app/globals.css`, dentro del bloque `@theme` de Tailwind v
 
 ```css
 @theme {
-  --color-marca: #1D293D;
-  --color-fondo: #F8FAFC;
-  --color-borde: #E2E8F0;
-  --color-texto-atenuado: #90A1B9;
-  --color-texto-secundario: #45556C;
+  --color-marca: #1d293d;
+  --color-marca-suave: #314158;
+  --color-fondo: #f8fafc;
+  --color-superficie: #ffffff;
+  --color-borde: #e2e8f0;
 
-  --color-estado-aviso: #FE9A00;
-  --color-estado-ok: #00A63E;
-  --color-estado-error: #E7000B;
-  --color-estado-info: #155DFC;
+  --color-texto: #1d293d;
+  --color-texto-secundario: #45556c;
+  --color-texto-atenuado: #90a1b9;
+
+  --color-aviso: #fe9a00;
+  --color-ok: #00a63e;
+  --color-error: #e7000b;
+  --color-info: #155dfc;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --spacing-tactil: 2.75rem;
 }
 ```
+
+Es el contenido real de `src/app/globals.css`. `--spacing-tactil` es lo que produce la
+clase `min-h-tactil` que usan el botón y el campo: los 44px quedan en un solo lugar.
 
 Los tonos claros de cada estado (`-50`, `-100`, `-200`, `-700`) se toman de las paletas
 `amber`, `green`, `red` y `blue` que Tailwind ya trae, para no declarar cuarenta variables
@@ -94,11 +106,10 @@ firme del SGP y aplica igual aquí, donde casi todo son cifras.
 Ambas ya vienen cargadas por `next/font` en `src/app/layout.tsx`, declaradas una sola vez.
 No se agregan más familias.
 
-> **Deuda heredada que hay que corregir en el Tramo 2.** El andamiaje de `create-next-app`
-> dejó en `globals.css` una regla `body { font-family: Arial, Helvetica, sans-serif; }` que
-> pisa las dos fuentes cargadas. Es exactamente el error que §17.1 describe del SGP: fuentes
-> cargadas que no se usan porque una regla de `body` las anula. Hay que eliminarla y dejar
-> que el `body` use la variable de la fuente sans.
+> **Deuda heredada, ya corregida.** El andamiaje de `create-next-app` dejaba en
+> `globals.css` una regla `body { font-family: Arial, Helvetica, sans-serif; }` que pisaba
+> las dos fuentes cargadas: exactamente el error que §17.1 describe del SGP. Se eliminó en
+> el Tramo 2; el `body` ahora lleva la clase `font-sans`.
 
 ### Escala de tamaños
 
@@ -213,12 +224,11 @@ Lista de verificación. Cada punto se revisa antes de dar por cerrada una pantal
 
 ---
 
-## Decisión pendiente
+## Modo oscuro: descartado
 
-**Modo oscuro.** El andamiaje trae un bloque `prefers-color-scheme: dark` que invierte los
-colores automáticamente. §17 no lo pide, y para una aplicación que se lee a pleno sol un
-tema oscuro automático puede empeorar el contraste justo cuando más se necesita.
+Se eliminó el bloque `prefers-color-scheme: dark` que traía el andamiaje. La aplicación
+tiene un único tema claro. §17 no lo pide, y un tema oscuro que se activa solo según la
+configuración del celular cambia el contraste justo cuando más se necesita. Si aparece la
+necesidad, se agregará como preferencia explícita del usuario, nunca automática.
 
-Propuesta: **eliminarlo en el Tramo 2** y trabajar con un solo tema claro en Fase 1. Si más
-adelante aparece la necesidad, se agrega como preferencia explícita del usuario, no
-automática.
+Ver D-006 en `06-decisiones.md`.

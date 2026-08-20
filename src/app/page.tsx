@@ -1,69 +1,104 @@
-import Image from "next/image";
+import { redirect } from "next/navigation";
+import { clienteServidor } from "@/lib/supabase/servidor";
+import { Tarjeta } from "@/components/ui/tarjeta";
+import { Insignia } from "@/components/ui/insignia";
+import { MensajeError } from "@/components/ui/estados";
+import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+import { CerrarSesion } from "@/components/cerrar-sesion";
 
-export default function Home() {
+type Rol = "gerente" | "lider" | "vendedor" | "administracion";
+
+const ETIQUETA_ROL: Record<Rol, string> = {
+  gerente: "Gerente",
+  lider: "Líder de ventas",
+  vendedor: "Vendedor",
+  administracion: "Administración",
+};
+
+export default async function Inicio() {
+  const supabase = await clienteServidor();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // El proxy ya redirige, pero la comprobación de verdad va aquí: la
+  // autorización nunca se delega al proxy (docs/03-seguridad-rls.md).
+  if (!user) redirect("/entrar");
+
+  const { data: perfil, error } = await supabase
+    .from("perfiles")
+    .select("nombre, rol, activo")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Cuántos perfiles ve este usuario. Es la prueba visible del RLS: un vendedor
+  // ve 1, un líder ve su equipo, gerencia los ve todos.
+  const { count: perfilesVisibles } = await supabase
+    .from("perfiles")
+    .select("id", { count: "exact", head: true });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <AvisoSinConexion />
+
+      <header className="flex items-center justify-between border-b border-borde bg-superficie px-4 py-3">
+        <span className="text-lg font-semibold text-marca">SGV</span>
+        <CerrarSesion />
+      </header>
+
+      <main className="flex flex-col gap-4 p-4">
+        {error && (
+          <MensajeError
+            titulo="No se pudo leer el perfil"
+            detalle={error.message}
+          />
+        )}
+
+        {!error && !perfil && (
+          <MensajeError
+            titulo="Tu usuario no tiene perfil"
+            detalle="La cuenta existe pero le falta su fila en la tabla de perfiles. Pídele a gerencia que la cree."
+          />
+        )}
+
+        {perfil && (
+          <Tarjeta>
+            <p className="text-sm text-texto-secundario">Sesión iniciada como</p>
+            <p className="mt-1 text-xl font-semibold text-texto">
+              {perfil.nombre}
+            </p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Insignia tono="info">
+                {ETIQUETA_ROL[perfil.rol as Rol] ?? perfil.rol}
+              </Insignia>
+              {perfil.activo ? (
+                <Insignia tono="ok">Activo</Insignia>
+              ) : (
+                <Insignia tono="aviso">Inactivo</Insignia>
+              )}
+            </div>
+
+            <p className="mt-4 font-mono text-xs text-texto-atenuado">
+              {user.email}
+            </p>
+          </Tarjeta>
+        )}
+
+        <Tarjeta>
+          <p className="text-sm font-medium text-texto">
+            Perfiles visibles para ti
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <p className="mt-1 font-mono text-3xl text-marca">
+            {perfilesVisibles ?? 0}
+          </p>
+          <p className="mt-2 text-xs text-texto-secundario">
+            Este número lo decide el RLS, no la pantalla. Un vendedor ve solo el
+            suyo; un líder, los de su equipo; gerencia, todos.
+          </p>
+        </Tarjeta>
       </main>
-    </div>
+    </>
   );
 }

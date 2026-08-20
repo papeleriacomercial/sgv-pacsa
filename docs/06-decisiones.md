@@ -102,3 +102,37 @@ llena de todos modos.
 La contrapartida es que la etapa por sí sola no distingue un prospecto que avanza de uno
 atascado. Se resuelve con `etapa_desde` y el compromiso vencido, que son datos derivados y
 no exigen captura adicional.
+
+---
+
+## D-006 — Un solo tema claro en Fase 1, sin modo oscuro
+
+**Fecha:** 2026-08-20
+
+**Decisión.** Se eliminó el bloque `prefers-color-scheme: dark` que traía el andamiaje de
+`create-next-app`. La aplicación tiene un único tema claro.
+
+**Alternativa descartada.** Mantener el modo oscuro automático según la preferencia del
+sistema operativo.
+
+**Por qué.** §17 no lo pide, y la restricción que manda es física: la app se lee a pleno sol.
+Un tema oscuro que se activa solo, según la configuración del celular, cambia el contraste
+justo cuando más se necesita y sin que el vendedor lo haya pedido. Si más adelante aparece
+la necesidad, se agrega como preferencia explícita del usuario, nunca automática.
+
+---
+
+## D-007 — Nomenclatura del código en español
+
+**Fecha:** 2026-08-20
+
+**Decisión.** Rutas, componentes y funciones propias se nombran en español: `/entrar`,
+`Boton`, `Insignia`, `clienteServidor()`. Se mantienen en inglés las APIs de terceros y las
+convenciones del framework que no se pueden traducir.
+
+**Alternativa descartada.** Código en inglés con interfaz en español.
+
+**Por qué.** Es la misma razón de D-002: la interfaz, la documentación y el vocabulario del
+negocio están en español, y mezclar idiomas obliga a traducir mentalmente todo el tiempo.
+Que la ruta que el vendedor ve en su celular diga `/entrar` y no `/login` es parte del mismo
+criterio.

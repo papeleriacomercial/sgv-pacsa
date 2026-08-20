@@ -70,8 +70,13 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-**Tramo 1 cerrado.** Los cuatro documentos de diseño están escritos. Lo siguiente es el
-Tramo 2: cimientos de la aplicación.
+**Tramo 2 — cimientos de la aplicación.** Hechos: limpieza del andamiaje, tokens de diseño
+en `globals.css`, clientes de Supabase para navegador y servidor, `proxy.ts` con refresco de
+sesión y redirección, pantalla de entrada, pantalla de inicio con nombre y rol, y los
+componentes compartidos (botón, tarjeta, insignia, campo, estados).
+
+**Falta para cerrarlo:** un usuario de prueba en `sgv-pacsa-dev` con su fila en `perfiles`,
+para comprobar el login de punta a punta y que el RLS deja ver solo lo que corresponde.
 
 ---
 
@@ -86,7 +91,7 @@ todo lo demás.
 Los cuatro documentos están escritos. Los catálogos de resultado de visita, motivo de
 pérdida y etapas quedaron definidos con el negocio el 2026-08-20.
 
-### Tramo 2 — Cimientos de la aplicación
+### Tramo 2 — Cimientos de la aplicación — EN CURSO
 
 Login, sesión, perfil del usuario, navegación, y los componentes compartidos de tarjeta,
 insignia, campo y tabla. Los tokens de `04-design-system.md` bajan a código aquí.
