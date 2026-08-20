@@ -18,16 +18,18 @@ no cambió, la tarea no terminó.
 |---|---|---|
 | Repositorio Git | Listo | Ramas `main` (producción) y `dev` (integración), según §14. |
 | Proyecto Next.js | Listo | Next.js 16.3.1, React 19, TypeScript, Tailwind v4. Solo el andamiaje de `create-next-app`; sin pantallas propias. |
-| Supabase `sgv-dev` | Creado | Entorno de desarrollo. |
-| Supabase `sgv-prod` | Creado | Entorno de producción. Sin migraciones aplicadas todavía. |
+| Supabase `sgv-pacsa-dev` | Creado | Entorno de desarrollo. |
+| Supabase `sgv-pacsa-prod` | Creado | Entorno de producción. Sin migraciones aplicadas todavía. |
 | Supabase CLI | Listo | `supabase` ^2.115.0 en devDependencies; se invoca con `npx supabase`. |
-| Variables de entorno | Listo en local | `.env.local` con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` apuntando a `sgv-dev`. |
+| Variables de entorno | Listo en local | `.env.local` con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` apuntando a `sgv-pacsa-dev`. |
+| Vercel | Creado | Proyecto `sgv-pacsa` conectado a GitHub. Producción desde `main` en `https://sgv-pacsa.vercel.app`. Variables cargadas: Production a prod, Preview y Development a dev. Configuración completa. |
+| Auth URL Configuration | Listo | Verificado el 2026-08-20: prod acepta `https://sgv-pacsa.vercel.app/**`; dev acepta `http://localhost:3000/**` y el comodín de previews `https://sgv-pacsa-*-papeleria-comercial.vercel.app/**`. |
 
 Los dos proyectos de Supabase quedaron separados desde el día uno, como exige §16.
 
 ### Base de datos
 
-**Migración `perfiles_y_roles`** — primera migración del sistema, aplicada en `sgv-dev`.
+**Migración `perfiles_y_roles`** — primera migración del sistema, aplicada en `sgv-pacsa-dev`.
 Contiene:
 
 - Enum `rol_usuario`: `gerente`, `lider`, `vendedor`, `administracion`.
@@ -40,9 +42,9 @@ Contiene:
   todo; el líder ve a los perfiles cuyo `lider_id` es él.
 - Función `tocar_updated_at()` y su trigger sobre `perfiles`.
 
-Es la única tabla que existe. `sgv-prod` sigue vacío: la migración **no** se ha aplicado ahí.
+Es la única tabla que existe. `sgv-pacsa-prod` sigue vacío: la migración **no** se ha aplicado ahí.
 
-**Verificado contra `sgv-dev` el 2026-08-20** (consulta a `pg_policies`, `pg_proc` y
+**Verificado contra `sgv-pacsa-dev` el 2026-08-20** (consulta a `pg_policies`, `pg_proc` y
 `pg_class` vía Management API): la única migración aplicada es `20260819224500`, RLS está
 activo, existen las cuatro políticas, y `perfiles_update_propio` tiene su `with check`
 completo — `rol = rol_actual()` y `lider_id` sin cambiar. Las tres funciones auxiliares son
@@ -53,6 +55,8 @@ El esquema en dev coincide con el archivo versionado.
 
 - `docs/00-vision.md` — levantamiento completo de Fase 1. Cerrado.
 - `CLAUDE.md` — índice, reglas de trabajo y mantenimiento de `/docs`. Vivo.
+- `docs/06-decisiones.md` — bitácora de decisiones. Vivo. Registradas D-001 (slug),
+  D-002 (nomenclatura en español) y D-003 (sin Docker).
 - `docs/07-estado.md` — este archivo. Vivo.
 - `docs/sgv-preview.html` — maqueta visual de referencia, no especificación.
 
@@ -68,15 +72,10 @@ Nada abierto en este momento.
 
 ### Bloquea el arranque del desarrollo
 
-1. **Vercel.** Proyecto `sgv` sin crear. Falta: conectar el repositorio, apuntar producción
-   a `main`, previews por rama, y cargar las variables de entorno de `sgv-prod` en el
-   entorno de producción y las de `sgv-dev` en preview.
-2. **Escribir los documentos de `/docs` que faltan.** Ninguno de estos existe todavía y
+1. **Escribir los documentos de `/docs` que faltan.** Ninguno de estos existe todavía y
    `01`–`04` condicionan cómo se programa:
    - `01-arquitectura.md`, `02-modelo-datos.md`, `03-seguridad-rls.md`, `04-design-system.md`
    - `05-modulos/` (un archivo por módulo; **ningún módulo se programa antes de tenerlo**)
-   - `06-decisiones.md` (aún no se ha registrado ninguna decisión, y ya hay varias tomadas —
-     ver abajo)
 
 ### Trabajo de producto (orden de §13)
 
@@ -100,9 +99,6 @@ auditoría. Cada una nace con RLS y sus políticas en la misma migración.
 
 ### 1. Desviaciones respecto a §16 que conviene zanjar y registrar en `06-decisiones.md`
 
-- **`perfiles` en vez de `profiles`.** §16 nombra la tabla `profiles`; el código usa
-  `perfiles`, en español, coherente con `rol_usuario` y `lider_id`. Se adoptó el español
-  como convención general (ya reflejada en `CLAUDE.md`), pero la decisión no está escrita.
 - **`perfiles` no tiene `created_by`.** §16 lo exige en todas las tablas. En `perfiles` es
   discutible, porque el perfil nace del registro del propio usuario en `auth.users`. Hay que
   decidir: exceptuar `perfiles` explícitamente, o agregar la columna.

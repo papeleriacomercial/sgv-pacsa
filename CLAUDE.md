@@ -25,7 +25,7 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 | `docs/03-seguridad-rls.md` | Roles y políticas por tabla. | Pendiente |
 | `docs/04-design-system.md` | Tokens y componentes (deriva de §17 de la visión). | Pendiente |
 | `docs/05-modulos/` | Un archivo por módulo (§7.1 … §7.9). | Pendiente |
-| `docs/06-decisiones.md` | Bitácora de decisiones: qué se decidió, cuándo y por qué. | Pendiente |
+| [docs/06-decisiones.md](docs/06-decisiones.md) | Bitácora de decisiones: qué se decidió, cuándo y por qué. | Vivo |
 | [docs/07-estado.md](docs/07-estado.md) | Qué está hecho, qué está en curso, qué falta. | Vivo |
 
 `docs/sgv-preview.html` es una maqueta visual de referencia, no especificación.
@@ -43,10 +43,12 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 
 | Entorno | Supabase | Rama | Vercel |
 |---|---|---|---|
-| Desarrollo | `sgv-dev` | `dev` | previews por rama |
-| Producción | `sgv-prod` | `main` | `sgv` |
+| Desarrollo | `sgv-pacsa-dev` | `dev` | previews por rama |
+| Producción | `sgv-pacsa-prod` | `main` | `sgv-pacsa` |
 
-Slug único `sgv` en todas las plataformas. Ramas de trabajo: `feat/<módulo>`. Los dos
+Slug único `sgv-pacsa` en GitHub, Vercel y Supabase (estos dos últimos con sufijo `-dev` y
+`-prod`). §14 de la visión dice `sgv`; se corrigió a lo que realmente quedó desplegado —
+ver `docs/06-decisiones.md`. Ramas de trabajo: `feat/<módulo>`. Los dos
 proyectos de Supabase están separados **desde el día uno**; nunca uno solo que después
 "se limpia".
 
@@ -73,7 +75,7 @@ llegaron después, obligando a una depuración completa. **No se repite.**
 - **Prohibido alterar el esquema desde el dashboard de Supabase.** Todo cambio entra por
   migración versionada en el repo (`npx supabase migration new <nombre>`). Si se toca por
   el dashboard, el repo deja de ser la verdad.
-- **Los prototipos de pantalla consumen la base real de `sgv-dev`**, nunca datos quemados
+- **Los prototipos de pantalla consumen la base real de `sgv-pacsa-dev`**, nunca datos quemados
   en el JSX. Si la pantalla nace leyendo datos falsos, el esquema se diseña al revés.
 - `snake_case` en tablas y columnas; **plural** en tablas. Nomenclatura en **español**,
   igual que la interfaz (`perfiles`, `rol_usuario`, `lider_id`).
