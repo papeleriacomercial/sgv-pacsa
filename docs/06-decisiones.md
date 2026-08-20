@@ -62,3 +62,43 @@ un problema ya resuelto. Los comandos que quedan fuera no son críticos: `db pus
 automáticamente— contradice la regla de §16 de escribir toda migración a mano y
 versionarla. Se reevalúa si aparece un caso concreto, como programar sin conexión o varios
 desarrolladores en paralelo.
+
+---
+
+## D-004 — Los catálogos son tipos enum, no tablas de catálogo
+
+**Fecha:** 2026-08-20
+
+**Decisión.** `etapa_prospecto`, `resultado_visita`, `motivo_perdida`, `tipo_interaccion`,
+`origen_prospecto` y `linea_producto` se implementan como tipos enum de Postgres.
+
+**Alternativa descartada.** Tablas de catálogo con filas editables desde una pantalla de
+administración.
+
+**Por qué.** La visión los llama catálogos **cerrados** (§6). Con enum, agregar una opción
+exige una migración versionada, que es justamente la garantía de que nadie los cambia desde
+el dashboard y de que el repositorio sigue siendo la verdad. El costo es que un cambio
+requiere despliegue; se acepta a propósito. Si con el uso real resulta que alguno cambia
+seguido, ese en particular se convierte en tabla.
+
+---
+
+## D-005 — `negociacion` es una etapa ancha y no se subdivide
+
+**Fecha:** 2026-08-20
+
+**Decisión.** El pipeline tiene seis etapas: `nuevo`, `contactado`, `cotizado`,
+`negociacion`, `ganado`, `perdido`. Dentro de `negociacion` caben la espera de aprobación
+de gerencia, la prueba de producto para validar calidad y la negociación de volumen y
+precio, sin subetapas.
+
+**Alternativa descartada.** Abrir subetapas para cada situación.
+
+**Por qué.** Lo que ocurre entre la cotización y la decisión final es demasiado variado para
+una lista fija, y cada subetapa nueva es un campo más que el vendedor tiene que mantener al
+día en la calle. El detalle lo dan la bitácora de visitas y el compromiso vigente, que él ya
+llena de todos modos.
+
+La contrapartida es que la etapa por sí sola no distingue un prospecto que avanza de uno
+atascado. Se resuelve con `etapa_desde` y el compromiso vencido, que son datos derivados y
+no exigen captura adicional.

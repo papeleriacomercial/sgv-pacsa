@@ -21,8 +21,8 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 |---|---|---|
 | [docs/00-vision.md](docs/00-vision.md) | Levantamiento de requerimientos Fase 1: alcance, entidades, flujo, reglas de negocio, módulos, prioridades. | Completo |
 | [docs/01-arquitectura.md](docs/01-arquitectura.md) | Stack, entornos, integraciones (Zoho, SGP, Google Places, Panamá Emprende). | Completo |
-| `docs/02-modelo-datos.md` | Esquema, convenciones y diccionario de campos. | Pendiente |
-| `docs/03-seguridad-rls.md` | Roles y políticas por tabla. | Pendiente |
+| [docs/02-modelo-datos.md](docs/02-modelo-datos.md) | Esquema, convenciones y diccionario de campos. | Completo |
+| [docs/03-seguridad-rls.md](docs/03-seguridad-rls.md) | Roles y políticas por tabla. | Completo |
 | [docs/04-design-system.md](docs/04-design-system.md) | Tokens y componentes (deriva de §17 de la visión). | Completo |
 | `docs/05-modulos/` | Un archivo por módulo (§7.1 … §7.9). | Pendiente |
 | [docs/06-decisiones.md](docs/06-decisiones.md) | Bitácora de decisiones: qué se decidió, cuándo y por qué. | Vivo |

@@ -56,8 +56,13 @@ El esquema en dev coincide con el archivo versionado.
 
 - `docs/00-vision.md` — levantamiento completo de Fase 1. Cerrado.
 - `CLAUDE.md` — índice, reglas de trabajo y mantenimiento de `/docs`. Vivo.
+- `docs/01-arquitectura.md` — stack, entornos, flujos e integraciones. Completo.
+- `docs/02-modelo-datos.md` — catálogos, tablas del núcleo de campo y diccionario. Completo.
+- `docs/03-seguridad-rls.md` — modelo de permisos y políticas por tabla. Completo.
+- `docs/04-design-system.md` — tokens, componentes y ficha de punto. Completo.
 - `docs/06-decisiones.md` — bitácora de decisiones. Vivo. Registradas D-001 (slug),
-  D-002 (nomenclatura en español) y D-003 (sin Docker).
+  D-002 (nomenclatura en español), D-003 (sin Docker), D-004 (catálogos como enum) y
+  D-005 (negociación como etapa ancha).
 - `docs/07-estado.md` — este archivo. Vivo.
 - `docs/sgv-preview.html` — maqueta visual de referencia, no especificación.
 
@@ -65,9 +70,8 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-**Tramo 1 — documentos de diseño.** Escritos `01-arquitectura.md` y `04-design-system.md`.
-Faltan `02-modelo-datos.md` y `03-seguridad-rls.md`, bloqueados por las decisiones de
-negocio de §12 (ver *Puntos que requieren decisión*).
+**Tramo 1 cerrado.** Los cuatro documentos de diseño están escritos. Lo siguiente es el
+Tramo 2: cimientos de la aplicación.
 
 ---
 
@@ -77,18 +81,10 @@ Cinco tramos hasta tener la aplicación en manos de un vendedor real. El orden s
 de la visión: primero el núcleo de campo, que es lo que hoy no existe y lo que sostiene
 todo lo demás.
 
-### Tramo 1 — Cerrar los documentos de diseño
+### Tramo 1 — Cerrar los documentos de diseño — HECHO
 
-Escribir `01-arquitectura.md`, `02-modelo-datos.md`, `03-seguridad-rls.md` y
-`04-design-system.md`.
-
-No es papeleo: es donde se fijan las decisiones que después cuestan caro cambiar — UUID
-generados en el cliente, borrado lógico, qué ve cada rol, y los tokens de diseño que
-evitan la deuda del SGP.
-
-**Bloqueado en parte:** `02` y `03` necesitan las decisiones de negocio de §12, sobre todo
-el catálogo cerrado de resultado de visita y el de motivo de pérdida. Hay que definirlos
-con los vendedores.
+Los cuatro documentos están escritos. Los catálogos de resultado de visita, motivo de
+pérdida y etapas quedaron definidos con el negocio el 2026-08-20.
 
 ### Tramo 2 — Cimientos de la aplicación
 
@@ -164,14 +160,16 @@ sentido cuando ya haya datos reales entrando.
 
 ### 2. Decisiones de negocio abiertas (§12 de la visión)
 
-Las que condicionan esquema y no se pueden inventar: catálogo cerrado de "resultado de
-visita" y de "motivo de pérdida", umbral de pedido mínimo, rango permitido de ajuste del
-umbral de dormido, y metas por vendedor.
+Resueltas el 2026-08-20 con el negocio: catálogo de resultado de visita (9 opciones) y de
+motivo de pérdida (5), y las etapas del pipeline. Quedan en `02-modelo-datos.md`.
+
+Siguen abiertas, y ninguna bloquea el núcleo de campo: umbral de pedido mínimo, rango
+permitido de ajuste del umbral de dormido, metas por vendedor, y el catálogo de
+`tipo_comercio`, que depende de la depuración de Zoho (§7.6).
 
 ---
 
 ## Cómo retomar
 
 1. Leer `CLAUDE.md` (índice y reglas) y este archivo.
-2. Escribir `06-decisiones.md` con las decisiones ya tomadas y sin registrar.
-3. Seguir con lo que marque *Pendiente*.
+2. Revisar el Tramo 2 en el plan de construcción y arrancar por ahí.
