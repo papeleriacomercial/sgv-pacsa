@@ -23,6 +23,7 @@ no cambió, la tarea no terminó.
 | Supabase CLI | Listo | `supabase` ^2.115.0 en devDependencies; se invoca con `npx supabase`. |
 | Variables de entorno | Listo en local | `.env.local` con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` apuntando a `sgv-pacsa-dev`. |
 | Vercel | Creado | Proyecto `sgv-pacsa` conectado a GitHub. Producción desde `main` en `https://sgv-pacsa.vercel.app`. Variables cargadas: Production a prod, Preview y Development a dev. Configuración completa. |
+| Previews de Vercel | Verificado | Primer deploy de la rama `dev` en estado `Ready`, lo que confirma que Preview y Production apuntan a bases distintas. |
 | Auth URL Configuration | Listo | Verificado el 2026-08-20: prod acepta `https://sgv-pacsa.vercel.app/**`; dev acepta `http://localhost:3000/**` y el comodín de previews `https://sgv-pacsa-*-papeleria-comercial.vercel.app/**`. |
 
 Los dos proyectos de Supabase quedaron separados desde el día uno, como exige §16.
@@ -64,34 +65,89 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-Nada abierto en este momento.
+**Tramo 1 — documentos de diseño.** Escritos `01-arquitectura.md` y `04-design-system.md`.
+Faltan `02-modelo-datos.md` y `03-seguridad-rls.md`, bloqueados por las decisiones de
+negocio de §12 (ver *Puntos que requieren decisión*).
 
 ---
 
-## Pendiente
+## Plan de construcción
 
-### Bloquea el arranque del desarrollo
+Cinco tramos hasta tener la aplicación en manos de un vendedor real. El orden sale de §13
+de la visión: primero el núcleo de campo, que es lo que hoy no existe y lo que sostiene
+todo lo demás.
 
-1. **Escribir los documentos de `/docs` que faltan.** Ninguno de estos existe todavía y
-   `01`–`04` condicionan cómo se programa:
-   - `01-arquitectura.md`, `02-modelo-datos.md`, `03-seguridad-rls.md`, `04-design-system.md`
-   - `05-modulos/` (un archivo por módulo; **ningún módulo se programa antes de tenerlo**)
+### Tramo 1 — Cerrar los documentos de diseño
 
-### Trabajo de producto (orden de §13)
+Escribir `01-arquitectura.md`, `02-modelo-datos.md`, `03-seguridad-rls.md` y
+`04-design-system.md`.
 
-1. **Núcleo de campo** (§7.1): alta de prospecto con GPS y foto, bitácora, compromisos con
-   fecha, mapa con filtros. Piloto con un solo vendedor durante dos semanas.
-2. **Inteligencia comercial** (§7.6), en paralelo — no depende de la adopción de los
-   vendedores. Bloqueado por la higiene del maestro de clientes y productos de Zoho.
-3. Búsqueda y calificación de prospectos (§7.4 y §7.5).
-4. Cotizaciones y aprobaciones de precio.
-5. Lectura de Zoho y del SGP.
-6. Tablero de gerencia (§7.3).
+No es papeleo: es donde se fijan las decisiones que después cuestan caro cambiar — UUID
+generados en el cliente, borrado lógico, qué ve cada rol, y los tokens de diseño que
+evitan la deuda del SGP.
 
-### Esquema que falta para el núcleo de campo
+**Bloqueado en parte:** `02` y `03` necesitan las decisiones de negocio de §12, sobre todo
+el catálogo cerrado de resultado de visita y el de motivo de pérdida. Hay que definirlos
+con los vendedores.
 
-`prospectos`, `visitas`, `compromisos`, `oportunidades`, `territorios` y la tabla de
-auditoría. Cada una nace con RLS y sus políticas en la misma migración.
+### Tramo 2 — Cimientos de la aplicación
+
+Login, sesión, perfil del usuario, navegación, y los componentes compartidos de tarjeta,
+insignia, campo y tabla. Los tokens de `04-design-system.md` bajan a código aquí.
+
+**Se ve al final:** entrar desde el celular, iniciar sesión y ver nombre y rol. Es donde
+se comprueba que el RLS funciona: un vendedor no debe poder ver el perfil de otro.
+
+**Por qué va aquí:** todo lo demás cuelga de saber quién eres. Las políticas de `perfiles`
+no sirven hasta que haya un usuario autenticado.
+
+### Tramo 3 — Núcleo de campo, captura
+
+Alta de prospecto con GPS y foto, validación de duplicados, bitácora de interacciones y
+compromisos con fecha.
+
+**Se ve al final:** un vendedor frente a un local registra el prospecto y deja agendado el
+próximo paso.
+
+**Criterio de aceptación:** que la captura completa baje de 30 segundos, medido con
+cronómetro. §12 marca la resistencia al registro en campo como el riesgo real del
+proyecto; si es lento, no se usa.
+
+**Tablas nuevas:** `prospectos`, `visitas`, `compromisos`, y la tabla de auditoría. Cada
+una nace con RLS y sus políticas en la misma migración.
+
+### Tramo 4 — Núcleo de campo, consulta
+
+Mapa de clientes y prospectos con filtros, y agenda del día con los compromisos vencidos
+primero.
+
+**Se ve al final:** lo que hoy da Badger Maps, más lo que Badger no da. Es donde el
+vendedor empieza a preferir la herramienta en vez de tolerarla.
+
+**Por qué después del 3:** un mapa sin datos capturados está vacío.
+
+**Tablas nuevas:** `oportunidades`, `territorios`.
+
+### Tramo 5 — Piloto con un vendedor, dos semanas
+
+Uso real en la calle antes de agregar cotizaciones o integraciones. Aquí se endurece el
+modo offline, que es lo más delicado del proyecto y solo se prueba de verdad en el
+interior, donde se cae la señal.
+
+**Produce:** la lista de lo que hay que arreglar antes de que lo toquen los demás.
+
+### En paralelo, sin bloquear nada
+
+La depuración del maestro de clientes y productos de Zoho (§7.6). No es programación, es
+normalización de datos, y es prerrequisito del módulo de inteligencia comercial. Puede
+avanzar desde ya, con otra persona. Probablemente sea el módulo de retorno más rápido
+porque los datos ya existen.
+
+### Después de los cinco tramos
+
+Búsqueda y calificación de prospectos (§7.4 y §7.5), cotizaciones con aprobación de
+precios, lectura de Zoho y del SGP, y el tablero de gerencia (§7.3). Todo eso solo tiene
+sentido cuando ya haya datos reales entrando.
 
 ---
 
