@@ -72,8 +72,9 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-Nada abierto. El núcleo de campo está completo y probado en un celular real. Lo siguiente
-es el Tramo 5: el piloto de dos semanas y el modo offline.
+**Tramo 4, incompleto.** Se dieron por hechos el mapa y la agenda, pero el tramo también
+incluía el **pipeline visual de oportunidades** y las tablas `oportunidades` y
+`territorios`, que no se construyeron. Corregido el 2026-08-21.
 
 ---
 
@@ -114,7 +115,7 @@ proyecto; si es lento, no se usa.
 **Tablas nuevas:** `prospectos`, `visitas`, `compromisos`, y la tabla de auditoría. Cada
 una nace con RLS y sus políticas en la misma migración.
 
-### Tramo 4 — Núcleo de campo, consulta — HECHO
+### Tramo 4 — Núcleo de campo, consulta — PARCIAL
 
 Mapa de clientes y prospectos con filtros, y agenda del día con los compromisos vencidos
 primero.
@@ -268,9 +269,11 @@ URL. No hay política de update ni de delete: la foto es evidencia, igual que la
 
 ---
 
-## Núcleo de campo completo — 2026-08-21
+## Captura y consulta probadas — 2026-08-21
 
-Tramos 3 y 4 cerrados y probados en un celular real contra el preview de `dev`.
+El Tramo 3 está cerrado. El Tramo 4 quedó a medias: se construyeron el mapa y la agenda,
+pero no el pipeline de oportunidades ni sus tablas. Lo probado funciona en un celular real
+contra el preview de `dev`.
 
 **Lo que funciona de punta a punta:**
 
@@ -296,3 +299,44 @@ vez que se mete un mapa en un contenedor flexible.
 
 **Lo que todavía no se ha medido:** cuántos segundos toma el registro completo de una visita.
 Es el criterio de aceptación de §12 y solo se mide con cronómetro en la calle, en el piloto.
+
+---
+
+## Inventario de lo que falta — 2026-08-21
+
+Levantado al preguntar el negocio si esto ya estaba listo para un piloto. La respuesta
+honesta es que no: está construido el núcleo de campo y nada más.
+
+### Dentro de §7.1, la app del vendedor
+
+| Capacidad | Estado |
+|---|---|
+| Alta de prospecto con GPS y foto | Hecho |
+| Bitácora de interacciones | Hecho |
+| Compromisos y agenda del día | Hecho |
+| Mapa con filtros | Hecho |
+| **Pipeline visual de oportunidades** | **Falta** — estaba asignado al Tramo 4 |
+| Modo offline con cola de sincronización | Falta — Tramo 5 |
+| Lista de precios vigente consultable | Falta — necesita Zoho |
+| Solicitud de cotización y su estado | Falta — necesita el módulo de oficina |
+| Estado y fecha estimada de entrega | Falta — necesita el SGP |
+
+### Módulos completos sin empezar
+
+Ocho de los nueve de §7. Ninguno tiene documento en `05-modulos/` todavía.
+
+| Módulo | Qué aporta | Depende de |
+|---|---|---|
+| §7.2 Oficina | Bandejas de cotización y alta de clientes | — |
+| §7.3 Gerencia | Tablero en vivo, "Requiere tu atención" | Datos entrando |
+| §7.4 Búsqueda de prospectos | Google Places por área y categoría | Llave y cuota de Google Cloud |
+| §7.5 Calificación | Puntaje de potencial, descarte con motivo | §7.6 para el modelo de gemelos |
+| §7.6 Inteligencia comercial | Tablero sobre facturación de Zoho | Depuración del maestro de Zoho |
+| §7.7 Reposición, muestras, competencia | Alertas de recompra, tasa de muestras | Zoho |
+| §7.8 Colaboración | Hilos anclados al registro | — |
+| §7.9 Grupos comerciales | Marca → sociedad → grupo | — |
+
+### Tablas que faltan
+
+`oportunidades`, `territorios`, `clientes`, `solicitudes_cotizacion`, `muestras`,
+`comentarios`, `grupos_comerciales`.
