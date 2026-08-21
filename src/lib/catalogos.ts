@@ -97,3 +97,35 @@ export const TONO_ETAPA: Record<Etapa, "ok" | "aviso" | "error" | "info" | "neut
   ganado: "ok",
   perdido: "error",
 };
+
+/**
+ * Categorías de búsqueda (§7.4).
+ *
+ * A la izquierda, cómo piensa el negocio. A la derecha, los tipos que entiende
+ * Google. **No son lo mismo y la traducción hay que revisarla con los
+ * vendedores**: Google no distingue una pulpería de un minisúper, y mete las
+ * dos en `convenience_store`.
+ */
+export const CATEGORIAS = {
+  supermercado: { etiqueta: "Supermercado", tipos: ["supermarket"] },
+  minisuper: { etiqueta: "Minisúper o pulpería", tipos: ["convenience_store"] },
+  restaurante: { etiqueta: "Restaurante", tipos: ["restaurant"] },
+  farmacia: { etiqueta: "Farmacia", tipos: ["pharmacy"] },
+  panaderia: { etiqueta: "Panadería", tipos: ["bakery"] },
+} as const;
+
+export type Categoria = keyof typeof CATEGORIAS;
+
+export const ETIQUETAS_CATEGORIA = Object.fromEntries(
+  Object.entries(CATEGORIAS).map(([clave, { etiqueta }]) => [clave, etiqueta]),
+) as Record<Categoria, string>;
+
+export const MOTIVOS_DESCARTE = {
+  no_existe: "No existe o está cerrado",
+  muy_pequeno: "Muy pequeño, no alcanza pedido mínimo",
+  no_usa_productos: "No usa nuestros productos",
+  ya_atendido: "Ya lo atiende la casa",
+  otro: "Otro motivo",
+} as const;
+
+export type MotivoDescarte = keyof typeof MOTIVOS_DESCARTE;

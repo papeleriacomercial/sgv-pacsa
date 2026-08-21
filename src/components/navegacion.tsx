@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarClock, Map, Store, TrendingUp } from "lucide-react";
+import { CalendarClock, Map, Search, Store, TrendingUp } from "lucide-react";
 
 const RUTAS = [
   { href: "/agenda", etiqueta: "Agenda", Icono: CalendarClock },
   { href: "/", etiqueta: "Prospectos", Icono: Store },
+  { href: "/buscar", etiqueta: "Buscar", Icono: Search },
   { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   { href: "/pipeline", etiqueta: "Pipeline", Icono: TrendingUp },
 ];
@@ -28,7 +29,7 @@ export function Navegacion() {
   if (ruta === "/entrar") return null;
 
   return (
-    <nav className="sticky bottom-0 mt-auto grid grid-cols-4 border-t border-borde bg-superficie">
+    <nav className="sticky bottom-0 mt-auto grid grid-cols-5 border-t border-borde bg-superficie">
       {RUTAS.map(({ href, etiqueta, Icono }) => {
         const activo =
           href === "/" ? ruta === "/" || ruta.startsWith("/prospectos") : ruta.startsWith(href);

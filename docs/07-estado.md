@@ -62,6 +62,7 @@ El esquema en dev coincide con el archivo versionado.
 - `docs/03-seguridad-rls.md` — modelo de permisos y políticas por tabla. Completo.
 - `docs/04-design-system.md` — tokens, componentes y ficha de punto. Completo.
 - `docs/05-modulos/7.1-app-movil-vendedor.md` — app del vendedor. Completo.
+- `docs/05-modulos/7.4-busqueda-prospectos.md` — búsqueda y planificación. Completo.
 - `docs/06-decisiones.md` — bitácora de decisiones. Vivo. Registradas D-001 (slug),
   D-002 (nomenclatura en español), D-003 (sin Docker), D-004 (catálogos como enum) y
   D-005 (negociación como etapa ancha).
@@ -72,8 +73,9 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-Nada abierto. El Tramo 4 quedó completo con el pipeline. Lo siguiente es §7.4, la búsqueda
-de prospectos.
+**§7.4 — búsqueda de prospectos.** Documento del módulo, migración y pantalla construidos y
+verificados en base. Falta probarla en la calle: la búsqueda real contra Google solo se
+comprueba con un celular en un lugar con comercios alrededor.
 
 ---
 
@@ -414,3 +416,44 @@ tarjetas con una mano y a pleno sol no funciona. Cambia la densidad, no los dato
 todavía: el filtro por zona del mapa y el mapa de cobertura de §7.3 son lo que la justifican.
 Crear una tabla que nadie lee es la misma clase de error que levantar pantallas con datos
 falsos. Se hace cuando exista la pantalla que la use.
+
+---
+
+## §7.4 Búsqueda de prospectos — 2026-08-21
+
+Migración `20260821161243_busqueda_prospectos`: enum `motivo_descarte`, tabla `descartes` y
+función `estado_de_puntos()`.
+
+**El semáforo tuvo el mismo problema que los duplicados.** Necesita saber si un punto es de
+otro vendedor, y el RLS lo impide. Se resolvió igual: función `security definer` de
+divulgación controlada que devuelve estado, nombre del vendedor, y fecha y resultado de la
+última visita. Nada más.
+
+**Los descartes se leen entre todo el equipo**, y es la única excepción deliberada al modelo
+de "cada quien ve lo suyo". Se justifica porque lo que se comparte es un hecho del mundo —el
+local cerró— y no información comercial. Escribir y editar sigue siendo del dueño.
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Semáforo con punto propio, descartado y nuevo | Devuelve los dos primeros | Correcto, con etapa y último resultado |
+| Punto que no está en el sistema | Sin fila: es nuevo por ausencia | 0 filas |
+| Un vendedor descarta, otro lo ve | Lo ve | Lo ve |
+| Otro intenta editar ese descarte | 0 filas | 0 filas |
+| Descartar a nombre de otro | Rechazado | `42501` |
+| Descartar dos veces el mismo punto | Rechazado | `23505` |
+
+**Pantalla `/buscar`:** categorías del negocio traducidas a tipos de Google, búsqueda por
+cercanía con radio o por texto libre, resultados ordenados por distancia con su semáforo,
+selección múltiple con alta en lote, y descarte con motivo.
+
+### Limitaciones conocidas de este tramo
+
+- **20 resultados por búsqueda**, no 60. La API nueva de Places no pagina en `searchNearby`.
+  Para cubrir un área grande hay que trocearla, que es lo que §7.4 ya anticipaba para vías
+  urbanas.
+- **No se puede marcar "ya es cliente"**: ese estado sale del maestro de Zoho y la
+  integración no existe. Un vendedor todavía puede prospectar a un cliente de la casa.
+- **Las categorías de Google no son las del negocio.** `convenience_store` mezcla pulpería y
+  minisúper. La traducción está en `src/lib/catalogos.ts` y hay que revisarla con los
+  vendedores.
+- **Los motivos de descarte son propuesta**, como lo fueron los de resultado de visita.
