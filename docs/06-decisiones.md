@@ -141,6 +141,10 @@ criterio.
 
 ## D-008 — El mapa usa OpenStreetMap, no Google Maps
 
+> **Revertida por D-009 el 2026-08-21.** Se conserva el registro porque las mediciones de
+> cobertura siguen siendo válidas y porque el error de razonamiento vale más documentado que
+> borrado.
+
 **Fecha:** 2026-08-21
 
 **Decisión.** El mapa de §7.1 se dibuja con Leaflet sobre mosaicos de OpenStreetMap. Toda
@@ -177,3 +181,47 @@ proveedor queda aislado detrás de una frontera clara —le entran puntos, le sa
 ninguna pantalla sabe quién dibuja las calles. Se reevalúa en el piloto del Tramo 5: si el
 vendedor dice que necesita ver comercios ajenos mientras maneja, se cambia; si no lo dice,
 el gasto no se hizo.
+
+---
+
+## D-009 — El mapa pasa a Google Maps. Revierte D-008
+
+**Fecha:** 2026-08-21
+
+**Decisión.** El mapa usa Google Maps a través de `@vis.gl/react-google-maps`. Se eliminaron
+Leaflet y react-leaflet.
+
+**Por qué cambió**, en orden de peso:
+
+**1. La función que el negocio pidió no se puede hacer con OSM.** Badger Maps deja tocar un
+local de tercero en el mapa y agregarlo a la lista de prospectos, y eso es lo que se quiere
+replicar. Los mosaicos de OSM son **imágenes**: el nombre del comercio está pintado dentro
+del PNG, no es un objeto tocable. Habría que pedir los comercios por separado a Overpass
+—un servicio voluntario, sin garantías, no apto para consulta continua desde la calle— y
+montar un servidor propio. Y aun así, el vendedor en Aguadulce vería 41 comercios.
+
+Google emite el evento con el `place_id` del local tocado. Es una función de la plataforma,
+no algo que haya que construir.
+
+**2. La justificación de costo de D-008 era falsa.** Se verificó la documentación de precios
+de Google: el crédito mensual de 200 dólares fue reemplazado por **10.000 llamadas gratis
+por servicio y por mes**. Con tres vendedores el uso estimado es de unas 1.300 cargas de
+mapa mensuales, así que el costo real es **cero**. D-008 recomendaba OSM para ahorrar un
+gasto que no existía.
+
+**3. La cuenta de Google hace falta igual** para la búsqueda de §7.4, donde OSM no alcanza en
+el interior. Con la llave, la facturación y las cuotas ya configuradas, usar Google también
+para el mapa no agrega trabajo.
+
+**Lo que sí se conserva de D-008:** el aislamiento del proveedor detrás de un solo
+componente. Gracias a esa decisión, cambiar de proveedor tocó un archivo y ninguna pantalla
+se enteró. La decisión de aislar resultó más valiosa que la de elegir.
+
+**Lo que se guarda de Google:** solo el `place_id` y la ubicación. El nombre del local viaja
+como sugerencia en el formulario de alta y se vuelve dato propio cuando el vendedor lo
+confirma, que es lo que permiten los términos de Maps y lo que ya describía §7.4.
+
+**Protecciones configuradas:** llave restringida a `sgv-pacsa.vercel.app`, la URL de preview
+de `dev`, y `localhost`. Quedan pendientes las cuotas diarias y la alerta de presupuesto: la
+consola de Google no las hizo evidentes y no bloquean el trabajo, pero hay que cerrarlas
+antes de producción.

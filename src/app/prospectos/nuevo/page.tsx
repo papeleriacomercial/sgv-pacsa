@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MapPin, MapPinOff } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { obtenerUbicacion, calidadUbicacion, type Ubicacion } from "@/lib/gps";
@@ -17,7 +17,7 @@ import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
-import { MensajeError } from "@/components/ui/estados";
+import { Cargando, MensajeError } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
 type Duplicado = {
@@ -37,19 +37,43 @@ const POR_QUE: Record<string, string> = {
 };
 
 export default function NuevoProspecto() {
+  return (
+    <Suspense fallback={<Cargando />}>
+      <Formulario />
+    </Suspense>
+  );
+}
+
+function Formulario() {
   const router = useRouter();
 
-  const [nombre, setNombre] = useState("");
+  // Cuando el vendedor llega tocando un local en el mapa, el candidato viene
+  // en la dirección: el `place_id`, la ubicación de Google y el nombre como
+  // sugerencia. El nombre solo se vuelve dato propio cuando él lo confirma
+  // aquí, que es lo que permiten los términos de Maps (§7.4).
+  const parametros = useSearchParams();
+  const placeId = parametros.get("place_id");
+  const latDelMapa = parametros.get("lat");
+  const lngDelMapa = parametros.get("lng");
+  const vieneDelMapa = placeId !== null && latDelMapa !== null;
+
+  const [nombre, setNombre] = useState(parametros.get("nombre") ?? "");
   const [ruc, setRuc] = useState("");
   const [tipoComercio, setTipoComercio] = useState("");
   const [productos, setProductos] = useState<LineaProducto[]>([]);
-  const [origen, setOrigen] = useState<Origen>("calle");
+  const [origen, setOrigen] = useState<Origen>(vieneDelMapa ? "busqueda" : "calle");
   const [contactoNombre, setContactoNombre] = useState("");
   const [contactoTelefono, setContactoTelefono] = useState("");
   const [notas, setNotas] = useState("");
 
-  const [ubicacion, setUbicacion] = useState<Ubicacion | null>(null);
-  const [buscandoGps, setBuscandoGps] = useState(true);
+  // Si el punto vino del mapa ya trae la ubicación de Google, así que el
+  // estado nace con ella y no hay nada que buscar.
+  const [ubicacion, setUbicacion] = useState<Ubicacion | null>(
+    vieneDelMapa
+      ? { lat: Number(latDelMapa), lng: Number(lngDelMapa), precisionM: 0 }
+      : null,
+  );
+  const [buscandoGps, setBuscandoGps] = useState(!vieneDelMapa);
 
   const [duplicados, setDuplicados] = useState<Duplicado[]>([]);
   const [ignorarDuplicados, setIgnorarDuplicados] = useState(false);
@@ -58,11 +82,13 @@ export default function NuevoProspecto() {
 
   // La ubicación se pide sola al abrir. El vendedor no tiene que acordarse.
   useEffect(() => {
+    if (vieneDelMapa) return;
+
     obtenerUbicacion().then((leida) => {
       setUbicacion(leida);
       setBuscandoGps(false);
     });
-  }, []);
+  }, [vieneDelMapa]);
 
   async function revisarDuplicados() {
     if (nombre.trim().length < 4 && !ubicacion) return;
@@ -73,7 +99,7 @@ export default function NuevoProspecto() {
       p_lat: ubicacion?.lat ?? null,
       p_lng: ubicacion?.lng ?? null,
       p_ruc: ruc.trim() || null,
-      p_place_id: null,
+      p_place_id: placeId,
     });
 
     setDuplicados((data as Duplicado[]) ?? []);
@@ -120,6 +146,8 @@ export default function NuevoProspecto() {
       notas: notas.trim() || null,
       lat: ubicacion?.lat ?? null,
       lng: ubicacion?.lng ?? null,
+      // Lo único de Google Places que puede guardarse indefinidamente.
+      place_id: placeId,
       vendedor_id: user.id,
     });
 
@@ -160,7 +188,10 @@ export default function NuevoProspecto() {
                   Buscando ubicación
                 </p>
               )}
-              {!buscandoGps && calidad && (
+              {!buscandoGps && vieneDelMapa && (
+                <Insignia tono="ok">Ubicación tomada del mapa</Insignia>
+              )}
+              {!buscandoGps && !vieneDelMapa && calidad && (
                 <Insignia tono={calidad.tono}>{calidad.texto}</Insignia>
               )}
               {!buscandoGps && !ubicacion && (

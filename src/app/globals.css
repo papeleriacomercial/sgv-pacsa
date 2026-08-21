@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-/* Hoja de estilos de Leaflet. Va aquí y no dentro del componente: si no se
-   carga, el mapa se dibuja con los mosaicos apilados y sin controles. */
-@import "leaflet/dist/leaflet.css";
-
 /* Tokens del sistema de diseño. Ver docs/04-design-system.md.
    Ningún color, tamaño ni radio se escribe suelto en el JSX: todo sale de aquí. */
 @theme {

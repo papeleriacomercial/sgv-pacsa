@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
-import L from "leaflet";
+import {
+  APIProvider,
+  InfoWindow,
+  Map,
+  Marker,
+  useMap,
+  useMapsLibrary,
+  type MapMouseEvent,
+} from "@vis.gl/react-google-maps";
 import { ETAPAS, type Etapa } from "@/lib/catalogos";
+import { MensajeError } from "@/components/ui/estados";
 
 export type Punto = {
   id: string;
@@ -19,95 +28,200 @@ export type Punto = {
  * Toda la dependencia del proveedor de mapas vive en este archivo.
  *
  * Al resto de la aplicación le entran puntos y le salen toques; no sabe ni le
- * importa quién dibuja las calles. Cambiar OpenStreetMap por Google más
- * adelante es reemplazar este componente, no tocar las pantallas. Ver
- * docs/06-decisiones.md.
+ * importa quién dibuja las calles. Ver D-008 en docs/06-decisiones.md.
  */
 
-// Centro de la Ciudad de Panamá, para cuando no hay ningún punto que encuadrar.
-const CENTRO_POR_OMISION: [number, number] = [8.9824, -79.5199];
+const CENTRO_POR_OMISION = { lat: 8.9824, lng: -79.5199 };
 
-// Los colores salen de las mismas variables del sistema de diseño. Leaflet
-// dibuja HTML suelto, así que se referencian con var() en vez de con clases.
 const COLOR_ETAPA: Record<Etapa, string> = {
-  nuevo: "var(--color-texto-atenuado)",
-  contactado: "var(--color-info)",
-  cotizado: "var(--color-info)",
-  negociacion: "var(--color-aviso)",
-  ganado: "var(--color-ok)",
-  perdido: "var(--color-error)",
+  nuevo: "#90a1b9",
+  contactado: "#155dfc",
+  cotizado: "#155dfc",
+  negociacion: "#fe9a00",
+  ganado: "#00a63e",
+  perdido: "#e7000b",
 };
 
-function icono(etapa: Etapa) {
-  return L.divIcon({
-    className: "",
-    html: `<span style="
-      display:block;width:16px;height:16px;border-radius:9999px;
-      background:${COLOR_ETAPA[etapa]};
-      border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);
-    "></span>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-  });
+/** Ícono dibujado como SVG en línea, para no depender de los globales de Google. */
+function icono(color: string) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="${color}" stroke="white" stroke-width="2.5"/></svg>`;
+  return { url: `data:image/svg+xml;utf8,${encodeURIComponent(svg)}` };
 }
 
 /** Encuadra el mapa sobre los puntos visibles cada vez que cambia el filtro. */
 function Encuadrar({ puntos }: { puntos: Punto[] }) {
   const mapa = useMap();
 
-  // Leaflet mide el contenedor una sola vez, al crearse. Si en ese momento
-  // todavía no tenía altura —cosa habitual en móvil, entre la barra del
-  // navegador que aparece y desaparece y el cambio de orientación— el mapa
-  // queda dibujado en cero píxeles y se ve como un recuadro vacío.
-  // invalidateSize lo obliga a volver a medir.
   useEffect(() => {
-    const id = setTimeout(() => mapa.invalidateSize(), 150);
-    return () => clearTimeout(id);
-  }, [mapa]);
-
-  useEffect(() => {
-    if (puntos.length === 0) return;
-    const limites = L.latLngBounds(puntos.map((p) => [p.lat, p.lng]));
-    mapa.fitBounds(limites, { padding: [40, 40], maxZoom: 16 });
-  }, [puntos, mapa]);
+    if (!mapa || puntos.length === 0) return;
+    const limites = new google.maps.LatLngBounds();
+    puntos.forEach((p) => limites.extend({ lat: p.lat, lng: p.lng }));
+    mapa.fitBounds(limites, 48);
+    // Con un solo punto, fitBounds acerca al máximo. Se limita el acercamiento.
+    const zoom = mapa.getZoom();
+    if (zoom !== undefined && zoom > 17) mapa.setZoom(17);
+  }, [mapa, puntos]);
 
   return null;
 }
 
-export default function MapaPuntos({ puntos }: { puntos: Punto[] }) {
+type Candidato = {
+  placeId: string;
+  nombre: string;
+  lat: number;
+  lng: number;
+};
+
+/**
+ * Lo que el vendedor pidió: ve un local de tercero en el mapa, lo toca, y lo
+ * agrega a su lista.
+ *
+ * De Google solo se guarda el `place_id` y la ubicación. El nombre viaja como
+ * sugerencia en el formulario y se vuelve dato propio cuando el vendedor lo
+ * confirma en la visita, que es lo que permiten los términos de Maps y lo que
+ * describe §7.4.
+ */
+function Contenido({
+  puntos,
+  onError,
+}: {
+  puntos: Punto[];
+  onError: (mensaje: string) => void;
+}) {
+  const router = useRouter();
+  const places = useMapsLibrary("places");
+  const [propio, setPropio] = useState<Punto | null>(null);
+  const [candidato, setCandidato] = useState<Candidato | null>(null);
+
+  const tocarMapa = useCallback(
+    async (evento: MapMouseEvent) => {
+      setPropio(null);
+      setCandidato(null);
+
+      const placeId = evento.detail.placeId;
+      if (!placeId || !places) return;
+
+      // Evita que Google abra su propia ventana sobre la nuestra.
+      evento.stop?.();
+
+      try {
+        const lugar = new places.Place({ id: placeId });
+        await lugar.fetchFields({ fields: ["displayName", "location"] });
+        if (!lugar.location) return;
+
+        setCandidato({
+          placeId,
+          nombre: lugar.displayName ?? "",
+          lat: lugar.location.lat(),
+          lng: lugar.location.lng(),
+        });
+      } catch {
+        onError("No se pudo leer ese local. Intenta de nuevo.");
+      }
+    },
+    [places, onError],
+  );
+
+  function agregar(c: Candidato) {
+    const parametros = new URLSearchParams({
+      place_id: c.placeId,
+      lat: String(c.lat),
+      lng: String(c.lng),
+      nombre: c.nombre,
+    });
+    router.push(`/prospectos/nuevo?${parametros}`);
+  }
+
   return (
-    <MapContainer
-      center={CENTRO_POR_OMISION}
-      zoom={12}
-      scrollWheelZoom
+    <Map
+      defaultCenter={CENTRO_POR_OMISION}
+      defaultZoom={12}
+      gestureHandling="greedy"
+      disableDefaultUI
+      zoomControl
+      clickableIcons
+      onClick={tocarMapa}
       style={{ height: "100%", width: "100%" }}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={19}
-      />
-
       <Encuadrar puntos={puntos} />
 
       {puntos.map((p) => (
-        <Marker key={p.id} position={[p.lat, p.lng]} icon={icono(p.etapa)}>
-          <Popup>
-            {/* El color del punto nunca va solo: al abrirlo, la etapa se lee
-                escrita. Es la regla de §17 aplicada al mapa. */}
-            <span className="block text-sm font-semibold">{p.nombre}</span>
-            <span className="block text-xs">
-              {p.tipoComercio ?? "Tipo sin definir"} · {ETAPAS[p.etapa]}
-            </span>
-            <Link
-              href={`/prospectos/${p.id}`}
-              className="mt-1 block text-xs underline"
-            >
-              Abrir expediente
-            </Link>
-          </Popup>
-        </Marker>
+        <Marker
+          key={p.id}
+          position={{ lat: p.lat, lng: p.lng }}
+          icon={icono(COLOR_ETAPA[p.etapa])}
+          onClick={() => {
+            setCandidato(null);
+            setPropio(p);
+          }}
+        />
       ))}
-    </MapContainer>
+
+      {propio && (
+        <InfoWindow
+          position={{ lat: propio.lat, lng: propio.lng }}
+          onCloseClick={() => setPropio(null)}
+        >
+          {/* El color del punto nunca va solo: al abrirlo, la etapa se lee
+              escrita. Es la regla de §17 aplicada al mapa. */}
+          <span className="block text-sm font-semibold">{propio.nombre}</span>
+          <span className="block text-xs">
+            {propio.tipoComercio ?? "Tipo sin definir"} · {ETAPAS[propio.etapa]}
+          </span>
+          <Link
+            href={`/prospectos/${propio.id}`}
+            className="mt-1 block text-xs underline"
+          >
+            Abrir expediente
+          </Link>
+        </InfoWindow>
+      )}
+
+      {candidato && (
+        <InfoWindow
+          position={{ lat: candidato.lat, lng: candidato.lng }}
+          onCloseClick={() => setCandidato(null)}
+        >
+          <span className="block text-sm font-semibold">
+            {candidato.nombre || "Este local"}
+          </span>
+          <span className="block text-xs">Todavía no es prospecto tuyo</span>
+          <button
+            type="button"
+            onClick={() => agregar(candidato)}
+            className="mt-1 text-xs font-medium underline"
+          >
+            Agregar como prospecto
+          </button>
+        </InfoWindow>
+      )}
+    </Map>
+  );
+}
+
+export default function MapaPuntos({ puntos }: { puntos: Punto[] }) {
+  const [error, setError] = useState<string | null>(null);
+  const llave = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  if (!llave) {
+    return (
+      <div className="p-4">
+        <MensajeError
+          titulo="Falta la llave del mapa"
+          detalle="No está configurada NEXT_PUBLIC_GOOGLE_MAPS_API_KEY en este entorno."
+        />
+      </div>
+    );
+  }
+
+  return (
+    <APIProvider apiKey={llave} libraries={["places"]}>
+      {error && (
+        <div className="p-2">
+          <MensajeError titulo={error} />
+        </div>
+      )}
+      <Contenido puntos={puntos} onError={setError} />
+    </APIProvider>
   );
 }
