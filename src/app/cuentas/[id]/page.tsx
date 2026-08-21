@@ -5,6 +5,7 @@ import { clienteServidor } from "@/lib/supabase/servidor";
 import {
   ETAPAS,
   LINEAS_PRODUCTO,
+  type TipoCuenta,
   RESULTADOS,
   TIPOS_INTERACCION,
   TONO_ETAPA,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/catalogos";
 import { FichaPunto } from "@/components/ficha-punto";
 import { CumplirCompromiso } from "@/components/cumplir-compromiso";
+import { CambiarTipoCuenta } from "@/components/cambiar-tipo-cuenta";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
@@ -41,7 +43,7 @@ function hoyEnPanama() {
 
 export default async function Expediente({
   params,
-}: PageProps<"/prospectos/[id]">) {
+}: PageProps<"/cuentas/[id]">) {
   const { id } = await params;
   const supabase = await clienteServidor();
 
@@ -51,9 +53,9 @@ export default async function Expediente({
   if (!user) redirect("/entrar");
 
   const { data: prospecto } = await supabase
-    .from("prospectos")
+    .from("cuentas")
     .select(
-      "id, nombre, tipo_comercio, etapa, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, lat, lng",
+      "id, nombre, tipo_comercio, tipo, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, lat, lng",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -64,16 +66,16 @@ export default async function Expediente({
   if (!prospecto) notFound();
 
   const { data: visitas } = await supabase
-    .from("visitas")
+    .from("seguimientos")
     .select("id, tipo, fecha, resultado, notas, proveedor_actual, precio_referencia, sin_gps")
-    .eq("prospecto_id", id)
+    .eq("cuenta_id", id)
     .is("deleted_at", null)
     .order("fecha", { ascending: false });
 
   const { data: compromisos } = await supabase
     .from("compromisos")
     .select("id, descripcion, fecha_compromiso, cumplido_en")
-    .eq("prospecto_id", id)
+    .eq("cuenta_id", id)
     .is("deleted_at", null)
     .is("cumplido_en", null)
     .order("fecha_compromiso", { ascending: true });
@@ -81,7 +83,7 @@ export default async function Expediente({
   const { data: oportunidades } = await supabase
     .from("oportunidades")
     .select("id, linea, descripcion, monto_estimado, etapa")
-    .eq("prospecto_id", id)
+    .eq("cuenta_id", id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
@@ -105,23 +107,19 @@ export default async function Expediente({
           id={prospecto.id}
           nombre={prospecto.nombre}
           tipoComercio={prospecto.tipo_comercio}
-          etapa={prospecto.etapa as Etapa}
+          tipo={prospecto.tipo as TipoCuenta}
           potencial={null}
           ultimaInteraccion={ultima ? fecha(ultima.fecha) : null}
           enlazada={false}
         />
 
-        <Link href={`/prospectos/${id}/visita`} className="block">
-          <Boton ancho>Registrar visita</Boton>
+        <Link href={`/cuentas/${id}/seguimiento`} className="block">
+          <Boton ancho>Registrar seguimiento</Boton>
         </Link>
 
         <div className="grid grid-cols-2 gap-2">
-          <Link href={`/prospectos/${id}/etapa`} className="block">
-            <Boton tono="secundario" ancho>
-              Cambiar etapa
-            </Boton>
-          </Link>
-          <Link href={`/prospectos/${id}/editar`} className="block">
+          <CambiarTipoCuenta id={id} tipo={prospecto.tipo as TipoCuenta} />
+          <Link href={`/cuentas//editar`} className="block">
             <Boton tono="secundario" ancho>
               Editar datos
             </Boton>
@@ -202,7 +200,7 @@ export default async function Expediente({
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-medium text-texto">Oportunidades</h2>
             <Link
-              href={`/prospectos/${id}/oportunidad`}
+              href={`/cuentas/${id}/nueva-oportunidad`}
               className="text-sm text-texto-secundario underline"
             >
               Agregar

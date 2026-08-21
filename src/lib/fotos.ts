@@ -44,11 +44,14 @@ export async function comprimirImagen(archivo: File): Promise<Blob> {
 export async function subirFoto(
   supabase: SupabaseClient,
   vendedorId: string,
-  visitaId: string,
+  seguimientoId: string,
   archivo: File,
 ): Promise<string | null> {
   const comprimida = await comprimirImagen(archivo);
-  const ruta = `${vendedorId}/${visitaId}.jpg`;
+  // El bucket se sigue llamando "visitas" aunque la tabla pase a
+  // "seguimientos": renombrarlo obligaria a mover los archivos ya subidos y
+  // no aporta nada. Ver docs/08-plan-v2.md.
+  const ruta = `${vendedorId}/${seguimientoId}.jpg`;
 
   const { error } = await supabase.storage
     .from("visitas")

@@ -134,7 +134,7 @@ function Formulario() {
     // registros sin conexión y sincronizarlos después sin renumerar nada.
     const id = crypto.randomUUID();
 
-    const { error: fallo } = await supabase.from("prospectos").insert({
+    const { error: fallo } = await supabase.from("cuentas").insert({
       id,
       nombre: nombre.trim(),
       ruc: ruc.trim() || null,
@@ -157,7 +157,7 @@ function Formulario() {
       return;
     }
 
-    router.replace(`/prospectos/${id}`);
+    router.replace(`/cuentas/${id}`);
     router.refresh();
   }
 
@@ -255,7 +255,7 @@ function Formulario() {
                     </span>
                     {d.es_mio && (
                       <Link
-                        href={`/prospectos/${d.id}`}
+                        href={`/cuentas/${d.id}`}
                         className="ml-2 underline"
                       >
                         Ver

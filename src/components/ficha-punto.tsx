@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ETAPAS, TONO_ETAPA, type Etapa } from "@/lib/catalogos";
+import { TIPOS_CUENTA, TONO_TIPO, type TipoCuenta } from "@/lib/catalogos";
 import { Insignia } from "@/components/ui/insignia";
 
 type Props = {
   id: string;
   nombre: string;
   tipoComercio: string | null;
-  etapa: Etapa;
+  tipo: TipoCuenta;
   potencial: number | null;
   ultimaInteraccion: string | null;
   enlazada?: boolean;
@@ -28,7 +28,7 @@ export function FichaPunto({
   id,
   nombre,
   tipoComercio,
-  etapa,
+  tipo,
   potencial,
   ultimaInteraccion,
   enlazada = true,
@@ -37,7 +37,7 @@ export function FichaPunto({
     <div className="flex flex-col gap-2 rounded-lg border border-borde bg-superficie p-3">
       <div className="flex items-start justify-between gap-2">
         <p className="text-base font-semibold text-texto">{nombre}</p>
-        <Insignia tono={TONO_ETAPA[etapa]}>{ETAPAS[etapa]}</Insignia>
+        <Insignia tono={TONO_TIPO[tipo]}>{TIPOS_CUENTA[tipo]}</Insignia>
       </div>
 
       <p className={`text-sm ${tipoComercio ? "text-texto-secundario" : FALTA}`}>
@@ -58,7 +58,7 @@ export function FichaPunto({
   if (!enlazada) return contenido;
 
   return (
-    <Link href={`/prospectos/${id}`} className="block">
+    <Link href={`/cuentas/${id}`} className="block">
       {contenido}
     </Link>
   );

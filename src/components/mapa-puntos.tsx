@@ -12,7 +12,7 @@ import {
   useMapsLibrary,
   type MapMouseEvent,
 } from "@vis.gl/react-google-maps";
-import { ETAPAS, type Etapa } from "@/lib/catalogos";
+import { TIPOS_CUENTA, type TipoCuenta } from "@/lib/catalogos";
 import { COLOR, iconoPin } from "@/lib/marcadores";
 import { MensajeError } from "@/components/ui/estados";
 
@@ -21,7 +21,7 @@ export type Punto = {
   nombre: string;
   lat: number;
   lng: number;
-  etapa: Etapa;
+  tipo: TipoCuenta;
   tipoComercio: string | null;
 };
 
@@ -34,13 +34,11 @@ export type Punto = {
 
 const CENTRO_POR_OMISION = { lat: 8.9824, lng: -79.5199 };
 
-const COLOR_ETAPA: Record<Etapa, string> = {
-  nuevo: COLOR.atenuado,
-  contactado: COLOR.info,
-  cotizado: COLOR.info,
-  negociacion: COLOR.aviso,
-  ganado: COLOR.ok,
-  perdido: COLOR.error,
+// Por omisión el pin dice si la cuenta es prospecto o cliente. En la Etapa 3
+// del plan v2 el color pasará a codificar el filtro que elija el usuario.
+const COLOR_TIPO: Record<TipoCuenta, string> = {
+  prospecto: COLOR.info,
+  cliente: COLOR.ok,
 };
 
 /** Encuadra el mapa sobre los puntos visibles cada vez que cambia el filtro. */
@@ -124,7 +122,7 @@ function Contenido({
       lng: String(c.lng),
       nombre: c.nombre,
     });
-    router.push(`/prospectos/nuevo?${parametros}`);
+    router.push(`/cuentas/nuevo?${parametros}`);
   }
 
   return (
@@ -144,7 +142,7 @@ function Contenido({
         <Marker
           key={p.id}
           position={{ lat: p.lat, lng: p.lng }}
-          icon={iconoPin(COLOR_ETAPA[p.etapa])}
+          icon={iconoPin(COLOR_TIPO[p.tipo])}
           onClick={() => {
             setCandidato(null);
             setPropio(p);
@@ -161,10 +159,10 @@ function Contenido({
               escrita. Es la regla de §17 aplicada al mapa. */}
           <span className="block text-sm font-semibold">{propio.nombre}</span>
           <span className="block text-xs">
-            {propio.tipoComercio ?? "Tipo sin definir"} · {ETAPAS[propio.etapa]}
+            {propio.tipoComercio ?? "Tipo sin definir"} · {TIPOS_CUENTA[propio.tipo]}
           </span>
           <Link
-            href={`/prospectos/${propio.id}`}
+            href={`/cuentas/${propio.id}`}
             className="mt-1 block text-xs underline"
           >
             Abrir expediente

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import type { Etapa, LineaProducto } from "@/lib/catalogos";
+import type { LineaProducto, TipoCuenta } from "@/lib/catalogos";
 import { MapaConFiltros } from "@/components/mapa-con-filtros";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
@@ -15,8 +15,8 @@ export default async function Mapa() {
   // Qué puntos devuelve esta consulta lo decide el RLS, no la pantalla: un
   // vendedor ve los suyos, un líder los de su equipo, gerencia todos.
   const { data } = await supabase
-    .from("prospectos")
-    .select("id, nombre, lat, lng, etapa, tipo_comercio, productos_interes")
+    .from("cuentas")
+    .select("id, nombre, lat, lng, tipo, tipo_comercio, productos_interes")
     .is("deleted_at", null)
     .not("lat", "is", null)
     .not("lng", "is", null);
@@ -26,7 +26,7 @@ export default async function Mapa() {
     nombre: p.nombre,
     lat: Number(p.lat),
     lng: Number(p.lng),
-    etapa: p.etapa as Etapa,
+    tipo: p.tipo as TipoCuenta,
     tipoComercio: p.tipo_comercio,
     productos: (p.productos_interes as LineaProducto[]) ?? [],
   }));

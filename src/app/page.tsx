@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import { type Etapa } from "@/lib/catalogos";
+import { type TipoCuenta } from "@/lib/catalogos";
 import { FichaPunto } from "@/components/ficha-punto";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
@@ -41,24 +41,24 @@ export default async function Inicio() {
     .eq("id", user.id)
     .maybeSingle();
 
-  const { data: prospectos } = await supabase
-    .from("prospectos")
-    .select("id, nombre, tipo_comercio, etapa")
+  const { data: cuentas } = await supabase
+    .from("cuentas")
+    .select("id, nombre, tipo_comercio, tipo")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(50);
 
   // Última interacción de cada punto, para la línea de abajo de la ficha.
-  const { data: visitas } = await supabase
-    .from("visitas")
-    .select("prospecto_id, fecha")
+  const { data: seguimientos } = await supabase
+    .from("seguimientos")
+    .select("cuenta_id, fecha")
     .is("deleted_at", null)
     .order("fecha", { ascending: false });
 
-  const ultimaPorProspecto = new Map<string, string>();
-  visitas?.forEach((v) => {
-    if (!ultimaPorProspecto.has(v.prospecto_id)) {
-      ultimaPorProspecto.set(v.prospecto_id, v.fecha);
+  const ultimaPorCuenta = new Map<string, string>();
+  seguimientos?.forEach((v) => {
+    if (!ultimaPorCuenta.has(v.cuenta_id)) {
+      ultimaPorCuenta.set(v.cuenta_id, v.fecha);
     }
   });
 
@@ -103,34 +103,34 @@ export default async function Inicio() {
         )}
 
         <Link
-          href="/prospectos/nuevo"
+          href="/cuentas/nuevo"
           className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-4 text-base font-medium text-white"
         >
           <Plus size={18} aria-hidden />
-          Nuevo prospecto
+          Nueva cuenta
         </Link>
 
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-texto">Mis prospectos</h2>
+          <h2 className="text-sm font-medium text-texto">Mis cuentas</h2>
 
-          {!prospectos?.length && (
+          {!cuentas?.length && (
             <Tarjeta>
-              <Vacio titulo="Todavía no tienes prospectos">
+              <Vacio titulo="Todavía no tienes cuentas">
                 Crea el primero desde el botón de arriba. Se registra en menos
                 de 30 segundos.
               </Vacio>
             </Tarjeta>
           )}
 
-          {prospectos?.map((p) => {
-            const ultima = ultimaPorProspecto.get(p.id);
+          {cuentas?.map((p) => {
+            const ultima = ultimaPorCuenta.get(p.id);
             return (
               <FichaPunto
                 key={p.id}
                 id={p.id}
                 nombre={p.nombre}
                 tipoComercio={p.tipo_comercio}
-                etapa={p.etapa as Etapa}
+                tipo={p.tipo as TipoCuenta}
                 potencial={null}
                 ultimaInteraccion={ultima ? FECHA.format(new Date(ultima)) : null}
               />

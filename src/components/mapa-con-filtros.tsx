@@ -3,7 +3,12 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Filter } from "lucide-react";
-import { ETAPAS, LINEAS_PRODUCTO, type Etapa, type LineaProducto } from "@/lib/catalogos";
+import {
+  LINEAS_PRODUCTO,
+  TIPOS_CUENTA,
+  type LineaProducto,
+  type TipoCuenta,
+} from "@/lib/catalogos";
 import type { Punto } from "@/components/mapa-puntos";
 import { Cargando, Vacio } from "@/components/ui/estados";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -18,14 +23,14 @@ const MapaPuntos = dynamic(() => import("@/components/mapa-puntos"), {
 type PuntoConProductos = Punto & { productos: LineaProducto[] };
 
 export function MapaConFiltros({ puntos }: { puntos: PuntoConProductos[] }) {
-  const [etapas, setEtapas] = useState<Etapa[]>([]);
+  const [tipos, setTipos] = useState<TipoCuenta[]>([]);
   const [productos, setProductos] = useState<LineaProducto[]>([]);
   const [abierto, setAbierto] = useState(false);
 
   const visibles = useMemo(
     () =>
       puntos.filter((p) => {
-        if (etapas.length > 0 && !etapas.includes(p.etapa)) return false;
+        if (tipos.length > 0 && !tipos.includes(p.tipo)) return false;
         if (
           productos.length > 0 &&
           !productos.some((linea) => p.productos.includes(linea))
@@ -34,7 +39,7 @@ export function MapaConFiltros({ puntos }: { puntos: PuntoConProductos[] }) {
         }
         return true;
       }),
-    [puntos, etapas, productos],
+    [puntos, tipos, productos],
   );
 
   function alternar<T>(lista: T[], valor: T): T[] {
@@ -43,7 +48,7 @@ export function MapaConFiltros({ puntos }: { puntos: PuntoConProductos[] }) {
       : [...lista, valor];
   }
 
-  const filtrosActivos = etapas.length + productos.length;
+  const filtrosActivos = tipos.length + productos.length;
 
   return (
     <div className="flex flex-1 flex-col gap-3">
@@ -66,23 +71,23 @@ export function MapaConFiltros({ puntos }: { puntos: PuntoConProductos[] }) {
       {abierto && (
         <Tarjeta className="flex flex-col gap-4">
           <div>
-            <p className="text-sm font-medium text-texto">Etapa</p>
+            <p className="text-sm font-medium text-texto">Tipo de cuenta</p>
             <div className="mt-2 flex flex-wrap gap-2">
-              {(Object.keys(ETAPAS) as Etapa[]).map((etapa) => {
-                const activo = etapas.includes(etapa);
+              {(Object.keys(TIPOS_CUENTA) as TipoCuenta[]).map((tipo) => {
+                const activo = tipos.includes(tipo);
                 return (
                   <button
-                    key={etapa}
+                    key={tipo}
                     type="button"
                     aria-pressed={activo}
-                    onClick={() => setEtapas((a) => alternar(a, etapa))}
+                    onClick={() => setTipos((a) => alternar(a, tipo))}
                     className={`min-h-tactil rounded-lg border px-3 text-sm ${
                       activo
                         ? "border-marca bg-marca text-white"
                         : "border-borde bg-superficie text-texto"
                     }`}
                   >
-                    {ETAPAS[etapa]}
+                    {TIPOS_CUENTA[tipo]}
                   </button>
                 );
               })}
@@ -117,7 +122,7 @@ export function MapaConFiltros({ puntos }: { puntos: PuntoConProductos[] }) {
             <button
               type="button"
               onClick={() => {
-                setEtapas([]);
+                setTipos([]);
                 setProductos([]);
               }}
               className="min-h-tactil rounded-lg border border-borde text-sm text-texto-secundario"

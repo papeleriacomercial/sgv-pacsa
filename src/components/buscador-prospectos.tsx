@@ -19,12 +19,12 @@ import { obtenerUbicacion, type Ubicacion } from "@/lib/gps";
 import { COLOR, iconoPin } from "@/lib/marcadores";
 import {
   CATEGORIAS,
-  ETAPAS,
   ETIQUETAS_CATEGORIA,
   MOTIVOS_DESCARTE,
-  TONO_ETAPA,
+  TIPOS_CUENTA,
+  TONO_TIPO,
   type Categoria,
-  type Etapa,
+  type TipoCuenta,
   type MotivoDescarte,
 } from "@/lib/catalogos";
 import { Boton } from "@/components/ui/boton";
@@ -69,11 +69,11 @@ const PANAMA = {
 
 type Estado = {
   place_id: string;
-  prospecto_id: string | null;
+  cuenta_id: string | null;
   es_mio: boolean | null;
   vendedor: string | null;
-  etapa: Etapa | null;
-  ultima_visita: string | null;
+  tipo: TipoCuenta | null;
+  ultimo_contacto: string | null;
   ultimo_resultado: string | null;
   descartado_por: string | null;
   motivo_descarte: MotivoDescarte | null;
@@ -139,7 +139,7 @@ function Leyenda() {
 function colorDe(c: Candidato) {
   if (c.estado?.motivo_descarte) return COLOR.atenuado;
   if (c.estado?.es_mio) return COLOR.info;
-  if (c.estado?.prospecto_id) return COLOR.aviso;
+  if (c.estado?.cuenta_id) return COLOR.aviso;
   return COLOR.ok;
 }
 
@@ -300,7 +300,7 @@ function Buscador() {
         vendedor_id: user.id,
       }));
 
-    const { error: fallo } = await supabase.from("prospectos").insert(filas);
+    const { error: fallo } = await supabase.from("cuentas").insert(filas);
 
     if (fallo) {
       setError(fallo.message);
@@ -625,12 +625,12 @@ function MapaCandidatos({
               ? `Descartado: ${MOTIVOS_DESCARTE[abierto.estado.motivo_descarte]}`
               : abierto.estado?.es_mio
                 ? "Ya es prospecto tuyo"
-                : abierto.estado?.prospecto_id
+                : abierto.estado?.cuenta_id
                   ? `De ${abierto.estado.vendedor ?? "otro vendedor"}`
                   : "Nuevo"}
           </span>
 
-          {!abierto.estado?.prospecto_id && !abierto.estado?.motivo_descarte && (
+          {!abierto.estado?.cuenta_id && !abierto.estado?.motivo_descarte && (
             <button
               type="button"
               onClick={() => onElegir(abierto.placeId)}
@@ -659,7 +659,7 @@ function Resultado({
   onVerEnMapa: () => void;
 }) {
   const e = candidato.estado;
-  const yaEsProspecto = e?.prospecto_id != null;
+  const yaEsProspecto = e?.cuenta_id != null;
   const descartado = e?.motivo_descarte != null;
 
   return (
@@ -736,12 +736,12 @@ function Resultado({
 
         {yaEsProspecto && e?.es_mio && (
           <>
-            <Insignia tono={TONO_ETAPA[e.etapa as Etapa]}>
-              {`Tuyo · ${ETAPAS[e.etapa as Etapa]}`}
+            <Insignia tono={TONO_TIPO[e.tipo as TipoCuenta]}>
+              {`Tuyo · ${TIPOS_CUENTA[e.tipo as TipoCuenta]}`}
             </Insignia>
-            {e.prospecto_id && (
+            {e.cuenta_id && (
               <Link
-                href={`/prospectos/${e.prospecto_id}`}
+                href={`/cuentas/${e.cuenta_id}`}
                 className="text-xs underline"
               >
                 Abrir
@@ -763,9 +763,9 @@ function Resultado({
         )}
       </div>
 
-      {e?.ultima_visita && (
+      {e?.ultimo_contacto && (
         <p className="text-xs text-texto-secundario">
-          Última visita {FECHA.format(new Date(e.ultima_visita))}
+          Última visita {FECHA.format(new Date(e.ultimo_contacto))}
         </p>
       )}
 

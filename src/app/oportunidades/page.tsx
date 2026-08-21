@@ -34,14 +34,14 @@ type Oportunidad = {
   descripcion: string | null;
   monto_estimado: string | number | null;
   etapa: string;
-  prospectos: { nombre: string } | { nombre: string }[] | null;
+  cuentas: { nombre: string } | { nombre: string }[] | null;
 };
 
-function nombreDe(prospectos: Oportunidad["prospectos"]) {
-  if (!prospectos) return "Prospecto";
-  return Array.isArray(prospectos)
-    ? (prospectos[0]?.nombre ?? "Prospecto")
-    : prospectos.nombre;
+function nombreDe(cuentas: Oportunidad["cuentas"]) {
+  if (!cuentas) return "Cuenta";
+  return Array.isArray(cuentas)
+    ? (cuentas[0]?.nombre ?? "Cuenta")
+    : cuentas.nombre;
 }
 
 /**
@@ -62,7 +62,7 @@ export default async function Pipeline() {
 
   const { data } = await supabase
     .from("oportunidades")
-    .select("id, linea, descripcion, monto_estimado, etapa, prospectos(nombre)")
+    .select("id, linea, descripcion, monto_estimado, etapa, cuentas(nombre)")
     .is("deleted_at", null)
     .order("monto_estimado", { ascending: false, nullsFirst: false });
 
@@ -135,7 +135,7 @@ export default async function Pipeline() {
                   <Tarjeta className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-base font-semibold text-texto">
-                        {nombreDe(o.prospectos)}
+                        {nombreDe(o.cuentas)}
                       </p>
                       <p className="text-sm text-texto-secundario">
                         {LINEAS_PRODUCTO[o.linea as LineaProducto]}

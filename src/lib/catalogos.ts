@@ -129,3 +129,21 @@ export const MOTIVOS_DESCARTE = {
 } as const;
 
 export type MotivoDescarte = keyof typeof MOTIVOS_DESCARTE;
+
+/**
+ * Tipo de cuenta (plan v2).
+ *
+ * Prospecto hasta la primera venta, cliente después. Lo marca el vendedor;
+ * cuando exista la integración, Zoho lo confirma o lo corrige. Ver D-010.
+ */
+export const TIPOS_CUENTA = {
+  prospecto: "Prospecto",
+  cliente: "Cliente",
+} as const;
+
+export type TipoCuenta = keyof typeof TIPOS_CUENTA;
+
+export const TONO_TIPO: Record<TipoCuenta, "ok" | "info"> = {
+  prospecto: "info",
+  cliente: "ok",
+};

@@ -38,14 +38,14 @@ export default function EditarOportunidad() {
     const supabase = clienteNavegador();
     supabase
       .from("oportunidades")
-      .select("prospecto_id, linea, monto_estimado, descripcion, etapa, motivo_perdida")
+      .select("cuenta_id, linea, monto_estimado, descripcion, etapa, motivo_perdida")
       .eq("id", id)
       .is("deleted_at", null)
       .maybeSingle()
       .then(({ data, error: fallo }) => {
         if (fallo) setError(fallo.message);
         if (data) {
-          setProspectoId(data.prospecto_id);
+          setProspectoId(data.cuenta_id);
           setLinea(data.linea as LineaProducto);
           setMonto(data.monto_estimado ? String(data.monto_estimado) : "");
           setDescripcion(data.descripcion ?? "");
@@ -84,7 +84,7 @@ export default function EditarOportunidad() {
       return;
     }
 
-    router.replace(prospectoId ? `/prospectos/${prospectoId}` : "/pipeline");
+    router.replace(prospectoId ? `/cuentas/${prospectoId}` : "/oportunidades");
     router.refresh();
   }
 
@@ -94,7 +94,7 @@ export default function EditarOportunidad() {
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
         <Link
-          href={prospectoId ? `/prospectos/${prospectoId}` : "/pipeline"}
+          href={prospectoId ? `/cuentas/${prospectoId}` : "/oportunidades"}
           className="text-sm text-texto-secundario"
         >
           Volver

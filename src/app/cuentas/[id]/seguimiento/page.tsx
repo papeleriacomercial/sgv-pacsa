@@ -90,9 +90,9 @@ export default function RegistrarVisita() {
       }
     }
 
-    const { error: falloVisita } = await supabase.from("visitas").insert({
+    const { error: falloVisita } = await supabase.from("seguimientos").insert({
       id: visitaId,
-      prospecto_id: prospectoId,
+      cuenta_id: prospectoId,
       vendedor_id: user.id,
       tipo,
       resultado,
@@ -114,7 +114,7 @@ export default function RegistrarVisita() {
 
     const { error: falloCompromiso } = await supabase.from("compromisos").insert({
       id: crypto.randomUUID(),
-      prospecto_id: prospectoId,
+      cuenta_id: prospectoId,
       visita_id: visitaId,
       vendedor_id: user.id,
       descripcion: proximoPaso.trim(),
@@ -129,7 +129,7 @@ export default function RegistrarVisita() {
       return;
     }
 
-    router.replace(`/prospectos/${prospectoId}`);
+    router.replace(`/cuentas/${prospectoId}`);
     router.refresh();
   }
 
@@ -141,7 +141,7 @@ export default function RegistrarVisita() {
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <Link href={`/prospectos/${prospectoId}`} className="text-sm text-texto-secundario">
+        <Link href={`/cuentas/${prospectoId}`} className="text-sm text-texto-secundario">
           Volver
         </Link>
         <h1 className="text-lg font-semibold text-marca">Registrar visita</h1>

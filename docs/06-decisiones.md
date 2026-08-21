@@ -225,3 +225,82 @@ confirma, que es lo que permiten los términos de Maps y lo que ya describía §
 de `dev`, y `localhost`. Quedan pendientes las cuotas diarias y la alerta de presupuesto: la
 consola de Google no las hizo evidentes y no bloquean el trabajo, pero hay que cerrarlas
 antes de producción.
+
+---
+
+## D-010 — `tipo_cuenta` lo marca el vendedor; Zoho lo confirma después
+
+**Fecha:** 2026-08-21
+
+**Decisión.** La cuenta lleva `tipo`: prospecto o cliente. Lo marca el vendedor al cerrar la
+primera venta. Cuando exista la integración, Zoho confirma o corrige esa marca, no la
+reemplaza.
+
+**Alternativa descartada.** Que "cliente" sea exclusivamente lo que diga Zoho, como plantean
+§2 y §4 de la visión.
+
+**Por qué.** El sistema pasó de gestionar prospección a gestionar el ciclo completo: el
+vendedor sigue atendiendo a su cliente para mantenerlo y venderle de nuevo. Esperar a que
+Zoho lo diga deja al vendedor sin poder marcar lo que él sabe el día que ocurre.
+
+Que las dos fuentes puedan discrepar es una función, no un defecto: si el vendedor marcó
+cliente y Zoho no tiene facturas, eso es un hallazgo que hay que mirar.
+
+---
+
+## D-011 — La etapa se muda de la cuenta a la oportunidad
+
+**Fecha:** 2026-08-21
+
+**Decisión.** `etapa` deja de existir en la cuenta y vive solo en la oportunidad. El motivo
+de pérdida y la fecha de recontacto se mudan con ella. El enum `etapa_prospecto` pasa a
+llamarse `etapa_oportunidad`.
+
+**Alternativa descartada.** Mantener etapa en los dos niveles.
+
+**Por qué.** Una cuenta con tres oportunidades en tres etapas distintas no está "en una
+etapa": la pregunta no tiene respuesta. Lo que avanza, se gana o se pierde es la venta, no
+el local. **Se pierde una venta, no un cliente** — y ese cliente puede volver a comprar otra
+línea el mes siguiente.
+
+Es el cambio más profundo del plan v2 y el que vuelve coherente todo lo demás.
+
+---
+
+## D-012 — El catálogo de categorías de comercio es abierto y global
+
+**Fecha:** 2026-08-21
+
+**Decisión.** `tipo_comercio` se alimenta de una tabla que crece con el uso: el vendedor
+escribe una categoría nueva y queda disponible para todos en una lista desplegable.
+Gerencia puede fusionar duplicados y desactivar las que sobren.
+
+**Alternativas descartadas.** Enum cerrado, como el resto de los catálogos (D-004). Y
+catálogo por vendedor, que es como lo hace Badger Maps.
+
+**Por qué.** Es la excepción a D-004 porque nadie puede enumerar por adelantado los tipos de
+comercio de un país entero, y la lista crece con cada zona nueva que se abre.
+
+Global y no por vendedor porque §7.6 necesita que `tipo_comercio` sea comparable con la
+clasificación de Zoho para el modelo de gemelos. Un catálogo por usuario se fragmenta en
+tres versiones de "minisuper" la primera semana, y ahí el cruce se vuelve imposible.
+
+---
+
+## D-013 — En el mapa, el color codifica el filtro elegido
+
+**Fecha:** 2026-08-21
+
+**Decisión.** En el mapa, el color de los pines codifica la variable que el usuario eligió
+—tipo de cuenta, vendedor, días sin contacto en gama de claro a oscuro— y **la leyenda es
+obligatoria y siempre visible**. Fuera del mapa, el color sigue significando estado.
+
+**Alternativa descartada.** Mantener la regla de §17 sin excepciones.
+
+**Por qué.** §17 fija que el color significa estado, y esa regla sigue siendo correcta en
+listas y formularios. Pero un mapa es una superficie de análisis: su valor está en ver
+patrones geográficos de la variable que se está mirando, y eso exige que el color sea
+configurable.
+
+La excepción se acota con la leyenda obligatoria, que es lo que preserva el principio de
+fondo: **los estados nunca dependen solo del color**.

@@ -47,7 +47,7 @@ export default function NuevaOportunidad() {
 
     const { error: fallo } = await supabase.from("oportunidades").insert({
       id: crypto.randomUUID(),
-      prospecto_id: prospectoId,
+      cuenta_id: prospectoId,
       vendedor_id: user.id,
       linea,
       monto_estimado: monto ? Number(monto) : null,
@@ -60,7 +60,7 @@ export default function NuevaOportunidad() {
       return;
     }
 
-    router.replace(`/prospectos/${prospectoId}`);
+    router.replace(`/cuentas/${prospectoId}`);
     router.refresh();
   }
 
@@ -70,7 +70,7 @@ export default function NuevaOportunidad() {
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
         <Link
-          href={`/prospectos/${prospectoId}`}
+          href={`/cuentas/${prospectoId}`}
           className="text-sm text-texto-secundario"
         >
           Volver

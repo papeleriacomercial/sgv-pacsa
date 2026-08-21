@@ -35,7 +35,7 @@ export default async function Agenda() {
 
   const { data: compromisos } = await supabase
     .from("compromisos")
-    .select("id, descripcion, fecha_compromiso, prospecto_id, prospectos(nombre)")
+    .select("id, descripcion, fecha_compromiso, cuenta_id, cuentas(nombre)")
     .is("deleted_at", null)
     .is("cumplido_en", null)
     .order("fecha_compromiso", { ascending: true });
@@ -79,15 +79,15 @@ type Compromiso = {
   id: string;
   descripcion: string;
   fecha_compromiso: string;
-  prospecto_id: string;
-  prospectos: { nombre: string } | { nombre: string }[] | null;
+  cuenta_id: string;
+  cuentas: { nombre: string } | { nombre: string }[] | null;
 };
 
-function nombreDe(prospectos: Compromiso["prospectos"]) {
-  if (!prospectos) return "Prospecto";
-  return Array.isArray(prospectos)
-    ? (prospectos[0]?.nombre ?? "Prospecto")
-    : prospectos.nombre;
+function nombreDe(cuentas: Compromiso["cuentas"]) {
+  if (!cuentas) return "Cuenta";
+  return Array.isArray(cuentas)
+    ? (cuentas[0]?.nombre ?? "Cuenta")
+    : cuentas.nombre;
 }
 
 function Grupo({
@@ -115,9 +115,9 @@ function Grupo({
           key={c.id}
           className={resaltado ? "border-red-200 bg-red-50" : undefined}
         >
-          <Link href={`/prospectos/${c.prospecto_id}`} className="block">
+          <Link href={`/cuentas/${c.cuenta_id}`} className="block">
             <p className="text-base font-semibold text-texto">
-              {nombreDe(c.prospectos)}
+              {nombreDe(c.cuentas)}
             </p>
             <p className="text-sm text-texto-secundario">{c.descripcion}</p>
           </Link>

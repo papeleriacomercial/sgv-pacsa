@@ -40,7 +40,7 @@ export default function EditarProspecto() {
   useEffect(() => {
     const supabase = clienteNavegador();
     supabase
-      .from("prospectos")
+      .from("cuentas")
       .select(
         "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas",
       )
@@ -71,7 +71,7 @@ export default function EditarProspecto() {
 
     const supabase = clienteNavegador();
     const { error: fallo } = await supabase
-      .from("prospectos")
+      .from("cuentas")
       .update({
         nombre: nombre.trim(),
         ruc: ruc.trim() || null,
@@ -91,7 +91,7 @@ export default function EditarProspecto() {
       return;
     }
 
-    router.replace(`/prospectos/${id}`);
+    router.replace(`/cuentas/${id}`);
     router.refresh();
   }
 
@@ -100,7 +100,7 @@ export default function EditarProspecto() {
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <Link href={`/prospectos/${id}`} className="text-sm text-texto-secundario">
+        <Link href={`/cuentas/${id}`} className="text-sm text-texto-secundario">
           Volver
         </Link>
         <h1 className="text-lg font-semibold text-marca">Editar prospecto</h1>

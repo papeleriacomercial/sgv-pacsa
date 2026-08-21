@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 import { CalendarClock, Map, Search, Store, TrendingUp } from "lucide-react";
 
 const RUTAS = [
-  { href: "/agenda", etiqueta: "Agenda", Icono: CalendarClock },
-  { href: "/", etiqueta: "Prospectos", Icono: Store },
+  { href: "/", etiqueta: "Cuentas", Icono: Store },
+  { href: "/oportunidades", etiqueta: "Oportunidades", Icono: TrendingUp },
+  { href: "/seguimientos", etiqueta: "Seguimientos", Icono: CalendarClock },
   { href: "/buscar", etiqueta: "Buscar", Icono: Search },
   { href: "/mapa", etiqueta: "Mapa", Icono: Map },
-  { href: "/pipeline", etiqueta: "Pipeline", Icono: TrendingUp },
 ];
 
 /**
@@ -32,7 +32,7 @@ export function Navegacion() {
     <nav className="sticky bottom-0 mt-auto grid grid-cols-5 border-t border-borde bg-superficie">
       {RUTAS.map(({ href, etiqueta, Icono }) => {
         const activo =
-          href === "/" ? ruta === "/" || ruta.startsWith("/prospectos") : ruta.startsWith(href);
+          href === "/" ? ruta === "/" || ruta.startsWith("/cuentas") : ruta.startsWith(href);
 
         return (
           <Link
