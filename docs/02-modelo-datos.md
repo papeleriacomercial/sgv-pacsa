@@ -145,6 +145,7 @@ El expediente del punto. Dueño del dato: este sistema, no Zoho.
 |---|---|---|
 | `id` | uuid PK | Generado en el cliente |
 | `nombre` | text not null | |
+| `ruc` | text | Se captura cuando aparece. Obligatorio antes de facturar, y una de las señales de duplicado (§6) |
 | `tipo_comercio` | text | Debe alinearse con la clasificación de Zoho (§7.6) |
 | `contacto_nombre` | text | |
 | `contacto_telefono` | text | |
@@ -185,8 +186,9 @@ La bitácora. Es el hecho registrado del que se deriva todo el avance.
 | `vendedor_id` | uuid not null → `perfiles` | |
 | `tipo` | `tipo_interaccion` not null | |
 | `fecha` | timestamptz not null default now() | |
-| `checkin_lat` / `checkin_lng` | numeric | Obligatorias si `tipo = visita` |
+| `checkin_lat` / `checkin_lng` | numeric | Obligatorias si `tipo = visita`, salvo que `sin_gps` sea verdadero |
 | `checkin_precision_m` | numeric | Precisión de la lectura GPS (§10) |
+| `sin_gps` | boolean not null default false | El GPS no enganchó. Deja el registro marcado para gerencia |
 | `resultado` | `resultado_visita` not null | |
 | `notas` | text | |
 | `proveedor_actual` | text | Inteligencia de competencia (§7.7) |
@@ -196,7 +198,9 @@ La bitácora. Es el hecho registrado del que se deriva todo el avance.
 
 **Restricciones en la base:**
 
-- Si `tipo = 'visita'`, `checkin_lat` y `checkin_lng` son obligatorias.
+- Si `tipo = 'visita'`, o hay coordenadas o `sin_gps` es verdadero. Nunca las dos cosas
+  nulas en silencio: una visita sin ubicación tiene que verse como tal.
+- `ruc` único entre los registros vivos cuando no es nulo.
 - Las visitas no se editan libremente: son bitácora. Ver `03-seguridad-rls.md`.
 
 `proveedor_actual` y `precio_referencia` son dos campos de captura casi instantánea cuyo

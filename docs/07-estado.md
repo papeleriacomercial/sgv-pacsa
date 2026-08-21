@@ -61,6 +61,7 @@ El esquema en dev coincide con el archivo versionado.
 - `docs/02-modelo-datos.md` — catálogos, tablas del núcleo de campo y diccionario. Completo.
 - `docs/03-seguridad-rls.md` — modelo de permisos y políticas por tabla. Completo.
 - `docs/04-design-system.md` — tokens, componentes y ficha de punto. Completo.
+- `docs/05-modulos/7.1-app-movil-vendedor.md` — app del vendedor. Completo.
 - `docs/06-decisiones.md` — bitácora de decisiones. Vivo. Registradas D-001 (slug),
   D-002 (nomenclatura en español), D-003 (sin Docker), D-004 (catálogos como enum) y
   D-005 (negociación como etapa ancha).
@@ -71,7 +72,9 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-Nada abierto. El Tramo 2 quedó cerrado y verificado; lo siguiente es el Tramo 3.
+**Tramo 3 — núcleo de campo, captura.** Escrito `05-modulos/7.1-app-movil-vendedor.md`.
+Siguen las migraciones de `prospectos`, `visitas`, `compromisos` y `auditoria`, cada una con
+su RLS, y después las tres pantallas.
 
 ---
 
