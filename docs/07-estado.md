@@ -72,9 +72,8 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-**Tramo 4 — núcleo de campo, consulta.** Mapa con filtros sobre OpenStreetMap, agenda del
-día con los vencidos primero, y barra de navegación. Compilan y las rutas quedan protegidas
-por el proxy. Falta verlos funcionando en un celular con puntos reales.
+Nada abierto. El núcleo de campo está completo y probado en un celular real. Lo siguiente
+es el Tramo 5: el piloto de dos semanas y el modo offline.
 
 ---
 
@@ -115,7 +114,7 @@ proyecto; si es lento, no se usa.
 **Tablas nuevas:** `prospectos`, `visitas`, `compromisos`, y la tabla de auditoría. Cada
 una nace con RLS y sus políticas en la misma migración.
 
-### Tramo 4 — Núcleo de campo, consulta — EN CURSO
+### Tramo 4 — Núcleo de campo, consulta — HECHO
 
 Mapa de clientes y prospectos con filtros, y agenda del día con los compromisos vencidos
 primero.
@@ -266,3 +265,34 @@ cambia nada y evita mantener una extensión.
 `{vendedor_id}/{visita_id}.jpg` y la política compara ese primer segmento contra
 `auth.uid()`. Sin esa convención, el RLS de `visitas` sería decorativo: bastaría adivinar la
 URL. No hay política de update ni de delete: la foto es evidencia, igual que la visita.
+
+---
+
+## Núcleo de campo completo — 2026-08-21
+
+Tramos 3 y 4 cerrados y probados en un celular real contra el preview de `dev`.
+
+**Lo que funciona de punta a punta:**
+
+| Pantalla | Estado |
+|---|---|
+| Alta de prospecto con GPS y aviso de duplicado | Probada |
+| Registro de visita con foto y compromiso | Probada |
+| Expediente con bitácora | Probada |
+| Editar prospecto | Probada |
+| Cambiar etapa, con motivo y fecha de recontacto | Probada |
+| Agenda del día, vencidos primero | Probada |
+| Mapa con filtros sobre OpenStreetMap | Probada |
+
+**Datos reales capturados en la prueba:** dos prospectos con coordenadas propias, GPS con 9
+y 13 metros de precisión, una foto subida al bucket, y un cambio de etapa a `perdido` con su
+fila en `auditoria`.
+
+**Un fallo que costó una vuelta:** el mapa salía en blanco. Leaflet mide su contenedor una
+sola vez, al crearse, y el contenedor tenía altura mínima dentro de una cadena de alturas
+mínimas, que nunca resuelve a un número. Se corrigió con altura explícita y con
+`invalidateSize()` después de montar. Queda anotado porque es un error que reaparece cada
+vez que se mete un mapa en un contenedor flexible.
+
+**Lo que todavía no se ha medido:** cuántos segundos toma el registro completo de una visita.
+Es el criterio de aceptación de §12 y solo se mide con cronómetro en la calle, en el piloto.
