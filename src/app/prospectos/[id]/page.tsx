@@ -3,9 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { CalendarClock, MapPinOff } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import {
+  ETAPAS,
   LINEAS_PRODUCTO,
   RESULTADOS,
   TIPOS_INTERACCION,
+  TONO_ETAPA,
   type Etapa,
   type LineaProducto,
   type Resultado,
@@ -18,6 +20,11 @@ import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
 import { Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+
+const MONTO = new Intl.NumberFormat("es-PA", {
+  style: "currency",
+  currency: "USD",
+});
 
 const FECHA = new Intl.DateTimeFormat("es-PA", {
   dateStyle: "medium",
@@ -70,6 +77,13 @@ export default async function Expediente({
     .is("deleted_at", null)
     .is("cumplido_en", null)
     .order("fecha_compromiso", { ascending: true });
+
+  const { data: oportunidades } = await supabase
+    .from("oportunidades")
+    .select("id, linea, descripcion, monto_estimado, etapa")
+    .eq("prospecto_id", id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
 
   const vigente = compromisos?.[0];
   const vencido = vigente ? vigente.fecha_compromiso < hoyEnPanama() : false;
@@ -183,6 +197,58 @@ export default async function Expediente({
             <p className="text-sm text-texto-secundario">{prospecto.notas}</p>
           )}
         </Tarjeta>
+
+        <section className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-medium text-texto">Oportunidades</h2>
+            <Link
+              href={`/prospectos/${id}/oportunidad`}
+              className="text-sm text-texto-secundario underline"
+            >
+              Agregar
+            </Link>
+          </div>
+
+          {!oportunidades?.length && (
+            <Tarjeta>
+              <Vacio titulo="Sin oportunidades">
+                Crea una por cada línea de producto que estés negociando. Es lo
+                que alimenta el pipeline.
+              </Vacio>
+            </Tarjeta>
+          )}
+
+          {oportunidades?.map((o) => (
+            <Link key={o.id} href={`/oportunidades/${o.id}`} className="block">
+              <Tarjeta className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium text-texto">
+                    {LINEAS_PRODUCTO[o.linea as LineaProducto]}
+                  </p>
+                  {o.descripcion && (
+                    <p className="text-xs text-texto-secundario">
+                      {o.descripcion}
+                    </p>
+                  )}
+                  <div className="mt-1">
+                    <Insignia tono={TONO_ETAPA[o.etapa as Etapa]}>
+                      {ETAPAS[o.etapa as Etapa]}
+                    </Insignia>
+                  </div>
+                </div>
+                <span
+                  className={`shrink-0 font-mono text-sm ${
+                    o.monto_estimado !== null ? "text-texto" : "text-texto-atenuado"
+                  }`}
+                >
+                  {o.monto_estimado !== null
+                    ? MONTO.format(Number(o.monto_estimado))
+                    : "Sin monto"}
+                </span>
+              </Tarjeta>
+            </Link>
+          ))}
+        </section>
 
         <section className="flex flex-col gap-2">
           <h2 className="text-sm font-medium text-texto">Bitácora</h2>

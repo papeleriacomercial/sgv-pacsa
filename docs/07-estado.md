@@ -72,9 +72,8 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-**Tramo 4, incompleto.** Se dieron por hechos el mapa y la agenda, pero el tramo también
-incluía el **pipeline visual de oportunidades** y las tablas `oportunidades` y
-`territorios`, que no se construyeron. Corregido el 2026-08-21.
+Nada abierto. El Tramo 4 quedó completo con el pipeline. Lo siguiente es §7.4, la búsqueda
+de prospectos.
 
 ---
 
@@ -115,7 +114,7 @@ proyecto; si es lento, no se usa.
 **Tablas nuevas:** `prospectos`, `visitas`, `compromisos`, y la tabla de auditoría. Cada
 una nace con RLS y sus políticas en la misma migración.
 
-### Tramo 4 — Núcleo de campo, consulta — PARCIAL
+### Tramo 4 — Núcleo de campo, consulta — HECHO
 
 Mapa de clientes y prospectos con filtros, y agenda del día con los compromisos vencidos
 primero.
@@ -315,7 +314,7 @@ honesta es que no: está construido el núcleo de campo y nada más.
 | Bitácora de interacciones | Hecho |
 | Compromisos y agenda del día | Hecho |
 | Mapa con filtros | Hecho |
-| **Pipeline visual de oportunidades** | **Falta** — estaba asignado al Tramo 4 |
+| Pipeline visual de oportunidades | Hecho |
 | Modo offline con cola de sincronización | Falta — Tramo 5 |
 | Lista de precios vigente consultable | Falta — necesita Zoho |
 | Solicitud de cotización y su estado | Falta — necesita el módulo de oficina |
@@ -378,3 +377,40 @@ API (New) habilitadas. Llave restringida a `sgv-pacsa.vercel.app`, la URL de pre
 
 Ninguno bloquea el desarrollo. Los dos deben cerrarse antes de que un vendedor real use el
 sistema.
+
+---
+
+## Pipeline de oportunidades — 2026-08-21
+
+Cierra el Tramo 4. Migración `20260821155641_oportunidades`.
+
+**Por qué la oportunidad se separa del prospecto.** Un mismo local puede comprar rollos
+fiscales y no bolsas, y cada negociación avanza a su ritmo. Sin esa separación no se puede
+medir la tasa de cierre por producto, que es una de las preguntas de §7.3.
+
+**Reutiliza el enum `etapa_prospecto`** en vez de tener uno propio. Un segundo catálogo casi
+idéntico obligaría a traducir entre dos vocabularios en cada pantalla, para distinguir
+matices que el negocio no hace.
+
+**No lleva `fecha_recontacto`:** cuándo volver es una decisión del punto, no de una línea de
+producto, y vive en `prospectos`.
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Estructura | RLS, 3 políticas, 3 triggers, 3 checks | Correcto |
+| El vendedor crea una oportunidad suya | Permitido | Correcto |
+| Marcarla perdida sin motivo | Rechazado | `23514` |
+| Probabilidad de 150 | Rechazado | `23514` |
+| Cambio de etapa | Fila en `auditoria` | `nuevo -> cotizado` |
+| Otro usuario la consulta | Ve 0 | Ve 0 |
+
+**Pantallas:** `/pipeline` agrupa por etapa con el total de cada grupo y el monto abierto
+arriba; se crean desde el expediente del prospecto y se editan en `/oportunidades/[id]`.
+
+En escritorio esto sería un tablero de columnas arrastrables. En móvil no: arrastrar
+tarjetas con una mano y a pleno sol no funciona. Cambia la densidad, no los datos (§17).
+
+**`territorios` no se construyó**, a diferencia de lo que decía el plan. No tiene consumidor
+todavía: el filtro por zona del mapa y el mapa de cobertura de §7.3 son lo que la justifican.
+Crear una tabla que nadie lee es la misma clase de error que levantar pantallas con datos
+falsos. Se hace cuando exista la pantalla que la use.
