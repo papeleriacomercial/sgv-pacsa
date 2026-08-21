@@ -72,9 +72,11 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-**Tramo 3 — núcleo de campo, captura.** Documento del módulo, migraciones y las tres
-pantallas están hechos y compilan. Falta la prueba de uso real: crear un prospecto y
-registrar una visita desde un celular, con cronómetro.
+**Tramo 3 — núcleo de campo, captura.** Documento del módulo, migraciones y pantallas
+hechos. Alta de prospecto y registro de visita probados en un celular real, con foto y GPS.
+Agregadas después: editar prospecto, cambiar etapa y cumplir compromiso — sin ellas el alta
+mínima dejaba el expediente sin forma de completarse, y no había manera de mover el
+pipeline.
 
 ---
 

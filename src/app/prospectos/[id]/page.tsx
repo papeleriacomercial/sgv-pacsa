@@ -12,6 +12,7 @@ import {
   type TipoInteraccion,
 } from "@/lib/catalogos";
 import { FichaPunto } from "@/components/ficha-punto";
+import { CumplirCompromiso } from "@/components/cumplir-compromiso";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
@@ -100,6 +101,19 @@ export default async function Expediente({
           <Boton ancho>Registrar visita</Boton>
         </Link>
 
+        <div className="grid grid-cols-2 gap-2">
+          <Link href={`/prospectos/${id}/etapa`} className="block">
+            <Boton tono="secundario" ancho>
+              Cambiar etapa
+            </Boton>
+          </Link>
+          <Link href={`/prospectos/${id}/editar`} className="block">
+            <Boton tono="secundario" ancho>
+              Editar datos
+            </Boton>
+          </Link>
+        </div>
+
         {vigente && (
           <div
             className={[
@@ -110,7 +124,7 @@ export default async function Expediente({
             ].join(" ")}
           >
             <CalendarClock size={18} className="mt-0.5 shrink-0" aria-hidden />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium">
                 {vencido ? "Compromiso vencido" : "Próximo paso"}
               </p>
@@ -118,6 +132,9 @@ export default async function Expediente({
               <p className="font-mono text-xs">
                 {fecha(vigente.fecha_compromiso)}
               </p>
+              <div className="mt-2">
+                <CumplirCompromiso id={vigente.id} />
+              </div>
             </div>
           </div>
         )}
