@@ -1,8 +1,12 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
+import { type Etapa } from "@/lib/catalogos";
+import { FichaPunto } from "@/components/ficha-punto";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
-import { MensajeError } from "@/components/ui/estados";
+import { MensajeError, Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { CerrarSesion } from "@/components/cerrar-sesion";
 
@@ -14,6 +18,11 @@ const ETIQUETA_ROL: Record<Rol, string> = {
   vendedor: "Vendedor",
   administracion: "Administración",
 };
+
+const FECHA = new Intl.DateTimeFormat("es-PA", {
+  dateStyle: "medium",
+  timeZone: "America/Panama",
+});
 
 export default async function Inicio() {
   const supabase = await clienteServidor();
@@ -32,11 +41,26 @@ export default async function Inicio() {
     .eq("id", user.id)
     .maybeSingle();
 
-  // Cuántos perfiles ve este usuario. Es la prueba visible del RLS: un vendedor
-  // ve 1, un líder ve su equipo, gerencia los ve todos.
-  const { count: perfilesVisibles } = await supabase
-    .from("perfiles")
-    .select("id", { count: "exact", head: true });
+  const { data: prospectos } = await supabase
+    .from("prospectos")
+    .select("id, nombre, tipo_comercio, etapa")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  // Última interacción de cada punto, para la línea de abajo de la ficha.
+  const { data: visitas } = await supabase
+    .from("visitas")
+    .select("prospecto_id, fecha")
+    .is("deleted_at", null)
+    .order("fecha", { ascending: false });
+
+  const ultimaPorProspecto = new Map<string, string>();
+  visitas?.forEach((v) => {
+    if (!ultimaPorProspecto.has(v.prospecto_id)) {
+      ultimaPorProspecto.set(v.prospecto_id, v.fecha);
+    }
+  });
 
   return (
     <>
@@ -63,41 +87,56 @@ export default async function Inicio() {
         )}
 
         {perfil && (
-          <Tarjeta>
-            <p className="text-sm text-texto-secundario">Sesión iniciada como</p>
-            <p className="mt-1 text-xl font-semibold text-texto">
-              {perfil.nombre}
-            </p>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Insignia tono="info">
-                {ETIQUETA_ROL[perfil.rol as Rol] ?? perfil.rol}
-              </Insignia>
-              {perfil.activo ? (
-                <Insignia tono="ok">Activo</Insignia>
-              ) : (
-                <Insignia tono="aviso">Inactivo</Insignia>
-              )}
+          <Tarjeta className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-base font-semibold text-texto">
+                {perfil.nombre}
+              </p>
+              <p className="font-mono text-xs text-texto-atenuado">
+                {user.email}
+              </p>
             </div>
-
-            <p className="mt-4 font-mono text-xs text-texto-atenuado">
-              {user.email}
-            </p>
+            <Insignia tono="info">
+              {ETIQUETA_ROL[perfil.rol as Rol] ?? perfil.rol}
+            </Insignia>
           </Tarjeta>
         )}
 
-        <Tarjeta>
-          <p className="text-sm font-medium text-texto">
-            Perfiles visibles para ti
-          </p>
-          <p className="mt-1 font-mono text-3xl text-marca">
-            {perfilesVisibles ?? 0}
-          </p>
-          <p className="mt-2 text-xs text-texto-secundario">
-            Este número lo decide el RLS, no la pantalla. Un vendedor ve solo el
-            suyo; un líder, los de su equipo; gerencia, todos.
-          </p>
-        </Tarjeta>
+        <Link
+          href="/prospectos/nuevo"
+          className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-4 text-base font-medium text-white"
+        >
+          <Plus size={18} aria-hidden />
+          Nuevo prospecto
+        </Link>
+
+        <section className="flex flex-col gap-2">
+          <h2 className="text-sm font-medium text-texto">Mis prospectos</h2>
+
+          {!prospectos?.length && (
+            <Tarjeta>
+              <Vacio titulo="Todavía no tienes prospectos">
+                Crea el primero desde el botón de arriba. Se registra en menos
+                de 30 segundos.
+              </Vacio>
+            </Tarjeta>
+          )}
+
+          {prospectos?.map((p) => {
+            const ultima = ultimaPorProspecto.get(p.id);
+            return (
+              <FichaPunto
+                key={p.id}
+                id={p.id}
+                nombre={p.nombre}
+                tipoComercio={p.tipo_comercio}
+                etapa={p.etapa as Etapa}
+                potencial={null}
+                ultimaInteraccion={ultima ? FECHA.format(new Date(ultima)) : null}
+              />
+            );
+          })}
+        </section>
       </main>
     </>
   );

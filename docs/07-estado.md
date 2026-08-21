@@ -72,9 +72,9 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-**Tramo 3 — núcleo de campo, captura.** Escrito `05-modulos/7.1-app-movil-vendedor.md`.
-Siguen las migraciones de `prospectos`, `visitas`, `compromisos` y `auditoria`, cada una con
-su RLS, y después las tres pantallas.
+**Tramo 3 — núcleo de campo, captura.** Documento del módulo, migraciones y las tres
+pantallas están hechos y compilan. Falta la prueba de uso real: crear un prospecto y
+registrar una visita desde un celular, con cronómetro.
 
 ---
 
@@ -100,7 +100,7 @@ se comprueba que el RLS funciona: un vendedor no debe poder ver el perfil de otr
 **Por qué va aquí:** todo lo demás cuelga de saber quién eres. Las políticas de `perfiles`
 no sirven hasta que haya un usuario autenticado.
 
-### Tramo 3 — Núcleo de campo, captura
+### Tramo 3 — Núcleo de campo, captura — EN CURSO
 
 Alta de prospecto con GPS y foto, validación de duplicados, bitácora de interacciones y
 compromisos con fecha.
@@ -235,3 +235,34 @@ base quedó en cero filas.
 
 Las dos últimas son las que más importan: la auditoría registra lo que debe y solo lo que
 debe, y ningún usuario puede escribirla directamente — solo el trigger `security definer`.
+
+---
+
+## Verificación de duplicados y fotos — 2026-08-21
+
+Migración `20260821013050_duplicados_y_fotos`. Agrega `buscar_duplicados()` y el bucket de
+fotos con sus políticas.
+
+**Por qué hizo falta una función.** §6 exige avisar *"este punto ya está registrado y
+asignado a X"*, pero el RLS impide que un vendedor lea los prospectos de otro: la consulta
+directa devolvía cero y el aviso no habría aparecido nunca. Se resolvió con una función
+`security definer` de **divulgación controlada**: devuelve nombre del punto, nombre del
+vendedor y distancia, y nada más. Ni contacto, ni notas, ni etapa, ni montos. Alcanza para
+decidir si es el mismo local sin convertirse en una puerta trasera al expediente ajeno.
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Punto a 30 m, nombre distinto | Detecta por cercanía | `cercania`, 30 m |
+| Punto a 2 km, nombre distinto | No aparece | 0 resultados |
+| Mismo RUC, a 2 km | Detecta por RUC | `ruc`, 2.002 m |
+| Nombre parecido, sin GPS | Detecta por nombre | `nombre` |
+| Nombre de 3 letras | No dispara | 0 resultados |
+
+El mínimo de cuatro letras evita que escribir "esq" saque medio maestro de clientes. La
+distancia se calcula con la fórmula de Haversine, sin PostGIS: a 50 metros la curvatura no
+cambia nada y evita mantener una extensión.
+
+**Fotos.** Bucket privado `visitas`, límite de 5 MB, solo imágenes. La ruta es
+`{vendedor_id}/{visita_id}.jpg` y la política compara ese primer segmento contra
+`auth.uid()`. Sin esa convención, el RLS de `visitas` sería decorativo: bastaría adivinar la
+URL. No hay política de update ni de delete: la foto es evidencia, igual que la visita.

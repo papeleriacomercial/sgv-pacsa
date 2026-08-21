@@ -1,0 +1,299 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { MapPin, MapPinOff } from "lucide-react";
+import { clienteNavegador } from "@/lib/supabase/navegador";
+import { obtenerUbicacion, calidadUbicacion, type Ubicacion } from "@/lib/gps";
+import {
+  LINEAS_PRODUCTO,
+  ORIGENES,
+  type LineaProducto,
+  type Origen,
+} from "@/lib/catalogos";
+import { Boton } from "@/components/ui/boton";
+import { Campo } from "@/components/ui/campo";
+import { Opciones } from "@/components/ui/opciones";
+import { Tarjeta } from "@/components/ui/tarjeta";
+import { Insignia } from "@/components/ui/insignia";
+import { MensajeError } from "@/components/ui/estados";
+import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+
+type Duplicado = {
+  id: string;
+  nombre: string;
+  vendedor: string;
+  es_mio: boolean;
+  distancia_m: number | null;
+  coincide_por: string;
+};
+
+const POR_QUE: Record<string, string> = {
+  place_id: "es el mismo punto",
+  ruc: "mismo RUC",
+  cercania: "a pocos metros",
+  nombre: "nombre parecido",
+};
+
+export default function NuevoProspecto() {
+  const router = useRouter();
+
+  const [nombre, setNombre] = useState("");
+  const [ruc, setRuc] = useState("");
+  const [tipoComercio, setTipoComercio] = useState("");
+  const [productos, setProductos] = useState<LineaProducto[]>([]);
+  const [origen, setOrigen] = useState<Origen>("calle");
+  const [contactoNombre, setContactoNombre] = useState("");
+  const [contactoTelefono, setContactoTelefono] = useState("");
+  const [notas, setNotas] = useState("");
+
+  const [ubicacion, setUbicacion] = useState<Ubicacion | null>(null);
+  const [buscandoGps, setBuscandoGps] = useState(true);
+
+  const [duplicados, setDuplicados] = useState<Duplicado[]>([]);
+  const [ignorarDuplicados, setIgnorarDuplicados] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+
+  // La ubicación se pide sola al abrir. El vendedor no tiene que acordarse.
+  useEffect(() => {
+    obtenerUbicacion().then((leida) => {
+      setUbicacion(leida);
+      setBuscandoGps(false);
+    });
+  }, []);
+
+  async function revisarDuplicados() {
+    if (nombre.trim().length < 4 && !ubicacion) return;
+
+    const supabase = clienteNavegador();
+    const { data } = await supabase.rpc("buscar_duplicados", {
+      p_nombre: nombre.trim() || null,
+      p_lat: ubicacion?.lat ?? null,
+      p_lng: ubicacion?.lng ?? null,
+      p_ruc: ruc.trim() || null,
+      p_place_id: null,
+    });
+
+    setDuplicados((data as Duplicado[]) ?? []);
+    setIgnorarDuplicados(false);
+  }
+
+  async function crear(evento: React.FormEvent) {
+    evento.preventDefault();
+    setError(null);
+
+    // El aviso no bloquea: advierte una vez y deja decidir. Un bloqueo duro
+    // frente al mostrador, con un falso positivo, vuelve la app un obstáculo.
+    if (duplicados.length > 0 && !ignorarDuplicados) {
+      setIgnorarDuplicados(true);
+      return;
+    }
+
+    setGuardando(true);
+
+    const supabase = clienteNavegador();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setError("Se cerró la sesión. Vuelve a entrar.");
+      setGuardando(false);
+      return;
+    }
+
+    // El id se genera aquí, no en la base: el celular tiene que poder crear
+    // registros sin conexión y sincronizarlos después sin renumerar nada.
+    const id = crypto.randomUUID();
+
+    const { error: fallo } = await supabase.from("prospectos").insert({
+      id,
+      nombre: nombre.trim(),
+      ruc: ruc.trim() || null,
+      tipo_comercio: tipoComercio.trim() || null,
+      productos_interes: productos,
+      origen,
+      contacto_nombre: contactoNombre.trim() || null,
+      contacto_telefono: contactoTelefono.trim() || null,
+      notas: notas.trim() || null,
+      lat: ubicacion?.lat ?? null,
+      lng: ubicacion?.lng ?? null,
+      vendedor_id: user.id,
+    });
+
+    if (fallo) {
+      setError(fallo.message);
+      setGuardando(false);
+      return;
+    }
+
+    router.replace(`/prospectos/${id}`);
+    router.refresh();
+  }
+
+  const calidad = ubicacion ? calidadUbicacion(ubicacion.precisionM) : null;
+
+  return (
+    <>
+      <AvisoSinConexion />
+
+      <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
+        <Link href="/" className="text-sm text-texto-secundario">
+          Volver
+        </Link>
+        <h1 className="text-lg font-semibold text-marca">Nuevo prospecto</h1>
+      </header>
+
+      <main className="flex flex-col gap-4 p-4">
+        <Tarjeta>
+          <div className="flex items-center gap-2">
+            {ubicacion ? (
+              <MapPin size={18} className="text-ok" aria-hidden />
+            ) : (
+              <MapPinOff size={18} className="text-aviso" aria-hidden />
+            )}
+            <div className="flex-1">
+              {buscandoGps && (
+                <p className="text-sm text-texto-secundario">
+                  Buscando ubicación
+                </p>
+              )}
+              {!buscandoGps && calidad && (
+                <Insignia tono={calidad.tono}>{calidad.texto}</Insignia>
+              )}
+              {!buscandoGps && !ubicacion && (
+                <>
+                  <p className="text-sm font-medium text-texto">Sin ubicación</p>
+                  <p className="text-xs text-texto-secundario">
+                    Puedes guardar igual. El prospecto queda marcado para
+                    ubicarlo después.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </Tarjeta>
+
+        <form onSubmit={crear} className="flex flex-col gap-4">
+          <Tarjeta className="flex flex-col gap-4">
+            <Campo
+              etiqueta="Nombre del negocio"
+              required
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              onBlur={revisarDuplicados}
+              ayuda="Es lo único obligatorio, además de la ubicación."
+            />
+
+            <Campo
+              etiqueta="RUC"
+              value={ruc}
+              onChange={(e) => setRuc(e.target.value)}
+              onBlur={revisarDuplicados}
+              ayuda="Si lo tienes a mano. Hace falta antes de facturar."
+            />
+
+            <Campo
+              etiqueta="Tipo de comercio"
+              value={tipoComercio}
+              onChange={(e) => setTipoComercio(e.target.value)}
+              ayuda="Minisúper, panadería, restaurante, farmacia."
+            />
+          </Tarjeta>
+
+          {duplicados.length > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm font-medium text-amber-800">
+                {duplicados.length === 1
+                  ? "Este punto podría estar registrado"
+                  : "Hay puntos parecidos registrados"}
+              </p>
+              <ul className="mt-2 flex flex-col gap-2">
+                {duplicados.map((d) => (
+                  <li key={d.id} className="text-sm text-amber-800">
+                    <span className="font-medium">{d.nombre}</span>
+                    {" — "}
+                    {d.es_mio ? "es tuyo" : `asignado a ${d.vendedor}`}
+                    <span className="text-xs">
+                      {" ("}
+                      {POR_QUE[d.coincide_por] ?? d.coincide_por}
+                      {d.distancia_m !== null && `, ${d.distancia_m} m`}
+                      {")"}
+                    </span>
+                    {d.es_mio && (
+                      <Link
+                        href={`/prospectos/${d.id}`}
+                        className="ml-2 underline"
+                      >
+                        Ver
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {ignorarDuplicados && (
+                <p className="mt-2 text-xs text-amber-800">
+                  Toca Crear de nuevo para registrarlo de todos modos.
+                </p>
+              )}
+            </div>
+          )}
+
+          <Tarjeta>
+            <Opciones
+              etiqueta="Productos de interés"
+              opciones={LINEAS_PRODUCTO}
+              valor={productos}
+              multiple
+              onCambio={(linea) =>
+                setProductos((antes) =>
+                  antes.includes(linea)
+                    ? antes.filter((l) => l !== linea)
+                    : [...antes, linea],
+                )
+              }
+            />
+          </Tarjeta>
+
+          <Tarjeta>
+            <Opciones
+              etiqueta="Cómo lo encontraste"
+              opciones={ORIGENES}
+              valor={origen}
+              onCambio={setOrigen}
+            />
+          </Tarjeta>
+
+          <Tarjeta className="flex flex-col gap-4">
+            <Campo
+              etiqueta="Contacto"
+              value={contactoNombre}
+              onChange={(e) => setContactoNombre(e.target.value)}
+              ayuda="Quién decide la compra."
+            />
+            <Campo
+              etiqueta="Teléfono"
+              type="tel"
+              inputMode="tel"
+              value={contactoTelefono}
+              onChange={(e) => setContactoTelefono(e.target.value)}
+            />
+            <Campo
+              etiqueta="Notas"
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
+            />
+          </Tarjeta>
+
+          {error && <MensajeError titulo="No se pudo crear" detalle={error} />}
+
+          <Boton type="submit" ancho disabled={guardando || !nombre.trim()}>
+            {guardando ? "Creando" : "Crear prospecto"}
+          </Boton>
+        </form>
+      </main>
+    </>
+  );
+}
