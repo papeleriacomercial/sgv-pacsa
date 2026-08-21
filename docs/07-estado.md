@@ -546,6 +546,12 @@ Dos decisiones de detalle que cambian el resultado:
   pinta del tono más oscuro.
 - La paleta de vendedores usa tonos que **no se confunden con el semáforo de estados**.
 
+### Lo que falta para cerrar la Etapa 3
+
+Las dos piezas de sucursales acordadas antes del replanteamiento: la insignia automática
+cuando un nombre se repite entre los resultados de una búsqueda, y el botón que cuenta las
+sucursales de una marca en todo el país. Quedaron fuera de este empujón.
+
 ### Lo que se conservó al reescribir el mapa
 
 La función de tocar un local de Google y agregarlo como cuenta vivía en el componente viejo.
