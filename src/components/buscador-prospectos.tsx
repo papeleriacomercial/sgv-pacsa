@@ -48,6 +48,24 @@ const RADIOS = [
   { metros: 5000, etiqueta: "5 km" },
 ];
 
+/**
+ * Rectángulo que encierra a Panamá.
+ *
+ * Sin esta restricción, la búsqueda por texto sale al mundo entero: buscar
+ * "farmacias en Aguadulce" devolvía farmacias en Aguadulce de Almería, España,
+ * a ocho mil kilómetros. Hay decenas de topónimos panameños repetidos en
+ * España y en el resto de América.
+ *
+ * La empresa vende solo en Panamá, así que acotar no pierde nada y evita una
+ * clase entera de resultados absurdos.
+ */
+const PANAMA = {
+  south: 7.15,
+  west: -83.1,
+  north: 9.7,
+  east: -77.1,
+};
+
 type Estado = {
   place_id: string;
   prospecto_id: string | null;
@@ -181,12 +199,25 @@ function Buscador() {
           fields: campos,
           textQuery: texto,
           maxResultCount: 20,
+          // Sin esto la búsqueda es mundial. Ver la nota de PANAMA arriba.
+          locationRestriction: PANAMA,
+          region: "pa",
         });
         encontrados = r;
       }
 
       const lista: Candidato[] = encontrados
         .filter((p) => p.id && p.location)
+        // Cinturón y tirantes: la restricción ya se la pedimos a Google, pero
+        // el descarte de lo que caiga fuera del país lo hacemos nosotros. Es
+        // barato y convierte la garantía en propia.
+        .filter(
+          (p) =>
+            p.location!.lat() >= PANAMA.south &&
+            p.location!.lat() <= PANAMA.north &&
+            p.location!.lng() >= PANAMA.west &&
+            p.location!.lng() <= PANAMA.east,
+        )
         .map((p) => ({
           placeId: p.id!,
           nombre: p.displayName ?? "Sin nombre",
