@@ -151,7 +151,7 @@ lógica.
 
 ## 5. Plan por etapas
 
-### Etapa A — Vocabulario y modelo de cuentas
+### Etapa 1 — Vocabulario y modelo de cuentas ✅ HECHA
 
 Renombrar `prospectos` → `cuentas` y `visitas` → `seguimientos`, con todas sus llaves,
 funciones y pantallas. Agregar `tipo_cuenta` y mover la etapa a la oportunidad.
@@ -161,7 +161,7 @@ pantallas. Hacerlo después significa escribir dos veces el mismo código.
 
 **Se ve al final:** lo mismo de hoy, con los nombres correctos y un campo Cliente/Prospecto.
 
-### Etapa B — La cuenta completa
+### Etapa 2 — La cuenta completa
 
 - Catálogo autoalimentado de categorías de comercio.
 - Volumen de venta: alta, media, baja.
@@ -171,7 +171,7 @@ pantallas. Hacerlo después significa escribir dos veces el mismo código.
   seguimiento nuevo, o señalar el punto en el mapa.
 - Vista con días desde el último contacto y días hasta el próximo compromiso.
 
-### Etapa C — Filtros y colorización
+### Etapa 3 — Filtros y colorización
 
 Un solo motor de filtros que sirve a la lista y al mapa: tipo de cuenta, categoría,
 producto de interés, volumen, días sin contacto, próximos N días, sin clasificar, sin
@@ -183,7 +183,7 @@ gama de claro a oscuro para los rangos numéricos.
 Aquí se absorben también los filtros que ya estaban pendientes de la lista y las dos piezas
 de sucursales de §7.4.
 
-### Etapa D — Seguimientos
+### Etapa 4 — Seguimientos
 
 Pantalla de Seguimientos con filtro por tipo de acción y por ventana de tiempo: vencidos,
 hoy, próximos tres días, o rango elegido.
@@ -191,7 +191,7 @@ hoy, próximos tres días, o rango elegido.
 **El botón deja de marcar "ya lo hice" y pasa a registrar un seguimiento**, con la misma
 captura que dentro de la cuenta, cerrando el compromiso actual y creando el siguiente.
 
-### Etapa E — Oportunidades
+### Etapa 5 — Oportunidades
 
 - Nombre de la oportunidad y fecha estimada de cierre.
 - Bitácora de avance: notas que se agregan encabezadas con fecha y hora, sin borrar las
@@ -200,7 +200,7 @@ captura que dentro de la cuenta, cerrando el compromiso actual y creando el sigu
 - **Una oportunidad con la fecha de cierre vencida no se puede modificar** hasta mover esa
   fecha hacia adelante.
 
-### Etapa F — Ventas y reportes
+### Etapa 6 — Ventas y reportes
 
 - Pantalla temporal para capturar la venta mensual por vendedor de 2026.
 - Reportes del mes vigente, desglosados por semana y por vendedor: cuentas nuevas,
@@ -211,7 +211,7 @@ captura que dentro de la cuenta, cerrando el compromiso actual y creando el sigu
 **Se hace antes de Zoho a propósito:** la pantalla temporal permite tener los reportes
 funcionando y validados con datos reales mientras la integración se construye.
 
-### Etapa G — Zoho
+### Etapa 7 — Zoho
 
 Lectura de las facturas de venta por vendedor, que reemplaza la captura manual de la
 Etapa F.
@@ -219,7 +219,7 @@ Etapa F.
 **Es la primera pieza que necesita credenciales de servidor**, fuera del navegador. Hasta
 hoy todo el sistema funciona con la llave pública y el RLS.
 
-### Etapa H — Piloto y modo offline
+### Etapa 8 — Piloto y modo offline
 
 El antiguo Tramo 5. Dos semanas con un vendedor real, y el endurecimiento del modo offline
 con su cola de sincronización.
@@ -233,8 +233,8 @@ No se mencionan en el replanteamiento y **permanecen en el plan**:
 | Módulo | Estado |
 |---|---|
 | §7.2 Oficina: bandejas de cotización y alta de clientes | Pendiente |
-| §7.3 Tablero de gerencia con "Requiere tu atención" | Parcial, lo cubre la Etapa F |
-| §7.4 Búsqueda de prospectos | Construido; sucursales y filtros en la Etapa C |
+| §7.3 Tablero de gerencia con "Requiere tu atención" | Parcial, lo cubre la Etapa 6 |
+| §7.4 Búsqueda de prospectos | Construido; sucursales y filtros en la Etapa 3 |
 | §7.5 Calificación y modelo de gemelos | Bloqueado por Zoho |
 | §7.6 Inteligencia comercial | Bloqueado por la depuración de Zoho |
 | §7.7 Reposición predictiva, muestras, competencia | Pendiente. La captura de competencia ya funciona |
@@ -243,18 +243,23 @@ No se mencionan en el replanteamiento y **permanecen en el plan**:
 | Solicitud de cotización con aprobación de precios | Pendiente |
 | Lectura del SGP: estado y fecha de entrega | Pendiente |
 | Validación de duplicados, descartes, auditoría | Construidos |
-| Modo offline | Etapa H |
+| Modo offline | Etapa 8 |
 
 **El cuello de botella no cambió:** la depuración del maestro de clientes y productos de
-Zoho sigue bloqueando §7.5, §7.6 y §7.7, y ahora también la Etapa G. No es programación.
+Zoho sigue bloqueando §7.5, §7.6 y §7.7, y ahora también la Etapa 7. No es programación.
 
 ---
 
-## 7. Decisiones que hacen falta antes de la Etapa A
+## 7. Decisiones tomadas antes de la Etapa 1
 
-1. **¿La etapa se muda a la oportunidad?** (punto 2.2.B). Es el cambio más profundo y todo
-   lo demás depende de él.
-2. **¿`tipo_cuenta` lo marca el vendedor y Zoho lo confirma después?** (punto 2.2.A).
-3. **¿Catálogo de categorías global, con gerencia depurando?** (punto 2.3).
-4. **¿La regla de la oportunidad vencida es exactamente así?** Con la fecha pasada, lo único
-   editable es la propia fecha; al moverla al futuro, se libera el resto.
+Las cuatro quedaron resueltas el 2026-08-21 y registradas como D-010 a D-013 en
+`06-decisiones.md`:
+
+1. **La etapa se muda a la oportunidad.** Se pierde una venta, no un local. (D-011)
+2. **`tipo_cuenta` lo marca el vendedor** y Zoho lo confirma después. (D-010)
+3. **Catálogo de categorías abierto y global**, con gerencia depurando. (D-012)
+4. **En el mapa el color codifica el filtro elegido**, con leyenda obligatoria. (D-013)
+
+La regla de la oportunidad vencida queda como está descrita y se implementa en la Etapa 5:
+con la fecha pasada, lo único editable es la propia fecha; al moverla al futuro, se libera
+el resto.
