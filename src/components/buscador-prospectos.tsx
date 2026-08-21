@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,7 +13,15 @@ import {
   useMap,
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
-import { Check, List, MapPin, MessageSquare, Search, X } from "lucide-react";
+import {
+  Building2,
+  Check,
+  List,
+  MapPin,
+  MessageSquare,
+  Search,
+  X,
+} from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { obtenerUbicacion, type Ubicacion } from "@/lib/gps";
 import { COLOR, iconoPin } from "@/lib/marcadores";
@@ -148,6 +156,24 @@ const FECHA = new Intl.DateTimeFormat("es-PA", {
   timeZone: "America/Panama",
 });
 
+/**
+ * Normaliza un nombre para comparar marcas.
+ *
+ * Quita acentos, puntuación y el número de sucursal del final: "Minisúper La
+ * Esquina 2" y "Minisuper la esquina" tienen que contar como el mismo negocio,
+ * que es justamente lo que delata una cadena.
+ */
+function normalizar(nombre: string) {
+  return nombre
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+\d+\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Haversine. A escala de barrio la curvatura no cambia nada. */
 function distancia(a: Ubicacion, lat: number, lng: number) {
   const r = (g: number) => (g * Math.PI) / 180;
@@ -178,6 +204,15 @@ function Buscador() {
   const [abierto, setAbierto] = useState<Candidato | null>(null);
   const [descartando, setDescartando] = useState<Candidato | null>(null);
   const [guardando, setGuardando] = useState(false);
+
+  /**
+   * Sucursales contadas en todo el país, por `place_id`.
+   *
+   * Se guarda en memoria durante la sesión: tocar dos veces el mismo local no
+   * gasta dos consultas. -1 significa que la consulta falló.
+   */
+  const [sucursales, setSucursales] = useState<Record<string, number>>({});
+  const [contando, setContando] = useState(false);
 
   useEffect(() => {
     obtenerUbicacion().then(setUbicacion);
@@ -335,6 +370,43 @@ function Buscador() {
     setGuardando(false);
   }
 
+  /**
+   * Nombres que se repiten dentro de esta búsqueda.
+   *
+   * Es el indicio gratuito de cadena: no consulta nada, solo compara lo que ya
+   * está en pantalla. Salta poco —dos sucursales rara vez caen en el mismo
+   * pueblo— y donde de verdad sirve es cuando se busca por marca.
+   */
+  const repetidos = useMemo(() => {
+    const cuenta = new Map<string, number>();
+    (resultados ?? []).forEach((c) => {
+      const clave = normalizar(c.nombre);
+      cuenta.set(clave, (cuenta.get(clave) ?? 0) + 1);
+    });
+    return cuenta;
+  }, [resultados]);
+
+  /** Una consulta, acotada a Panamá, para saber si la marca tiene más locales. */
+  async function contarSucursales(c: Candidato) {
+    if (!places || sucursales[c.placeId] !== undefined) return;
+    setContando(true);
+
+    try {
+      const { places: encontrados } = await places.Place.searchByText({
+        fields: ["id"],
+        textQuery: c.nombre,
+        maxResultCount: 20,
+        locationRestriction: PANAMA,
+        region: "pa",
+      });
+      setSucursales((s) => ({ ...s, [c.placeId]: encontrados.length }));
+    } catch {
+      setSucursales((s) => ({ ...s, [c.placeId]: -1 }));
+    }
+
+    setContando(false);
+  }
+
   const ordenados = [...(resultados ?? [])].sort((a, b) =>
     orden === "cercania"
       ? (a.distanciaM ?? Infinity) - (b.distanciaM ?? Infinity)
@@ -490,6 +562,9 @@ function Buscador() {
                 candidatos={ordenados}
                 abierto={abierto}
                 onAbrir={setAbierto}
+                sucursales={sucursales}
+                contando={contando}
+                onContarSucursales={contarSucursales}
                 elegidos={elegidos}
                 onElegir={(id) =>
                   setElegidos((a) =>
@@ -516,6 +591,7 @@ function Buscador() {
                   setAbierto(c);
                   setVista("mapa");
                 }}
+                enLaBusqueda={repetidos.get(normalizar(c.nombre)) ?? 1}
               />
             ))
           )}
@@ -577,12 +653,18 @@ function MapaCandidatos({
   onAbrir,
   elegidos,
   onElegir,
+  sucursales,
+  contando,
+  onContarSucursales,
 }: {
   candidatos: Candidato[];
   abierto: Candidato | null;
   onAbrir: (c: Candidato | null) => void;
   elegidos: string[];
   onElegir: (placeId: string) => void;
+  sucursales: Record<string, number>;
+  contando: boolean;
+  onContarSucursales: (c: Candidato) => void;
 }) {
   const centro = candidatos[0]
     ? { lat: candidatos[0].lat, lng: candidatos[0].lng }
@@ -634,10 +716,32 @@ function MapaCandidatos({
             <button
               type="button"
               onClick={() => onElegir(abierto.placeId)}
-              className="mt-1 text-xs font-medium underline"
+              className="mt-1 block text-xs font-medium underline"
             >
               {elegidos.includes(abierto.placeId) ? "Quitar" : "Elegir"}
             </button>
+          )}
+
+          {/* La consulta nacional va aquí y no en la lista: para llegar, el
+              vendedor ya miró el mapa y tocó este punto. Es un gesto
+              deliberado, no algo que se toca de paso en veinte filas. */}
+          {sucursales[abierto.placeId] === undefined ? (
+            <button
+              type="button"
+              onClick={() => onContarSucursales(abierto)}
+              disabled={contando}
+              className="mt-1 block text-xs underline"
+            >
+              {contando ? "Buscando" : "¿Tiene más sucursales?"}
+            </button>
+          ) : (
+            <span className="mt-1 block text-xs">
+              {sucursales[abierto.placeId] === -1
+                ? "No se pudo consultar"
+                : sucursales[abierto.placeId] <= 1
+                  ? "No encontré otras sucursales"
+                  : `Aparece en ${sucursales[abierto.placeId]} lugares de Panamá`}
+            </span>
           )}
         </InfoWindow>
       )}
@@ -651,12 +755,15 @@ function Resultado({
   onElegir,
   onDescartar,
   onVerEnMapa,
+  enLaBusqueda,
 }: {
   candidato: Candidato;
   elegido: boolean;
   onElegir: () => void;
   onDescartar: () => void;
   onVerEnMapa: () => void;
+  /** Cuántos resultados de esta búsqueda comparten el nombre. */
+  enLaBusqueda: number;
 }) {
   const e = candidato.estado;
   const yaEsProspecto = e?.cuenta_id != null;
@@ -732,6 +839,15 @@ function Resultado({
 
       {/* El semáforo de §7.4: lo que diferencia esto de mirar Google a mano. */}
       <div className="flex flex-wrap items-center gap-1.5">
+        {/* Indicio gratuito de cadena: el nombre se repite en esta misma
+            búsqueda. No consulta nada. */}
+        {enLaBusqueda > 1 && (
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+            <Building2 size={14} aria-hidden />
+            {`Cadena · ${enLaBusqueda} aquí`}
+          </span>
+        )}
+
         {!yaEsProspecto && !descartado && <Insignia tono="ok">Nuevo</Insignia>}
 
         {yaEsProspecto && e?.es_mio && (

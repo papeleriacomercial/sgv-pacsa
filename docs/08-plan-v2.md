@@ -171,7 +171,7 @@ pantallas. Hacerlo después significa escribir dos veces el mismo código.
   seguimiento nuevo, o señalar el punto en el mapa.
 - Vista con días desde el último contacto y días hasta el próximo compromiso.
 
-### Etapa 3 — Filtros y colorización — CASI
+### Etapa 3 — Filtros y colorización ✅ HECHA
 
 Un solo motor de filtros que sirve a la lista y al mapa: tipo de cuenta, categoría,
 producto de interés, volumen, días sin contacto, próximos N días, sin clasificar, sin
@@ -180,10 +180,8 @@ ubicación, por reactivar, y por vendedor para líder y gerencia.
 Colorización de los pines según el filtro elegido, con leyenda obligatoria, incluida la
 gama de claro a oscuro para los rangos numéricos.
 
-Aquí se absorben también los filtros que ya estaban pendientes de la lista.
-
-**Falta cerrarla:** las dos piezas de sucursales de §7.4 —la insignia automática de nombres
-repetidos y el botón que cuenta sucursales en todo el país— siguen sin construirse.
+Aquí se absorben también los filtros que ya estaban pendientes de la lista y las dos piezas
+de sucursales de §7.4.
 
 ### Etapa 4 — Seguimientos
 

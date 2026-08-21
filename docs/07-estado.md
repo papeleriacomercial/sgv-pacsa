@@ -546,11 +546,30 @@ Dos decisiones de detalle que cambian el resultado:
   pinta del tono más oscuro.
 - La paleta de vendedores usa tonos que **no se confunden con el semáforo de estados**.
 
-### Lo que falta para cerrar la Etapa 3
+### Detección de cadenas
 
-Las dos piezas de sucursales acordadas antes del replanteamiento: la insignia automática
-cuando un nombre se repite entre los resultados de una búsqueda, y el botón que cuenta las
-sucursales de una marca en todo el país. Quedaron fuera de este empujón.
+Dos piezas con costos muy distintos, y por eso separadas.
+
+**La insignia es gratis y automática.** Si dos resultados de la misma búsqueda comparten
+nombre, se marcan solos con "Cadena · N aquí". No consulta nada: compara lo que ya está en
+pantalla. La comparación normaliza acentos, puntuación y el número de sucursal del final,
+para que "Minisúper La Esquina 2" cuente igual que "Minisuper la esquina".
+
+Salta poco, y es esperable: dos sucursales rara vez caen en el mismo pueblo. Donde sí
+funciona es cuando el líder busca por marca, que es el cuarto modo de búsqueda de §7.4.
+
+**El conteo nacional cuesta una consulta y va escondido.** El botón *¿Tiene más
+sucursales?* vive dentro de la ventana del pin, en el mapa. Para llegar ahí el vendedor ya
+miró el mapa y tocó ese punto: es un gesto deliberado, no algo que se toca de paso en
+veinte filas. El resultado queda en memoria durante la sesión, así que tocarlo dos veces no
+gasta dos consultas.
+
+El nombre es una pregunta y no una promesa a propósito: la app no sabe la respuesta hasta
+que consulta.
+
+**Lo que este conteo no hace:** Google agrupa por nombre, no por dueño. Un grupo comercial
+con tres marcas distintas no se detecta así — eso es §7.9, la cadena marca → sociedad →
+directores, y es otro módulo.
 
 ### Lo que se conservó al reescribir el mapa
 
