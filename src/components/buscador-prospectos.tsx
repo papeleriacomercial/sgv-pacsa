@@ -10,6 +10,7 @@ import {
   // abajo para cruzar los estados del semáforo.
   Map as MapaGoogle,
   Marker,
+  useMap,
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
 import { Check, List, MapPin, MessageSquare, Search, X } from "lucide-react";
@@ -511,6 +512,10 @@ function Buscador() {
                   )
                 }
                 onDescartar={() => setDescartando(c)}
+                onVerEnMapa={() => {
+                  setAbierto(c);
+                  setVista("mapa");
+                }}
               />
             ))
           )}
@@ -546,6 +551,26 @@ function Buscador() {
  * una vía principal o si están desperdigados en el monte. Esa geografía decide
  * si vale la pena la parada, y se lee de un vistazo.
  */
+/**
+ * Lleva el mapa hasta el punto que se abrió desde la lista.
+ *
+ * En la lista ves qué es: el nombre y cuántas reseñas tiene. En el mapa ves
+ * dónde está. Poder saltar de una vista a la otra sobre el mismo punto es lo
+ * que hace que las dos sirvan.
+ */
+function Centrar({ candidato }: { candidato: Candidato | null }) {
+  const mapa = useMap();
+
+  useEffect(() => {
+    if (!mapa || !candidato) return;
+    mapa.panTo({ lat: candidato.lat, lng: candidato.lng });
+    const zoom = mapa.getZoom();
+    if (zoom === undefined || zoom < 16) mapa.setZoom(16);
+  }, [mapa, candidato]);
+
+  return null;
+}
+
 function MapaCandidatos({
   candidatos,
   abierto,
@@ -565,13 +590,15 @@ function MapaCandidatos({
 
   return (
     <MapaGoogle
-      defaultCenter={centro}
+      defaultCenter={abierto ? { lat: abierto.lat, lng: abierto.lng } : centro}
       defaultZoom={14}
       gestureHandling="greedy"
       disableDefaultUI
       zoomControl
       style={{ height: "100%", width: "100%" }}
     >
+      <Centrar candidato={abierto} />
+
       {candidatos.map((c) => (
         <Marker
           key={c.placeId}
@@ -623,11 +650,13 @@ function Resultado({
   elegido,
   onElegir,
   onDescartar,
+  onVerEnMapa,
 }: {
   candidato: Candidato;
   elegido: boolean;
   onElegir: () => void;
   onDescartar: () => void;
+  onVerEnMapa: () => void;
 }) {
   const e = candidato.estado;
   const yaEsProspecto = e?.prospecto_id != null;
@@ -641,7 +670,23 @@ function Resultado({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
-          <p className="text-base font-semibold text-texto">{candidato.nombre}</p>
+          {/* El nombre lleva al mapa: en la lista se ve qué es, en el mapa
+              dónde está. */}
+          <button
+            type="button"
+            onClick={onVerEnMapa}
+            className="flex items-start gap-1.5 text-left"
+          >
+            <span className="text-base font-semibold text-texto underline decoration-borde underline-offset-2">
+              {candidato.nombre}
+            </span>
+            <MapPin
+              size={14}
+              className="mt-1 shrink-0 text-texto-atenuado"
+              aria-hidden
+            />
+            <span className="sr-only">Ver en el mapa</span>
+          </button>
           <div className="flex flex-wrap items-center gap-3">
             {candidato.distanciaM !== null && (
               <p className="flex items-center gap-1 font-mono text-xs text-texto-secundario">
