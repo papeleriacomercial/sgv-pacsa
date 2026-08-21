@@ -136,3 +136,44 @@ convenciones del framework que no se pueden traducir.
 negocio están en español, y mezclar idiomas obliga a traducir mentalmente todo el tiempo.
 Que la ruta que el vendedor ve en su celular diga `/entrar` y no `/login` es parte del mismo
 criterio.
+
+---
+
+## D-008 — El mapa usa OpenStreetMap, no Google Maps
+
+**Fecha:** 2026-08-21
+
+**Decisión.** El mapa de §7.1 se dibuja con Leaflet sobre mosaicos de OpenStreetMap. Toda
+la dependencia del proveedor vive en un solo componente, `src/components/mapa-puntos.tsx`.
+
+**Alternativa descartada.** Google Maps, que cobra por cada carga de mapa.
+
+**Por qué.** Lo que pide §7.1 es un mapa *de clientes y prospectos*: puntos propios sobre un
+fondo de calles. Las coordenadas las capturó el vendedor con el GPS de su celular, así que
+son dato propio y la restricción de almacenamiento de §7.4 no las alcanza. Para dibujar
+puntos propios sobre calles correctas, pagarle a Google no aporta nada.
+
+**Lo que se midió antes de decidir**, consultando Overpass:
+
+| Zona | Comercios en OSM |
+|---|---|
+| Centro de Ciudad de Panamá | 1.281 |
+| David, Chiriquí | 751 |
+| La Chorrera | 122 |
+| Aguadulce | 41 |
+
+Los nombres son locales y del perfil correcto —Mini Super San Luis, Farmacia Heidi,
+Panadería Pocri— pero la cobertura se adelgaza en el interior: 41 comercios en Aguadulce
+está claramente incompleto.
+
+**Eso no afecta esta decisión.** El descubrimiento de prospectos no sale del fondo del mapa:
+sale de Google Places API, en el módulo §7.4, que ya estaba decidido y se paga aparte. Lo
+único que cambia según el proveedor es qué comercios ajenos ve el vendedor mientras navega
+sin buscar nada, y eso no es un requisito de §7.1.
+
+**Cómo se revierte.** Google no permite usar sus mosaicos fuera de su propia librería, así
+que cambiar no es sustituir una dirección: es reemplazar el componente del mapa. Por eso el
+proveedor queda aislado detrás de una frontera clara —le entran puntos, le salen toques— y
+ninguna pantalla sabe quién dibuja las calles. Se reevalúa en el piloto del Tramo 5: si el
+vendedor dice que necesita ver comercios ajenos mientras maneja, se cambia; si no lo dice,
+el gasto no se hizo.

@@ -72,11 +72,9 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-**Tramo 3 — núcleo de campo, captura.** Documento del módulo, migraciones y pantallas
-hechos. Alta de prospecto y registro de visita probados en un celular real, con foto y GPS.
-Agregadas después: editar prospecto, cambiar etapa y cumplir compromiso — sin ellas el alta
-mínima dejaba el expediente sin forma de completarse, y no había manera de mover el
-pipeline.
+**Tramo 4 — núcleo de campo, consulta.** Mapa con filtros sobre OpenStreetMap, agenda del
+día con los vencidos primero, y barra de navegación. Compilan y las rutas quedan protegidas
+por el proxy. Falta verlos funcionando en un celular con puntos reales.
 
 ---
 
@@ -102,7 +100,7 @@ se comprueba que el RLS funciona: un vendedor no debe poder ver el perfil de otr
 **Por qué va aquí:** todo lo demás cuelga de saber quién eres. Las políticas de `perfiles`
 no sirven hasta que haya un usuario autenticado.
 
-### Tramo 3 — Núcleo de campo, captura — EN CURSO
+### Tramo 3 — Núcleo de campo, captura — HECHO
 
 Alta de prospecto con GPS y foto, validación de duplicados, bitácora de interacciones y
 compromisos con fecha.
@@ -117,7 +115,7 @@ proyecto; si es lento, no se usa.
 **Tablas nuevas:** `prospectos`, `visitas`, `compromisos`, y la tabla de auditoría. Cada
 una nace con RLS y sus políticas en la misma migración.
 
-### Tramo 4 — Núcleo de campo, consulta
+### Tramo 4 — Núcleo de campo, consulta — EN CURSO
 
 Mapa de clientes y prospectos con filtros, y agenda del día con los compromisos vencidos
 primero.
