@@ -13,6 +13,7 @@ import {
   type MapMouseEvent,
 } from "@vis.gl/react-google-maps";
 import { ETAPAS, type Etapa } from "@/lib/catalogos";
+import { COLOR, iconoPin } from "@/lib/marcadores";
 import { MensajeError } from "@/components/ui/estados";
 
 export type Punto = {
@@ -34,19 +35,13 @@ export type Punto = {
 const CENTRO_POR_OMISION = { lat: 8.9824, lng: -79.5199 };
 
 const COLOR_ETAPA: Record<Etapa, string> = {
-  nuevo: "#90a1b9",
-  contactado: "#155dfc",
-  cotizado: "#155dfc",
-  negociacion: "#fe9a00",
-  ganado: "#00a63e",
-  perdido: "#e7000b",
+  nuevo: COLOR.atenuado,
+  contactado: COLOR.info,
+  cotizado: COLOR.info,
+  negociacion: COLOR.aviso,
+  ganado: COLOR.ok,
+  perdido: COLOR.error,
 };
-
-/** Ícono dibujado como SVG en línea, para no depender de los globales de Google. */
-function icono(color: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="${color}" stroke="white" stroke-width="2.5"/></svg>`;
-  return { url: `data:image/svg+xml;utf8,${encodeURIComponent(svg)}` };
-}
 
 /** Encuadra el mapa sobre los puntos visibles cada vez que cambia el filtro. */
 function Encuadrar({ puntos }: { puntos: Punto[] }) {
@@ -149,7 +144,7 @@ function Contenido({
         <Marker
           key={p.id}
           position={{ lat: p.lat, lng: p.lng }}
-          icon={icono(COLOR_ETAPA[p.etapa])}
+          icon={iconoPin(COLOR_ETAPA[p.etapa])}
           onClick={() => {
             setCandidato(null);
             setPropio(p);

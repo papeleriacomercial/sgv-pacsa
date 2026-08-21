@@ -3,10 +3,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { APIProvider, useMapsLibrary } from "@vis.gl/react-google-maps";
-import { Check, MapPin, Search, X } from "lucide-react";
+import {
+  APIProvider,
+  InfoWindow,
+  // Con alias: `Map` a secas taparía el Map de JavaScript, que se usa más
+  // abajo para cruzar los estados del semáforo.
+  Map as MapaGoogle,
+  Marker,
+  useMapsLibrary,
+} from "@vis.gl/react-google-maps";
+import { Check, List, MapPin, MessageSquare, Search, X } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { obtenerUbicacion, type Ubicacion } from "@/lib/gps";
+import { COLOR, iconoPin } from "@/lib/marcadores";
 import {
   CATEGORIAS,
   ETAPAS,
@@ -57,8 +66,28 @@ type Candidato = {
   lat: number;
   lng: number;
   distanciaM: number | null;
+  /**
+   * Número de reseñas en Google. §7.5 lo llama el mejor proxy gratuito de
+   * tráfico del local: 400 reseñas no es lo mismo que 12.
+   *
+   * Deliberadamente **no** se usa la calificación en estrellas. Un restaurante
+   * de 4.8 puede ser diminuto, y lo que buscamos es volumen, no calidad.
+   *
+   * Se muestra, no se guarda: los términos de Google no permiten almacenarlo.
+   */
+  resenas: number | null;
   estado: Estado | null;
 };
+
+type Orden = "cercania" | "resenas";
+
+/** El color del pin dice en qué estado está el punto (§17). */
+function colorDe(c: Candidato) {
+  if (c.estado?.motivo_descarte) return COLOR.atenuado;
+  if (c.estado?.es_mio) return COLOR.info;
+  if (c.estado?.prospecto_id) return COLOR.aviso;
+  return COLOR.ok;
+}
 
 const FECHA = new Intl.DateTimeFormat("es-PA", {
   dateStyle: "medium",
@@ -90,6 +119,9 @@ function Buscador() {
   const [error, setError] = useState<string | null>(null);
 
   const [elegidos, setElegidos] = useState<string[]>([]);
+  const [orden, setOrden] = useState<Orden>("cercania");
+  const [vista, setVista] = useState<"lista" | "mapa">("lista");
+  const [abierto, setAbierto] = useState<Candidato | null>(null);
   const [descartando, setDescartando] = useState<Candidato | null>(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -120,7 +152,11 @@ function Buscador() {
 
     try {
       const tipos = categorias.flatMap((c) => [...CATEGORIAS[c].tipos]);
-      const campos = ["id", "displayName", "location"];
+      // `userRatingCount` pertenece al tramo Enterprise de Places, más caro por
+      // llamada pero con su propia cuota gratuita de 10.000 al mes. A este
+      // volumen sigue costando cero, y sin ese número la lista es una fila de
+      // nombres indistinguibles.
+      const campos = ["id", "displayName", "location", "userRatingCount"];
       let encontrados: google.maps.places.Place[] = [];
 
       if (modo === "cerca") {
@@ -159,9 +195,8 @@ function Buscador() {
           distanciaM: ubicacion
             ? distancia(ubicacion, p.location!.lat(), p.location!.lng())
             : null,
+          resenas: p.userRatingCount ?? null,
         }))
-        // Ordenada por cercanía: es lo que convierte la lista en una ruta.
-        .sort((a, b) => (a.distanciaM ?? 0) - (b.distanciaM ?? 0))
         .map((c) => ({ ...c, estado: null }));
 
       setResultados(await marcarEstados(lista));
@@ -232,6 +267,12 @@ function Buscador() {
     setDescartando(null);
     setGuardando(false);
   }
+
+  const ordenados = [...(resultados ?? [])].sort((a, b) =>
+    orden === "cercania"
+      ? (a.distanciaM ?? Infinity) - (b.distanciaM ?? Infinity)
+      : (b.resenas ?? -1) - (a.resenas ?? -1),
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -315,26 +356,96 @@ function Buscador() {
             <p className="text-sm font-medium text-texto">
               {resultados.length} encontrados
             </p>
-            <p className="text-xs text-texto-secundario">
-              Ordenados por cercanía
-            </p>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                aria-pressed={vista === "lista"}
+                onClick={() => setVista("lista")}
+                className={`min-h-tactil w-11 rounded-lg border ${
+                  vista === "lista"
+                    ? "border-marca bg-marca text-white"
+                    : "border-borde bg-superficie text-texto"
+                }`}
+                aria-label="Ver como lista"
+              >
+                <List size={16} className="mx-auto" aria-hidden />
+              </button>
+              <button
+                type="button"
+                aria-pressed={vista === "mapa"}
+                onClick={() => setVista("mapa")}
+                className={`min-h-tactil w-11 rounded-lg border ${
+                  vista === "mapa"
+                    ? "border-marca bg-marca text-white"
+                    : "border-borde bg-superficie text-texto"
+                }`}
+                aria-label="Ver en el mapa"
+              >
+                <MapPin size={16} className="mx-auto" aria-hidden />
+              </button>
+            </div>
           </div>
 
-          {resultados.map((c) => (
-            <Resultado
-              key={c.placeId}
-              candidato={c}
-              elegido={elegidos.includes(c.placeId)}
-              onElegir={() =>
-                setElegidos((a) =>
-                  a.includes(c.placeId)
-                    ? a.filter((x) => x !== c.placeId)
-                    : [...a, c.placeId],
-                )
-              }
-              onDescartar={() => setDescartando(c)}
-            />
-          ))}
+          {/* Ordenar por reseñas es lo que separa un supermercado de 400 de
+              una tienda de 12. Es el proxy de tráfico de §7.5. */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              aria-pressed={orden === "cercania"}
+              onClick={() => setOrden("cercania")}
+              className={`min-h-tactil flex-1 rounded-lg border text-sm ${
+                orden === "cercania"
+                  ? "border-marca bg-marca text-white"
+                  : "border-borde bg-superficie text-texto"
+              }`}
+            >
+              Más cerca
+            </button>
+            <button
+              type="button"
+              aria-pressed={orden === "resenas"}
+              onClick={() => setOrden("resenas")}
+              className={`min-h-tactil flex-1 rounded-lg border text-sm ${
+                orden === "resenas"
+                  ? "border-marca bg-marca text-white"
+                  : "border-borde bg-superficie text-texto"
+              }`}
+            >
+              Más movimiento
+            </button>
+          </div>
+
+          {vista === "mapa" ? (
+            <div className="h-[60vh] w-full overflow-hidden rounded-lg border border-borde">
+              <MapaCandidatos
+                candidatos={ordenados}
+                abierto={abierto}
+                onAbrir={setAbierto}
+                elegidos={elegidos}
+                onElegir={(id) =>
+                  setElegidos((a) =>
+                    a.includes(id) ? a.filter((x) => x !== id) : [...a, id],
+                  )
+                }
+              />
+            </div>
+          ) : (
+            ordenados.map((c) => (
+              <Resultado
+                key={c.placeId}
+                candidato={c}
+                elegido={elegidos.includes(c.placeId)}
+                onElegir={() =>
+                  setElegidos((a) =>
+                    a.includes(c.placeId)
+                      ? a.filter((x) => x !== c.placeId)
+                      : [...a, c.placeId],
+                  )
+                }
+                onDescartar={() => setDescartando(c)}
+              />
+            ))
+          )}
         </>
       )}
 
@@ -357,6 +468,85 @@ function Buscador() {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Los mismos resultados sobre el mapa.
+ *
+ * Es lo que una lista no puede mostrar: si los puntos forman un racimo sobre
+ * una vía principal o si están desperdigados en el monte. Esa geografía decide
+ * si vale la pena la parada, y se lee de un vistazo.
+ */
+function MapaCandidatos({
+  candidatos,
+  abierto,
+  onAbrir,
+  elegidos,
+  onElegir,
+}: {
+  candidatos: Candidato[];
+  abierto: Candidato | null;
+  onAbrir: (c: Candidato | null) => void;
+  elegidos: string[];
+  onElegir: (placeId: string) => void;
+}) {
+  const centro = candidatos[0]
+    ? { lat: candidatos[0].lat, lng: candidatos[0].lng }
+    : { lat: 8.9824, lng: -79.5199 };
+
+  return (
+    <MapaGoogle
+      defaultCenter={centro}
+      defaultZoom={14}
+      gestureHandling="greedy"
+      disableDefaultUI
+      zoomControl
+      style={{ height: "100%", width: "100%" }}
+    >
+      {candidatos.map((c) => (
+        <Marker
+          key={c.placeId}
+          position={{ lat: c.lat, lng: c.lng }}
+          icon={iconoPin(elegidos.includes(c.placeId) ? COLOR.marca : colorDe(c))}
+          onClick={() => onAbrir(c)}
+        />
+      ))}
+
+      {abierto && (
+        <InfoWindow
+          position={{ lat: abierto.lat, lng: abierto.lng }}
+          onCloseClick={() => onAbrir(null)}
+        >
+          <span className="block text-sm font-semibold">{abierto.nombre}</span>
+          <span className="block text-xs">
+            {abierto.resenas === null
+              ? "Sin reseñas"
+              : `${abierto.resenas} reseñas`}
+            {abierto.distanciaM !== null && ` · ${abierto.distanciaM} m`}
+          </span>
+          <span className="block text-xs">
+            {abierto.estado?.motivo_descarte
+              ? `Descartado: ${MOTIVOS_DESCARTE[abierto.estado.motivo_descarte]}`
+              : abierto.estado?.es_mio
+                ? "Ya es prospecto tuyo"
+                : abierto.estado?.prospecto_id
+                  ? `De ${abierto.estado.vendedor ?? "otro vendedor"}`
+                  : "Nuevo"}
+          </span>
+
+          {!abierto.estado?.prospecto_id && !abierto.estado?.motivo_descarte && (
+            <button
+              type="button"
+              onClick={() => onElegir(abierto.placeId)}
+              className="mt-1 text-xs font-medium underline"
+            >
+              {elegidos.includes(abierto.placeId) ? "Quitar" : "Elegir"}
+            </button>
+          )}
+        </InfoWindow>
+      )}
+    </MapaGoogle>
   );
 }
 
@@ -384,14 +574,31 @@ function Resultado({
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           <p className="text-base font-semibold text-texto">{candidato.nombre}</p>
-          {candidato.distanciaM !== null && (
-            <p className="flex items-center gap-1 font-mono text-xs text-texto-secundario">
-              <MapPin size={12} aria-hidden />
-              {candidato.distanciaM < 1000
-                ? `${candidato.distanciaM} m`
-                : `${(candidato.distanciaM / 1000).toFixed(1)} km`}
+          <div className="flex flex-wrap items-center gap-3">
+            {candidato.distanciaM !== null && (
+              <p className="flex items-center gap-1 font-mono text-xs text-texto-secundario">
+                <MapPin size={12} aria-hidden />
+                {candidato.distanciaM < 1000
+                  ? `${candidato.distanciaM} m`
+                  : `${(candidato.distanciaM / 1000).toFixed(1)} km`}
+              </p>
+            )}
+
+            {/* Proxy de tráfico, no de calidad: se muestra el número de
+                reseñas y nunca las estrellas (§7.5). */}
+            <p
+              className={`flex items-center gap-1 font-mono text-xs ${
+                candidato.resenas === null
+                  ? "text-texto-atenuado"
+                  : "text-texto-secundario"
+              }`}
+            >
+              <MessageSquare size={12} aria-hidden />
+              {candidato.resenas === null
+                ? "sin reseñas"
+                : `${candidato.resenas} reseñas`}
             </p>
-          )}
+          </div>
         </div>
 
         {!yaEsProspecto && !descartado && (
