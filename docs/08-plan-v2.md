@@ -171,7 +171,7 @@ pantallas. Hacerlo después significa escribir dos veces el mismo código.
   seguimiento nuevo, o señalar el punto en el mapa.
 - Vista con días desde el último contacto y días hasta el próximo compromiso.
 
-### Etapa 3 — Filtros y colorización
+### Etapa 3 — Filtros y colorización ✅ HECHA
 
 Un solo motor de filtros que sirve a la lista y al mapa: tipo de cuenta, categoría,
 producto de interés, volumen, días sin contacto, próximos N días, sin clasificar, sin

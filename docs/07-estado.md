@@ -504,3 +504,50 @@ vendedor viera la cartera completa. Verificado: otro usuario ve cero filas.
 | Categoría duplicada con otra caja | Rechazada | `23505` |
 | Un vendedor agrega categoría, otro la ve | La ve | La ve |
 | Cadencia de 400 días | Rechazada | `23514` |
+
+---
+
+## Plan v2, Etapa 3 — Filtros y colorización — 2026-08-21
+
+**Un solo motor de filtros para la lista y el mapa.** Si cada vista tuviera el suyo, en tres
+meses filtrarían distinto por el mismo criterio y nadie sabría cuál creer. Vive en
+`src/lib/filtros.ts` como funciones puras, sin React de por medio.
+
+**Lista y mapa son la misma pantalla con un botón de vista**, no dos pantallas. Cambiar de
+vista no pierde los filtros.
+
+### Filtros disponibles
+
+Nombre · tipo de cuenta · volumen · producto de interés · tipo de comercio · poblado ·
+vendedor · sin contacto hace más de N días · con compromiso en los próximos N días · fuera
+de cadencia · sin clasificar · sin ubicación.
+
+Las opciones de tipo de comercio y poblado **salen de los datos**, no de una lista fija: si
+nadie usó una categoría, no se ofrece como filtro.
+
+El filtro por vendedor **solo aparece para quien ve a más de una persona**. A un vendedor,
+filtrar por sí mismo no le dice nada.
+
+### Colorización (D-013)
+
+Solo en el mapa. Cuatro dimensiones: tipo de cuenta, volumen, días sin contacto y vendedor.
+
+La de días usa una gama de ámbar claro a rojo oscuro **calculada sobre el rango real de lo
+que se está viendo**. Una escala fija haría que en una cartera fresca todo se viera igual de
+claro y no se distinguiera nada.
+
+**La leyenda no es opcional:** sale de la misma función que decide los colores, para que no
+se pueda olvidar. Es lo que mantiene la regla de §17 dentro de la excepción.
+
+Dos decisiones de detalle que cambian el resultado:
+
+- **Nunca contactada cuenta como "hace mucho"**, no como nulo. Es el caso más urgente, y
+  tratarlo como dato faltante lo escondería justo del filtro que lo busca. En el mapa se
+  pinta del tono más oscuro.
+- La paleta de vendedores usa tonos que **no se confunden con el semáforo de estados**.
+
+### Lo que se conservó al reescribir el mapa
+
+La función de tocar un local de Google y agregarlo como cuenta vivía en el componente viejo.
+Se trasladó al nuevo antes de borrarlo: perderla habría sido un retroceso sobre algo ya
+probado en la calle.

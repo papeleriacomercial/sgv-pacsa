@@ -1,0 +1,215 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { List, MapPin } from "lucide-react";
+import {
+  aplicar,
+  colorizar,
+  DIMENSIONES,
+  FILTROS_VACIOS,
+  type Cuenta,
+  type Dimension,
+  type Filtros,
+} from "@/lib/filtros";
+import { PanelFiltros } from "@/components/panel-filtros";
+import { FichaPunto } from "@/components/ficha-punto";
+import { Tarjeta } from "@/components/ui/tarjeta";
+import { Cargando, Vacio } from "@/components/ui/estados";
+
+const MapaCuentas = dynamic(() => import("@/components/mapa-cuentas"), {
+  ssr: false,
+  loading: () => <Cargando texto="Cargando mapa" />,
+});
+
+/**
+ * La cartera, con un solo motor de filtros y dos vistas.
+ *
+ * Lista y mapa son dos formas de mirar el mismo conjunto filtrado, no dos
+ * pantallas distintas. Cambiar de vista no pierde los filtros: es el mismo
+ * componente.
+ */
+export function CuentasConFiltros({
+  cuentas,
+  vendedores,
+  vistaInicial = "lista",
+}: {
+  cuentas: Cuenta[];
+  vendedores: { id: string; nombre: string }[];
+  vistaInicial?: "lista" | "mapa";
+}) {
+  const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS);
+  const [abierto, setAbierto] = useState(false);
+  const [vista, setVista] = useState(vistaInicial);
+  const [dimension, setDimension] = useState<Dimension>("tipo");
+
+  const visibles = useMemo(() => aplicar(cuentas, filtros), [cuentas, filtros]);
+
+  // Las opciones salen de los datos, no de una lista fija: si nadie usó una
+  // categoría, no tiene sentido ofrecerla como filtro.
+  const categorias = useMemo(
+    () =>
+      [...new Set(cuentas.map((c) => c.tipo_comercio).filter(Boolean))].sort() as string[],
+    [cuentas],
+  );
+
+  const poblados = useMemo(
+    () => [...new Set(cuentas.map((c) => c.poblado).filter(Boolean))].sort() as string[],
+    [cuentas],
+  );
+
+  const nombreVendedor = (id: string) =>
+    vendedores.find((v) => v.id === id)?.nombre ?? "Otro vendedor";
+
+  const { color, leyenda } = useMemo(
+    () => colorizar(visibles, dimension, nombreVendedor),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visibles, dimension, vendedores],
+  );
+
+  const conUbicacion = visibles.filter((c) => !c.sin_ubicacion);
+
+  return (
+    <div className="flex flex-1 flex-col gap-3">
+      <PanelFiltros
+        filtros={filtros}
+        onCambio={setFiltros}
+        abierto={abierto}
+        onAbrir={setAbierto}
+        categorias={categorias}
+        poblados={poblados}
+        vendedores={vendedores}
+        visibles={visibles.length}
+        total={cuentas.length}
+      />
+
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium text-texto">
+          {visibles.length} {visibles.length === 1 ? "cuenta" : "cuentas"}
+        </p>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            aria-pressed={vista === "lista"}
+            onClick={() => setVista("lista")}
+            aria-label="Ver como lista"
+            className={`min-h-tactil w-11 rounded-lg border ${
+              vista === "lista"
+                ? "border-marca bg-marca text-white"
+                : "border-borde bg-superficie text-texto"
+            }`}
+          >
+            <List size={16} className="mx-auto" aria-hidden />
+          </button>
+          <button
+            type="button"
+            aria-pressed={vista === "mapa"}
+            onClick={() => setVista("mapa")}
+            aria-label="Ver en el mapa"
+            className={`min-h-tactil w-11 rounded-lg border ${
+              vista === "mapa"
+                ? "border-marca bg-marca text-white"
+                : "border-borde bg-superficie text-texto"
+            }`}
+          >
+            <MapPin size={16} className="mx-auto" aria-hidden />
+          </button>
+        </div>
+      </div>
+
+      {vista === "mapa" && (
+        <>
+          {/* La colorización solo existe en el mapa. En la lista cada ficha
+              trae su estado escrito y no hace falta codificarlo en color. */}
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-texto">Colorear por</p>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(DIMENSIONES) as Dimension[])
+                .filter((d) => d !== "vendedor" || vendedores.length > 1)
+                .map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    aria-pressed={dimension === d}
+                    onClick={() => setDimension(d)}
+                    className={`min-h-tactil rounded-lg border px-3 text-sm ${
+                      dimension === d
+                        ? "border-marca bg-marca text-white"
+                        : "border-borde bg-superficie text-texto"
+                    }`}
+                  >
+                    {DIMENSIONES[d]}
+                  </button>
+                ))}
+            </div>
+          </div>
+
+          {/* Obligatoria: sin ella, el mapa incumple §17. Ver D-013. */}
+          <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-lg border border-borde bg-superficie px-3 py-2">
+            {leyenda.map(({ color: c, texto }) => (
+              <span
+                key={texto}
+                className="flex items-center gap-1.5 text-xs text-texto-secundario"
+              >
+                <span
+                  aria-hidden
+                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: c }}
+                />
+                {texto}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+
+      {visibles.length === 0 && (
+        <Tarjeta>
+          <Vacio titulo="Ninguna cuenta pasa el filtro">
+            Quita algún filtro para volver a verlas.
+          </Vacio>
+        </Tarjeta>
+      )}
+
+      {vista === "mapa" && visibles.length > 0 && (
+        <>
+          {conUbicacion.length === 0 ? (
+            <Tarjeta>
+              <Vacio titulo="Ninguna de estas cuentas tiene ubicación">
+                Ábrelas y márcalas en el mapa desde su expediente.
+              </Vacio>
+            </Tarjeta>
+          ) : (
+            <div className="h-[60vh] w-full overflow-hidden rounded-lg border border-borde">
+              <MapaCuentas cuentas={conUbicacion} color={color} />
+            </div>
+          )}
+
+          {conUbicacion.length < visibles.length && (
+            <p className="text-xs text-texto-atenuado">
+              {visibles.length - conUbicacion.length} sin ubicación, no se
+              dibujan en el mapa.
+            </p>
+          )}
+        </>
+      )}
+
+      {vista === "lista" &&
+        visibles.map((c) => (
+          <FichaPunto
+            key={c.id}
+            id={c.id}
+            nombre={c.nombre}
+            tipoComercio={c.tipo_comercio}
+            tipo={c.tipo}
+            potencial={null}
+            ultimaInteraccion={
+              c.dias_sin_contacto === null
+                ? null
+                : `Hace ${c.dias_sin_contacto} días`
+            }
+          />
+        ))}
+    </div>
+  );
+}

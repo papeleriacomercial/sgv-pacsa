@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import { type TipoCuenta } from "@/lib/catalogos";
-import { FichaPunto } from "@/components/ficha-punto";
+import { cargarCartera } from "@/lib/cartera";
+import { CuentasConFiltros } from "@/components/cuentas-con-filtros";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { MensajeError, Vacio } from "@/components/ui/estados";
@@ -18,11 +18,6 @@ const ETIQUETA_ROL: Record<Rol, string> = {
   vendedor: "Vendedor",
   administracion: "Administración",
 };
-
-const FECHA = new Intl.DateTimeFormat("es-PA", {
-  dateStyle: "medium",
-  timeZone: "America/Panama",
-});
 
 export default async function Inicio() {
   const supabase = await clienteServidor();
@@ -41,26 +36,7 @@ export default async function Inicio() {
     .eq("id", user.id)
     .maybeSingle();
 
-  const { data: cuentas } = await supabase
-    .from("cuentas")
-    .select("id, nombre, tipo_comercio, tipo")
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  // Última interacción de cada punto, para la línea de abajo de la ficha.
-  const { data: seguimientos } = await supabase
-    .from("seguimientos")
-    .select("cuenta_id, fecha")
-    .is("deleted_at", null)
-    .order("fecha", { ascending: false });
-
-  const ultimaPorCuenta = new Map<string, string>();
-  seguimientos?.forEach((v) => {
-    if (!ultimaPorCuenta.has(v.cuenta_id)) {
-      ultimaPorCuenta.set(v.cuenta_id, v.fecha);
-    }
-  });
+  const { cuentas, vendedores } = await cargarCartera();
 
   return (
     <>
@@ -71,7 +47,7 @@ export default async function Inicio() {
         <CerrarSesion />
       </header>
 
-      <main className="flex flex-col gap-4 p-4">
+      <main className="flex flex-1 flex-col gap-4 p-4">
         {error && (
           <MensajeError
             titulo="No se pudo leer el perfil"
@@ -102,41 +78,32 @@ export default async function Inicio() {
           </Tarjeta>
         )}
 
-        <Link
-          href="/cuentas/nuevo"
-          className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-4 text-base font-medium text-white"
-        >
-          <Plus size={18} aria-hidden />
-          Nueva cuenta
-        </Link>
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href="/cuentas/nuevo"
+            className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-4 text-base font-medium text-white"
+          >
+            <Plus size={18} aria-hidden />
+            Nueva cuenta
+          </Link>
+          <Link
+            href="/buscar"
+            className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
+          >
+            <Search size={18} aria-hidden />
+            Buscar
+          </Link>
+        </div>
 
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-texto">Mis cuentas</h2>
-
-          {!cuentas?.length && (
-            <Tarjeta>
-              <Vacio titulo="Todavía no tienes cuentas">
-                Crea el primero desde el botón de arriba. Se registra en menos
-                de 30 segundos.
-              </Vacio>
-            </Tarjeta>
-          )}
-
-          {cuentas?.map((p) => {
-            const ultima = ultimaPorCuenta.get(p.id);
-            return (
-              <FichaPunto
-                key={p.id}
-                id={p.id}
-                nombre={p.nombre}
-                tipoComercio={p.tipo_comercio}
-                tipo={p.tipo as TipoCuenta}
-                potencial={null}
-                ultimaInteraccion={ultima ? FECHA.format(new Date(ultima)) : null}
-              />
-            );
-          })}
-        </section>
+        {cuentas.length === 0 ? (
+          <Tarjeta>
+            <Vacio titulo="Todavía no tienes cuentas">
+              Crea la primera con el botón de arriba, o búscalas en el mapa.
+            </Vacio>
+          </Tarjeta>
+        ) : (
+          <CuentasConFiltros cuentas={cuentas} vendedores={vendedores} />
+        )}
       </main>
     </>
   );
