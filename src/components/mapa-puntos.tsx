@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { ETAPAS, type Etapa } from "@/lib/catalogos";
 
 export type Punto = {
@@ -56,6 +55,16 @@ function icono(etapa: Etapa) {
 function Encuadrar({ puntos }: { puntos: Punto[] }) {
   const mapa = useMap();
 
+  // Leaflet mide el contenedor una sola vez, al crearse. Si en ese momento
+  // todavía no tenía altura —cosa habitual en móvil, entre la barra del
+  // navegador que aparece y desaparece y el cambio de orientación— el mapa
+  // queda dibujado en cero píxeles y se ve como un recuadro vacío.
+  // invalidateSize lo obliga a volver a medir.
+  useEffect(() => {
+    const id = setTimeout(() => mapa.invalidateSize(), 150);
+    return () => clearTimeout(id);
+  }, [mapa]);
+
   useEffect(() => {
     if (puntos.length === 0) return;
     const limites = L.latLngBounds(puntos.map((p) => [p.lat, p.lng]));
@@ -71,7 +80,7 @@ export default function MapaPuntos({ puntos }: { puntos: Punto[] }) {
       center={CENTRO_POR_OMISION}
       zoom={12}
       scrollWheelZoom
-      className="h-full w-full rounded-lg"
+      style={{ height: "100%", width: "100%" }}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

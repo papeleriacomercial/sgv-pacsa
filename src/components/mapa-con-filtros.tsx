@@ -135,7 +135,7 @@ export function MapaConFiltros({ puntos }: { puntos: PuntoConProductos[] }) {
           </Vacio>
         </Tarjeta>
       ) : (
-        <div className="min-h-[60vh] flex-1 overflow-hidden rounded-lg border border-borde">
+        <div className="h-[65vh] w-full overflow-hidden rounded-lg border border-borde">
           <MapaPuntos puntos={visibles} />
         </div>
       )}
