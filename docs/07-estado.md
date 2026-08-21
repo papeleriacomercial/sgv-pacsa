@@ -340,3 +340,41 @@ Ocho de los nueve de §7. Ninguno tiene documento en `05-modulos/` todavía.
 
 `oportunidades`, `territorios`, `clientes`, `solicitudes_cotizacion`, `muestras`,
 `comentarios`, `grupos_comerciales`.
+
+---
+
+## Mapa de Google y captura desde el mapa — 2026-08-21
+
+Verificado en un celular real contra el preview de `dev`.
+
+| Prueba | Resultado |
+|---|---|
+| El mapa carga con los comercios de Google visibles | Correcto |
+| Los prospectos propios se ven como puntos de color por etapa | Correcto |
+| Tocar un local de tercero abre el globo con su nombre | Correcto |
+| "Agregar como prospecto" lleva al alta con nombre y ubicación | Correcto |
+| El prospecto queda creado con su `place_id` | Correcto |
+
+Es la funcionalidad de Badger Maps que motivó el cambio de proveedor (D-009).
+
+**Configuración de Google Cloud.** Proyecto `sgv-pacsa`, con Maps JavaScript API y Places
+API (New) habilitadas. Llave restringida a `sgv-pacsa.vercel.app`, la URL de preview de
+`dev` y `localhost`.
+
+**Dos lecciones de la configuración**, anotadas porque van a repetirse:
+
+1. Las variables `NEXT_PUBLIC_` se incrustan **al construir**, no al abrir. Agregar una
+   variable en Vercel no la mete en los deploys que ya existen: hay que reconstruir.
+2. Vercel marca como *Sensitive* cualquier variable cuyo nombre combine `NEXT_PUBLIC_` con
+   `API_KEY`, y eso bloquea el guardado hasta confirmar. Para una llave de mapas la
+   advertencia no aplica: es pública por diseño y la protege la restricción por dominio.
+
+### Pendientes de seguridad antes del piloto
+
+| | Qué falta | Por qué importa |
+|---|---|---|
+| 1 | Cuotas diarias o alerta de presupuesto en Google Cloud | La restricción por dominio es falsificable. La cuota es el único tope real del gasto |
+| 2 | Agregar la cuenta de la empresa como Propietario del proyecto de Google | El proyecto quedó a nombre de una cuenta personal. Si se pierde, el mapa deja de funcionar y nadie más puede administrarlo |
+
+Ninguno bloquea el desarrollo. Los dos deben cerrarse antes de que un vendedor real use el
+sistema.
