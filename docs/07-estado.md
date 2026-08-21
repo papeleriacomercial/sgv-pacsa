@@ -197,3 +197,41 @@ filtra por `auth.uid()` de verdad, no está devolviendo todo. La primera confirm
 
 Esta es la diferencia con el SGP: aquí el modelo de permisos se probó con la tabla vacía,
 antes de que hubiera un solo dato real que depurar.
+
+---
+
+## Verificación del núcleo de campo — 2026-08-21
+
+Migración `20260821012429_nucleo_de_campo` aplicada en `sgv-pacsa-dev`. Crea seis enums,
+dos funciones auxiliares y las tablas `prospectos`, `visitas`, `compromisos` y `auditoria`,
+las cuatro con RLS y políticas en la misma migración.
+
+**Estructura:**
+
+| Tabla | RLS | Políticas | Triggers | Checks |
+|---|---|---|---|---|
+| `prospectos` | Sí | 4 | 3 | 2 |
+| `visitas` | Sí | 4 | 1 | 1 |
+| `compromisos` | Sí | 3 | 1 | 0 |
+| `auditoria` | Sí | 2 | 0 | 0 |
+
+**Pruebas funcionales**, todas como el usuario `vendedor` y en transacciones revertidas. La
+base quedó en cero filas.
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Crea un prospecto suyo | Permitido, `created_by` se atribuye solo | Correcto |
+| Crea un prospecto a nombre de otro vendedor | Rechazado | `42501` |
+| Marca perdido sin motivo | Rechazado | `23514 prospectos_motivo_solo_si_perdido` |
+| Motivo `precio` sin fecha de recontacto | Rechazado | `23514 prospectos_recontacto_obligatorio` |
+| Motivo `precio` con fecha | Permitido | Correcto |
+| Visita sin GPS y sin marca `sin_gps` | Rechazado | `23514 visitas_gps_o_marca` |
+| La misma visita con `sin_gps` | Permitido | Correcto |
+| Edita su propia visita | 0 filas: las visitas son bitácora | 0 filas |
+| Borra su propia visita | 0 filas | 0 filas |
+| Cambia de etapa | Fila en `auditoria` con el cambio | `etapa: nuevo -> cotizado` |
+| Cambia solo las notas | Sin fila en `auditoria`, `etapa_desde` intacto | Correcto |
+| Escribe en `auditoria` a mano | Rechazado | `42501` |
+
+Las dos últimas son las que más importan: la auditoría registra lo que debe y solo lo que
+debe, y ningún usuario puede escribirla directamente — solo el trigger `security definer`.

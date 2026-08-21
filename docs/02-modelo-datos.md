@@ -120,11 +120,21 @@ hacer.
 Aparece en tres lugares —`stock_suficiente`, `precio` y `espera_licitacion`— y en los tres
 significa lo mismo: este punto vuelve a la lista de trabajo en una fecha concreta.
 
-No se modela como texto libre ni como campo opcional. **La base lo obliga:** si el valor
-elegido pide recontacto y no hay fecha, el registro no se guarda. Un campo opcional se
-olvida; una restricción, no.
+No se modela como texto libre ni como campo opcional. Un campo opcional se olvida.
 
-Se implementa con `check` en la tabla correspondiente, detallado más abajo.
+**Dónde se obliga cada uno:**
+
+- `precio` y `espera_licitacion` viven en `prospectos`, junto a `fecha_recontacto`. Ahí lo
+  obliga la base con un `check`: sin fecha, el registro no se guarda. Verificado.
+- `stock_suficiente` es un resultado de visita, y la fecha del próximo paso vive en
+  `compromisos`, otra tabla. Un `check` no puede mirar otra tabla, así que **esa lo obliga
+  la interfaz**, no la base. Se documenta la diferencia en vez de dar por hecho que la base
+  cubre las dos.
+
+No se cerró con un trigger que exigiera el compromiso porque §6 pide un próximo paso en
+*toda* visita, y esa regla es justamente una de las que hay que validar en el piloto: forzar
+un próximo paso cuando el local está cerrado no tiene sentido. Endurecer en la base algo que
+se sospecha mal obliga a una migración para corregirlo.
 
 ---
 
