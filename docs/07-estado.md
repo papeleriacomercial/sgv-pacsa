@@ -81,6 +81,10 @@ comprueba con un celular en un lugar con comercios alrededor.
 
 ## Plan de construcción
 
+> **Reemplazado el 2026-08-21.** El plan vigente está en [08-plan-v2.md](08-plan-v2.md),
+> tras el replanteamiento del negocio. Lo que sigue abajo se conserva como registro de lo
+> que se planificó y se ejecutó hasta los Tramos 1 a 4.
+
 Cinco tramos hasta tener la aplicación en manos de un vendedor real. El orden sale de §13
 de la visión: primero el núcleo de campo, que es lo que hoy no existe y lo que sostiene
 todo lo demás.
