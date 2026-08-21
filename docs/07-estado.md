@@ -25,6 +25,7 @@ no cambió, la tarea no terminó.
 | Vercel | Creado | Proyecto `sgv-pacsa` conectado a GitHub. Producción desde `main` en `https://sgv-pacsa.vercel.app`. Variables cargadas: Production a prod, Preview y Development a dev. Configuración completa. |
 | Previews de Vercel | Verificado | Primer deploy de la rama `dev` en estado `Ready`, lo que confirma que Preview y Production apuntan a bases distintas. |
 | Auth URL Configuration | Listo | Verificado el 2026-08-20: prod acepta `https://sgv-pacsa.vercel.app/**`; dev acepta `http://localhost:3000/**` y el comodín de previews `https://sgv-pacsa-*-papeleria-comercial.vercel.app/**`. |
+| Aplicación, cimientos | Verificado | Login, sesión y pantalla de inicio funcionando desde un celular real contra el preview de `dev`. |
 
 Los dos proyectos de Supabase quedaron separados desde el día uno, como exige §16.
 
@@ -70,13 +71,7 @@ El esquema en dev coincide con el archivo versionado.
 
 ## En curso
 
-**Tramo 2 — cimientos de la aplicación.** Hechos: limpieza del andamiaje, tokens de diseño
-en `globals.css`, clientes de Supabase para navegador y servidor, `proxy.ts` con refresco de
-sesión y redirección, pantalla de entrada, pantalla de inicio con nombre y rol, y los
-componentes compartidos (botón, tarjeta, insignia, campo, estados).
-
-**Falta para cerrarlo:** un usuario de prueba en `sgv-pacsa-dev` con su fila en `perfiles`,
-para comprobar el login de punta a punta y que el RLS deja ver solo lo que corresponde.
+Nada abierto. El Tramo 2 quedó cerrado y verificado; lo siguiente es el Tramo 3.
 
 ---
 
@@ -91,7 +86,7 @@ todo lo demás.
 Los cuatro documentos están escritos. Los catálogos de resultado de visita, motivo de
 pérdida y etapas quedaron definidos con el negocio el 2026-08-20.
 
-### Tramo 2 — Cimientos de la aplicación — EN CURSO
+### Tramo 2 — Cimientos de la aplicación — HECHO
 
 Login, sesión, perfil del usuario, navegación, y los componentes compartidos de tarjeta,
 insignia, campo y tabla. Los tokens de `04-design-system.md` bajan a código aquí.
@@ -178,3 +173,24 @@ permitido de ajuste del umbral de dormido, metas por vendedor, y el catálogo de
 
 1. Leer `CLAUDE.md` (índice y reglas) y este archivo.
 2. Revisar el Tramo 2 en el plan de construcción y arrancar por ahí.
+
+---
+
+## Verificación del RLS — 2026-08-20
+
+Primera prueba real del modelo de permisos, con un usuario `vendedor` en `sgv-pacsa-dev`.
+Las tres primeras corrieron dentro de transacciones revertidas: no dejaron rastro.
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| El vendedor intenta cambiarse su `rol` a `gerente` | Rechazado | `42501: new row violates row-level security policy` |
+| El vendedor cambia su propio `nombre` | Permitido | Permitido |
+| Otro usuario consulta `perfiles` | Ve 0 filas | Ve 0 de 1 |
+| Login de punta a punta desde un celular | Nombre, rol y conteo | Correcto |
+
+La tercera es la concluyente: un usuario distinto ve **cero** filas, no una. La política
+filtra por `auth.uid()` de verdad, no está devolviendo todo. La primera confirma que el
+`with check` de `perfiles_update_propio` cierra la escalada de privilegios.
+
+Esta es la diferencia con el SGP: aquí el modelo de permisos se probó con la tabla vacía,
+antes de que hubiera un solo dato real que depurar.
