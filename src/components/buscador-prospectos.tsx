@@ -99,6 +99,41 @@ type Candidato = {
 
 type Orden = "cercania" | "resenas";
 
+/**
+ * Leyenda de colores.
+ *
+ * En la lista, cada tarjeta trae su estado escrito. En el mapa no: hasta que
+ * tocas el pin, el color va solo. Esta leyenda es lo que cumple la regla de
+ * §17 —los estados nunca dependen solo del color— en la vista de mapa.
+ */
+const LEYENDA = [
+  { color: COLOR.ok, texto: "Nuevo" },
+  { color: COLOR.info, texto: "Tuyo" },
+  { color: COLOR.aviso, texto: "De otro vendedor" },
+  { color: COLOR.atenuado, texto: "Descartado" },
+  { color: COLOR.marca, texto: "Elegido" },
+];
+
+function Leyenda() {
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-lg border border-borde bg-superficie px-3 py-2">
+      {LEYENDA.map(({ color, texto }) => (
+        <span
+          key={texto}
+          className="flex items-center gap-1.5 text-xs text-texto-secundario"
+        >
+          <span
+            aria-hidden
+            className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          {texto}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /** El color del pin dice en qué estado está el punto (§17). */
 function colorDe(c: Candidato) {
   if (c.estado?.motivo_descarte) return COLOR.atenuado;
@@ -416,6 +451,8 @@ function Buscador() {
               </button>
             </div>
           </div>
+
+          <Leyenda />
 
           {/* Ordenar por reseñas es lo que separa un supermercado de 400 de
               una tienda de 12. Es el proxy de tráfico de §7.5. */}
