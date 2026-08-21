@@ -18,6 +18,7 @@ import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, MensajeError } from "@/components/ui/estados";
+import { CampoCategoria, registrarCategoria } from "@/components/campo-categoria";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
 type Duplicado = {
@@ -130,6 +131,9 @@ function Formulario() {
       return;
     }
 
+    // La categoría escrita se suma al catálogo compartido, si es nueva.
+    if (tipoComercio.trim()) await registrarCategoria(tipoComercio);
+
     // El id se genera aquí, no en la base: el celular tiene que poder crear
     // registros sin conexión y sincronizarlos después sin renumerar nada.
     const id = crypto.randomUUID();
@@ -226,12 +230,7 @@ function Formulario() {
               ayuda="Si lo tienes a mano. Hace falta antes de facturar."
             />
 
-            <Campo
-              etiqueta="Tipo de comercio"
-              value={tipoComercio}
-              onChange={(e) => setTipoComercio(e.target.value)}
-              ayuda="Minisúper, panadería, restaurante, farmacia."
-            />
+            <CampoCategoria valor={tipoComercio} onCambio={setTipoComercio} />
           </Tarjeta>
 
           {duplicados.length > 0 && (

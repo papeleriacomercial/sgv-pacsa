@@ -4,12 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { clienteNavegador } from "@/lib/supabase/navegador";
-import { LINEAS_PRODUCTO, type LineaProducto } from "@/lib/catalogos";
+import {
+  CADENCIAS,
+  LINEAS_PRODUCTO,
+  VOLUMENES,
+  type LineaProducto,
+  type Volumen,
+} from "@/lib/catalogos";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError } from "@/components/ui/estados";
+import { CampoCategoria, registrarCategoria } from "@/components/campo-categoria";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
 /**
@@ -36,13 +43,17 @@ export default function EditarProspecto() {
   const [contactoWhatsapp, setContactoWhatsapp] = useState("");
   const [contactoCorreo, setContactoCorreo] = useState("");
   const [notas, setNotas] = useState("");
+  const [volumen, setVolumen] = useState<Volumen | null>(null);
+  const [direccion, setDireccion] = useState("");
+  const [poblado, setPoblado] = useState("");
+  const [cadencia, setCadencia] = useState("");
 
   useEffect(() => {
     const supabase = clienteNavegador();
     supabase
       .from("cuentas")
       .select(
-        "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas",
+        "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas, volumen, direccion, poblado, dias_cadencia",
       )
       .eq("id", id)
       .is("deleted_at", null)
@@ -59,6 +70,10 @@ export default function EditarProspecto() {
           setContactoWhatsapp(data.contacto_whatsapp ?? "");
           setContactoCorreo(data.contacto_correo ?? "");
           setNotas(data.notas ?? "");
+          setVolumen((data.volumen as Volumen) ?? null);
+          setDireccion(data.direccion ?? "");
+          setPoblado(data.poblado ?? "");
+          setCadencia(data.dias_cadencia ? String(data.dias_cadencia) : "");
         }
         setCargando(false);
       });
@@ -68,6 +83,9 @@ export default function EditarProspecto() {
     evento.preventDefault();
     setError(null);
     setGuardando(true);
+
+    // La categoría escrita se suma al catálogo compartido, si es nueva.
+    if (tipoComercio.trim()) await registrarCategoria(tipoComercio);
 
     const supabase = clienteNavegador();
     const { error: fallo } = await supabase
@@ -82,6 +100,10 @@ export default function EditarProspecto() {
         contacto_whatsapp: contactoWhatsapp.trim() || null,
         contacto_correo: contactoCorreo.trim() || null,
         notas: notas.trim() || null,
+        volumen,
+        direccion: direccion.trim() || null,
+        poblado: poblado.trim() || null,
+        dias_cadencia: cadencia ? Number(cadencia) : null,
       })
       .eq("id", id);
 
@@ -124,10 +146,64 @@ export default function EditarProspecto() {
                 onChange={(e) => setRuc(e.target.value)}
                 ayuda="Hace falta antes de facturar."
               />
+              <CampoCategoria valor={tipoComercio} onCambio={setTipoComercio} />
+            </Tarjeta>
+
+            <Tarjeta className="flex flex-col gap-4">
+              <Opciones
+                etiqueta="Volumen de venta"
+                opciones={VOLUMENES}
+                valor={volumen}
+                onCambio={setVolumen}
+                ayuda="Tu estimación de cuánto puede comprar esta cuenta."
+              />
+
+              {/* Contra qué se mide "días sin contacto". Sin cadencia, el
+                  número es solo un número: 20 días es alarma en un restaurante
+                  y normal en una oficina. */}
+              <div>
+                <p className="text-sm font-medium text-texto">
+                  Cada cuánto contactarla
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {CADENCIAS.map((c) => (
+                    <button
+                      key={c.dias}
+                      type="button"
+                      aria-pressed={cadencia === String(c.dias)}
+                      onClick={() =>
+                        setCadencia(
+                          cadencia === String(c.dias) ? "" : String(c.dias),
+                        )
+                      }
+                      className={`min-h-tactil rounded-lg border px-3 text-sm ${
+                        cadencia === String(c.dias)
+                          ? "border-marca bg-marca text-white"
+                          : "border-borde bg-superficie text-texto"
+                      }`}
+                    >
+                      {c.etiqueta}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-texto-atenuado">
+                  Opcional. Si la defines, el sistema te avisa cuando se pase.
+                </p>
+              </div>
+            </Tarjeta>
+
+            <Tarjeta className="flex flex-col gap-4">
               <Campo
-                etiqueta="Tipo de comercio"
-                value={tipoComercio}
-                onChange={(e) => setTipoComercio(e.target.value)}
+                etiqueta="Dirección"
+                value={direccion}
+                onChange={(e) => setDireccion(e.target.value)}
+                ayuda="Cómo se llega. Las coordenadas sirven al mapa, esto a la gente."
+              />
+              <Campo
+                etiqueta="Poblado o distrito"
+                value={poblado}
+                onChange={(e) => setPoblado(e.target.value)}
+                ayuda="Aguadulce, La Chorrera, David. Permite agrupar la cartera por zona."
               />
             </Tarjeta>
 

@@ -161,7 +161,7 @@ pantallas. Hacerlo después significa escribir dos veces el mismo código.
 
 **Se ve al final:** lo mismo de hoy, con los nombres correctos y un campo Cliente/Prospecto.
 
-### Etapa 2 — La cuenta completa
+### Etapa 2 — La cuenta completa ✅ HECHA
 
 - Catálogo autoalimentado de categorías de comercio.
 - Volumen de venta: alta, media, baja.

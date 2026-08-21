@@ -147,3 +147,32 @@ export const TONO_TIPO: Record<TipoCuenta, "ok" | "info"> = {
   prospecto: "info",
   cliente: "ok",
 };
+
+/** Volumen estimado por el vendedor (plan v2, Etapa 2). */
+export const VOLUMENES = {
+  alta: "Alta",
+  media: "Media",
+  baja: "Baja",
+} as const;
+
+export type Volumen = keyof typeof VOLUMENES;
+
+export const TONO_VOLUMEN: Record<Volumen, "ok" | "info" | "neutro"> = {
+  alta: "ok",
+  media: "info",
+  baja: "neutro",
+};
+
+/**
+ * Cadencias sugeridas, en días.
+ *
+ * "Días sin contacto" por sí solo no dice si algo está bien: 20 días sin ver a
+ * un restaurante que recompra cada 15 es una alarma; a una oficina que compra
+ * cada tres meses, es normal. La cadencia es contra qué se mide.
+ */
+export const CADENCIAS = [
+  { dias: 7, etiqueta: "Semanal" },
+  { dias: 15, etiqueta: "Quincenal" },
+  { dias: 30, etiqueta: "Mensual" },
+  { dias: 90, etiqueta: "Trimestral" },
+];

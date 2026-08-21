@@ -461,3 +461,46 @@ selección múltiple con alta en lote, y descarte con motivo.
   minisúper. La traducción está en `src/lib/catalogos.ts` y hay que revisarla con los
   vendedores.
 - **Los motivos de descarte son propuesta**, como lo fueron los de resultado de visita.
+
+---
+
+## Plan v2, Etapas 1 y 2 — 2026-08-21
+
+El plan vigente está en [08-plan-v2.md](08-plan-v2.md).
+
+### Etapa 1 — Vocabulario y modelo de cuentas
+
+`prospectos` → `cuentas`, `visitas` → `seguimientos`, campo `tipo` prospecto/cliente, y la
+etapa mudada de la cuenta a la oportunidad (D-011). Trece pantallas, rutas y menú.
+
+Verificado: los datos sobrevivieron el renombrado, `buscar_duplicados` y `estado_de_puntos`
+siguen respondiendo, y la auditoría registra el paso `prospecto -> cliente`.
+
+### Etapa 2 — La cuenta completa
+
+| Pieza | Estado |
+|---|---|
+| Catálogo abierto de categorías, global | Hecho |
+| Volumen de venta alta/media/baja | Hecho |
+| Ubicación en texto: dirección y poblado | Hecho |
+| Cuentas sin coordenadas: aviso y pantalla para ubicarlas | Hecho |
+| Días desde el último contacto y hasta el próximo compromiso | Hecho |
+| Cadencia objetivo por cuenta | Hecho |
+
+**La cadencia no estaba pedida.** Se agregó porque "días sin contacto" por sí solo no dice
+si algo está bien: 20 días sin ver a un restaurante que recompra cada 15 es una alarma; a
+una oficina que compra cada tres meses, es normal. La cadencia es contra qué se mide, y es
+la versión trabajable del umbral de dormido de §6.
+
+**La vista `cuentas_resumen` lleva `security_invoker = true`.** Sin eso correría con los
+permisos de quien la creó y saltaría el RLS de las tablas de abajo, dejando que cualquier
+vendedor viera la cartera completa. Verificado: otro usuario ve cero filas.
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Otro usuario consulta la vista | Ve 0 | Ve 0 |
+| El vendedor ve las suyas con días calculados | Correcto | 1 día sin contacto, 6 hasta el compromiso |
+| Fuera de cadencia sin cadencia definida | Nulo | Nulo |
+| Categoría duplicada con otra caja | Rechazada | `23505` |
+| Un vendedor agrega categoría, otro la ve | La ve | La ve |
+| Cadencia de 400 días | Rechazada | `23514` |

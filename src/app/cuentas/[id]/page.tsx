@@ -53,9 +53,9 @@ export default async function Expediente({
   if (!user) redirect("/entrar");
 
   const { data: prospecto } = await supabase
-    .from("cuentas")
+    .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo_comercio, tipo, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, lat, lng",
+      "id, nombre, tipo_comercio, tipo, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -119,7 +119,7 @@ export default async function Expediente({
 
         <div className="grid grid-cols-2 gap-2">
           <CambiarTipoCuenta id={id} tipo={prospecto.tipo as TipoCuenta} />
-          <Link href={`/cuentas//editar`} className="block">
+          <Link href={`/cuentas/${id}/editar`} className="block">
             <Boton tono="secundario" ancho>
               Editar datos
             </Boton>
@@ -151,6 +151,61 @@ export default async function Expediente({
           </div>
         )}
 
+        {/* Los días son cálculo, no captura: salen de la vista de resumen.
+            "Fuera de cadencia" los compara contra la cadencia de esta cuenta,
+            no contra un número plano igual para todas. */}
+        <div className="grid grid-cols-2 gap-2">
+          <Tarjeta
+            className={
+              prospecto.fuera_de_cadencia ? "border-red-200 bg-red-50" : undefined
+            }
+          >
+            <p className="text-xs text-texto-secundario">Sin contacto</p>
+            <p
+              className={`font-mono text-2xl ${
+                prospecto.fuera_de_cadencia ? "text-error" : "text-texto"
+              }`}
+            >
+              {prospecto.dias_sin_contacto ?? "—"}
+            </p>
+            <p className="text-xs text-texto-atenuado">
+              {prospecto.dias_sin_contacto === null
+                ? "Nunca contactada"
+                : prospecto.fuera_de_cadencia
+                  ? "Pasada de su cadencia"
+                  : "días"}
+            </p>
+          </Tarjeta>
+
+          <Tarjeta>
+            <p className="text-xs text-texto-secundario">Próximo paso</p>
+            <p className="font-mono text-2xl text-texto">
+              {prospecto.dias_hasta_compromiso ?? "—"}
+            </p>
+            <p className="text-xs text-texto-atenuado">
+              {prospecto.dias_hasta_compromiso === null
+                ? "Sin compromiso"
+                : prospecto.dias_hasta_compromiso < 0
+                  ? "días vencido"
+                  : "días"}
+            </p>
+          </Tarjeta>
+        </div>
+
+        {prospecto.sin_ubicacion && (
+          <Link href={`/cuentas/${id}/ubicar`} className="block">
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
+              <MapPinOff size={18} className="mt-0.5 shrink-0" aria-hidden />
+              <div>
+                <p className="text-sm font-medium">Esta cuenta no tiene ubicación</p>
+                <p className="text-xs">
+                  No aparece en el mapa. Toca aquí para marcarla.
+                </p>
+              </div>
+            </div>
+          </Link>
+        )}
+
         <Tarjeta className="flex flex-col gap-3">
           <p className="text-sm font-medium text-texto">Datos</p>
 
@@ -171,6 +226,12 @@ export default async function Expediente({
                 }
               >
                 {prospecto.contacto_telefono ?? "Sin registrar"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-texto-secundario">Poblado</dt>
+              <dd className={prospecto.poblado ? "" : "text-texto-atenuado"}>
+                {prospecto.poblado ?? "Sin registrar"}
               </dd>
             </div>
             <div className="flex justify-between gap-2">
