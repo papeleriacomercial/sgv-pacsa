@@ -124,7 +124,10 @@ export default function UbicarCuenta() {
             </Tarjeta>
 
             <div className="h-[55vh] w-full overflow-hidden rounded-lg border border-borde">
-              <APIProvider apiKey={llave}>
+              {/* Mismo juego de librerías que el resto de la aplicación. Pedirle
+                  el script a Google dos veces con parámetros distintos hace
+                  que el segundo mapa no arranque. */}
+              <APIProvider apiKey={llave} libraries={["places"]}>
                 <MapaGoogle
                   defaultCenter={centro}
                   defaultZoom={punto ? 17 : 15}

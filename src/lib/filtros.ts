@@ -1,4 +1,9 @@
-import type { LineaProducto, TipoCuenta, Volumen } from "@/lib/catalogos";
+import {
+  LINEAS_PRODUCTO,
+  type LineaProducto,
+  type TipoCuenta,
+  type Volumen,
+} from "@/lib/catalogos";
 import { COLOR } from "@/lib/marcadores";
 
 /**
@@ -126,22 +131,39 @@ export function aplicar(cuentas: Cuenta[], f: Filtros): Cuenta[] {
 // leyenda es obligatoria. Fuera del mapa, el color sigue significando estado.
 // ===========================================================================
 
-export type Dimension = "tipo" | "volumen" | "sin_contacto" | "vendedor";
+/**
+ * Las dimensiones de color son **las mismas variables que se pueden filtrar**.
+ * Si se pudiera colorear por algo que no se puede filtrar, o al revés, el
+ * vendedor tendría que aprender dos vocabularios para la misma cartera.
+ */
+export type Dimension =
+  | "tipo"
+  | "volumen"
+  | "producto"
+  | "categoria"
+  | "poblado"
+  | "sin_contacto"
+  | "vendedor";
 
 export const DIMENSIONES: Record<Dimension, string> = {
   tipo: "Tipo de cuenta",
   volumen: "Volumen",
+  producto: "Producto de interés",
+  categoria: "Tipo de comercio",
+  poblado: "Poblado",
   sin_contacto: "Días sin contacto",
   vendedor: "Vendedor",
 };
 
+const ETIQUETA_PRODUCTO: Record<string, string> = LINEAS_PRODUCTO;
+
 /**
- * Paleta para vendedores.
+ * Paleta para las dimensiones de valor abierto.
  *
- * No son colores de estado: aquí el color solo distingue personas, y por eso
- * se eligieron tonos que no se confunden con el semáforo del sistema.
+ * No son colores de estado: aquí el color solo distingue valores entre sí, y
+ * por eso se eligieron tonos que no se confunden con el semáforo del sistema.
  */
-const PALETA_VENDEDOR = [
+const PALETA_VALORES = [
   "#7C3AED",
   "#0891B2",
   "#DB2777",
@@ -198,17 +220,55 @@ export function colorizar(
     };
   }
 
-  if (dimension === "vendedor") {
-    const ids = [...new Set(cuentas.map((c) => c.vendedor_id))];
-    const porId = new Map(
-      ids.map((id, i) => [id, PALETA_VENDEDOR[i % PALETA_VENDEDOR.length]]),
+  // Dimensiones de valor abierto: vendedor, categoría, poblado y producto. Se
+  // resuelven igual —tantos colores como valores distintos haya— porque
+  // ninguna tiene una lista fija conocida de antemano.
+  if (
+    dimension === "vendedor" ||
+    dimension === "categoria" ||
+    dimension === "poblado" ||
+    dimension === "producto"
+  ) {
+    const claveDe = (c: Cuenta): string | null => {
+      if (dimension === "vendedor") return c.vendedor_id;
+      if (dimension === "categoria") return c.tipo_comercio;
+      if (dimension === "poblado") return c.poblado;
+      // Una cuenta puede interesarse en varias líneas. Se colorea por la
+      // primera, y la leyenda lo dice para que nadie lea de más.
+      return c.productos_interes?.[0] ?? null;
+    };
+
+    const etiquetaDe = (clave: string) =>
+      dimension === "vendedor"
+        ? nombreVendedor(clave)
+        : dimension === "producto"
+          ? (ETIQUETA_PRODUCTO[clave] ?? clave)
+          : clave;
+
+    const claves = [
+      ...new Set(cuentas.map(claveDe).filter((v): v is string => v !== null)),
+    ].sort();
+
+    const porClave = new Map(
+      claves.map((k, i) => [k, PALETA_VALORES[i % PALETA_VALORES.length]]),
     );
+
+    const leyenda: EntradaLeyenda[] = claves.map((k) => ({
+      color: porClave.get(k)!,
+      texto: etiquetaDe(k),
+    }));
+
+    const haySinValor = cuentas.some((c) => claveDe(c) === null);
+    if (haySinValor) {
+      leyenda.push({ color: COLOR.atenuado, texto: "Sin definir" });
+    }
+
     return {
-      color: (c) => porId.get(c.vendedor_id) ?? COLOR.atenuado,
-      leyenda: ids.map((id) => ({
-        color: porId.get(id)!,
-        texto: nombreVendedor(id),
-      })),
+      color: (c) => {
+        const k = claveDe(c);
+        return k ? (porClave.get(k) ?? COLOR.atenuado) : COLOR.atenuado;
+      },
+      leyenda,
     };
   }
 

@@ -81,6 +81,9 @@ export function CuentasConFiltros({
         vendedores={vendedores}
         visibles={visibles.length}
         total={cuentas.length}
+        dimension={dimension}
+        onDimension={setDimension}
+        conColor={vista === "mapa"}
       />
 
       <div className="flex items-center justify-between gap-2">
@@ -117,50 +120,26 @@ export function CuentasConFiltros({
         </div>
       </div>
 
+      {/* Obligatoria: sin ella, el mapa incumple §17. Ver D-013. */}
       {vista === "mapa" && (
-        <>
-          {/* La colorización solo existe en el mapa. En la lista cada ficha
-              trae su estado escrito y no hace falta codificarlo en color. */}
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-texto">Colorear por</p>
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(DIMENSIONES) as Dimension[])
-                .filter((d) => d !== "vendedor" || vendedores.length > 1)
-                .map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    aria-pressed={dimension === d}
-                    onClick={() => setDimension(d)}
-                    className={`min-h-tactil rounded-lg border px-3 text-sm ${
-                      dimension === d
-                        ? "border-marca bg-marca text-white"
-                        : "border-borde bg-superficie text-texto"
-                    }`}
-                  >
-                    {DIMENSIONES[d]}
-                  </button>
-                ))}
-            </div>
-          </div>
-
-          {/* Obligatoria: sin ella, el mapa incumple §17. Ver D-013. */}
-          <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-lg border border-borde bg-superficie px-3 py-2">
-            {leyenda.map(({ color: c, texto }) => (
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-lg border border-borde bg-superficie px-3 py-2">
+          <span className="text-xs font-medium text-texto">
+            {DIMENSIONES[dimension]}:
+          </span>
+          {leyenda.map(({ color: c, texto }) => (
+            <span
+              key={texto}
+              className="flex items-center gap-1.5 text-xs text-texto-secundario"
+            >
               <span
-                key={texto}
-                className="flex items-center gap-1.5 text-xs text-texto-secundario"
-              >
-                <span
-                  aria-hidden
-                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: c }}
-                />
-                {texto}
-              </span>
-            ))}
-          </div>
-        </>
+                aria-hidden
+                className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: c }}
+              />
+              {texto}
+            </span>
+          ))}
+        </div>
       )}
 
       {visibles.length === 0 && (

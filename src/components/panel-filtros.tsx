@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Filter, X } from "lucide-react";
 import {
   LINEAS_PRODUCTO,
@@ -11,7 +12,9 @@ import {
 } from "@/lib/catalogos";
 import {
   contarActivos,
+  DIMENSIONES,
   FILTROS_VACIOS,
+  type Dimension,
   type Filtros,
 } from "@/lib/filtros";
 import { Campo } from "@/components/ui/campo";
@@ -80,6 +83,9 @@ export function PanelFiltros({
   vendedores,
   visibles,
   total,
+  dimension,
+  onDimension,
+  conColor,
 }: {
   filtros: Filtros;
   onCambio: (f: Filtros) => void;
@@ -91,9 +97,20 @@ export function PanelFiltros({
   vendedores: { id: string; nombre: string }[];
   visibles: number;
   total: number;
+  dimension: Dimension;
+  onDimension: (d: Dimension) => void;
+  /** La colorización solo existe en el mapa. */
+  conColor: boolean;
 }) {
+  const [pestana, setPestana] = useState<"filtrar" | "colorear">("filtrar");
   const activos = contarActivos(filtros);
-  const set = (parcial: Partial<Filtros>) => onCambio({ ...filtros, ...parcial });
+  const set = (parcial: Partial<Filtros>) =>
+    onCambio({ ...filtros, ...parcial });
+
+  // Filtrar y colorear son dos cosas distintas y no se mezclan en la misma
+  // vista: una decide qué se ve, la otra cómo se ve. Van en pestañas, con el
+  // mismo vocabulario de variables en las dos.
+  const enColor = conColor && pestana === "colorear";
 
   return (
     <div className="flex flex-col gap-3">
@@ -104,7 +121,7 @@ export function PanelFiltros({
       >
         <span className="flex items-center gap-2">
           <Filter size={16} aria-hidden />
-          Filtros
+          {conColor ? "Filtrar y colorear" : "Filtros"}
         </span>
         <span className="text-texto-secundario">
           {activos > 0
@@ -115,158 +132,225 @@ export function PanelFiltros({
 
       {abierto && (
         <Tarjeta className="flex flex-col gap-4">
-          <Campo
-            etiqueta="Buscar por nombre"
-            value={filtros.texto}
-            onChange={(e) => set({ texto: e.target.value })}
-          />
-
-          <Grupo titulo="Tipo de cuenta">
-            {(Object.keys(TIPOS_CUENTA) as TipoCuenta[]).map((t) => (
-              <Pastilla
-                key={t}
-                activo={filtros.tipos.includes(t)}
-                onClick={() => set({ tipos: alternar(filtros.tipos, t) })}
-              >
-                {TIPOS_CUENTA[t]}
-              </Pastilla>
-            ))}
-          </Grupo>
-
-          <Grupo titulo="Volumen">
-            {(Object.keys(VOLUMENES) as Volumen[]).map((v) => (
-              <Pastilla
-                key={v}
-                activo={filtros.volumenes.includes(v)}
-                onClick={() => set({ volumenes: alternar(filtros.volumenes, v) })}
-              >
-                {VOLUMENES[v]}
-              </Pastilla>
-            ))}
-          </Grupo>
-
-          <Grupo titulo="Producto de interés">
-            {(Object.keys(LINEAS_PRODUCTO) as LineaProducto[]).map((p) => (
-              <Pastilla
-                key={p}
-                activo={filtros.productos.includes(p)}
-                onClick={() => set({ productos: alternar(filtros.productos, p) })}
-              >
-                {LINEAS_PRODUCTO[p]}
-              </Pastilla>
-            ))}
-          </Grupo>
-
-          {categorias.length > 0 && (
-            <Grupo titulo="Tipo de comercio">
-              {categorias.map((c) => (
-                <Pastilla
-                  key={c}
-                  activo={filtros.categorias.includes(c)}
-                  onClick={() =>
-                    set({ categorias: alternar(filtros.categorias, c) })
-                  }
-                >
-                  {c}
-                </Pastilla>
-              ))}
-            </Grupo>
-          )}
-
-          {poblados.length > 0 && (
-            <Grupo titulo="Poblado">
-              {poblados.map((p) => (
-                <Pastilla
+          {conColor && (
+            <div className="grid grid-cols-2 gap-2">
+              {(["filtrar", "colorear"] as const).map((p) => (
+                <button
                   key={p}
-                  activo={filtros.poblados.includes(p)}
-                  onClick={() => set({ poblados: alternar(filtros.poblados, p) })}
+                  type="button"
+                  aria-pressed={pestana === p}
+                  onClick={() => setPestana(p)}
+                  className={`min-h-tactil rounded-lg border text-sm capitalize ${
+                    pestana === p
+                      ? "border-marca bg-marca text-white"
+                      : "border-borde bg-superficie text-texto"
+                  }`}
                 >
-                  {p}
-                </Pastilla>
+                  {p === "filtrar" ? "Qué se ve" : "Cómo se colorea"}
+                </button>
               ))}
+            </div>
+          )}
+
+          {enColor && (
+            <Grupo titulo="Colorear los pines por">
+              {(Object.keys(DIMENSIONES) as Dimension[])
+                .filter((d) => d !== "vendedor" || vendedores.length > 1)
+                .map((d) => (
+                  <Pastilla
+                    key={d}
+                    activo={dimension === d}
+                    onClick={() => onDimension(d)}
+                  >
+                    {DIMENSIONES[d]}
+                  </Pastilla>
+                ))}
             </Grupo>
           )}
 
-          {/* Solo aparece para quien ve a más de una persona: líder y gerencia.
+          {!enColor && (
+            <>
+              <Campo
+                etiqueta="Buscar por nombre"
+                value={filtros.texto}
+                onChange={(e) => set({ texto: e.target.value })}
+              />
+
+              <Grupo titulo="Tipo de cuenta">
+                {(Object.keys(TIPOS_CUENTA) as TipoCuenta[]).map((t) => (
+                  <Pastilla
+                    key={t}
+                    activo={filtros.tipos.includes(t)}
+                    onClick={() => set({ tipos: alternar(filtros.tipos, t) })}
+                  >
+                    {TIPOS_CUENTA[t]}
+                  </Pastilla>
+                ))}
+              </Grupo>
+
+              <Grupo titulo="Volumen">
+                {(Object.keys(VOLUMENES) as Volumen[]).map((v) => (
+                  <Pastilla
+                    key={v}
+                    activo={filtros.volumenes.includes(v)}
+                    onClick={() =>
+                      set({ volumenes: alternar(filtros.volumenes, v) })
+                    }
+                  >
+                    {VOLUMENES[v]}
+                  </Pastilla>
+                ))}
+              </Grupo>
+
+              <Grupo titulo="Producto de interés">
+                {(Object.keys(LINEAS_PRODUCTO) as LineaProducto[]).map((p) => (
+                  <Pastilla
+                    key={p}
+                    activo={filtros.productos.includes(p)}
+                    onClick={() =>
+                      set({ productos: alternar(filtros.productos, p) })
+                    }
+                  >
+                    {LINEAS_PRODUCTO[p]}
+                  </Pastilla>
+                ))}
+              </Grupo>
+
+              <Grupo titulo="Tipo de comercio">
+                {categorias.length > 0 ? (
+                  categorias.map((c) => (
+                    <Pastilla
+                      key={c}
+                      activo={filtros.categorias.includes(c)}
+                      onClick={() =>
+                        set({ categorias: alternar(filtros.categorias, c) })
+                      }
+                    >
+                      {c}
+                    </Pastilla>
+                  ))
+                ) : (
+                  <p className="text-xs text-texto-atenuado">
+                    Ninguna cuenta tiene tipo de comercio todavía. Se llena al
+                    crear la cuenta o en Editar datos.
+                  </p>
+                )}
+              </Grupo>
+
+              {/* El poblado se muestra siempre, aunque esté vacío. Esconderlo
+              cuando ninguna cuenta lo tiene hace que el filtro parezca no
+              existir, y el vendedor no descubre que puede llenarlo. */}
+              <Grupo titulo="Poblado">
+                {poblados.length > 0 ? (
+                  poblados.map((p) => (
+                    <Pastilla
+                      key={p}
+                      activo={filtros.poblados.includes(p)}
+                      onClick={() =>
+                        set({ poblados: alternar(filtros.poblados, p) })
+                      }
+                    >
+                      {p}
+                    </Pastilla>
+                  ))
+                ) : (
+                  <p className="text-xs text-texto-atenuado">
+                    Ninguna cuenta tiene poblado todavía. Se llena en Editar
+                    datos, y a partir de ahí se puede filtrar por zona.
+                  </p>
+                )}
+              </Grupo>
+
+              {/* Solo aparece para quien ve a más de una persona: líder y gerencia.
               A un vendedor filtrar por sí mismo no le dice nada. */}
-          {vendedores.length > 1 && (
-            <Grupo titulo="Vendedor">
-              {vendedores.map((v) => (
+              {vendedores.length > 1 && (
+                <Grupo titulo="Vendedor">
+                  {vendedores.map((v) => (
+                    <Pastilla
+                      key={v.id}
+                      activo={filtros.vendedores.includes(v.id)}
+                      onClick={() =>
+                        set({ vendedores: alternar(filtros.vendedores, v.id) })
+                      }
+                    >
+                      {v.nombre}
+                    </Pastilla>
+                  ))}
+                </Grupo>
+              )}
+
+              <Grupo titulo="Sin contacto hace más de">
+                {[15, 30, 60, 90].map((d) => (
+                  <Pastilla
+                    key={d}
+                    activo={filtros.sinContactoDesde === d}
+                    onClick={() =>
+                      set({
+                        sinContactoDesde:
+                          filtros.sinContactoDesde === d ? null : d,
+                      })
+                    }
+                  >
+                    {`${d} días`}
+                  </Pastilla>
+                ))}
+              </Grupo>
+
+              <Grupo titulo="Con compromiso en los próximos">
+                {[0, 3, 7, 30].map((d) => (
+                  <Pastilla
+                    key={d}
+                    activo={filtros.compromisoEnDias === d}
+                    onClick={() =>
+                      set({
+                        compromisoEnDias:
+                          filtros.compromisoEnDias === d ? null : d,
+                      })
+                    }
+                  >
+                    {d === 0 ? "Vencidos y hoy" : `${d} días`}
+                  </Pastilla>
+                ))}
+              </Grupo>
+
+              <Grupo titulo="Atajos">
                 <Pastilla
-                  key={v.id}
-                  activo={filtros.vendedores.includes(v.id)}
+                  activo={filtros.soloFueraDeCadencia}
                   onClick={() =>
-                    set({ vendedores: alternar(filtros.vendedores, v.id) })
+                    set({ soloFueraDeCadencia: !filtros.soloFueraDeCadencia })
                   }
                 >
-                  {v.nombre}
+                  Fuera de cadencia
                 </Pastilla>
-              ))}
-            </Grupo>
-          )}
+                <Pastilla
+                  activo={filtros.soloSinClasificar}
+                  onClick={() =>
+                    set({ soloSinClasificar: !filtros.soloSinClasificar })
+                  }
+                >
+                  Sin clasificar
+                </Pastilla>
+                <Pastilla
+                  activo={filtros.soloSinUbicacion}
+                  onClick={() =>
+                    set({ soloSinUbicacion: !filtros.soloSinUbicacion })
+                  }
+                >
+                  Sin ubicación
+                </Pastilla>
+              </Grupo>
 
-          <Grupo titulo="Sin contacto hace más de">
-            {[15, 30, 60, 90].map((d) => (
-              <Pastilla
-                key={d}
-                activo={filtros.sinContactoDesde === d}
-                onClick={() =>
-                  set({ sinContactoDesde: filtros.sinContactoDesde === d ? null : d })
-                }
-              >
-                {`${d} días`}
-              </Pastilla>
-            ))}
-          </Grupo>
-
-          <Grupo titulo="Con compromiso en los próximos">
-            {[0, 3, 7, 30].map((d) => (
-              <Pastilla
-                key={d}
-                activo={filtros.compromisoEnDias === d}
-                onClick={() =>
-                  set({ compromisoEnDias: filtros.compromisoEnDias === d ? null : d })
-                }
-              >
-                {d === 0 ? "Vencidos y hoy" : `${d} días`}
-              </Pastilla>
-            ))}
-          </Grupo>
-
-          <Grupo titulo="Atajos">
-            <Pastilla
-              activo={filtros.soloFueraDeCadencia}
-              onClick={() =>
-                set({ soloFueraDeCadencia: !filtros.soloFueraDeCadencia })
-              }
-            >
-              Fuera de cadencia
-            </Pastilla>
-            <Pastilla
-              activo={filtros.soloSinClasificar}
-              onClick={() =>
-                set({ soloSinClasificar: !filtros.soloSinClasificar })
-              }
-            >
-              Sin clasificar
-            </Pastilla>
-            <Pastilla
-              activo={filtros.soloSinUbicacion}
-              onClick={() => set({ soloSinUbicacion: !filtros.soloSinUbicacion })}
-            >
-              Sin ubicación
-            </Pastilla>
-          </Grupo>
-
-          {activos > 0 && (
-            <button
-              type="button"
-              onClick={() => onCambio(FILTROS_VACIOS)}
-              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde text-sm text-texto-secundario"
-            >
-              <X size={16} aria-hidden />
-              Quitar todos los filtros
-            </button>
+              {activos > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onCambio(FILTROS_VACIOS)}
+                  className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde text-sm text-texto-secundario"
+                >
+                  <X size={16} aria-hidden />
+                  Quitar todos los filtros
+                </button>
+              )}
+            </>
           )}
         </Tarjeta>
       )}
