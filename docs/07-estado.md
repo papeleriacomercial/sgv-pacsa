@@ -639,3 +639,37 @@ completos contra `information_schema` y `pg_policies`, no de memoria.
 Se agregó a `CLAUDE.md` la regla que faltaba: **los documentos de referencia se actualizan en
 el mismo empujón que el código.** La regla anterior solo obligaba a tocar `07-estado.md`, y
 por eso las referencias se desfasaron sin que nada avisara.
+
+---
+
+## Plan v2, Etapa 4 — Seguimientos — 2026-08-21
+
+Migración `20260822034428_accion_del_compromiso`: `compromisos.tipo_accion`.
+
+**Por qué hizo falta un campo nuevo.** El compromiso guardaba qué hacer en texto libre y
+cuándo. Con eso no se puede armar lo que pide el negocio —"las llamadas de hoy", "las visitas
+vencidas"— porque habría que leer cuarenta frases. El tipo de acción tiene que ser un dato.
+
+**La pantalla.** Filtra por acción —visita, llamada, WhatsApp, correo, muestra— y por ventana
+de tiempo: vencidos, hoy, próximos tres días, todos, o un rango elegido. Los vencidos van
+primero y en rojo.
+
+**El botón cambió de significado, y es el cambio de fondo de la etapa.** Antes decía *"Ya lo
+hice"* y solo marcaba el compromiso como cumplido. Ahora dice **Registrar** y abre la captura
+de seguimiento: al guardar, cierra el compromiso que lo motivó y crea el siguiente en el
+mismo gesto.
+
+La diferencia importa: *"ya lo hice"* se podía tocar sin dejar rastro de qué pasó, y el
+sistema perdía el hecho. Ahora **cumplir un compromiso es registrar qué ocurrió**, que es el
+principio rector de §1 aplicado a la agenda.
+
+Al registrar el próximo paso se elige también qué acción será, no solo el texto y la fecha.
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Compromiso sin acción declarada | Por omisión `visita` | Correcto |
+| Fijar acción y filtrar por ella | Devuelve solo esa | 1 llamada |
+| Cerrar uno y encadenar el siguiente | 1 cerrado, 1 pendiente | Correcto |
+
+**El día se calcula en el servidor, en hora de Panamá.** Si lo calculara el navegador, un
+celular con el huso mal puesto mostraría los vencidos de otro día.

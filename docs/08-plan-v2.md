@@ -136,7 +136,7 @@ Tres huecos reales en lo ya construido, que no son requerimientos nuevos sino de
 |---|---|
 | `prospectos` (23 columnas) | Renombrar a `cuentas`, quitar etapa y motivo, agregar tipo, volumen, ubicación, marca de GPS |
 | `visitas` (18 columnas) | Renombrar a `seguimientos`, agregar `oportunidad_id` |
-| `compromisos` | Renombrar la llave foránea |
+| `compromisos` | Renombrar la llave foránea, agregar `tipo_accion` |
 | `oportunidades` (14 columnas) | Agregar nombre, fecha estimada de cierre, motivo de pérdida, fecha de recontacto |
 | `descartes`, `auditoria`, `perfiles` | Sin cambios |
 | `buscar_duplicados`, `estado_de_puntos`, `auditar_prospecto` | Reescribir por los renombrados |
@@ -183,7 +183,7 @@ gama de claro a oscuro para los rangos numéricos.
 Aquí se absorben también los filtros que ya estaban pendientes de la lista y las dos piezas
 de sucursales de §7.4.
 
-### Etapa 4 — Seguimientos
+### Etapa 4 — Seguimientos ✅ HECHA
 
 Pantalla de Seguimientos con filtro por tipo de acción y por ventana de tiempo: vencidos,
 hoy, próximos tres días, o rango elegido.

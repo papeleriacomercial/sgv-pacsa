@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Camera, MapPin, MapPinOff } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { subirFoto } from "@/lib/fotos";
@@ -18,7 +18,7 @@ import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
-import { MensajeError } from "@/components/ui/estados";
+import { Cargando, MensajeError } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { BotonVolver } from "@/components/boton-volver";
 
@@ -28,13 +28,27 @@ function hoyEnPanama() {
   });
 }
 
-export default function RegistrarVisita() {
+export default function RegistrarSeguimiento() {
+  return (
+    <Suspense fallback={<Cargando />}>
+      <Formulario />
+    </Suspense>
+  );
+}
+
+function Formulario() {
   const router = useRouter();
   const { id: prospectoId } = useParams<{ id: string }>();
+
+  // Cuando se llega desde la pantalla de Seguimientos, se viene a cumplir un
+  // compromiso concreto: al guardar se cierra ese y se encadena el siguiente.
+  const parametros = useSearchParams();
+  const compromisoId = parametros.get("compromiso");
 
   const [tipo, setTipo] = useState<TipoInteraccion>("visita");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [proximoPaso, setProximoPaso] = useState("");
+  const [accion, setAccion] = useState<TipoInteraccion>("visita");
   const [fechaCompromiso, setFechaCompromiso] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
   const [proveedor, setProveedor] = useState("");
@@ -112,6 +126,16 @@ export default function RegistrarVisita() {
       return;
     }
 
+    // El compromiso que motivó este seguimiento se da por cumplido. Registrar
+    // lo que se hizo es lo que lo cierra: no hay un botón aparte de "ya lo
+    // hice" que se pueda tocar sin dejar rastro de qué pasó.
+    if (compromisoId) {
+      await supabase
+        .from("compromisos")
+        .update({ cumplido_en: new Date().toISOString() })
+        .eq("id", compromisoId);
+    }
+
     const { error: falloCompromiso } = await supabase.from("compromisos").insert({
       id: crypto.randomUUID(),
       cuenta_id: prospectoId,
@@ -119,17 +143,20 @@ export default function RegistrarVisita() {
       vendedor_id: user.id,
       descripcion: proximoPaso.trim(),
       fecha_compromiso: fechaCompromiso,
+      tipo_accion: accion,
     });
 
     if (falloCompromiso) {
       setError(
-        `La visita quedó guardada, pero el compromiso no: ${falloCompromiso.message}`,
+        `El seguimiento quedó guardado, pero el compromiso no: ${falloCompromiso.message}`,
       );
       setGuardando(false);
       return;
     }
 
-    router.replace(`/cuentas/${prospectoId}`);
+    // Volver a donde se venía: si el seguimiento salió de la agenda, ahí es
+    // donde el vendedor sigue trabajando.
+    router.replace(compromisoId ? "/seguimientos" : `/cuentas/${prospectoId}`);
     router.refresh();
   }
 
@@ -141,7 +168,7 @@ export default function RegistrarVisita() {
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <BotonVolver alterno={`/cuentas/`} />
+        <BotonVolver alterno={`/cuentas/${prospectoId}`} />
         <h1 className="text-lg font-semibold text-marca">Registrar seguimiento</h1>
       </header>
 
@@ -203,6 +230,15 @@ export default function RegistrarVisita() {
                   : undefined
               }
             />
+
+            {/* Qué acción es, no solo qué dice el texto. Es lo que permite
+                después pedir "las llamadas de hoy" en vez de leer 40 frases. */}
+            <Opciones
+              etiqueta="¿Qué vas a hacer?"
+              opciones={TIPOS_INTERACCION}
+              valor={accion}
+              onCambio={setAccion}
+            />
           </Tarjeta>
 
           <Tarjeta className="flex flex-col gap-3">
@@ -259,7 +295,7 @@ export default function RegistrarVisita() {
           {error && <MensajeError titulo="No se pudo guardar" detalle={error} />}
 
           <Boton type="submit" ancho disabled={guardando || !listo}>
-            {guardando ? "Guardando" : "Guardar visita"}
+            {guardando ? "Guardando" : "Guardar seguimiento"}
           </Boton>
         </form>
       </main>

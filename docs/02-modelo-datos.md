@@ -152,8 +152,12 @@ interacción puede ser llamada, WhatsApp o correo, no solo una visita.
 
 ### `compromisos`
 
-`id` · `cuenta_id` · `visita_id` · `vendedor_id` · `descripcion` · `fecha_compromiso` ·
-`cumplido_en` · auditoría.
+`id` · `cuenta_id` · `visita_id` · `vendedor_id` · `descripcion` · `tipo_accion` ·
+`fecha_compromiso` · `cumplido_en` · auditoría.
+
+**`tipo_accion` es qué hay que hacer**, del mismo enum que los seguimientos. Sin ese dato la
+pantalla de Seguimientos no puede pedir "las llamadas de hoy": habría que leer cuarenta
+frases de texto libre.
 
 Un compromiso vencido es `fecha_compromiso < hoy` y `cumplido_en is null`.
 
