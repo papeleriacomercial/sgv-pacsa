@@ -13,6 +13,15 @@ import { Insignia } from "@/components/ui/insignia";
 import { Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
+function hoyEnPanama() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Panama" });
+}
+
+const FECHA = new Intl.DateTimeFormat("es-PA", {
+  dateStyle: "medium",
+  timeZone: "America/Panama",
+});
+
 const MONTO = new Intl.NumberFormat("es-PA", {
   style: "currency",
   currency: "USD",
@@ -30,7 +39,9 @@ const ORDEN: Etapa[] = [
 
 type Oportunidad = {
   id: string;
+  nombre: string;
   linea: string;
+  fecha_cierre_estimada: string | null;
   descripcion: string | null;
   monto_estimado: string | number | null;
   etapa: string;
@@ -62,7 +73,9 @@ export default async function Pipeline() {
 
   const { data } = await supabase
     .from("oportunidades")
-    .select("id, linea, descripcion, monto_estimado, etapa, cuentas(nombre)")
+    .select(
+      "id, nombre, linea, descripcion, monto_estimado, etapa, fecha_cierre_estimada, cuentas(nombre)",
+    )
     .is("deleted_at", null)
     .order("monto_estimado", { ascending: false, nullsFirst: false });
 
@@ -135,11 +148,30 @@ export default async function Pipeline() {
                   <Tarjeta className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-base font-semibold text-texto">
-                        {nombreDe(o.cuentas)}
+                        {o.nombre}
                       </p>
                       <p className="text-sm text-texto-secundario">
+                        {nombreDe(o.cuentas)} ·{" "}
                         {LINEAS_PRODUCTO[o.linea as LineaProducto]}
                       </p>
+                      {/* La fecha vencida se marca en rojo: es lo que congela
+                          la oportunidad hasta que alguien la mueva. */}
+                      {o.fecha_cierre_estimada && (
+                        <p
+                          className={`font-mono text-xs ${
+                            o.fecha_cierre_estimada < hoyEnPanama()
+                              ? "text-error"
+                              : "text-texto-atenuado"
+                          }`}
+                        >
+                          {o.fecha_cierre_estimada < hoyEnPanama()
+                            ? "Vencida el "
+                            : "Cierra el "}
+                          {FECHA.format(
+                            new Date(`${o.fecha_cierre_estimada}T12:00:00`),
+                          )}
+                        </p>
+                      )}
                       {o.descripcion && (
                         <p className="text-xs text-texto-atenuado">
                           {o.descripcion}

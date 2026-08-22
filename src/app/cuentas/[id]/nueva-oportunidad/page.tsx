@@ -22,7 +22,9 @@ export default function NuevaOportunidad() {
   const router = useRouter();
   const { id: prospectoId } = useParams<{ id: string }>();
 
+  const [nombre, setNombre] = useState("");
   const [linea, setLinea] = useState<LineaProducto | null>(null);
+  const [fechaCierre, setFechaCierre] = useState("");
   const [monto, setMonto] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export default function NuevaOportunidad() {
 
   async function crear(evento: React.FormEvent) {
     evento.preventDefault();
-    if (!linea) return;
+    if (!linea || !nombre.trim()) return;
     setError(null);
     setGuardando(true);
 
@@ -49,7 +51,9 @@ export default function NuevaOportunidad() {
       id: crypto.randomUUID(),
       cuenta_id: prospectoId,
       vendedor_id: user.id,
+      nombre: nombre.trim(),
       linea,
+      fecha_cierre_estimada: fechaCierre || null,
       monto_estimado: monto ? Number(monto) : null,
       descripcion: descripcion.trim() || null,
     });
@@ -75,6 +79,23 @@ export default function NuevaOportunidad() {
 
       <main className="flex flex-col gap-4 p-4">
         <form onSubmit={crear} className="flex flex-col gap-4">
+          <Tarjeta className="flex flex-col gap-4">
+            <Campo
+              etiqueta="Nombre de la oportunidad"
+              required
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              ayuda="Qué se está vendiendo. Ej: 100 cajas de rollos térmicos 80mm."
+            />
+            <Campo
+              etiqueta="Fecha estimada de cierre"
+              type="date"
+              value={fechaCierre}
+              onChange={(e) => setFechaCierre(e.target.value)}
+              ayuda="Cuándo esperas cerrarla. Si se vence, la oportunidad se congela hasta que la muevas."
+            />
+          </Tarjeta>
+
           <Tarjeta>
             <Opciones
               etiqueta="Línea de producto"
@@ -105,7 +126,7 @@ export default function NuevaOportunidad() {
 
           {error && <MensajeError titulo="No se pudo crear" detalle={error} />}
 
-          <Boton type="submit" ancho disabled={guardando || !linea}>
+          <Boton type="submit" ancho disabled={guardando || !linea || !nombre.trim()}>
             {guardando ? "Creando" : "Crear oportunidad"}
           </Boton>
         </form>

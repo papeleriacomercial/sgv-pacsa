@@ -145,6 +145,7 @@ interacción puede ser llamada, WhatsApp o correo, no solo una visita.
 | `resultado` | `resultado_visita` not null | |
 | `proveedor_actual` / `precio_referencia` | text / numeric | Inteligencia de competencia (§7.7) |
 | `foto_path` | text | Bucket `visitas`, que conserva su nombre viejo |
+| `oportunidad_id` | uuid → `oportunidades` | Opcional: la venta concreta sobre la que trató |
 | `notas` | text | |
 | `created_at` `updated_at` `created_by` `deleted_at` | | |
 
@@ -166,16 +167,29 @@ Un compromiso vencido es `fecha_compromiso < hoy` y `cumplido_en is null`.
 Un punto más una línea de producto. Se separan de la cuenta porque un mismo local puede
 comprar rollos y no bolsas, y cada negociación avanza a su ritmo.
 
-`id` · `cuenta_id` · `vendedor_id` · `linea` · `descripcion` · `monto_estimado` ·
-`probabilidad` (0–100) · `etapa` · `etapa_desde` · `motivo_perdida` · `fecha_recontacto` ·
-auditoría.
+`id` · `cuenta_id` · `vendedor_id` · `nombre` · `linea` · `descripcion` ·
+`monto_estimado` · `probabilidad` (0–100) · `etapa` · `etapa_desde` ·
+`fecha_cierre_estimada` · `motivo_perdida` · `fecha_recontacto` · auditoría.
 
 **Restricciones:** el motivo existe si y solo si la etapa es `perdido`; los motivos que
 significan reintentar exigen `fecha_recontacto`; la probabilidad va de 0 a 100; el monto no
 es negativo.
 
-**Falta** lo que pide la Etapa 5 del plan v2: nombre de la oportunidad, fecha estimada de
-cierre, bitácora de avance y relación con seguimientos.
+**La oportunidad vencida se congela.** Con `fecha_cierre_estimada` en el pasado, un trigger
+rechaza cualquier UPDATE salvo que mueva esa fecha al futuro. Dos excepciones: cerrarla como
+ganada o perdida, y borrarla lógicamente. Sin la primera, registrar una venta perdida
+obligaría a inventarle antes una fecha futura de cierre — a mentir para poder decir la
+verdad.
+
+### `notas_oportunidad`
+
+`id` · `oportunidad_id` · `texto` · `autor_id` · `created_at`.
+
+Bitácora de avance: **se agrega, no se edita**. Cada nota nace con su fecha y hora. Un campo
+de texto único se sobrescribe y pierde la historia; así queda cómo evolucionó la negociación,
+que es lo que hay que mirar cuando una oportunidad lleva dos meses sin moverse.
+
+Sin política de update ni de delete, igual que los seguimientos y la auditoría.
 
 ### `categorias_comercio`
 

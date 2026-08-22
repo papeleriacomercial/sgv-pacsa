@@ -191,7 +191,7 @@ hoy, próximos tres días, o rango elegido.
 **El botón deja de marcar "ya lo hice" y pasa a registrar un seguimiento**, con la misma
 captura que dentro de la cuenta, cerrando el compromiso actual y creando el siguiente.
 
-### Etapa 5 — Oportunidades
+### Etapa 5 — Oportunidades ✅ HECHA
 
 - Nombre de la oportunidad y fecha estimada de cierre.
 - Bitácora de avance: notas que se agregan encabezadas con fecha y hora, sin borrar las

@@ -673,3 +673,43 @@ Al registrar el próximo paso se elige también qué acción será, no solo el t
 
 **El día se calcula en el servidor, en hora de Panamá.** Si lo calculara el navegador, un
 celular con el huso mal puesto mostraría los vencidos de otro día.
+
+---
+
+## Plan v2, Etapa 5 — Oportunidades — 2026-08-21
+
+Migración `20260822035849_oportunidades_completas`.
+
+| Pieza | Estado |
+|---|---|
+| Nombre de la oportunidad | Hecho |
+| Fecha estimada de cierre | Hecho |
+| Bitácora de avance con fecha y hora | Hecho |
+| Seguimientos ligados a la venta | Hecho |
+| Bloqueo por fecha vencida | Hecho |
+
+**La bitácora se agrega, no se edita.** Un campo de texto único se sobrescribe y pierde la
+historia. Así queda el rastro de cómo evolucionó la negociación, que es exactamente lo que
+hay que mirar cuando una oportunidad lleva dos meses en `negociacion` — la etapa ancha de
+D-005 se vuelve legible por su bitácora.
+
+### Una excepción que agregué a la regla del vencimiento
+
+El requerimiento decía que una oportunidad vencida no se puede actualizar hasta mover la
+fecha. Implementado tal cual, **registrar una venta perdida obligaría a inventarle primero
+una fecha futura de cierre**: mentir para poder decir la verdad.
+
+El trigger permite dos cosas con la fecha vencida: **cerrarla como ganada o perdida**, y
+borrarla lógicamente. Todo lo demás sigue congelado.
+
+Queda a confirmación del negocio; si prefieren la regla sin excepciones, es quitar cuatro
+líneas del trigger.
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Vencida: editar el monto | Rechazado | `23514` con mensaje en español |
+| Vencida: mover la fecha al futuro y editar | Permitido | Correcto |
+| Vencida: marcarla perdida | Permitido, por la excepción | Correcto |
+| Con fecha futura: editar libremente | Permitido | Correcto |
+| Editar una nota de bitácora | 0 filas | 0 filas |
+| Seguimiento ligado a la venta | Queda ligado | Correcto |

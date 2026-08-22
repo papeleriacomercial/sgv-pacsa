@@ -44,6 +44,8 @@ function Formulario() {
   // compromiso concreto: al guardar se cierra ese y se encadena el siguiente.
   const parametros = useSearchParams();
   const compromisoId = parametros.get("compromiso");
+  // Si se llega desde una oportunidad, el seguimiento queda ligado a esa venta.
+  const oportunidadId = parametros.get("oportunidad");
 
   const [tipo, setTipo] = useState<TipoInteraccion>("visita");
   const [resultado, setResultado] = useState<Resultado | null>(null);
@@ -118,6 +120,7 @@ function Formulario() {
       checkin_lng: ubicacion?.lng ?? null,
       checkin_precision_m: ubicacion?.precisionM ?? null,
       sin_gps: ubicacion === null,
+      oportunidad_id: oportunidadId,
     });
 
     if (falloVisita) {
@@ -156,7 +159,13 @@ function Formulario() {
 
     // Volver a donde se venía: si el seguimiento salió de la agenda, ahí es
     // donde el vendedor sigue trabajando.
-    router.replace(compromisoId ? "/seguimientos" : `/cuentas/${prospectoId}`);
+    router.replace(
+      oportunidadId
+        ? `/oportunidades/${oportunidadId}`
+        : compromisoId
+          ? "/seguimientos"
+          : `/cuentas/${prospectoId}`,
+    );
     router.refresh();
   }
 
