@@ -19,6 +19,8 @@ import { FichaPunto } from "@/components/ficha-punto";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, Vacio } from "@/components/ui/estados";
 
+// Sigue siendo dinámico y sin render en servidor: el mapa solo existe en el
+// navegador, y así su código no viaja a quien nunca abre la vista de mapa.
 const MapaCuentas = dynamic(() => import("@/components/mapa-cuentas"), {
   ssr: false,
   loading: () => <Cargando texto="Cargando mapa" />,

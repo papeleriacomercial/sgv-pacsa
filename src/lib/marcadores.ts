@@ -32,10 +32,20 @@ export type IconoMarcador = {
 export function iconoPin(color: string): IconoMarcador {
   const url = `data:image/svg+xml;utf8,${encodeURIComponent(svgPin(color))}`;
 
-  // `google` solo existe después de que cargue la librería. Los marcadores se
-  // dibujan siempre dentro del mapa, así que a esa altura ya está, pero la
-  // comprobación evita que un render temprano rompa la pantalla.
-  if (typeof google === "undefined" || !google.maps) return { url };
+  // No basta con que exista `google.maps`: `Size` y `Point` pertenecen a la
+  // librería `core`, que Google carga aparte y más tarde. Comprobar solo el
+  // objeto dejaba pasar un render temprano donde el objeto ya está pero las
+  // clases todavía no, y `new google.maps.Size()` reventaba el mapa entero.
+  //
+  // Era la causa de que el mapa no apareciera la primera vez y sí al volver:
+  // en la segunda visita la librería ya estaba cargada.
+  if (
+    typeof google === "undefined" ||
+    typeof google.maps?.Size !== "function" ||
+    typeof google.maps?.Point !== "function"
+  ) {
+    return { url };
+  }
 
   return {
     url,

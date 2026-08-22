@@ -69,6 +69,9 @@ function Contenido({
 }) {
   const router = useRouter();
   const places = useMapsLibrary("places");
+  // `core` trae Size y Point, que usa el ícono del marcador. Sin esperarla, el
+  // primer render los construye antes de que existan y revienta el mapa entero.
+  const core = useMapsLibrary("core");
   const [abierta, setAbierta] = useState<Cuenta | null>(
     () => cuentas.find((c) => c.id === destacada) ?? null,
   );
@@ -126,14 +129,15 @@ function Contenido({
     >
       <Encuadrar cuentas={cuentas} destacada={destacada} />
 
-      {cuentas.map((c) => (
-        <Marker
-          key={c.id}
-          position={{ lat: c.lat!, lng: c.lng! }}
-          icon={iconoPin(color(c))}
-          onClick={() => setAbierta(c)}
-        />
-      ))}
+      {core &&
+        cuentas.map((c) => (
+          <Marker
+            key={c.id}
+            position={{ lat: c.lat!, lng: c.lng! }}
+            icon={iconoPin(color(c))}
+            onClick={() => setAbierta(c)}
+          />
+        ))}
 
       {abierta && (
         <InfoWindow
@@ -152,7 +156,10 @@ function Contenido({
               ? "Nunca contactada"
               : `Hace ${abierta.dias_sin_contacto} días sin contacto`}
           </span>
-          <Link href={`/cuentas/${abierta.id}`} className="mt-1 block text-xs underline">
+          <Link
+            href={`/cuentas/${abierta.id}`}
+            className="mt-1 block text-xs underline"
+          >
             Abrir expediente
           </Link>
         </InfoWindow>

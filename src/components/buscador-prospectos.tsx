@@ -666,6 +666,10 @@ function MapaCandidatos({
   contando: boolean;
   onContarSucursales: (c: Candidato) => void;
 }) {
+  // `core` trae Size y Point, que usa el ícono del marcador. Sin esperarla, el
+  // primer render los construye antes de que existan y revienta el mapa entero.
+  const core = useMapsLibrary("core");
+
   const centro = candidatos[0]
     ? { lat: candidatos[0].lat, lng: candidatos[0].lng }
     : { lat: 8.9824, lng: -79.5199 };
@@ -681,14 +685,17 @@ function MapaCandidatos({
     >
       <Centrar candidato={abierto} />
 
-      {candidatos.map((c) => (
-        <Marker
-          key={c.placeId}
-          position={{ lat: c.lat, lng: c.lng }}
-          icon={iconoPin(elegidos.includes(c.placeId) ? COLOR.marca : colorDe(c))}
-          onClick={() => onAbrir(c)}
-        />
-      ))}
+      {core &&
+        candidatos.map((c) => (
+          <Marker
+            key={c.placeId}
+            position={{ lat: c.lat, lng: c.lng }}
+            icon={iconoPin(
+              elegidos.includes(c.placeId) ? COLOR.marca : colorDe(c),
+            )}
+            onClick={() => onAbrir(c)}
+          />
+        ))}
 
       {abierto && (
         <InfoWindow
