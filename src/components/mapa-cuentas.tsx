@@ -19,17 +19,34 @@ import { MensajeError } from "@/components/ui/estados";
 
 const CENTRO_POR_OMISION = { lat: 8.9824, lng: -79.5199 };
 
-function Encuadrar({ cuentas }: { cuentas: Cuenta[] }) {
+function Encuadrar({
+  cuentas,
+  destacada,
+}: {
+  cuentas: Cuenta[];
+  destacada?: string;
+}) {
   const mapa = useMap();
 
   useEffect(() => {
-    if (!mapa || cuentas.length === 0) return;
+    if (!mapa) return;
+
+    // Si se llega desde una cuenta concreta, el mapa se centra en ella en vez
+    // de encuadrar toda la cartera.
+    const punto = cuentas.find((c) => c.id === destacada);
+    if (punto) {
+      mapa.panTo({ lat: punto.lat!, lng: punto.lng! });
+      mapa.setZoom(17);
+      return;
+    }
+
+    if (cuentas.length === 0) return;
     const limites = new google.maps.LatLngBounds();
     cuentas.forEach((c) => limites.extend({ lat: c.lat!, lng: c.lng! }));
     mapa.fitBounds(limites, 48);
     const zoom = mapa.getZoom();
     if (zoom !== undefined && zoom > 17) mapa.setZoom(17);
-  }, [mapa, cuentas]);
+  }, [mapa, cuentas, destacada]);
 
   return null;
 }
@@ -44,13 +61,17 @@ function Encuadrar({ cuentas }: { cuentas: Cuenta[] }) {
 function Contenido({
   cuentas,
   color,
+  destacada,
 }: {
   cuentas: Cuenta[];
   color: (c: Cuenta) => string;
+  destacada?: string;
 }) {
   const router = useRouter();
   const places = useMapsLibrary("places");
-  const [abierta, setAbierta] = useState<Cuenta | null>(null);
+  const [abierta, setAbierta] = useState<Cuenta | null>(
+    () => cuentas.find((c) => c.id === destacada) ?? null,
+  );
   const [candidato, setCandidato] = useState<{
     placeId: string;
     nombre: string;
@@ -103,7 +124,7 @@ function Contenido({
       onClick={tocarMapa}
       style={{ height: "100%", width: "100%" }}
     >
-      <Encuadrar cuentas={cuentas} />
+      <Encuadrar cuentas={cuentas} destacada={destacada} />
 
       {cuentas.map((c) => (
         <Marker
@@ -170,9 +191,11 @@ function Contenido({
 export default function MapaCuentas({
   cuentas,
   color,
+  destacada,
 }: {
   cuentas: Cuenta[];
   color: (c: Cuenta) => string;
+  destacada?: string;
 }) {
   const llave = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -189,7 +212,7 @@ export default function MapaCuentas({
 
   return (
     <APIProvider apiKey={llave} libraries={["places"]}>
-      <Contenido cuentas={cuentas} color={color} />
+      <Contenido cuentas={cuentas} color={color} destacada={destacada} />
     </APIProvider>
   );
 }

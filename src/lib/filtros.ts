@@ -296,3 +296,78 @@ export function colorizar(
     ],
   };
 }
+
+// ===========================================================================
+// Serialización a la dirección
+//
+// Los filtros viven en la URL y no en el estado de React. Sin esto, entrar a
+// una cuenta y volver atrás pierde todo: quien esté corrigiendo cuentas sin
+// clasificar tendría que rearmar el filtro después de cada una.
+//
+// De paso, la vista queda enlazable: un líder puede mandarle a un vendedor la
+// dirección exacta de lo que está mirando.
+// ===========================================================================
+
+const LISTAS = [
+  "tipos",
+  "categorias",
+  "poblados",
+  "productos",
+  "volumenes",
+  "vendedores",
+] as const;
+
+const BANDERAS = [
+  "soloSinClasificar",
+  "soloSinUbicacion",
+  "soloFueraDeCadencia",
+] as const;
+
+export function desdeUrl(p: URLSearchParams): Filtros {
+  const filtros: Filtros = { ...FILTROS_VACIOS, texto: p.get("q") ?? "" };
+
+  LISTAS.forEach((clave) => {
+    const valor = p.get(clave);
+    if (valor) {
+      // @ts-expect-error todas las listas son de cadenas en la dirección
+      filtros[clave] = valor.split(",");
+    }
+  });
+
+  BANDERAS.forEach((clave) => {
+    if (p.get(clave) === "1") filtros[clave] = true;
+  });
+
+  const sin = p.get("sinContacto");
+  if (sin) filtros.sinContactoDesde = Number(sin);
+
+  const comp = p.get("compromiso");
+  if (comp !== null) filtros.compromisoEnDias = Number(comp);
+
+  return filtros;
+}
+
+/** Solo escribe lo que no es el valor por omisión: direcciones cortas y legibles. */
+export function aUrl(
+  f: Filtros,
+  dimension: Dimension,
+  vista: "lista" | "mapa",
+): string {
+  const p = new URLSearchParams();
+
+  if (f.texto.trim()) p.set("q", f.texto.trim());
+  LISTAS.forEach((clave) => {
+    const lista = f[clave] as string[];
+    if (lista.length) p.set(clave, lista.join(","));
+  });
+  BANDERAS.forEach((clave) => {
+    if (f[clave]) p.set(clave, "1");
+  });
+  if (f.sinContactoDesde !== null) p.set("sinContacto", String(f.sinContactoDesde));
+  if (f.compromisoEnDias !== null) p.set("compromiso", String(f.compromisoEnDias));
+
+  if (dimension !== "tipo") p.set("color", dimension);
+  p.set("vista", vista);
+
+  return p.toString();
+}

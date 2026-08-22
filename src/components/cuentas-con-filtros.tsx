@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { List, MapPin } from "lucide-react";
 import {
   aplicar,
+  aUrl,
   colorizar,
+  desdeUrl,
   DIMENSIONES,
-  FILTROS_VACIOS,
   type Cuenta,
   type Dimension,
   type Filtros,
@@ -33,15 +35,36 @@ export function CuentasConFiltros({
   cuentas,
   vendedores,
   vistaInicial = "lista",
+  cuentaDestacada,
 }: {
   cuentas: Cuenta[];
   vendedores: { id: string; nombre: string }[];
   vistaInicial?: "lista" | "mapa";
+  /** Se abre centrada y con su ventana desplegada. Llega desde el expediente. */
+  cuentaDestacada?: string;
 }) {
-  const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS);
+  const router = useRouter();
+  const ruta = usePathname();
+  const parametros = useSearchParams();
+
+  // El estado nace de la dirección, no de valores vacíos. Volver atrás desde
+  // una cuenta devuelve exactamente la vista que se estaba mirando: sin esto,
+  // corregir diez cuentas sin clasificar obliga a rearmar el filtro diez veces.
+  const [filtros, setFiltros] = useState<Filtros>(() => desdeUrl(parametros));
   const [abierto, setAbierto] = useState(false);
-  const [vista, setVista] = useState(vistaInicial);
-  const [dimension, setDimension] = useState<Dimension>("tipo");
+  const [vista, setVista] = useState<"lista" | "mapa">(
+    (parametros.get("vista") as "lista" | "mapa") ?? vistaInicial,
+  );
+  const [dimension, setDimension] = useState<Dimension>(
+    (parametros.get("color") as Dimension) ?? "tipo",
+  );
+
+  // `replace` y no `push`: cada toque de filtro no debe dejar una entrada en el
+  // historial, o el botón de atrás tardaría veinte toques en salir.
+  useEffect(() => {
+    const consulta = aUrl(filtros, dimension, vista);
+    router.replace(`${ruta}?${consulta}`, { scroll: false });
+  }, [filtros, dimension, vista, ruta, router]);
 
   const visibles = useMemo(() => aplicar(cuentas, filtros), [cuentas, filtros]);
 
@@ -160,7 +183,11 @@ export function CuentasConFiltros({
             </Tarjeta>
           ) : (
             <div className="h-[60vh] w-full overflow-hidden rounded-lg border border-borde">
-              <MapaCuentas cuentas={conUbicacion} color={color} />
+              <MapaCuentas
+                cuentas={conUbicacion}
+                color={color}
+                destacada={cuentaDestacada}
+              />
             </div>
           )}
 

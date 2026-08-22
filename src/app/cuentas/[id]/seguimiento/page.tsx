@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Camera, MapPin, MapPinOff } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
@@ -21,6 +20,7 @@ import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { MensajeError } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+import { BotonVolver } from "@/components/boton-volver";
 
 function hoyEnPanama() {
   return new Date().toLocaleDateString("en-CA", {
@@ -141,10 +141,8 @@ export default function RegistrarVisita() {
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <Link href={`/cuentas/${prospectoId}`} className="text-sm text-texto-secundario">
-          Volver
-        </Link>
-        <h1 className="text-lg font-semibold text-marca">Registrar visita</h1>
+        <BotonVolver alterno={`/cuentas/`} />
+        <h1 className="text-lg font-semibold text-marca">Registrar seguimiento</h1>
       </header>
 
       <main className="flex flex-col gap-4 p-4">

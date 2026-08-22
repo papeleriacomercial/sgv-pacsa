@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CalendarClock, MapPinOff } from "lucide-react";
+import { CalendarClock, MapPinned, MapPinOff } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import {
   ETAPAS,
@@ -22,6 +22,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
 import { Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+import { BotonVolver } from "@/components/boton-volver";
 
 const MONTO = new Intl.NumberFormat("es-PA", {
   style: "currency",
@@ -96,9 +97,7 @@ export default async function Expediente({
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <Link href="/" className="text-sm text-texto-secundario">
-          Volver
-        </Link>
+        <BotonVolver />
         <h1 className="text-lg font-semibold text-marca">Expediente</h1>
       </header>
 
@@ -112,6 +111,19 @@ export default async function Expediente({
           ultimaInteraccion={ultima ? fecha(ultima.fecha) : null}
           enlazada={false}
         />
+
+        {/* Salta al mapa centrado en esta cuenta. El camino de vuelta lo
+            resuelve el historial, y como los filtros viven en la dirección, el
+            mapa filtrado que se estaba mirando reaparece intacto. */}
+        {!prospecto.sin_ubicacion && (
+          <Link
+            href={`/mapa?cuenta=${id}`}
+            className="min-h-tactil flex items-center justify-center gap-2 self-start rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
+          >
+            <MapPinned size={16} aria-hidden />
+            Ver en el mapa
+          </Link>
+        )}
 
         <Link href={`/cuentas/${id}/seguimiento`} className="block">
           <Boton ancho>Registrar seguimiento</Boton>

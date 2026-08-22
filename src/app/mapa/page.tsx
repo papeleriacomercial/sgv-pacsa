@@ -4,7 +4,10 @@ import { cargarCartera } from "@/lib/cartera";
 import { CuentasConFiltros } from "@/components/cuentas-con-filtros";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
-export default async function Mapa() {
+export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
+  // Se llega aquí desde el expediente con `?cuenta=<id>` para abrir el mapa
+  // centrado en ese punto.
+  const { cuenta } = await searchParams;
   const supabase = await clienteServidor();
 
   const {
@@ -27,6 +30,7 @@ export default async function Mapa() {
           cuentas={cuentas}
           vendedores={vendedores}
           vistaInicial="mapa"
+          cuentaDestacada={typeof cuenta === "string" ? cuenta : undefined}
         />
       </main>
     </>

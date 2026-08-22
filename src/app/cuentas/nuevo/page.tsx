@@ -20,6 +20,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Cargando, MensajeError } from "@/components/ui/estados";
 import { CampoCategoria, registrarCategoria } from "@/components/campo-categoria";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+import { BotonVolver } from "@/components/boton-volver";
 
 type Duplicado = {
   id: string;
@@ -172,9 +173,7 @@ function Formulario() {
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <Link href="/" className="text-sm text-texto-secundario">
-          Volver
-        </Link>
+        <BotonVolver />
         <h1 className="text-lg font-semibold text-marca">Nuevo prospecto</h1>
       </header>
 

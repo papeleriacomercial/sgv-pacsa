@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import {
@@ -18,6 +17,7 @@ import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError } from "@/components/ui/estados";
 import { CampoCategoria, registrarCategoria } from "@/components/campo-categoria";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+import { BotonVolver } from "@/components/boton-volver";
 
 /**
  * Completar el expediente después.
@@ -122,10 +122,8 @@ export default function EditarProspecto() {
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <Link href={`/cuentas/${id}`} className="text-sm text-texto-secundario">
-          Volver
-        </Link>
-        <h1 className="text-lg font-semibold text-marca">Editar prospecto</h1>
+        <BotonVolver alterno={`/cuentas/${id}`} />
+        <h1 className="text-lg font-semibold text-marca">Editar cuenta</h1>
       </header>
 
       <main className="flex flex-col gap-4 p-4">
