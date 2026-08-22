@@ -1,5 +1,6 @@
 import {
   LINEAS_PRODUCTO,
+  TIPOS_CUENTA,
   type LineaProducto,
   type TipoCuenta,
   type Volumen,
@@ -44,9 +45,17 @@ export type Filtros = {
   sinContactoDesde: number | null;
   /** Cuentas con compromiso dentro de los próximos N días, vencidos incluidos. */
   compromisoEnDias: number | null;
-  soloSinClasificar: boolean;
+  /** Cuentas a las que nadie les puso tipo de comercio. */
+  soloSinCategoria: boolean;
   soloSinUbicacion: boolean;
   soloFueraDeCadencia: boolean;
+  /**
+   * Las descartadas se esconden por omisión.
+   *
+   * No se borran —saber que se fue a ver y no sirvió evita que otro repita el
+   * viaje— pero tampoco estorban el trabajo del día. Se ven pidiéndolas.
+   */
+  incluirDescartadas: boolean;
 };
 
 export const FILTROS_VACIOS: Filtros = {
@@ -59,9 +68,10 @@ export const FILTROS_VACIOS: Filtros = {
   vendedores: [],
   sinContactoDesde: null,
   compromisoEnDias: null,
-  soloSinClasificar: false,
+  soloSinCategoria: false,
   soloSinUbicacion: false,
   soloFueraDeCadencia: false,
+  incluirDescartadas: false,
 };
 
 export function contarActivos(f: Filtros): number {
@@ -75,9 +85,10 @@ export function contarActivos(f: Filtros): number {
     f.vendedores.length +
     (f.sinContactoDesde !== null ? 1 : 0) +
     (f.compromisoEnDias !== null ? 1 : 0) +
-    (f.soloSinClasificar ? 1 : 0) +
+    (f.soloSinCategoria ? 1 : 0) +
     (f.soloSinUbicacion ? 1 : 0) +
-    (f.soloFueraDeCadencia ? 1 : 0)
+    (f.soloFueraDeCadencia ? 1 : 0) +
+    (f.incluirDescartadas ? 1 : 0)
   );
 }
 
@@ -85,6 +96,16 @@ export function aplicar(cuentas: Cuenta[], f: Filtros): Cuenta[] {
   const texto = f.texto.trim().toLowerCase();
 
   return cuentas.filter((c) => {
+    // Las descartadas salen del conjunto antes que nada, salvo que se pidan
+    // expresamente —con el interruptor o eligiéndolas en el filtro de tipo—.
+    if (
+      c.tipo === "descartada" &&
+      !f.incluirDescartadas &&
+      !f.tipos.includes("descartada")
+    ) {
+      return false;
+    }
+
     if (texto && !c.nombre.toLowerCase().includes(texto)) return false;
     if (f.tipos.length && !f.tipos.includes(c.tipo)) return false;
     if (f.vendedores.length && !f.vendedores.includes(c.vendedor_id)) return false;
@@ -116,7 +137,7 @@ export function aplicar(cuentas: Cuenta[], f: Filtros): Cuenta[] {
       if (c.dias_hasta_compromiso > f.compromisoEnDias) return false;
     }
 
-    if (f.soloSinClasificar && c.tipo_comercio) return false;
+    if (f.soloSinCategoria && c.tipo_comercio) return false;
     if (f.soloSinUbicacion && !c.sin_ubicacion) return false;
     if (f.soloFueraDeCadencia && c.fuera_de_cadencia !== true) return false;
 
@@ -195,12 +216,25 @@ export function colorizar(
   nombreVendedor: (id: string) => string,
 ): { color: (c: Cuenta) => string; leyenda: EntradaLeyenda[] } {
   if (dimension === "tipo") {
+    const tonos: Record<TipoCuenta, string> = {
+      sin_clasificar: COLOR.aviso,
+      prospecto: COLOR.info,
+      cliente: COLOR.ok,
+      descartada: COLOR.atenuado,
+    };
+
+    // La leyenda solo nombra los tipos que están en pantalla: con las
+    // descartadas escondidas, ofrecer su color sería explicar algo que no se ve.
+    const presentes = (Object.keys(TIPOS_CUENTA) as TipoCuenta[]).filter((t) =>
+      cuentas.some((c) => c.tipo === t),
+    );
+
     return {
-      color: (c) => (c.tipo === "cliente" ? COLOR.ok : COLOR.info),
-      leyenda: [
-        { color: COLOR.ok, texto: "Cliente" },
-        { color: COLOR.info, texto: "Prospecto" },
-      ],
+      color: (c) => tonos[c.tipo] ?? COLOR.atenuado,
+      leyenda: presentes.map((t) => ({
+        color: tonos[t],
+        texto: TIPOS_CUENTA[t],
+      })),
     };
   }
 
@@ -318,9 +352,10 @@ const LISTAS = [
 ] as const;
 
 const BANDERAS = [
-  "soloSinClasificar",
+  "soloSinCategoria",
   "soloSinUbicacion",
   "soloFueraDeCadencia",
+  "incluirDescartadas",
 ] as const;
 
 export function desdeUrl(p: URLSearchParams): Filtros {

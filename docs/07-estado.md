@@ -1,12 +1,14 @@
 # Estado del proyecto
 
-**Última actualización:** 2026-08-20 · **Rama activa:** `dev`
+**Última actualización:** 2026-08-22 · **Rama activa:** `dev`
 
 Se actualiza al cerrar cada tarea (§15 de la visión). Si una tarea terminó y este archivo
 no cambió, la tarea no terminó.
 
-> **Fase actual:** cimientos. Todavía no arranca el núcleo de campo (§7.1), que es el
-> primer módulo del orden sugerido en §13.
+> **Fase actual:** plan v2, Etapas 1 a 5 cerradas (`docs/08-plan-v2.md`). Falta la Etapa 6
+> —ventas y reportes—, la 7 —Zoho, bloqueada por la higiene del maestro de clientes— y la 8
+> —piloto y offline—. Este archivo es un registro que crece por el final: **lo último es lo
+> vigente**.
 
 ---
 
@@ -713,3 +715,119 @@ líneas del trigger.
 | Con fecha futura: editar libremente | Permitido | Correcto |
 | Editar una nota de bitácora | 0 filas | 0 filas |
 | Seguimiento ligado a la venta | Queda ligado | Correcto |
+
+---
+
+## Ciclo de vida de la cuenta — 2026-08-22
+
+Dos migraciones: `20260822134935_ciclo_de_vida_cuenta` y `20260822135652_motivo_sin_interes`.
+Aplicadas y verificadas en `sgv-pacsa-dev`.
+
+Sale de cuatro observaciones del negocio sobre las pantallas de las Etapas 4 y 5. Las cuatro
+apuntaban al mismo hueco: **el sistema no distinguía entre planear e informar**, y por eso
+obligaba a inventar hechos para poder usar los formularios.
+
+### 1. La cuenta nace sin clasificar (D-015)
+
+`tipo_cuenta` pasa de dos valores a cuatro:
+
+    sin_clasificar → prospecto → cliente
+                  ↘ descartada
+
+Una cuenta creada desde el mapa, en la oficina, no es un prospecto: nadie la ha visto. Nace
+`sin_clasificar` y el primer seguimiento la resuelve. La clasificación se presugiere según el
+resultado —los resultados terminales proponen descartarla, con su motivo ya elegido— pero la
+decide el vendedor, no un automatismo.
+
+Descartar **no borra**: la cuenta conserva su visita y su motivo, y sale de la cartera del día
+salvo que se active "Mostrar descartadas".
+
+`motivo_descarte` gana el valor `sin_interes`, que faltaba: el caso más común de una primera
+visita fallida no tenía dónde caer y terminaba en "otro".
+
+### 2. Registrar y programar se separan (D-016)
+
+| Pantalla | Qué es | Dónde vive |
+|---|---|---|
+| Registrar seguimiento | Contar qué pasó, cuando ya pasó | `/cuentas/[id]/seguimiento` |
+| Programar seguimiento | Agendar qué se va a hacer | `/cuentas/[id]/programar` |
+
+El compromiso programado lleva `visita_id` nulo. Los dos aparecen juntos en Seguimientos, que
+es donde se ejecutan.
+
+### 3. El próximo paso deja de ser obligatorio en tres resultados (D-017)
+
+`local_cerrado`, `no_usa_productos` y `sin_interes` —y la cuenta que se acaba de descartar—.
+Si se llena, sigue necesitando fecha: o los dos campos o ninguno.
+
+### 4. Las coordenadas son un dato de la cuenta (D-018)
+
+Editables en *Editar datos*, junto a dirección y poblado, por tres caminos: escribirlas,
+"Estoy aquí", o marcarlas en el mapa. Se valida que vayan completas y dentro de rango.
+
+El check-in del seguimiento sigue siendo lo que era —dónde estaba el vendedor— y **solo se
+pide cuando la interacción es una visita**. Antes se pedía siempre, incluso en una llamada.
+
+### El alta ahora tiene dos botones
+
+- **Crear y registrar visita** — está frente al local; sigue derecho al seguimiento.
+- **Crear solamente** — la está poniendo en el mapa para ir después; queda sin clasificar.
+
+Los dos crean la misma cuenta. Lo que cambia es a dónde lleva.
+
+### El orden del formulario de seguimiento
+
+Intención → check-in (solo si es visita) → resultado → clasificación (solo si estaba sin
+clasificar) → notas → proveedor y precio → evidencia → próximo paso.
+
+La intención va primero porque decide el resto de la pantalla.
+
+### Filtros
+
+- `soloSinClasificar` se renombró a `soloSinCategoria`, etiquetado **"Sin categoría"**. Antes
+  significaba "sin tipo de comercio" y chocaba de frente con el nuevo tipo de cuenta.
+- El filtro de tipo de cuenta ahora ofrece los cuatro valores; "Sin clasificar" es la cola de
+  trabajo.
+- Atajo nuevo: **"Mostrar descartadas"**.
+- La colorización por tipo ofrece cuatro colores y la leyenda solo nombra los que están en
+  pantalla.
+
+### Verificación contra `sgv-pacsa-dev`
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Valores del enum `tipo_cuenta` | Los cuatro, en orden | Correcto |
+| Valor por omisión de `cuentas.tipo` | `sin_clasificar` | Correcto |
+| Descartada sin motivo | Rechazada | `check_violation` |
+| Prospecto con motivo | Rechazado | `check_violation` |
+| Descartada con motivo | Aceptada | Correcto |
+| Cuenta simple | Nace `sin_clasificar` | Correcto |
+| `cuentas_resumen` rehecha | Existe con `security_invoker=true` | Correcto |
+| La vista con un usuario ajeno | 0 filas | 0 filas |
+| La vista con el vendedor dueño | Sus 4 cuentas, con días calculados | Correcto |
+| Política `cuentas_admin_clientes` y `estado_de_puntos` | Rehechas tras el cambio de tipo | Correcto |
+
+`tsc --noEmit`, `eslint` y `next build` limpios. Las catorce rutas compilan.
+
+### Un hueco que quedaba de la Etapa 4
+
+En el expediente sobrevivía un botón **"Ya lo hice"** que cerraba el compromiso vigente sin
+registrar nada. La Etapa 4 lo había reemplazado en la pantalla de Seguimientos, pero no aquí.
+
+Era exactamente la puerta que §1 no permite: se podía tocar sin dejar rastro de qué pasó, y
+el sistema perdía el hecho. Ahora lleva al mismo formulario de seguimiento, con el
+compromiso en la dirección; al guardar se cierra ese y se encadena el siguiente.
+
+### Lo que no pude verificar yo
+
+**Las pantallas autenticadas.** El servidor de desarrollo levanta y la pantalla de entrada
+carga sin errores de consola ni de servidor, pero entrar exige una contraseña y no capturo
+credenciales. Falta que el negocio recorra en el celular: crear una cuenta por los dos
+caminos, clasificarla desde el primer seguimiento, descartarla y verla desaparecer del mapa,
+programar un seguimiento sin registrar nada, y corregir las coordenadas de una cuenta.
+
+### Pendiente de decisión del negocio
+
+Sigue abierta la excepción de la Etapa 5 —cerrar una oportunidad vencida como ganada o
+perdida sin mover la fecha— y ahora se le suma D-017, que es la misma idea aplicada al
+próximo paso: no obligar a inventar una fecha futura para poder registrar un final.

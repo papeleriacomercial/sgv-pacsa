@@ -200,6 +200,19 @@ captura que dentro de la cuenta, cerrando el compromiso actual y creando el sigu
 - **Una oportunidad con la fecha de cierre vencida no se puede modificar** hasta mover esa
   fecha hacia adelante.
 
+### Etapa 5b — Ciclo de vida de la cuenta ✅ HECHA
+
+No estaba en el plan: salió de revisar las pantallas de las Etapas 4 y 5 el 2026-08-22. Las
+cuatro observaciones del negocio apuntaban al mismo hueco —**el sistema no distinguía entre
+planear e informar**— y por eso obligaba a inventar hechos para poder usar los formularios.
+
+- La cuenta nace **sin clasificar**; el primer seguimiento la vuelve prospecto o la descarta
+  con su motivo. Descartar no borra (D-015).
+- **Registrar** y **programar** un seguimiento pasan a ser dos pantallas (D-016).
+- El próximo paso deja de ser obligatorio en los tres resultados terminales (D-017).
+- Las coordenadas pasan a ser un dato editable de la cuenta, y el check-in solo se pide en
+  las visitas (D-018).
+
 ### Etapa 6 — Ventas y reportes
 
 - Pantalla temporal para capturar la venta mensual por vendedor de 2026.

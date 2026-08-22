@@ -168,6 +168,12 @@ Es el error más silencioso de todo este esquema: la vista funcionaría, devolve
 cada vendedor estaría viendo la cartera entera sin que nada avisara. Verificado en dev: otro
 usuario ve cero filas.
 
+**Cada vez que se rehace, hay que volver a ponerle la marca.** Postgres no deja cambiar el
+tipo de una columna de la que cuelga una vista, así que toda migración que toque
+`cuentas.tipo` la tira y la vuelve a crear —pasó en `20260822134935_ciclo_de_vida_cuenta`—.
+Un `create view` sin `with (security_invoker = true)` compila igual y abre la cartera entera.
+Es la línea que hay que revisar en el diff, no el `select`.
+
 ---
 
 ## Divulgación controlada

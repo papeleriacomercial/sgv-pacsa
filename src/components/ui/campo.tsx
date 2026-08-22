@@ -13,7 +13,13 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
  * Campo único de formulario. Su ausencia en el SGP produjo ocho variantes
  * distintas; aquí solo existe este.
  */
-export function Campo({ etiqueta, ayuda, error, ...props }: Props) {
+export function Campo({
+  etiqueta,
+  ayuda,
+  error,
+  className = "",
+  ...props
+}: Props) {
   const id = useId();
   const idAyuda = `${id}-ayuda`;
 
@@ -31,6 +37,9 @@ export function Campo({ etiqueta, ayuda, error, ...props }: Props) {
           "min-h-tactil px-3 rounded-lg bg-superficie text-base",
           "border outline-none focus:ring-2 focus:ring-marca/30",
           error ? "border-error" : "border-borde focus:border-marca",
+          // Va al final para que quien lo pase pueda añadir sin perder la base:
+          // los identificadores y las medidas van en monoespaciada (§17).
+          className,
         ].join(" ")}
         {...props}
       />

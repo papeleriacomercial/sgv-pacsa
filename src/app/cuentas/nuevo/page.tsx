@@ -38,7 +38,7 @@ const POR_QUE: Record<string, string> = {
   nombre: "nombre parecido",
 };
 
-export default function NuevoProspecto() {
+export default function NuevaCuenta() {
   return (
     <Suspense fallback={<Cargando />}>
       <Formulario />
@@ -81,6 +81,9 @@ function Formulario() {
   const [ignorarDuplicados, setIgnorarDuplicados] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  // Cuál de los dos caminos se tocó. Se guarda en estado porque el aviso de
+  // duplicados corta el primer envío, y al segundo hay que recordar a dónde iba.
+  const [conVisita, setConVisita] = useState(false);
 
   // La ubicación se pide sola al abrir. El vendedor no tiene que acordarse.
   useEffect(() => {
@@ -154,6 +157,8 @@ function Formulario() {
       // Lo único de Google Places que puede guardarse indefinidamente.
       place_id: placeId,
       vendedor_id: user.id,
+      // No se manda `tipo`: la base la crea `sin_clasificar`. Llamarla
+      // prospecto antes de que alguien la vea afirma algo que no ocurrió.
     });
 
     if (fallo) {
@@ -162,7 +167,10 @@ function Formulario() {
       return;
     }
 
-    router.replace(`/cuentas/${id}`);
+    // Los dos caminos crean la misma cuenta sin clasificar; lo que cambia es a
+    // dónde lleva. Desde la calle se sigue derecho a registrar la visita, que
+    // es la que decide si es prospecto o se descarta.
+    router.replace(conVisita ? `/cuentas/${id}/seguimiento` : `/cuentas/${id}`);
     router.refresh();
   }
 
@@ -174,7 +182,7 @@ function Formulario() {
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
         <BotonVolver />
-        <h1 className="text-lg font-semibold text-marca">Nuevo prospecto</h1>
+        <h1 className="text-lg font-semibold text-marca">Nueva cuenta</h1>
       </header>
 
       <main className="flex flex-col gap-4 p-4">
@@ -218,7 +226,7 @@ function Formulario() {
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               onBlur={revisarDuplicados}
-              ayuda="Es lo único obligatorio, además de la ubicación."
+              ayuda="Es lo único obligatorio. Lo demás se completa después."
             />
 
             <Campo
@@ -318,9 +326,34 @@ function Formulario() {
 
           {error && <MensajeError titulo="No se pudo crear" detalle={error} />}
 
-          <Boton type="submit" ancho disabled={guardando || !nombre.trim()}>
-            {guardando ? "Creando" : "Crear prospecto"}
-          </Boton>
+          {/* Los dos caminos por los que nace una cuenta, cada uno con su botón.
+              En la calle, parado frente al local, lo que sigue es contar cómo
+              fue. En la oficina, planificando sobre el mapa, no ha pasado nada
+              todavía y forzar un resultado sería inventarlo. */}
+          <div className="flex flex-col gap-2">
+            <Boton
+              type="submit"
+              ancho
+              disabled={guardando || !nombre.trim()}
+              onClick={() => setConVisita(true)}
+            >
+              {guardando && conVisita ? "Creando" : "Crear y registrar visita"}
+            </Boton>
+            <Boton
+              type="submit"
+              tono="secundario"
+              ancho
+              disabled={guardando || !nombre.trim()}
+              onClick={() => setConVisita(false)}
+            >
+              {guardando && !conVisita ? "Creando" : "Crear solamente"}
+            </Boton>
+            <p className="text-xs text-texto-atenuado">
+              Si estás frente al local, registra la visita ahora. Si la estás
+              poniendo en el mapa para ir después, queda sin clasificar hasta
+              que alguien la trabaje.
+            </p>
+          </div>
         </form>
       </main>
     </>

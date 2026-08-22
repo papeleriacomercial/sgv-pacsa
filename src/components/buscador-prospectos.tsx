@@ -333,6 +333,9 @@ function Buscador() {
         lng: c.lng,
         origen: "busqueda",
         vendedor_id: user.id,
+        // Sin `tipo`: entran sin clasificar. Agregarlas en tanda desde el
+        // directorio no las convierte en prospectos, solo las pone en la cola
+        // de lo que hay que ir a ver (D-015).
       }));
 
     const { error: fallo } = await supabase.from("cuentas").insert(filas);
@@ -603,7 +606,7 @@ function Buscador() {
           <Boton ancho onClick={agregarElegidos} disabled={guardando}>
             {guardando
               ? "Agregando"
-              : `Agregar ${elegidos.length} a mis prospectos`}
+              : `Agregar ${elegidos.length} a mi cartera`}
           </Boton>
         </div>
       )}
@@ -713,7 +716,7 @@ function MapaCandidatos({
             {abierto.estado?.motivo_descarte
               ? `Descartado: ${MOTIVOS_DESCARTE[abierto.estado.motivo_descarte]}`
               : abierto.estado?.es_mio
-                ? "Ya es prospecto tuyo"
+                ? "Ya es cuenta tuya"
                 : abierto.estado?.cuenta_id
                   ? `De ${abierto.estado.vendedor ?? "otro vendedor"}`
                   : "Nuevo"}

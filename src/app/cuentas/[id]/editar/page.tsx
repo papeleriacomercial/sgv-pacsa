@@ -16,6 +16,7 @@ import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError } from "@/components/ui/estados";
 import { CampoCategoria, registrarCategoria } from "@/components/campo-categoria";
+import { CampoCoordenadas } from "@/components/campo-coordenadas";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { BotonVolver } from "@/components/boton-volver";
 
@@ -46,6 +47,8 @@ export default function EditarProspecto() {
   const [volumen, setVolumen] = useState<Volumen | null>(null);
   const [direccion, setDireccion] = useState("");
   const [poblado, setPoblado] = useState("");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
   const [cadencia, setCadencia] = useState("");
 
   useEffect(() => {
@@ -53,7 +56,7 @@ export default function EditarProspecto() {
     supabase
       .from("cuentas")
       .select(
-        "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas, volumen, direccion, poblado, dias_cadencia",
+        "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas, volumen, direccion, poblado, lat, lng, dias_cadencia",
       )
       .eq("id", id)
       .is("deleted_at", null)
@@ -73,6 +76,8 @@ export default function EditarProspecto() {
           setVolumen((data.volumen as Volumen) ?? null);
           setDireccion(data.direccion ?? "");
           setPoblado(data.poblado ?? "");
+          setLat(data.lat === null ? "" : String(data.lat));
+          setLng(data.lng === null ? "" : String(data.lng));
           setCadencia(data.dias_cadencia ? String(data.dias_cadencia) : "");
         }
         setCargando(false);
@@ -82,6 +87,25 @@ export default function EditarProspecto() {
   async function guardar(evento: React.FormEvent) {
     evento.preventDefault();
     setError(null);
+
+    // Media coordenada no ubica nada, y guardarla dejaría la cuenta en un
+    // estado que el mapa no sabe dibujar. O las dos o ninguna.
+    const numLat = lat.trim() === "" ? null : Number(lat);
+    const numLng = lng.trim() === "" ? null : Number(lng);
+
+    if ((numLat === null) !== (numLng === null)) {
+      setError("Las coordenadas van completas: latitud y longitud, o ninguna.");
+      return;
+    }
+
+    if (
+      (numLat !== null && (Number.isNaN(numLat) || Math.abs(numLat) > 90)) ||
+      (numLng !== null && (Number.isNaN(numLng) || Math.abs(numLng) > 180))
+    ) {
+      setError("Esas coordenadas no existen. Revísalas o márcalas en el mapa.");
+      return;
+    }
+
     setGuardando(true);
 
     // La categoría escrita se suma al catálogo compartido, si es nueva.
@@ -103,6 +127,8 @@ export default function EditarProspecto() {
         volumen,
         direccion: direccion.trim() || null,
         poblado: poblado.trim() || null,
+        lat: numLat,
+        lng: numLng,
         dias_cadencia: cadencia ? Number(cadencia) : null,
       })
       .eq("id", id);
@@ -190,7 +216,18 @@ export default function EditarProspecto() {
               </div>
             </Tarjeta>
 
+            {/* Dónde queda la cuenta, las tres formas juntas: para el mapa las
+                coordenadas, para llegar la dirección, para agrupar el poblado. */}
             <Tarjeta className="flex flex-col gap-4">
+              <CampoCoordenadas
+                cuentaId={id}
+                lat={lat}
+                lng={lng}
+                onCambio={(nuevaLat, nuevaLng) => {
+                  setLat(nuevaLat);
+                  setLng(nuevaLng);
+                }}
+              />
               <Campo
                 etiqueta="Dirección"
                 value={direccion}

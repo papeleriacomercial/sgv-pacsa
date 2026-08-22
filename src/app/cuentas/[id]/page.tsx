@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CalendarClock, MapPinned, MapPinOff } from "lucide-react";
+import { CalendarClock, HelpCircle, MapPinned, MapPinOff } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import {
   ETAPAS,
   LINEAS_PRODUCTO,
+  type MotivoDescarte,
   type TipoCuenta,
   RESULTADOS,
   TIPOS_INTERACCION,
@@ -15,8 +16,7 @@ import {
   type TipoInteraccion,
 } from "@/lib/catalogos";
 import { FichaPunto } from "@/components/ficha-punto";
-import { CumplirCompromiso } from "@/components/cumplir-compromiso";
-import { CambiarTipoCuenta } from "@/components/cambiar-tipo-cuenta";
+import { ClasificarCuenta } from "@/components/clasificar-cuenta";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
@@ -56,7 +56,7 @@ export default async function Expediente({
   const { data: prospecto } = await supabase
     .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo_comercio, tipo, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion",
+      "id, nombre, tipo_comercio, tipo, motivo_descarte, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -88,6 +88,8 @@ export default async function Expediente({
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
+  const descartada = prospecto.tipo === "descartada";
+  const sinClasificar = prospecto.tipo === "sin_clasificar";
   const vigente = compromisos?.[0];
   const vencido = vigente ? vigente.fecha_compromiso < hoyEnPanama() : false;
   const ultima = visitas?.[0];
@@ -125,18 +127,48 @@ export default async function Expediente({
           </Link>
         )}
 
-        <Link href={`/cuentas/${id}/seguimiento`} className="block">
-          <Boton ancho>Registrar seguimiento</Boton>
-        </Link>
+        {/* La cola de trabajo hecha visible: una cuenta puesta en el mapa desde
+            la oficina no es un prospecto hasta que alguien va y lo comprueba. */}
+        {sinClasificar && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
+            <HelpCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
+            <div>
+              <p className="text-sm font-medium">Sin clasificar</p>
+              <p className="text-xs">
+                Nadie la ha visitado ni contactado todavía. Al registrar el
+                primer seguimiento decides si queda como prospecto o se descarta.
+              </p>
+            </div>
+          </div>
+        )}
 
-        <div className="grid grid-cols-2 gap-2">
-          <CambiarTipoCuenta id={id} tipo={prospecto.tipo as TipoCuenta} />
-          <Link href={`/cuentas/${id}/editar`} className="block">
-            <Boton tono="secundario" ancho>
-              Editar datos
-            </Boton>
-          </Link>
-        </div>
+        {/* Registrar y programar son dos actos distintos: uno cuenta lo que ya
+            pasó, el otro agenda lo que va a pasar. Juntarlos obligaba a
+            inventar un resultado para poder agendar una visita futura. */}
+        {!descartada && (
+          <div className="flex flex-col gap-2">
+            <Link href={`/cuentas/${id}/seguimiento`} className="block">
+              <Boton ancho>Registrar seguimiento</Boton>
+            </Link>
+            <Link href={`/cuentas/${id}/programar`} className="block">
+              <Boton tono="secundario" ancho>
+                Programar seguimiento
+              </Boton>
+            </Link>
+          </div>
+        )}
+
+        <ClasificarCuenta
+          id={id}
+          tipo={prospecto.tipo as TipoCuenta}
+          motivoDescarte={prospecto.motivo_descarte as MotivoDescarte | null}
+        />
+
+        <Link href={`/cuentas/${id}/editar`} className="block">
+          <Boton tono="secundario" ancho>
+            Editar datos
+          </Boton>
+        </Link>
 
         {vigente && (
           <div
@@ -156,8 +188,17 @@ export default async function Expediente({
               <p className="font-mono text-xs">
                 {fecha(vigente.fecha_compromiso)}
               </p>
+              {/* Cumplir un compromiso es registrar qué pasó, no tocar un
+                  botón que lo borra. El "ya lo hice" que había aquí cerraba el
+                  compromiso sin dejar rastro del hecho, que es justo lo que
+                  §1 no permite. Es el mismo camino que usa Seguimientos. */}
               <div className="mt-2">
-                <CumplirCompromiso id={vigente.id} />
+                <Link
+                  href={`/cuentas/${id}/seguimiento?compromiso=${vigente.id}`}
+                  className="block"
+                >
+                  <Boton tono="secundario">Registrar lo que pasó</Boton>
+                </Link>
               </div>
             </div>
           </div>

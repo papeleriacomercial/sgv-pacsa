@@ -176,6 +176,9 @@ export function PanelFiltros({
                 onChange={(e) => set({ texto: e.target.value })}
               />
 
+              {/* "Sin clasificar" es la cola de trabajo: cuentas puestas en el
+              mapa desde la oficina que nadie ha ido a ver todavía. Aparece
+              primero porque es lo que hay que vaciar. */}
               <Grupo titulo="Tipo de cuenta">
                 {(Object.keys(TIPOS_CUENTA) as TipoCuenta[]).map((t) => (
                   <Pastilla
@@ -322,13 +325,15 @@ export function PanelFiltros({
                 >
                   Fuera de cadencia
                 </Pastilla>
+                {/* No confundir con el tipo de cuenta "sin clasificar": esto
+                es la cuenta a la que le falta el tipo de comercio. */}
                 <Pastilla
-                  activo={filtros.soloSinClasificar}
+                  activo={filtros.soloSinCategoria}
                   onClick={() =>
-                    set({ soloSinClasificar: !filtros.soloSinClasificar })
+                    set({ soloSinCategoria: !filtros.soloSinCategoria })
                   }
                 >
-                  Sin clasificar
+                  Sin categoría
                 </Pastilla>
                 <Pastilla
                   activo={filtros.soloSinUbicacion}
@@ -337,6 +342,17 @@ export function PanelFiltros({
                   }
                 >
                   Sin ubicación
+                </Pastilla>
+                {/* Las descartadas no se borran, se esconden. Este es el
+                interruptor que las trae de vuelta cuando hace falta revisar
+                qué se fue a ver y por qué no sirvió. */}
+                <Pastilla
+                  activo={filtros.incluirDescartadas}
+                  onClick={() =>
+                    set({ incluirDescartadas: !filtros.incluirDescartadas })
+                  }
+                >
+                  Mostrar descartadas
                 </Pastilla>
               </Grupo>
 

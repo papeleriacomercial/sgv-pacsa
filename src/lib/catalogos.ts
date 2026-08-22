@@ -42,6 +42,31 @@ export type Resultado = keyof typeof RESULTADOS;
  */
 export const RESULTADOS_CON_RECONTACTO: Resultado[] = ["stock_suficiente"];
 
+/**
+ * Resultados que cierran la conversación.
+ *
+ * §6 obliga a que todo seguimiento deje un próximo paso, y esa regla es la que
+ * evita que una cuenta se apague sin que nadie lo note. Pero con estos tres
+ * resultados el próximo paso sería inventado: pedirle una fecha futura a quien
+ * acaba de encontrar el local cerrado enseña a escribir cualquier cosa con tal
+ * de guardar. Aquí —y solo aquí— el próximo paso es opcional.
+ *
+ * Son además los que presugieren descartar la cuenta cuando estaba sin
+ * clasificar.
+ */
+export const RESULTADOS_TERMINALES: Resultado[] = [
+  "local_cerrado",
+  "no_usa_productos",
+  "sin_interes",
+];
+
+/** Qué motivo de descarte propone cada resultado terminal. */
+export const DESCARTE_SUGERIDO: Partial<Record<Resultado, MotivoDescarte>> = {
+  local_cerrado: "no_existe",
+  no_usa_productos: "no_usa_productos",
+  sin_interes: "sin_interes",
+};
+
 export const MOTIVOS_PERDIDA = {
   precio: "Precio o mejor oferta de la competencia",
   espera_licitacion: "Esperar fecha de licitación",
@@ -124,6 +149,7 @@ export const MOTIVOS_DESCARTE = {
   no_existe: "No existe o está cerrado",
   muy_pequeno: "Muy pequeño, no alcanza pedido mínimo",
   no_usa_productos: "No usa nuestros productos",
+  sin_interes: "Escuchó y no le interesó",
   ya_atendido: "Ya lo atiende la casa",
   otro: "Otro motivo",
 } as const;
@@ -131,22 +157,44 @@ export const MOTIVOS_DESCARTE = {
 export type MotivoDescarte = keyof typeof MOTIVOS_DESCARTE;
 
 /**
- * Tipo de cuenta (plan v2).
+ * Ciclo de vida de la cuenta (plan v2).
  *
- * Prospecto hasta la primera venta, cliente después. Lo marca el vendedor;
- * cuando exista la integración, Zoho lo confirma o lo corrige. Ver D-010.
+ *   sin_clasificar → prospecto → cliente
+ *                 ↘ descartada
+ *
+ * Una cuenta creada desde la oficina, planificando sobre el mapa, nace
+ * **sin clasificar**: nadie la ha visitado ni contactado, y llamarla prospecto
+ * afirma algo que no ocurrió. El primer seguimiento la resuelve: o pasa a
+ * prospecto, o se descarta con su motivo.
+ *
+ * De prospecto a cliente lo marca el vendedor; cuando exista la integración,
+ * Zoho lo confirma o lo corrige. Ver D-010.
  */
 export const TIPOS_CUENTA = {
+  sin_clasificar: "Sin clasificar",
   prospecto: "Prospecto",
   cliente: "Cliente",
+  descartada: "Descartada",
 } as const;
 
 export type TipoCuenta = keyof typeof TIPOS_CUENTA;
 
-export const TONO_TIPO: Record<TipoCuenta, "ok" | "info"> = {
+/**
+ * El tono es estado, no decoración (§17).
+ *
+ * "Sin clasificar" va en aviso porque es trabajo pendiente, no un estado
+ * estable: alguien tiene que ir a verla. "Descartada" va en neutro y no en
+ * error: no es una falla, es una cuenta cerrada con su explicación.
+ */
+export const TONO_TIPO: Record<TipoCuenta, "ok" | "aviso" | "info" | "neutro"> = {
+  sin_clasificar: "aviso",
   prospecto: "info",
   cliente: "ok",
+  descartada: "neutro",
 };
+
+/** Cuentas que siguen en juego. Las descartadas no estorban el trabajo del día. */
+export const TIPOS_VIVOS: TipoCuenta[] = ["sin_clasificar", "prospecto", "cliente"];
 
 /** Volumen estimado por el vendedor (plan v2, Etapa 2). */
 export const VOLUMENES = {

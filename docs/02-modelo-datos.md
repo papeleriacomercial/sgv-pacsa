@@ -35,15 +35,41 @@ adelantado los tipos de comercio de un país, y la lista crece con cada zona que
 | Enum | Valores |
 |---|---|
 | `rol_usuario` | gerente · lider · vendedor · administracion |
-| `tipo_cuenta` | prospecto · cliente |
+| `tipo_cuenta` | sin_clasificar · prospecto · cliente · descartada |
 | `volumen_cuenta` | alta · media · baja |
 | `etapa_oportunidad` | nuevo · contactado · cotizado · negociacion · ganado · perdido |
 | `resultado_visita` | nueve opciones, ver abajo |
 | `motivo_perdida` | precio · espera_licitacion · no_cumple_especificaciones · sin_interes_real · no_contactar |
-| `motivo_descarte` | no_existe · muy_pequeno · no_usa_productos · ya_atendido · otro |
+| `motivo_descarte` | no_existe · muy_pequeno · no_usa_productos · sin_interes · ya_atendido · otro |
 | `tipo_interaccion` | visita · llamada · whatsapp · correo · entrega_muestra |
 | `origen_prospecto` | calle · busqueda · referido · llamada_entrante · otro |
 | `linea_producto` | rollos_fiscales · bolsas_papel · papel_antigrasa · tubos_carton · otros |
+
+### `tipo_cuenta` — el ciclo de vida de la cuenta
+
+    sin_clasificar → prospecto → cliente
+                  ↘ descartada
+
+Una cuenta nace de dos formas distintas y hasta la migración `ciclo_de_vida_cuenta` las dos
+quedaban iguales:
+
+1. **En la calle**, parado frente al local. Se captura el GPS y se registra la visita en el
+   acto.
+2. **En la oficina**, planificando sobre el mapa. No hay contacto todavía.
+
+La segunda produce cuentas que nadie ha visitado ni contactado, y llamarlas "prospecto"
+afirma algo que no ocurrió. `sin_clasificar` es lo que son hasta que alguien las trabaje, y
+esa cola es lo que el vendedor tiene que vaciar.
+
+**`descartada` no es borrado.** La cuenta conserva su visita y su motivo: saber que alguien
+ya fue y no sirvió evita que otro repita el viaje. Sale de la cartera del día, no de la base.
+El interruptor "Mostrar descartadas" la trae de vuelta.
+
+Restricción `cuentas_motivo_solo_si_descartada`: `(tipo = 'descartada') = (motivo_descarte
+is not null)`. Las dos direcciones. Una cuenta descartada sin motivo es información perdida;
+un motivo en una cuenta viva es un dato que nadie sabría interpretar.
+
+Ver D-015.
 
 ### `etapa_oportunidad`
 
@@ -105,7 +131,7 @@ Un punto con el que hay relación comercial, sea prospecto o cliente. Se llamaba
 |---|---|---|
 | `id` | uuid PK | Generado en el cliente |
 | `nombre` | text not null | |
-| `tipo` | `tipo_cuenta` not null default `prospecto` | La marca del vendedor: "a este ya le vendí" (D-010) |
+| `tipo` | `tipo_cuenta` not null default `sin_clasificar` | Dónde va la cuenta en su ciclo de vida (D-010, D-015) |
 | `ruc` | text | Único entre vivos. Señal de duplicado (§6) |
 | `tipo_comercio` | text | Alimenta y se alimenta de `categorias_comercio` |
 | `volumen` | `volumen_cuenta` | Juicio del vendedor. Distinto del potencial calculado de §7.5 |
@@ -118,6 +144,7 @@ Un punto con el que hay relación comercial, sea prospecto o cliente. Se llamaba
 | `dias_cadencia` | smallint 1–365 | Cada cuántos días debería contactarse. Nulo: sin cadencia |
 | `vendedor_id` | uuid not null → `perfiles` | |
 | `origen` | `origen_prospecto` not null | |
+| `motivo_descarte` | `motivo_descarte` | Por qué no sirvió. Obligatorio si y solo si `tipo = descartada` |
 | `notas` | text | |
 | `created_at` `updated_at` `created_by` `deleted_at` | | |
 
@@ -161,6 +188,13 @@ pantalla de Seguimientos no puede pedir "las llamadas de hoy": habría que leer 
 frases de texto libre.
 
 Un compromiso vencido es `fecha_compromiso < hoy` y `cumplido_en is null`.
+
+**`visita_id` es nulo cuando el compromiso se programó, no se derivó.** Programar y
+registrar son dos actos distintos (D-016): programar es decidir qué se va a hacer y cuándo,
+sentado frente al mapa, sin que haya pasado nada todavía; registrar es contar qué pasó, con
+su check-in y su resultado, y de ahí sale el próximo paso encadenado. Los dos producen
+compromisos y los dos aparecen en la pantalla de Seguimientos; el nulo distingue de dónde
+vino cada uno.
 
 ### `oportunidades`
 

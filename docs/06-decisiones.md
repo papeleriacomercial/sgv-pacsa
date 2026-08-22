@@ -327,3 +327,122 @@ un vendedor la dirección exacta de lo que está mirando.
 
 Se usa `replace` y no `push`: cada toque de filtro no debe dejar una entrada en el historial,
 o el botón de atrás tardaría veinte toques en salir de la pantalla.
+
+---
+
+## D-015 — La cuenta nace sin clasificar, y descartarla no la borra
+
+**Fecha:** 2026-08-22
+
+**Decisión.** `tipo_cuenta` pasa de dos valores a cuatro: `sin_clasificar`, `prospecto`,
+`cliente`, `descartada`. El valor por omisión al crear una cuenta es `sin_clasificar`, y la
+promoción a prospecto —o el descarte, con su motivo obligatorio— la resuelve el vendedor al
+registrar el primer seguimiento.
+
+**Alternativas descartadas.**
+
+- Dejar que todo nazca como `prospecto`, que es lo que hacía antes.
+- Una tabla aparte de "candidatos" que se convierte en cuenta al visitarse.
+- Descartar con borrado lógico (`deleted_at`), tratándolo como basura.
+
+**Por qué.** Una cuenta nace de dos formas y hasta ahora las dos quedaban iguales. En la
+calle, parado frente al local, se captura el GPS y se registra la visita en el acto. En la
+oficina, planificando sobre el mapa, no ha habido contacto todavía. Llamar "prospecto" a lo
+segundo es afirmar algo que no ocurrió, y contamina toda métrica que cuente prospectos.
+
+Una tabla aparte se descartó porque duplica el modelo: mismos campos, mismo RLS, misma
+pantalla de edición, y una conversión que hay que mantener. El estado es un campo, no una
+tabla.
+
+**Descartar no borra** porque saber que alguien ya fue y no sirvió es información, no basura:
+es lo que evita que otro vendedor repita el viaje. La cuenta descartada conserva su visita y
+su motivo; simplemente sale de la cartera del día salvo que se pidan las descartadas.
+
+Efecto secundario buscado: **la cola de trabajo se vuelve visible**. "Sin clasificar" es un
+filtro de tipo de cuenta, y lo que hay ahí es exactamente lo que falta ir a ver.
+
+**Consecuencia en el catálogo.** `motivo_descarte` gana el valor `sin_interes`. El enum nació
+para los puntos de Google que nunca llegaron a ser cuenta, y ahí los cinco valores
+alcanzaban. Ahora califica también una cuenta que sí se visitó, y el caso más común de esa
+visita —el encargado escuchó y no le interesó— no tenía dónde caer. Sin ese valor todo
+terminaba en "otro", y el reporte de por qué se pierden los prospectos no diría nada.
+
+---
+
+## D-016 — Programar un seguimiento y registrarlo son dos pantallas
+
+**Fecha:** 2026-08-22
+
+**Decisión.** Se separan dos acciones que estaban pegadas:
+
+- **Registrar seguimiento** (`/cuentas/[id]/seguimiento`) — contar qué pasó, cuando ya pasó.
+  Lleva check-in, resultado y evidencia. De ahí puede salir el próximo paso encadenado.
+- **Programar seguimiento** (`/cuentas/[id]/programar`) — agendar qué se va a hacer y cuándo.
+  No afirma que haya pasado nada. Produce un compromiso con `visita_id` nulo.
+
+Los dos alimentan la misma pantalla de Seguimientos, que es donde se ejecutan.
+
+**Alternativa descartada.** Mantener una sola pantalla, como estaba: el próximo paso solo se
+podía crear como consecuencia de registrar una visita.
+
+**Por qué.** Lo planteó el negocio y es correcto: *"la acción de crear es en base a un plan,
+una siguiente acción, y luego la acción del seguimiento es hacer el seguimiento"*.
+
+Con una sola pantalla, para agendar una visita futura había que registrar una visita que no
+ocurrió y elegirle un resultado. Eso es exactamente la clase de dato falso que este sistema
+existe para no producir: el principio rector es que **el avance es consecuencia de hechos
+registrados**, y un hecho inventado para poder usar el formulario rompe el principio en su
+raíz.
+
+El reparto de pantallas queda: en **Cuentas** se programan los seguimientos futuros; en
+**Seguimientos** se ejecutan y se registra el resultado.
+
+---
+
+## D-017 — El próximo paso deja de ser obligatorio en los resultados terminales
+
+**Fecha:** 2026-08-22
+
+**Decisión.** §6 obliga a que todo seguimiento deje un próximo paso. Se mantiene, con tres
+excepciones: `local_cerrado`, `no_usa_productos` y `sin_interes`. Con esos resultados —y con
+la cuenta que se acaba de descartar— el próximo paso es opcional. Si se llena, sigue
+necesitando fecha: o los dos campos o ninguno.
+
+**Alternativa descartada.** Mantener la regla sin excepciones, que es lo que estaba.
+
+**Por qué.** La regla es buena y es la que evita que una cuenta se apague sin que nadie lo
+note. Pero pedirle una fecha futura a quien acaba de encontrar el local cerrado no produce un
+compromiso: produce un compromiso inventado. Y una regla que obliga a inventar enseña a
+escribir cualquier cosa con tal de guardar, que es peor que no tener la regla.
+
+La excepción se acota a los tres resultados donde la conversación de verdad terminó. En todo
+lo demás —incluido "no estaba el encargado", que es el caso donde más falta hace— sigue
+siendo obligatorio.
+
+---
+
+## D-018 — Las coordenadas de la cuenta se editan en la cuenta, no en la visita
+
+**Fecha:** 2026-08-22
+
+**Decisión.** Las coordenadas pasan a ser un campo editable de la cuenta, dentro de *Editar
+datos*, junto a dirección y poblado. Tres caminos: escribirlas, tomarlas del celular
+("Estoy aquí"), o tocarlas en el mapa. El check-in del seguimiento se queda donde está, y
+**solo se pide cuando la interacción es una visita**.
+
+**Alternativa descartada.** Seguir capturando la ubicación únicamente al crear la cuenta, con
+la pantalla `/ubicar` como único remedio.
+
+**Por qué.** Estaban confundidas dos cosas distintas:
+
+- **Dónde queda el local** — dato de la cuenta, se corrige cuantas veces haga falta.
+- **Dónde estaba el vendedor al registrar la visita** — hecho de la bitácora, no se toca.
+
+Una cuenta creada sin señal quedaba fuera del mapa y no había forma de arreglarlo desde la
+pantalla donde se corrige todo lo demás.
+
+De paso se corrige el orden del formulario de seguimiento: **la intención va primero**,
+porque decide el resto de la pantalla. Una llamada no tiene check-in ni foto del local, y
+pedírselos enseña al vendedor a saltarse campos, que es el hábito que después vacía la base.
+El orden queda: intención → check-in (solo si es visita) → resultado → clasificación (solo si
+la cuenta estaba sin clasificar) → notas → proveedor y precio → evidencia → próximo paso.
