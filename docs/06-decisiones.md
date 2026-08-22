@@ -304,3 +304,26 @@ configurable.
 
 La excepción se acota con la leyenda obligatoria, que es lo que preserva el principio de
 fondo: **los estados nunca dependen solo del color**.
+
+---
+
+## D-014 — Los filtros viven en la dirección, no en el estado de React
+
+**Fecha:** 2026-08-21
+
+**Decisión.** Los filtros de la cartera, la dimensión de colorización y la vista elegida se
+serializan a la URL. El botón Volver usa el historial del navegador en vez de un destino
+fijo.
+
+**Alternativa descartada.** Mantenerlos en el estado del componente, que es lo natural en
+React.
+
+**Por qué.** Con el estado en memoria, entrar a una cuenta y volver lo perdía todo. El
+negocio lo encontró trabajando: para corregir cuentas sin clasificar había que rearmar el
+filtro después de cada una, y con diez cuentas eso vuelve el trabajo en tanda inviable.
+
+Efecto secundario que sale gratis: **la vista queda enlazable**. Un líder puede mandarle a
+un vendedor la dirección exacta de lo que está mirando.
+
+Se usa `replace` y no `push`: cada toque de filtro no debe dejar una entrada en el historial,
+o el botón de atrás tardaría veinte toques en salir de la pantalla.

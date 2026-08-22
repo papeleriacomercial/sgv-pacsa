@@ -148,6 +148,14 @@ siendo la documentación final del sistema. Mantenerla no es trabajo extra al fi
   fecha, decisión, alternativas consideradas, por qué.
 - **`docs/07-estado.md` se actualiza al cerrar cada tarea.** Es lo que permite retomar el
   trabajo sin releer todo. Si una tarea terminó y el estado no cambió, la tarea no terminó.
+- **Los documentos de referencia se actualizan en el mismo empujón que el código, sin que
+  nadie lo pida.** Si cambia el esquema, cambian `02-modelo-datos.md` y `03-seguridad-rls.md`;
+  si cambia una pantalla, cambia su archivo en `05-modulos/`. Actualizar la documentación es
+  parte de terminar la tarea, no un paso posterior.
+
+  El 2026-08-21 esos dos documentos seguían describiendo las tablas `prospectos` y `visitas`
+  dos etapas después de haberlas renombrado, porque la regla solo obligaba a tocar el estado.
+  **Una referencia desactualizada es peor que no tenerla: se cree.**
 - `docs/00-vision.md` **no se edita** para reflejar avances — es el levantamiento original.
   Solo se corrige si cambia el alcance acordado con el negocio, y ese cambio se anota en
   `06-decisiones.md`.

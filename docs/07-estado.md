@@ -576,3 +576,66 @@ directores, y es otro módulo.
 La función de tocar un local de Google y agregarlo como cuenta vivía en el componente viejo.
 Se trasladó al nuevo antes de borrarlo: perderla habría sido un retroceso sobre algo ya
 probado en la calle.
+
+---
+
+## Correcciones sobre la Etapa 3 — 2026-08-21
+
+Tres defectos que encontró el negocio usando las pantallas, más uno que salió al buscarlos.
+
+### El mapa en blanco en la primera carga
+
+**Síntoma:** el mapa no aparecía al abrir la aplicación y sí al volver después de navegar.
+
+Se persiguió con dos hipótesis equivocadas —el alto del contenedor y las librerías
+desalineadas entre proveedores— antes de montar una página de diagnóstico temporal sin
+sesión para poder ver la consola. Ahí salió la causa en una línea:
+
+```
+TypeError: google.maps.Size is not a constructor
+```
+
+La función del ícono comprobaba que existiera `google.maps` antes de usar `Size` y `Point`,
+pero **esas clases pertenecen a la librería `core`, que Google carga aparte y más tarde**. El
+objeto ya está, las clases todavía no. La excepción tumbaba el subárbol entero del mapa, y en
+la segunda visita ya no ocurría porque la librería estaba cargada.
+
+Corregido en dos capas: la función comprueba las clases y no el objeto que las contiene, y
+los marcadores no se dibujan hasta que `useMapsLibrary("core")` resuelve.
+
+**La lección de método, que valía más que el arreglo:** dos hipótesis razonables fallaron
+seguidas porque no se podía observar el fallo. Una página de diagnóstico desechable costó
+diez minutos y dio la respuesta exacta.
+
+### Filtrar y colorear estaban mezclados
+
+Competían en la misma vista y no se podía usar ninguna. Ahora son dos pestañas del mismo
+panel: *Qué se ve* y *Cómo se colorea*. Las dimensiones de color pasaron de cuatro a siete y
+son **las mismas variables que se pueden filtrar**: si se pudiera colorear por algo que no se
+puede filtrar, habría dos vocabularios para la misma cartera.
+
+### El filtro de poblado parecía no existir
+
+No faltaba: lo escondía la regla de que las opciones salen de los datos, y ninguna cuenta
+tenía poblado. Un filtro invisible es un filtro que nadie descubre. Ahora el grupo se muestra
+siempre y explica cómo llenarlo. Mismo arreglo para tipo de comercio.
+
+### El estado de los filtros se perdía al navegar
+
+Corregir cuentas incompletas obligaba a rearmar el filtro después de cada una. Los filtros
+pasaron a vivir en la dirección (D-014), el botón Volver usa el historial, y el expediente
+tiene un enlace *Ver en el mapa* que abre el mapa centrado en esa cuenta.
+
+---
+
+## Estado de la documentación — 2026-08-21
+
+Auditada contra el esquema real. `02-modelo-datos.md` y `03-seguridad-rls.md` seguían
+describiendo `prospectos` y `visitas` dos etapas después del renombrado: se reescribieron
+completos contra `information_schema` y `pg_policies`, no de memoria.
+
+`05-modulos/7.1` recibió el vocabulario nuevo con una nota de qué cambió y por qué.
+
+Se agregó a `CLAUDE.md` la regla que faltaba: **los documentos de referencia se actualizan en
+el mismo empujón que el código.** La regla anterior solo obligaba a tocar `07-estado.md`, y
+por eso las referencias se desfasaron sin que nada avisara.
