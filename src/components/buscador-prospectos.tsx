@@ -191,13 +191,17 @@ function Buscador() {
   // Cuando se llega armando una lista, los puntos elegidos entran ahí en vez
   // de caer sueltos en la cartera — que es el problema que las listas
   // resuelven. Ver docs/12-flujo-vendedor.html.
-  const listaId = useSearchParams().get("lista");
+  const parametros = useSearchParams();
+  const listaId = parametros.get("lista");
   const places = useMapsLibrary("places");
 
   const [ubicacion, setUbicacion] = useState<Ubicacion | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [radio, setRadio] = useState(3000);
-  const [texto, setTexto] = useState("");
+  // Cuando se llega desde una lista de zona, el poblado viene prellenado: es
+  // lo único que iba a escribir de todos modos.
+  const [texto, setTexto] = useState(() => parametros.get("q") ?? "");
+  const [nombreLista, setNombreLista] = useState<string | null>(null);
 
   const [resultados, setResultados] = useState<Candidato[] | null>(null);
   const [buscando, setBuscando] = useState(false);
@@ -223,6 +227,17 @@ function Buscador() {
     obtenerUbicacion().then(setUbicacion);
   }, []);
 
+  useEffect(() => {
+    if (!listaId) return;
+    const supabase = clienteNavegador();
+    supabase
+      .from("listas")
+      .select("nombre")
+      .eq("id", listaId)
+      .maybeSingle()
+      .then(({ data }) => setNombreLista(data?.nombre ?? null));
+  }, [listaId]);
+
   /** Consulta el semáforo contra la base propia (§7.4). */
   const marcarEstados = useCallback(async (lista: Candidato[]) => {
     if (lista.length === 0) return lista;
@@ -237,12 +252,27 @@ function Buscador() {
     return lista.map((c) => ({ ...c, estado: porId.get(c.placeId) ?? null }));
   }, []);
 
-  async function buscar(modo: "cerca" | "texto") {
+  /**
+   * @param centro Dónde buscar cuando el modo es "cerca". Sin esto solo se
+   *   podía buscar alrededor del GPS — y para armar la lista de un pueblo al
+   *   que todavía no ha ido, eso no sirve de nada.
+   */
+  async function buscar(
+    modo: "cerca" | "texto",
+    centro?: { lat: number; lng: number },
+  ) {
     if (!places) return;
     setError(null);
     setBuscando(true);
-    setResultados(null);
-    setElegidos([]);
+
+    // Barrer una zona **acumula**; empezar de cero borra. Si cada barrido
+    // reemplazara, moverse dos cuadras perdería lo que ya marcó — y recorrer
+    // un pueblo en tandas sería imposible, que es justo para lo que sirve.
+    const barriendo = centro !== undefined;
+    if (!barriendo) {
+      setResultados(null);
+      setElegidos([]);
+    }
 
     try {
       const tipos = categorias.flatMap((c) => [...CATEGORIAS[c].tipos]);
@@ -254,7 +284,8 @@ function Buscador() {
       let encontrados: google.maps.places.Place[] = [];
 
       if (modo === "cerca") {
-        if (!ubicacion) {
+        const desde = centro ?? ubicacion;
+        if (!desde) {
           setError("No hay ubicación. Activa el GPS o busca por texto.");
           setBuscando(false);
           return;
@@ -262,7 +293,7 @@ function Buscador() {
         const { places: r } = await places.Place.searchNearby({
           fields: campos,
           locationRestriction: {
-            center: { lat: ubicacion.lat, lng: ubicacion.lng },
+            center: { lat: desde.lat, lng: desde.lng },
             radius: radio,
           },
           includedPrimaryTypes: tipos.length > 0 ? tipos : undefined,
@@ -271,9 +302,18 @@ function Buscador() {
         });
         encontrados = r;
       } else {
+        // Las categorías elegidas se suman al texto. Antes se ignoraban en
+        // este modo, y era justo lo que hacía falta para armar una lista de
+        // zona: "Farmacia y Panadería en Aguadulce" en una sola consulta.
+        const etiquetas = categorias.map((c) => CATEGORIAS[c].etiqueta);
+        const consulta =
+          etiquetas.length > 0
+            ? `${etiquetas.join(" y ")} en ${texto}`
+            : texto;
+
         const { places: r } = await places.Place.searchByText({
           fields: campos,
-          textQuery: texto,
+          textQuery: consulta,
           maxResultCount: 20,
           // Sin esto la búsqueda es mundial. Ver la nota de PANAMA arriba.
           locationRestriction: PANAMA,
@@ -306,7 +346,15 @@ function Buscador() {
         }))
         .map((c) => ({ ...c, estado: null }));
 
-      setResultados(await marcarEstados(lista));
+      const conEstado = await marcarEstados(lista);
+
+      setResultados((antes) => {
+        if (!barriendo || !antes) return conEstado;
+        // Por `place_id`: los barridos se solapan y el mismo local sale dos
+        // veces. Se queda el que ya estaba para no perder nada de él.
+        const vistos = new Set(antes.map((c) => c.placeId));
+        return [...antes, ...conEstado.filter((c) => !vistos.has(c.placeId))];
+      });
     } catch {
       setError("La búsqueda falló. Revisa la señal e intenta de nuevo.");
     }
@@ -440,6 +488,23 @@ function Buscador() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Sin esto se pierde el hilo: escoge veinte puntos y no sabe a dónde
+          van a caer. */}
+      {listaId && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+          <p className="text-sm text-blue-800">
+            Armando la lista{" "}
+            <span className="font-semibold">{nombreLista ?? "…"}</span>
+          </p>
+          <Link
+            href={`/listas/${listaId}`}
+            className="shrink-0 text-xs text-blue-800 underline"
+          >
+            Ver la lista
+          </Link>
+        </div>
+      )}
+
       <Tarjeta className="flex flex-col gap-4">
         <Opciones
           etiqueta="Qué buscas"
@@ -488,7 +553,13 @@ function Buscador() {
           etiqueta="O busca un área o una marca"
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
-          ayuda="Farmacias en Aguadulce · Supermercados Calle 50 · Banco General"
+          ayuda={
+            categorias.length > 0
+              ? `Escribe el área: se va a buscar "${categorias
+                  .map((c) => CATEGORIAS[c].etiqueta)
+                  .join(" y ")} en …"`
+              : "Aguadulce · Calle 50 · Banco General. Escoge arriba qué tipo de comercio para afinar."
+          }
         />
         <Boton
           tono="secundario"
@@ -504,7 +575,9 @@ function Buscador() {
       </Tarjeta>
 
       {error && <MensajeError titulo={error} />}
-      {buscando && <Cargando texto="Buscando" />}
+      {/* Mientras barre el mapa no se desmonta: si desapareciera, volvería
+          centrado en otro lado y perdería el sitio que estaba mirando. */}
+      {buscando && !resultados && <Cargando texto="Buscando" />}
 
       {resultados?.length === 0 && (
         <Tarjeta>
@@ -596,6 +669,8 @@ function Buscador() {
                     a.includes(id) ? a.filter((x) => x !== id) : [...a, id],
                   )
                 }
+                onBuscarAqui={(centro) => buscar("cerca", centro)}
+                buscando={buscando}
               />
             </div>
           ) : (
@@ -672,6 +747,40 @@ function Centrar({ candidato }: { candidato: Candidato | null }) {
   return null;
 }
 
+/**
+ * "Buscar en esta zona".
+ *
+ * Es el gesto que uno espera de un mapa y que faltaba: moverse hasta Aguadulce
+ * y pedir lo que hay ahí. Sin esto solo se podía buscar alrededor del GPS —
+ * inútil para armar la lista de un pueblo al que todavía no ha ido— o por
+ * texto, que devuelve veinte y se acabó.
+ *
+ * Barriendo por zonas se puede recorrer un pueblo entero en tandas.
+ */
+function BuscarAqui({
+  onBuscar,
+  buscando,
+}: {
+  onBuscar: (centro: { lat: number; lng: number }) => void;
+  buscando: boolean;
+}) {
+  const mapa = useMap();
+
+  return (
+    <button
+      type="button"
+      disabled={buscando || !mapa}
+      onClick={() => {
+        const c = mapa?.getCenter();
+        if (c) onBuscar({ lat: c.lat(), lng: c.lng() });
+      }}
+      className="min-h-tactil absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-lg border border-borde bg-superficie px-4 text-sm font-medium text-texto shadow-md disabled:opacity-60"
+    >
+      {buscando ? "Buscando" : "Buscar en esta zona"}
+    </button>
+  );
+}
+
 function MapaCandidatos({
   candidatos,
   abierto,
@@ -681,6 +790,8 @@ function MapaCandidatos({
   sucursales,
   contando,
   onContarSucursales,
+  onBuscarAqui,
+  buscando,
 }: {
   candidatos: Candidato[];
   abierto: Candidato | null;
@@ -690,6 +801,8 @@ function MapaCandidatos({
   sucursales: Record<string, number>;
   contando: boolean;
   onContarSucursales: (c: Candidato) => void;
+  onBuscarAqui: (centro: { lat: number; lng: number }) => void;
+  buscando: boolean;
 }) {
   // `core` trae Size y Point, que usa el ícono del marcador. Sin esperarla, el
   // primer render los construye antes de que existan y revienta el mapa entero.
@@ -708,6 +821,7 @@ function MapaCandidatos({
       zoomControl
       style={{ height: "100%", width: "100%" }}
     >
+      <BuscarAqui onBuscar={onBuscarAqui} buscando={buscando} />
       <Centrar candidato={abierto} />
 
       {core &&

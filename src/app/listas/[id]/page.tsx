@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { MapPinned } from "lucide-react";
+import { MapPinned, Search } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import {
   CLASES_VENTA,
@@ -92,9 +92,11 @@ export default async function DetalleLista({
   const sinTocar = miembros.filter((m) => !ultimaPorCuenta.has(m.cuenta_id));
   const trabajadas = miembros.filter((m) => ultimaPorCuenta.has(m.cuenta_id));
 
-  const destinoMapa = lista.poblado
-    ? `/mapa?lista=${id}&q=${encodeURIComponent(lista.poblado)}`
-    : `/mapa?lista=${id}`;
+  // A Buscar y no al mapa de la cartera: el mapa muestra lo que ya es suyo, y
+  // aquí lo que hace falta es encontrar puntos que todavía no lo son.
+  const destinoBusqueda = lista.poblado
+    ? `/buscar?lista=${id}&q=${encodeURIComponent(lista.poblado)}`
+    : `/buscar?lista=${id}`;
 
   return (
     <>
@@ -127,11 +129,20 @@ export default async function DetalleLista({
             en su poblado. El semáforo de la búsqueda evita reescoger lo que ya
             es suyo, lo que descartó o lo que es de un compañero. */}
         <Link
-          href={destinoMapa}
+          href={destinoBusqueda}
+          className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-3 text-base font-medium text-white"
+        >
+          <Search size={18} aria-hidden />
+          Buscar puntos para esta lista
+        </Link>
+
+        {/* El mapa de la cartera, para ver dónde caen los que ya tiene. */}
+        <Link
+          href={`/mapa?poblados=${encodeURIComponent(lista.poblado ?? "")}`}
           className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
         >
           <MapPinned size={16} aria-hidden />
-          Agregar puntos desde el mapa
+          Ver la zona en el mapa
         </Link>
 
         {lista.sin_tocar_hace_mucho > 0 && (

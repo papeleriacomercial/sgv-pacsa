@@ -1437,3 +1437,55 @@ Lo que queda marcado como pendiente en esos documentos:
   la venta estancada por días sin movimiento. Las tres son de su cierre y salen juntas.
 - **Gerencia**: el informe mensual, y las dos partes bloqueadas por las categorías
   direccionables y por Zoho.
+
+---
+
+## Armar una lista de zona no funcionaba — 2026-08-23
+
+Salió usándolo: crear la lista "Aguadulce" y tocar *Agregar puntos* llevaba al mapa de la
+cartera, donde solo hay filtros y colorización. **No había forma de buscar Aguadulce.**
+
+Tres errores encadenados, y uno estaba ahí desde antes.
+
+### 1. El enlace iba a la pantalla equivocada
+
+`/mapa` es el mapa de **su cartera**: muestra lo que ya es suyo. Lo que hacía falta es
+`/buscar`, que es donde se encuentran puntos que todavía no lo son. Y el `?q=` que le pasaba
+se ignoraba.
+
+Ahora va a `/buscar?lista=<id>&q=<poblado>`, con el poblado prellenado y un aviso arriba que
+dice qué lista se está armando, con enlace de vuelta. Sin eso se pierde el hilo: escoge veinte
+puntos y no sabe a dónde van a caer.
+
+La lista conserva además un enlace al mapa de la cartera —*ver la zona en el mapa*— filtrado
+por ese poblado, que es otra cosa y también sirve.
+
+### 2. La búsqueda por texto tiraba las categorías
+
+Estaba así desde §7.4: en modo texto, las categorías elegidas arriba se ignoraban. Escoger
+*Farmacia* y escribir *Aguadulce* buscaba solo "Aguadulce".
+
+Ahora se combinan en una sola consulta: **"Farmacia y Panadería en Aguadulce"**. Era justo lo
+que hacía falta para armar una lista de zona, y el campo lo dice mientras escribe.
+
+### 3. Faltaba "Buscar en esta zona"
+
+Es el gesto que uno espera de un mapa. Antes solo se podía buscar **alrededor del GPS**
+—inútil para armar la lista de un pueblo al que todavía no ha ido— o por texto, que devuelve
+veinte y se acabó.
+
+Ahora el mapa de resultados lleva un botón que busca alrededor de donde uno está mirando. Con
+eso se recorre un pueblo entero en tandas.
+
+**Y el barrido acumula, no reemplaza.** Si cada barrido borrara lo anterior, moverse dos
+cuadras perdería lo que ya marcó y recorrer un pueblo por tandas sería imposible. Se mezcla
+por `place_id` porque los barridos se solapan y el mismo local sale dos veces.
+
+El mapa tampoco se desmonta mientras busca: si desapareciera, volvería centrado en otro lado
+y perdería el sitio que estaba mirando.
+
+### Lo que esto deja pendiente
+
+Sigue sin poder **tocar un comercio cualquiera en el mapa de búsqueda** para agregarlo — eso
+solo se puede en el mapa de la cartera. Con el barrido por zona el caso se cubre casi siempre,
+pero si aparece la necesidad, es media hora.
