@@ -18,6 +18,8 @@ import {
   type TipoSolicitud,
 } from "@/lib/catalogos";
 import { MiSemana } from "@/components/mi-semana";
+import { ReprogramarCompromiso } from "@/components/reprogramar-compromiso";
+import { CambiarElDia } from "@/components/cambiar-el-dia";
 import { RegistrarJornada } from "@/components/registrar-jornada";
 import { JornadasDeLaSemana } from "@/components/jornadas-de-la-semana";
 import { CerrarSesion } from "@/components/cerrar-sesion";
@@ -40,6 +42,7 @@ type Compromiso = {
   descripcion: string;
   fecha_compromiso: string;
   tipo_accion: TipoInteraccion;
+  veces_movido: number;
   cuentas: { nombre: string } | { nombre: string }[] | null;
   oportunidades: { nombre: string } | { nombre: string }[] | null;
 };
@@ -103,7 +106,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
       supabase
         .from("compromisos")
         .select(
-          "id, cuenta_id, descripcion, fecha_compromiso, tipo_accion, cuentas(nombre), oportunidades(nombre)",
+          "id, cuenta_id, descripcion, fecha_compromiso, tipo_accion, veces_movido, cuentas(nombre), oportunidades(nombre)",
         )
         .is("deleted_at", null)
         .is("cumplido_en", null)
@@ -147,9 +150,14 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
     const venta = nombreDe(c.oportunidades);
 
     return (
-      <Link href={`/cuentas/${c.cuenta_id}/seguimiento?compromiso=${c.id}`}>
-        <Tarjeta
-          className={`flex flex-col gap-1 ${vencido ? "border-red-200 bg-red-50" : ""}`}
+      <Tarjeta
+        className={`flex flex-col gap-2 ${vencido ? "border-red-200 bg-red-50" : ""}`}
+      >
+        {/* El enlace envuelve solo el contenido: reprogramar es otra acción y
+            no puede quedar dentro del área que abre el seguimiento. */}
+        <Link
+          href={`/cuentas/${c.cuenta_id}/seguimiento?compromiso=${c.id}`}
+          className="flex flex-col gap-1"
         >
           <div className="flex items-start justify-between gap-2">
             <p className="text-base font-semibold text-texto">
@@ -172,8 +180,10 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
             </Insignia>
             {venta && <Insignia tono="info">{venta}</Insignia>}
           </div>
-        </Tarjeta>
-      </Link>
+        </Link>
+
+        <ReprogramarCompromiso id={c.id} vecesMovido={c.veces_movido} />
+      </Tarjeta>
     );
   }
 
@@ -304,6 +314,14 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
                 {paradas.map((c) => (
                   <Renglon key={c.id} c={c} />
                 ))}
+
+                {/* Cuando el día se cae, mover cinco paradas una por una es la
+                    fricción que hace que no se muevan — y la agenda queda llena
+                    de vencidos falsos. */}
+                <CambiarElDia
+                  ids={paradas.map((c) => c.id)}
+                  cuantos={paradas.length}
+                />
               </section>
             )}
 

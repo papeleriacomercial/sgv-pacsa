@@ -336,6 +336,21 @@ export type MotivoCompetencia = keyof typeof MOTIVOS_COMPETENCIA;
  * duplicaría el tiempo de captura y enseñaría al vendedor a elegir resultados
  * que no la disparan — que es exactamente cómo se corrompe un catálogo.
  */
+/**
+ * Resultados donde puede haber una venta que tome tiempo.
+ *
+ * El bloque para abrirla aparece con estos tres y es opcional. El vendedor de
+ * ruta casi siempre lo salta —vende en una o dos visitas, y eso es un pedido—
+ * y el líder casi siempre lo toma.
+ *
+ * La regla: si vas a volver más de una vez por la misma venta, es una venta.
+ */
+export const RESULTADOS_CON_VENTA_LARGA: Resultado[] = [
+  "pide_cotizacion",
+  "quiere_precio",
+  "pide_muestra",
+];
+
 export const RESULTADOS_CON_COMPETENCIA: Resultado[] = [
   "quiere_precio",
   "stock_suficiente",

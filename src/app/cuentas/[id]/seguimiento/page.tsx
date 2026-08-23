@@ -9,6 +9,8 @@ import { subirFoto } from "@/lib/fotos";
 import { obtenerUbicacion, calidadUbicacion, type Ubicacion } from "@/lib/gps";
 import {
   DESCARTE_SUGERIDO,
+  RESUELVE,
+  RESULTADOS_CON_VENTA_LARGA,
   RESULTADO_VENTA,
   MOTIVOS_COMPETENCIA,
   MOTIVOS_DESCARTE,
@@ -18,8 +20,10 @@ import {
   RESULTADOS_TERMINALES,
   TIPOS_INTERACCION,
   type MotivoCompetencia,
+  type LineaProducto,
   type MotivoDescarte,
   type Resultado,
+  type ResuelveSolicitud,
   type TipoCuenta,
   type TipoInteraccion,
 } from "@/lib/catalogos";
@@ -89,6 +93,7 @@ function Formulario() {
 
   const [nombreCuenta, setNombreCuenta] = useState("");
   const [tipoCuenta, setTipoCuenta] = useState<TipoCuenta | null>(null);
+  const [lineaDeLaCuenta, setLineaDeLaCuenta] = useState<LineaProducto>("otros");
   const [cargando, setCargando] = useState(true);
 
   const [tipo, setTipo] = useState<TipoInteraccion>("visita");
@@ -104,6 +109,18 @@ function Formulario() {
   >([]);
   const [precio, setPrecio] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
+  // El pedido, cuando la visita terminó en venta.
+  const [pedidoDetalle, setPedidoDetalle] = useState("");
+  const [pedidoMonto, setPedidoMonto] = useState("");
+  const [pedidoFactura, setPedidoFactura] = useState<ResuelveSolicitud>("yo");
+  const [entregado, setEntregado] = useState(true);
+
+  // La venta que va a tomar tiempo.
+  const [abrirVenta, setAbrirVenta] = useState(false);
+  const [ventaNombre, setVentaNombre] = useState("");
+  const [ventaMonto, setVentaMonto] = useState("");
+  const [ventaCierre, setVentaCierre] = useState("");
+
   const [proximoPaso, setProximoPaso] = useState("");
   const [accion, setAccion] = useState<TipoInteraccion>("visita");
   const [fechaCompromiso, setFechaCompromiso] = useState("");
@@ -119,7 +136,7 @@ function Formulario() {
     const supabase = clienteNavegador();
     supabase
       .from("cuentas")
-      .select("nombre, tipo")
+      .select("nombre, tipo, productos_interes")
       .eq("id", cuentaId)
       .is("deleted_at", null)
       .maybeSingle()
@@ -127,6 +144,10 @@ function Formulario() {
         if (data) {
           setNombreCuenta(data.nombre ?? "");
           setTipoCuenta(data.tipo as TipoCuenta);
+          // La venta hereda la línea que la cuenta ya declaró. Dejar todo en
+          // "otros" volvería inútil el reporte por línea de producto (§7.7).
+          const lineas = (data.productos_interes ?? []) as LineaProducto[];
+          if (lineas.length > 0) setLineaDeLaCuenta(lineas[0]);
         }
         setCargando(false);
       });
@@ -164,6 +185,8 @@ function Formulario() {
   // captura y enseñaría a elegir resultados que no la disparan.
   const hayCompetencia =
     resultado !== null && RESULTADOS_CON_COMPETENCIA.includes(resultado);
+  const puedeSerVentaLarga =
+    resultado !== null && RESULTADOS_CON_VENTA_LARGA.includes(resultado);
   const hayQueClasificar = tipoCuenta === "sin_clasificar";
   const seDescarta = clasificacion === "descartada";
 
@@ -180,6 +203,8 @@ function Formulario() {
 
   const listo =
     resultado !== null &&
+    (!huboVenta || pedidoDetalle.trim() !== "") &&
+    (!abrirVenta || ventaNombre.trim() !== "") &&
     // La lectura tarda ocho segundos como mucho. Dejar guardar antes marcaría
     // la visita como `sin_gps` cuando el GPS iba a enganchar en un segundo más.
     !buscandoGps &&
@@ -275,6 +300,77 @@ function Formulario() {
       }
     }
 
+    // La venta que va a tomar tiempo. Se crea antes del compromiso para que el
+    // próximo paso pueda colgar de ella: es lo que hace que la agenda diga a
+    // qué venta sirve cada renglón.
+    let ventaId: string | null = oportunidadId;
+
+    if (abrirVenta && ventaNombre.trim()) {
+      const nuevaVenta = crypto.randomUUID();
+      const { error: falloVenta } = await insertar(
+        "oportunidades",
+        {
+          id: nuevaVenta,
+          cuenta_id: cuentaId,
+          vendedor_id: user.id,
+          nombre: ventaNombre.trim(),
+          linea: lineaDeLaCuenta,
+          monto_estimado: ventaMonto ? Number(ventaMonto) : null,
+          fecha_cierre_estimada: ventaCierre || null,
+          etapa: "contactado",
+        },
+        `Venta abierta con ${nombreCuenta}`,
+      );
+
+      if (falloVenta) {
+        setError(
+          `El seguimiento quedó guardado, pero la venta no: ${falloVenta}`,
+        );
+        setGuardando(false);
+        return;
+      }
+
+      ventaId = nuevaVenta;
+    }
+
+    // El pedido. Nace como solicitud porque es exactamente eso: si lo factura
+    // él con su talonario se cierra en el acto; si necesita factura fiscal,
+    // sale a la bandeja de administración con su reloj.
+    if (huboVenta && pedidoDetalle.trim()) {
+      const ahora = new Date().toISOString();
+      const propio = pedidoFactura === "yo";
+
+      const { error: falloPedido } = await insertar(
+        "solicitudes",
+        {
+          id: crypto.randomUUID(),
+          cuenta_id: cuentaId,
+          oportunidad_id: ventaId,
+          vendedor_id: user.id,
+          tipo: "pedido",
+          resuelve: pedidoFactura,
+          detalle: pedidoDetalle.trim(),
+          monto_estimado: pedidoMonto ? Number(pedidoMonto) : null,
+          // Si se la dejó del carro, el pedido nace cerrado: no hay nada que
+          // esperar de nadie.
+          estado: propio && entregado ? "resuelta" : "pendiente",
+          respuesta:
+            propio && entregado ? "Facturado y entregado en la visita" : null,
+          resuelta_en: propio && entregado ? ahora : null,
+          resuelta_por: propio && entregado ? user.id : null,
+        },
+        `Pedido de ${nombreCuenta}`,
+      );
+
+      if (falloPedido) {
+        setError(
+          `El seguimiento quedó guardado, pero el pedido no: ${falloPedido}`,
+        );
+        setGuardando(false);
+        return;
+      }
+    }
+
     // El compromiso que motivó este seguimiento se da por cumplido. Registrar
     // lo que se hizo es lo que lo cierra: no hay un botón aparte de "ya lo
     // hice" que se pueda tocar sin dejar rastro de qué pasó.
@@ -295,7 +391,7 @@ function Formulario() {
           // El próximo paso hereda la venta del seguimiento que lo originó, sin
           // que él la elija otra vez. Es lo que hace que la agenda sepa a qué
           // venta sirve cada renglón.
-          oportunidad_id: oportunidadId,
+          oportunidad_id: ventaId,
           vendedor_id: user.id,
           descripcion: proximoPaso.trim(),
           fecha_compromiso: fechaCompromiso,
@@ -458,7 +554,135 @@ function Formulario() {
               </Tarjeta>
             )}
 
-            {/* 5. Lo que se conversó. */}
+            {/* 5. El pedido, cuando la visita terminó en venta. Es el mejor
+                resultado posible y hasta ahora no tenía dónde anotarse. */}
+            {huboVenta && (
+              <Tarjeta className="flex flex-col gap-4 border-green-200 bg-green-50">
+                <div>
+                  <p className="text-sm font-medium text-texto">El pedido</p>
+                  <p className="text-xs text-texto-secundario">
+                    Con esto la venta de la semana se ve sin esperar la factura.
+                  </p>
+                </div>
+
+                <Campo
+                  etiqueta="Qué se llevó"
+                  required
+                  value={pedidoDetalle}
+                  onChange={(e) => setPedidoDetalle(e.target.value)}
+                  ayuda="“4 cajas de rollos 80mm”."
+                />
+
+                <Campo
+                  etiqueta="Cuánto"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  value={pedidoMonto}
+                  onChange={(e) => setPedidoMonto(e.target.value)}
+                />
+
+                {/* Los dos caminos son reales y ninguno es el excepcional. */}
+                <Opciones
+                  etiqueta="¿Quién factura?"
+                  opciones={RESUELVE}
+                  valor={pedidoFactura}
+                  onCambio={setPedidoFactura}
+                  ayuda="Tu talonario, o la oficina si necesita factura fiscal."
+                />
+
+                {pedidoFactura === "yo" && (
+                  <label className="min-h-tactil flex cursor-pointer items-center gap-2 text-sm text-texto">
+                    <input
+                      type="checkbox"
+                      checked={entregado}
+                      onChange={(e) => setEntregado(e.target.checked)}
+                      className="size-5"
+                    />
+                    Se la dejé ahora
+                  </label>
+                )}
+              </Tarjeta>
+            )}
+
+            {/* 5b. La venta que va a tomar tiempo. Opcional, y el vendedor de
+                ruta casi siempre la salta: si se resuelve en la próxima visita
+                es un pedido, no una venta que haya que seguir. */}
+            {puedeSerVentaLarga && (
+              <Tarjeta className="flex flex-col gap-4">
+                <div>
+                  <p className="text-sm font-medium text-texto">
+                    ¿Esta venta va a tomar tiempo?
+                  </p>
+                  <p className="text-xs text-texto-secundario">
+                    Si vas a volver más de una vez por lo mismo, ábrela y le
+                    hacemos seguimiento. Si se resuelve en la próxima visita, no
+                    hace falta.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    aria-pressed={abrirVenta}
+                    onClick={() => setAbrirVenta(true)}
+                    className={`min-h-tactil rounded-lg border px-3 text-sm ${
+                      abrirVenta
+                        ? "border-marca bg-marca text-white"
+                        : "border-borde bg-superficie text-texto"
+                    }`}
+                  >
+                    Abrir la venta
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={!abrirVenta}
+                    onClick={() => setAbrirVenta(false)}
+                    className={`min-h-tactil rounded-lg border px-3 text-sm ${
+                      !abrirVenta
+                        ? "border-marca bg-marca text-white"
+                        : "border-borde bg-superficie text-texto"
+                    }`}
+                  >
+                    Se resuelve pronto
+                  </button>
+                </div>
+
+                {abrirVenta && (
+                  <>
+                    <Campo
+                      etiqueta="Nombre de la venta"
+                      required
+                      value={ventaNombre}
+                      onChange={(e) => setVentaNombre(e.target.value)}
+                      ayuda="“Rollos térmicos”, “Bolsas para la cafetería”."
+                    />
+                    <Campo
+                      etiqueta="Monto estimado"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
+                      value={ventaMonto}
+                      onChange={(e) => setVentaMonto(e.target.value)}
+                    />
+                    {/* La fecha es lo que después dice cuándo entra la plata, y
+                        de ella sale si es venta rápida o grande. */}
+                    <Campo
+                      etiqueta="Cuándo crees que cierra"
+                      type="date"
+                      min={hoyEnPanama()}
+                      value={ventaCierre}
+                      onChange={(e) => setVentaCierre(e.target.value)}
+                      ayuda="Aproximado. Es lo que arma la proyección por mes."
+                    />
+                  </>
+                )}
+              </Tarjeta>
+            )}
+
+            {/* 6. Lo que se conversó. */}
             <Tarjeta>
               <Campo
                 etiqueta="Notas"
@@ -468,7 +692,7 @@ function Formulario() {
               />
             </Tarjeta>
 
-            {/* 6. La ficha de competencia. Solo cuando el resultado implica
+            {/* 7. La ficha de competencia. Solo cuando el resultado implica
                 que hay alguien más vendiéndole. */}
             {hayCompetencia && (
               <Tarjeta className="flex flex-col gap-4">
@@ -514,7 +738,7 @@ function Formulario() {
               </Tarjeta>
             )}
 
-            {/* 7. Evidencia. */}
+            {/* 8. Evidencia. */}
             <Tarjeta className="flex flex-col gap-3">
               <label className="text-sm font-medium text-texto">Evidencia</label>
               <label className="min-h-tactil flex cursor-pointer items-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto">
@@ -530,7 +754,7 @@ function Formulario() {
               </label>
             </Tarjeta>
 
-            {/* 8. El próximo paso, al final: es lo que deja la cuenta viva. */}
+            {/* 9. El próximo paso, al final: es lo que deja la cuenta viva. */}
             <Tarjeta className="flex flex-col gap-4">
               <div>
                 <p className="text-sm font-medium text-texto">Próximo paso</p>

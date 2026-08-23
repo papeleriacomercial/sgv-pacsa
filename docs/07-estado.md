@@ -1279,3 +1279,125 @@ un tercero.
 - Validar los catálogos provisionales con los tres vendedores: tipos de jornada, motivos de
   competencia, y qué resultados cuentan como contacto efectivo.
 - Los **umbrales**, que se fijan con cuatro a seis semanas de uso real y no desde la oficina.
+
+---
+
+## Lo que faltaba: pedido, venta, reprogramar, tablero y mercado — 2026-08-23
+
+Cierra el inventario de lo diseñado y no construido.
+
+### `20260823222720_reprogramar`
+
+`compromisos.veces_movido`, contado por un trigger.
+
+Reprogramar tiene que existir: si hoy no va a alcanzar, moverlo es más honesto que dejarlo
+pudrirse como vencido, y si no puede moverlo aprende a ignorar la agenda entera. **Pero deja
+rastro** — si fuera gratis, todo se empujaría para siempre y "vencido" dejaría de significar
+algo.
+
+El contador va en trigger y no en la pantalla: contar desde el cliente deja la puerta abierta
+a mover por otro camino y que el contador no se entere. Y solo cuenta si de verdad cambió la
+fecha — editar el texto o cumplirlo no es reprogramar.
+
+A la cuarta vez la pantalla pregunta si la cuenta sigue viva. No es un castigo: uno movido
+cuatro veces es señal de que o la cuenta no es real, o el plan no lo era.
+
+### El pedido dentro de "Compró"
+
+El resultado existía desde la Etapa 6 pero no capturaba nada. Ahora abre un bloque: qué se
+llevó, cuánto, **quién factura** —su talonario o la oficina— y si se la dejó en el acto.
+
+Nace como **solicitud de tipo pedido**, que es exactamente lo que es. Si lo factura él y ya la
+entregó, el pedido nace cerrado: no hay nada que esperar de nadie. Si necesita factura fiscal,
+sale a la bandeja con su reloj.
+
+Con esto **la venta de la semana se ve sin esperar la factura**, y el bloque de Ventas del
+cierre deja de estar vacío.
+
+### Abrir una venta desde el seguimiento
+
+Bloque condicional con `pide_cotizacion`, `quiere_precio` y `pide_muestra`. Opcional, y con la
+regla escrita en la pantalla: *si vas a volver más de una vez por lo mismo, ábrela*.
+
+**El formulario sigue siendo el mismo para los tres roles.** El vendedor de ruta lo ve y casi
+siempre elige "se resuelve pronto"; el líder casi siempre la abre.
+
+La venta hereda la línea de producto que la cuenta ya declaró — dejar todo en "otros" volvería
+inútil el reporte por línea (§7.7). Y el próximo paso cuelga de la venta recién creada, que es
+lo que hace que la agenda diga a qué venta sirve cada renglón.
+
+### Cambiar el día
+
+Cuando el día se cae, mover cinco paradas una por una es la fricción que hace que no se
+muevan — y la agenda queda llena de vencidos falsos. Se mueven en bloque.
+
+**Las llamadas se quedan**: no tienen pueblo y se hacen desde donde sea.
+
+Y el motivo se pregunta en el mismo gesto. Si además perdió el día completo, se registra como
+jornada: **mover el plan no gasta un día, perderlo sí**, y esa es la diferencia que decide si
+la semana tuvo tres días vendibles o cinco.
+
+### Ventas en marcha, por mes de cierre
+
+La pantalla dejó de llamarse "Pipeline" —quedó del principio y no es la palabra del negocio— y
+ganó una segunda vista.
+
+**Por mes es la única que muestra el hueco.** Los meses vacíos entre el primero y el último se
+dibujan a propósito: un mes sin nada no aparece solo, y en agosto ver que octubre está vacío
+todavía deja tiempo de meter ventas rápidas que cierren a tiempo.
+
+Las **sin fecha** van aparte: son invisibles para cualquier proyección y son las que se pudren
+calladas.
+
+Rápida o grande sale de la fecha de cierre, sin capturar nada. Y si empuja la fecha tres
+veces, la venta pasa sola de rápida a grande — que es justo lo que está pasando.
+
+### El Tablero
+
+Tres cosas y ninguna más: si se cerró el ciclo, las excepciones, y el cierre del líder — el
+único que gerencia lee completo.
+
+**Lo que no hace importa tanto como lo que hace: no tiene dónde escribirle a un vendedor.** El
+puesto de líder existe para que gerencia no tenga tres frentes; si el tablero ofrece la caja,
+la tentación existe y en un mes el vendedor escribe para gerencia. La restricción va en el
+producto, no en la buena intención.
+
+Las excepciones que levanta hoy: no cerró la semana, menos del 70% de visitas verificadas,
+cinco o más compromisos vencidos, **pidió algo y nadie le contestó**, y solicitudes pasadas de
+24 horas.
+
+Muestra excepciones y no todo. Un tablero que lo muestra todo tarda cuarenta minutos y deja de
+abrirse.
+
+### Mercado
+
+La pantalla que hace que valga la pena capturar la competencia. **Sin ella el vendedor levanta
+el dato tres meses, nunca ve que movió nada, y deja de levantarlo — con razón.**
+
+Muestra por qué le compran al otro, quiénes nos ganan, el precio que pagan hoy, en qué
+poblados y en qué tipos de comercio.
+
+Con el recordatorio del compromiso que la sostiene: si esto no termina en una decisión
+anunciada al equipo, van a dejar de capturarlo.
+
+### Verificación
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Mover la fecha dos veces | Cuenta 2 | Correcto |
+| Editar solo la descripción | No cuenta | Correcto |
+| Marcarlo cumplido moviendo la fecha | No cuenta | Correcto |
+
+`tsc`, `eslint` y `next build` limpios; **veinticuatro rutas**. Sin errores de consola ni de
+servidor.
+
+### Lo que queda, ahora sí
+
+- El ciclo de **administración**: la bandeja funciona, pero su día completo, el alta de
+  clientes y la conciliación con Zoho no se han diseñado.
+- El **informe mensual** de gerencia. Tiene sentido cuando haya un mes de datos.
+- **Cobertura y espacios en blanco**, bloqueado por las categorías direccionables.
+- El **conteo de clientes por cuenta madre**: el esquema ya distingue madre de punto, pero
+  ninguna cifra usa la distinción todavía. Importa cuando exista el informe mensual.
+- **Zoho**, y con él toda la mitad de retención.
+- Validar los catálogos provisionales, y fijar los umbrales con datos reales.

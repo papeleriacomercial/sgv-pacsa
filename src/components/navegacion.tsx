@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Inbox, List, Map, Store, TrendingUp } from "lucide-react";
+import {
+  CalendarDays,
+  Gauge,
+  Inbox,
+  Radar,
+  List,
+  Map,
+  Store,
+  TrendingUp,
+} from "lucide-react";
 
 // Buscar sale de la barra: es la misma acción que el mapa —encontrar puntos
 // nuevos— con otra forma de hacerla, y se llega desde ahí y desde una lista.
@@ -33,15 +42,17 @@ const POR_ROL: Record<Rol, Ruta[]> = {
     { href: "/", etiqueta: "Agenda", Icono: CalendarDays },
     { href: "/listas", etiqueta: "Listas", Icono: List },
     { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
+    { href: "/mercado", etiqueta: "Mercado", Icono: Radar },
     { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
-    { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],
+  // Gerencia no registra nada: es el único rol que solo lee y decide. Su
+  // pantalla es el tablero, y arranca ahí.
   gerente: [
-    { href: "/", etiqueta: "Agenda", Icono: CalendarDays },
+    { href: "/tablero", etiqueta: "Tablero", Icono: Gauge },
     { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
+    { href: "/mercado", etiqueta: "Mercado", Icono: Radar },
     { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
     { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
-    { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],
   administracion: [
     { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
