@@ -158,6 +158,41 @@ un hecho del mundo, no información comercial.
 
 ---
 
+## `cierres`: el RLS decide filas, no columnas
+
+El líder tiene UPDATE sobre los cierres de su equipo porque tiene que poder responder. Pero
+**no puede reescribir el plan**, y eso el RLS no lo puede expresar: una política decide qué
+filas se tocan, no qué columnas.
+
+Lo resuelve un trigger, `cierres_protege_el_plan`: si quien actualiza no es el dueño ni
+gerencia, cualquier cambio a los números, las respuestas de las tres preguntas, el plan o la
+apuesta se rechaza con `check_violation`. Solo pasa la respuesta.
+
+Está en la base y no en la pantalla a propósito. Es la regla que sostiene todo el esquema de
+abajo hacia arriba, y una regla que solo vive en la interfaz se salta desde cualquier otro
+lado.
+
+---
+
+## `listas` y su contenido
+
+`listas_cuentas` no puede consultar `listas` directamente desde su política: `listas` tiene
+RLS, y evaluar una política dentro de otra hace que Postgres recurse. Por eso
+`puedo_ver_lista()` y `puedo_editar_lista()` son `security definer` con
+`set search_path = public`, igual que `rol_actual()`.
+
+El líder ve las listas de su equipo pero no las modifica: son el plan del vendedor.
+
+---
+
+## `solicitudes`
+
+Administración ve y cierra su bandeja —pedidos, cotizaciones y muestras que salieron a la
+oficina— y **no ve los precios**: esos son decisión de gerencia. El vendedor cierra las que
+resuelve él mismo con su talonario.
+
+---
+
 ## `jornadas` y `competidores`
 
 `jornadas` sigue el modelo de `seguimientos`: cada quien registra y ve lo suyo, el líder ve

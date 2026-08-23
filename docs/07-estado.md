@@ -1187,3 +1187,95 @@ una conversación de veinte segundos.
 - El ciclo de **administración**.
 - Validar con los tres vendedores los catálogos provisionales: tipos de jornada, motivos de
   competencia, y qué resultados cuentan como contacto efectivo.
+
+---
+
+## El cierre semanal y el contrato — 2026-08-23
+
+La pieza que cierra el lazo. Con esto el ciclo completo existe:
+
+> Él declara qué va a hacer. Quien lo acompaña responde con contexto y objetivos, sin
+> reescribirle el plan. La semana siguiente el sistema pone lado a lado lo prometido y lo
+> ocurrido. Y él comenta qué pasó.
+
+### `20260823221111_cierre_semanal`
+
+Tabla `cierres`, una por vendedor y semana.
+
+**Los números se congelan.** Se guardan en `numeros` en vez de recalcularse a propósito: la
+semana 34 tiene que seguir diciendo en diciembre lo que dijo en agosto. Si se recalcularan,
+una cuenta descartada después cambiaría el pasado — y un histórico que se mueve solo no sirve
+para comparar nada.
+
+**Las tres preguntas son fijas**: qué te sorprendió, qué te frenó, qué necesitas de nosotros.
+No una caja abierta: *"cuéntame la semana"* produce prosa, y en un mes es la misma frase
+irrefutable e inútil. La tercera es la que devuelve algo.
+
+**El trigger `cierres_protege_el_plan`** rechaza que quien no es el dueño toque los números,
+las respuestas, el plan o la apuesta. Solo pasa la respuesta.
+
+Está en la base y no en la pantalla porque es la regla que sostiene el esquema de abajo hacia
+arriba: **si el plan se puede editar desde arriba deja de ser su plan**, y el vendedor aprende
+a proponer lo que va a ser aprobado. Ahí se acabó la información. Un plan flojo con su nombre
+encima es más útil que uno bueno impuesto.
+
+### La decisión del dictado
+
+Quedaba abierto grabar audio, transcribir, o las dos. **Se resolvió por una tercera vía: el
+micrófono del teclado del celular.**
+
+El vendedor toca el micrófono, habla, y el teléfono escribe. Cero infraestructura nueva, cero
+servicio externo, y produce **texto que se puede buscar y agregar desde el primer día** — no
+un audio que alguien tiene que escuchar. Y él ya sabe usarlo.
+
+Si en el piloto resulta que la transcripción del teclado no alcanza, grabar audio es el paso
+siguiente y no se pierde nada de lo hecho.
+
+### Las pantallas
+
+| Pantalla | Quién | Cuándo |
+|---|---|---|
+| `/cierre` | Vendedor | Jueves o viernes, cuatro pasos |
+| `/contrato` | Líder y gerencia | Viernes, una respuesta por persona |
+
+El cierre confirma los números —ya calculados, no escribe ninguno—, contesta las tres
+preguntas, reparte las rutas en los cinco días con su cantidad, y envía.
+
+**Se compromete por cantidad, no por nombre.** Cuál de los cincuenta va a ver lo decide
+manejando; nombrarlos por adelantado sería precisión falsa, y el día que visite tres que no
+estaban en la lista el sistema diría que incumplió.
+
+El sistema sugiere la suma de lo repartido pero **el número lo escribe él**: en el momento en
+que la aplicación lo proponga como meta, deja de ser su plan.
+
+### La reconciliación
+
+En Agenda · Mi semana, el lunes aparece solo: *"dijiste 20, tocaste 11"*, más la respuesta de
+quien lo acompaña. **Nadie lo calcula.** Sin ese cierre automático del lazo, planificar es
+redactar deseos.
+
+### Verificación
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Un ajeno consulta cierres | 0 filas | 0 filas |
+| El dueño ve el suyo y edita su apuesta | Permitido | Correcto |
+| Un tercero reescribe la apuesta | Rechazado | `check_violation` |
+| Un tercero responde | Permitido | Correcto |
+| Responder sin sello de fecha | Rechazado | `check_violation` |
+| La apuesta quedó como la dejó el dueño | 30 | 30 |
+
+`tsc`, `eslint` y `next build` limpios; veintidós rutas.
+
+**Nota sobre la verificación:** la primera versión de esta prueba daba un falso negativo
+porque `reset role` no limpia `request.jwt.claims`, así que `auth.uid()` seguía siendo el
+dueño y el trigger dejaba pasar correctamente. Hay que limpiar el claim a mano para probar a
+un tercero.
+
+### Lo que queda
+
+- El **pedido** dentro del resultado `compro`, apoyado en Solicitudes.
+- El ciclo de **administración**.
+- Validar los catálogos provisionales con los tres vendedores: tipos de jornada, motivos de
+  competencia, y qué resultados cuentan como contacto efectivo.
+- Los **umbrales**, que se fijan con cuatro a seis semanas de uso real y no desde la oficina.

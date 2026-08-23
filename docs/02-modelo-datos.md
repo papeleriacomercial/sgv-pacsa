@@ -45,6 +45,11 @@ adelantado los tipos de comercio de un país, y la lista crece con cada zona que
 | `tipo_punto` | local · oficina |
 | `tipo_jornada` | viaje_mercancia · entrega · entrega_urgente · no_pudo_salir · administrativo · personal |
 | `duracion_jornada` | media · completa |
+| `tipo_lista` | zona · objetivo |
+| `clase_venta` | rapida · grande |
+| `tipo_solicitud` | pedido · cotizacion · muestra · precio |
+| `resuelve_solicitud` | yo · oficina |
+| `estado_solicitud` | pendiente · resuelta · rechazada |
 | `motivo_competencia` | precio · credito · paisanaje · cercania · entrega · especificacion · pedido_minimo · otro |
 | `origen_prospecto` | calle · busqueda · referido · llamada_entrante · otro |
 | `linea_producto` | rollos_fiscales · bolsas_papel · papel_antigrasa · tubos_carton · otros |
@@ -271,6 +276,55 @@ cliente, y hoy el del interior ve a los suyos repartiendo sin recibir crédito p
 **RLS:** cada quien registra y ve lo suyo, el líder ve a su equipo, gerencia todo. Sin
 UPDATE salvo una excepción — puede corregir lo de hoy. No poder arreglar un "media jornada"
 mal puesto hasta el viernes es lo que hace que se deje de registrar.
+
+### `listas` y `listas_cuentas`
+
+`listas`: `id` · `vendedor_id` · `nombre` · `tipo` · `clase` · `poblado` · `archivada` ·
+auditoría. `listas_cuentas`: `lista_id` · `cuenta_id` · `agregada_en` · `agregada_por`.
+
+Los paquetes de leads. Resuelven dos cosas: que cincuenta puntos escogidos un domingo no
+ahoguen la cartera, y que **exista el denominador del embudo** — sin intención declarada, la
+pregunta *"trabajó 50 y convirtió 10, ¿qué pasó con los 40?"* es incontestable.
+
+Tabla de unión y no columna en `cuentas`: una cuenta puede estar en más de una lista, y la
+fecha de entrada es dato — es lo que permite decir "levantaste 60, tocaste 34", que es
+**calidad de planificación** y no tasa de conversión.
+
+`clase` es lo que el vendedor **espera** al armarla; lo real sale de la fecha de cierre de
+cada venta. Las dos conviven: sin la marca en la lista la mezcla solo se mira hacia atrás, y
+la mezcla se decide antes de empezar. Cuando no coinciden, es un hallazgo de mercado.
+
+Vista `listas_resumen` con `security_invoker`, que cuenta también cuántos llevan más de dos
+meses sin tocar: contra el cementerio, la defensa es mostrar la antigüedad.
+
+### `solicitudes`
+
+`id` · `cuenta_id` · `oportunidad_id` · `vendedor_id` · `tipo` · `resuelve` · `detalle` ·
+`monto_estimado` · `para_cuando` · `estado` · `respuesta` · `resuelta_en` · auditoría.
+
+Lo que entra y necesita que actúe alguien más. **No es un seguimiento** —un seguimiento es
+algo que el vendedor hizo o prometió— es un encargo con destinatario y con reloj. Es la
+bandeja de §7.2.
+
+`resuelve` distingue los dos caminos reales: su talonario o la oficina. Registrar los dos
+hace visible la **facturación manual**, que hoy no se ve.
+
+Vista `solicitudes_resumen` con las horas y si está vencida. El reloj mide a los dos lados.
+
+### `cierres`
+
+`id` · `vendedor_id` · `semana` · `numeros` · `sorprendio` · `freno` · `necesito` ·
+`plan` · `apuesta_leads` · `apuesta_clientes` · `enviado_en` · `respuesta` · auditoría.
+
+El contrato semanal. `numeros` se **congela** en vez de recalcularse: la semana 34 tiene que
+seguir diciendo en diciembre lo que dijo en agosto, y un histórico que se mueve solo no sirve
+para comparar.
+
+**El trigger `cierres_protege_el_plan` impide que quien no es el dueño toque el plan.** Es la
+regla que sostiene el esquema de abajo hacia arriba: si el plan se puede editar desde arriba
+deja de ser su plan, y el vendedor aprende a proponer lo que va a ser aprobado. Vive en la
+base y no en la pantalla porque una regla que solo existe en la interfaz se salta desde
+cualquier otro lado.
 
 ### `competidores`
 

@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarClock, Clock, MapPin, Phone } from "lucide-react";
+import {
+  CalendarClock,
+  ClipboardCheck,
+  Clock,
+  MapPin,
+  Phone,
+  Users,
+} from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import { cargarSemana, hoyEnPanama } from "@/lib/semana";
+import { cargarSemana, hoyEnPanama, lunesDeEstaSemana } from "@/lib/semana";
 import { cargarListas } from "@/lib/listas";
 import {
   TIPOS_INTERACCION,
@@ -77,11 +84,20 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
 
   const hoy = hoyEnPanama();
 
-  const [{ data: perfil }, { data: comps }, { data: pend }, semana, listas] =
-    await Promise.all([
+  const lunes = lunesDeEstaSemana();
+
+  const [
+    { data: perfil },
+    { data: comps },
+    { data: pend },
+    { data: cierre },
+    { data: anterior },
+    semana,
+    listas,
+  ] = await Promise.all([
       supabase
         .from("perfiles")
-        .select("nombre")
+        .select("nombre, rol")
         .eq("id", user.id)
         .maybeSingle(),
       supabase
@@ -99,6 +115,21 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
         .eq("vendedor_id", user.id)
         .eq("estado", "pendiente")
         .order("created_at", { ascending: true }),
+      supabase
+        .from("cierres")
+        .select("enviado_en")
+        .eq("vendedor_id", user.id)
+        .eq("semana", lunes)
+        .maybeSingle(),
+      // El de la semana pasada trae la apuesta contra la que se reconcilia.
+      supabase
+        .from("cierres")
+        .select("apuesta_leads, apuesta_clientes, respuesta, respondido_en")
+        .eq("vendedor_id", user.id)
+        .lt("semana", lunes)
+        .order("semana", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
       cargarSemana(user.id),
       cargarListas(),
     ]);
@@ -186,11 +217,71 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
       <main className="flex flex-1 flex-col gap-4 p-4">
         {enSemana ? (
           <>
+            {/* La respuesta de quien lo acompaña, primero: es lo que arranca la
+                semana con dirección en vez de con una lista. */}
+            {anterior?.respuesta && (
+              <Tarjeta className="flex flex-col gap-1">
+                <p className="text-xs text-texto-secundario">
+                  Respuesta a tu semana pasada
+                </p>
+                <p className="text-sm text-texto">{anterior.respuesta}</p>
+              </Tarjeta>
+            )}
+
+            {/* La reconciliación. Nadie la calcula: sale sola, y es lo que
+                convierte el plan en algo real en vez de un deseo. */}
+            {anterior?.apuesta_leads !== null &&
+              anterior?.apuesta_leads !== undefined && (
+                <Tarjeta className="flex flex-col gap-1">
+                  <p className="text-xs text-texto-secundario">
+                    Lo que apostaste la semana pasada
+                  </p>
+                  <div className="flex items-baseline justify-between gap-2 text-sm">
+                    <span className="text-texto-secundario">Leads</span>
+                    <span className="font-mono text-texto">
+                      dijiste {anterior.apuesta_leads} · tocaste{" "}
+                      {semana.cuentasTocadas}
+                    </span>
+                  </div>
+                  {anterior.apuesta_clientes !== null && (
+                    <div className="flex items-baseline justify-between gap-2 text-sm">
+                      <span className="text-texto-secundario">Clientes</span>
+                      <span className="font-mono text-texto">
+                        dijiste {anterior.apuesta_clientes} · al día{" "}
+                        {semana.enCadencia}
+                      </span>
+                    </div>
+                  )}
+                </Tarjeta>
+              )}
+
             <MiSemana semana={semana} />
             <JornadasDeLaSemana />
             {/* La jornada se registra al cerrar el día. Si cuesta encontrarla,
                 no se llena — y es la coartada del vendedor. */}
             <RegistrarJornada />
+
+            {/* El cierre es un formulario, no una pantalla: se usa una vez a la
+                semana y no se gana un lugar en la barra. */}
+            <Link
+              href="/cierre"
+              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-4 text-base font-medium text-white"
+            >
+              <ClipboardCheck size={18} aria-hidden />
+              {cierre?.enviado_en ? "Ajustar mi cierre" : "Cerrar la semana"}
+            </Link>
+
+            {/* El otro lado del contrato. Solo aparece para quien acompaña a
+                alguien: el líder y gerencia. */}
+            {(perfil?.rol === "lider" || perfil?.rol === "gerente") && (
+              <Link
+                href="/contrato"
+                className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
+              >
+                <Users size={18} aria-hidden />
+                Responder a mi equipo
+              </Link>
+            )}
           </>
         ) : (
           <>
