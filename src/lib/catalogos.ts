@@ -217,6 +217,94 @@ export const TONO_VOLUMEN: Record<Volumen, "ok" | "info" | "neutro"> = {
 };
 
 /**
+ * Lo que le llega al vendedor y necesita que alguien más actúe.
+ *
+ * No es un seguimiento: un seguimiento es algo que él hizo o prometió. Esto es
+ * un encargo con destinatario y con reloj. Si cae en la agenda se pierde entre
+ * lo suyo y nadie de la oficina se entera de que hay un pedido esperando.
+ */
+export const TIPOS_SOLICITUD = {
+  pedido: "Pedido",
+  cotizacion: "Cotización",
+  muestra: "Muestra",
+  precio: "Precio o condición especial",
+} as const;
+
+export type TipoSolicitud = keyof typeof TIPOS_SOLICITUD;
+
+/** Quién atiende cada clase de encargo. */
+export const ATIENDE: Record<TipoSolicitud, string> = {
+  pedido: "Administración",
+  cotizacion: "Administración",
+  muestra: "Administración",
+  precio: "Gerencia",
+};
+
+/**
+ * Quién lo resuelve.
+ *
+ * Los dos caminos son reales y ninguno es el excepcional: el pedido lo puede
+ * facturar él con su talonario, o mandarlo a la oficina cuando el cliente
+ * necesita factura fiscal.
+ */
+export const RESUELVE = {
+  yo: "Yo mismo",
+  oficina: "La oficina",
+} as const;
+
+export type ResuelveSolicitud = keyof typeof RESUELVE;
+
+export const ESTADOS_SOLICITUD = {
+  pendiente: "Pendiente",
+  resuelta: "Resuelta",
+  rechazada: "Rechazada",
+} as const;
+
+export type EstadoSolicitud = keyof typeof ESTADOS_SOLICITUD;
+
+export const TONO_SOLICITUD: Record<EstadoSolicitud, "aviso" | "ok" | "error"> = {
+  pendiente: "aviso",
+  resuelta: "ok",
+  rechazada: "error",
+};
+
+/**
+ * Qué clase de lista es.
+ *
+ * Las dos usan el mismo mecanismo y no se parecen por dentro: la de zona se
+ * arma barriendo el mapa y tiene veinte o treinta locales; la de objetivos se
+ * arma por nombre —uno ya sabe cuáles son los bancos— y tiene diez o quince,
+ * casi todos oficinas de negociación.
+ */
+export const TIPOS_LISTA = {
+  zona: "Zona",
+  objetivo: "Objetivos",
+} as const;
+
+export type TipoLista = keyof typeof TIPOS_LISTA;
+
+/**
+ * Qué espera de esa lista al armarla.
+ *
+ * No es lo mismo que resultó —eso sale de la fecha de cierre de cada venta—
+ * y las dos conviven a propósito: sin la marca en la lista, la mezcla solo se
+ * puede mirar hacia atrás, y la mezcla es una decisión que se toma antes de
+ * empezar. Cuando lo esperado y lo real no coinciden, es un hallazgo de
+ * mercado y no un error de captura.
+ */
+export const CLASES_VENTA = {
+  rapida: "Ventas rápidas",
+  grande: "Ventas grandes",
+} as const;
+
+export type ClaseVenta = keyof typeof CLASES_VENTA;
+
+export const AYUDA_CLASE: Record<ClaseVenta, string> = {
+  rapida: "Cierran en semanas. Pagan el mes",
+  grande: "Tardan meses. Construyen el año",
+};
+
+/**
  * Por qué el comercio le compra al competidor y no a nosotros.
  *
  * **Lista provisional.** Se arrancó con una propuesta para poder mostrar la

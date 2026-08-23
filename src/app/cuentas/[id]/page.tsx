@@ -7,6 +7,7 @@ import {
   LINEAS_PRODUCTO,
   type MotivoDescarte,
   type TipoCuenta,
+  type TipoPunto,
   RESULTADOS,
   TIPOS_INTERACCION,
   TONO_ETAPA,
@@ -17,6 +18,8 @@ import {
 } from "@/lib/catalogos";
 import { FichaPunto } from "@/components/ficha-punto";
 import { ClasificarCuenta } from "@/components/clasificar-cuenta";
+import { AgregarALista } from "@/components/agregar-a-lista";
+import { CadenaCuenta } from "@/components/cadena-cuenta";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
@@ -56,7 +59,7 @@ export default async function Expediente({
   const { data: prospecto } = await supabase
     .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo_comercio, tipo, motivo_descarte, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion",
+      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -155,6 +158,13 @@ export default async function Expediente({
                 Programar seguimiento
               </Boton>
             </Link>
+            {/* Lo que el cliente pide y resuelve otro. No es un seguimiento:
+                es un encargo con destinatario y con reloj. */}
+            <Link href={`/cuentas/${id}/solicitud`} className="block">
+              <Boton tono="secundario" ancho>
+                Pedir algo a la oficina
+              </Boton>
+            </Link>
           </div>
         )}
 
@@ -169,6 +179,14 @@ export default async function Expediente({
             Editar datos
           </Boton>
         </Link>
+
+        <AgregarALista cuentaId={id} />
+
+        <CadenaCuenta
+          id={id}
+          cuentaMadreId={prospecto.cuenta_madre_id as string | null}
+          tipoPunto={prospecto.tipo_punto as TipoPunto}
+        />
 
         {vigente && (
           <div

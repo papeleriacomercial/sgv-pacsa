@@ -58,6 +58,8 @@ function Formulario() {
   const latDelMapa = parametros.get("lat");
   const lngDelMapa = parametros.get("lng");
   const vieneDelMapa = placeId !== null && latDelMapa !== null;
+  // Si el punto se escogió armando una lista, la cuenta entra ahí al crearse.
+  const listaId = parametros.get("lista");
 
   const [nombre, setNombre] = useState(parametros.get("nombre") ?? "");
   const [ruc, setRuc] = useState("");
@@ -165,6 +167,12 @@ function Formulario() {
       setError(fallo.message);
       setGuardando(false);
       return;
+    }
+
+    if (listaId) {
+      await supabase
+        .from("listas_cuentas")
+        .insert({ lista_id: listaId, cuenta_id: id });
     }
 
     // Los dos caminos crean la misma cuenta sin clasificar; lo que cambia es a

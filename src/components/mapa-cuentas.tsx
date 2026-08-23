@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   APIProvider,
   InfoWindow,
@@ -68,6 +68,8 @@ function Contenido({
   destacada?: string;
 }) {
   const router = useRouter();
+  // Cuando se llega desde una lista, los puntos que escoja entran ahí.
+  const listaId = useSearchParams().get("lista");
   const places = useMapsLibrary("places");
   // `core` trae Size y Point, que usa el ícono del marcador. Sin esperarla, el
   // primer render los construye antes de que existan y revienta el mapa entero.
@@ -183,6 +185,8 @@ function Contenido({
                 lng: String(candidato.lng),
                 nombre: candidato.nombre,
               });
+              // Si se está armando una lista, la cuenta entra ahí al crearse.
+              if (listaId) p.set("lista", listaId);
               router.push(`/cuentas/nuevo?${p}`);
             }}
             className="mt-1 text-xs font-medium underline"

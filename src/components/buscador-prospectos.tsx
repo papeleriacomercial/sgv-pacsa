@@ -1,7 +1,8 @@
 "use client";
 
+
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   APIProvider,
@@ -187,6 +188,10 @@ function distancia(a: Ubicacion, lat: number, lng: number) {
 
 function Buscador() {
   const router = useRouter();
+  // Cuando se llega armando una lista, los puntos elegidos entran ahí en vez
+  // de caer sueltos en la cartera — que es el problema que las listas
+  // resuelven. Ver docs/12-flujo-vendedor.html.
+  const listaId = useSearchParams().get("lista");
   const places = useMapsLibrary("places");
 
   const [ubicacion, setUbicacion] = useState<Ubicacion | null>(null);
@@ -346,7 +351,24 @@ function Buscador() {
       return;
     }
 
-    router.push("/");
+    // Si venía armando una lista, los recién creados entran ahí. Sin esto los
+    // cincuenta puntos del domingo caerían sueltos en la cartera, que es el
+    // problema que las listas existen para resolver.
+    if (listaId) {
+      const { error: falloLista } = await supabase.from("listas_cuentas").insert(
+        filas.map((f) => ({ lista_id: listaId, cuenta_id: f.id })),
+      );
+
+      if (falloLista) {
+        setError(
+          `Las cuentas quedaron creadas, pero no entraron a la lista: ${falloLista.message}`,
+        );
+        setGuardando(false);
+        return;
+      }
+    }
+
+    router.push(listaId ? `/listas/${listaId}` : "/");
     router.refresh();
   }
 

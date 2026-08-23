@@ -2,15 +2,53 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarClock, Map, Search, Store, TrendingUp } from "lucide-react";
+import { CalendarClock, Inbox, List, Map, Store, TrendingUp } from "lucide-react";
 
-const RUTAS = [
-  { href: "/", etiqueta: "Cuentas", Icono: Store },
-  { href: "/oportunidades", etiqueta: "Oportunidades", Icono: TrendingUp },
-  { href: "/seguimientos", etiqueta: "Seguimientos", Icono: CalendarClock },
-  { href: "/buscar", etiqueta: "Buscar", Icono: Search },
-  { href: "/mapa", etiqueta: "Mapa", Icono: Map },
-];
+// Buscar sale de la barra: es la misma acción que el mapa —encontrar puntos
+// nuevos— con otra forma de hacerla, y se llega desde ahí y desde una lista.
+// El lugar que libera lo toma Listas, que es donde el vendedor planifica.
+type Rol = "gerente" | "lider" | "vendedor" | "administracion";
+
+type Ruta = { href: string; etiqueta: string; Icono: typeof Store };
+
+/**
+ * La barra cambia según el rol, porque los tres oficios no son el mismo.
+ *
+ * El vendedor de ruta casi nunca abre Oportunidades —vende en una o dos
+ * visitas, y eso es un pedido, no una negociación— así que no se gana un lugar
+ * permanente en su barra. Al líder sí: las ventas que tardan meses son su
+ * trabajo principal.
+ *
+ * Administración solo atiende su bandeja y el maestro de clientes.
+ */
+const POR_ROL: Record<Rol, Ruta[]> = {
+  vendedor: [
+    { href: "/", etiqueta: "Cuentas", Icono: Store },
+    { href: "/listas", etiqueta: "Listas", Icono: List },
+    { href: "/seguimientos", etiqueta: "Seguimientos", Icono: CalendarClock },
+    { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
+    { href: "/mapa", etiqueta: "Mapa", Icono: Map },
+  ],
+  lider: [
+    { href: "/", etiqueta: "Cuentas", Icono: Store },
+    { href: "/listas", etiqueta: "Listas", Icono: List },
+    { href: "/seguimientos", etiqueta: "Seguimientos", Icono: CalendarClock },
+    { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
+    { href: "/mapa", etiqueta: "Mapa", Icono: Map },
+  ],
+  gerente: [
+    { href: "/", etiqueta: "Cuentas", Icono: Store },
+    { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
+    { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
+    { href: "/seguimientos", etiqueta: "Seguimientos", Icono: CalendarClock },
+    { href: "/mapa", etiqueta: "Mapa", Icono: Map },
+  ],
+  administracion: [
+    { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
+    { href: "/", etiqueta: "Cuentas", Icono: Store },
+    { href: "/mapa", etiqueta: "Mapa", Icono: Map },
+  ],
+};
 
 /**
  * Barra de navegación de la app de campo.
@@ -22,15 +60,20 @@ const RUTAS = [
  * cromo indica **identidad**, no riesgo. Es el único lugar de la aplicación
  * donde el ámbar no quiere decir "cuidado".
  */
-export function Navegacion() {
+export function Navegacion({ rol }: { rol?: Rol }) {
   const ruta = usePathname();
 
   // La pantalla de entrada no tiene a dónde navegar.
   if (ruta === "/entrar") return null;
 
+  const rutas = POR_ROL[rol ?? "vendedor"];
+
   return (
-    <nav className="sticky bottom-0 mt-auto grid grid-cols-5 border-t border-borde bg-superficie">
-      {RUTAS.map(({ href, etiqueta, Icono }) => {
+    <nav
+      className="sticky bottom-0 mt-auto grid border-t border-borde bg-superficie"
+      style={{ gridTemplateColumns: `repeat(${rutas.length}, minmax(0, 1fr))` }}
+    >
+      {rutas.map(({ href, etiqueta, Icono }) => {
         const activo =
           href === "/" ? ruta === "/" || ruta.startsWith("/cuentas") : ruta.startsWith(href);
 

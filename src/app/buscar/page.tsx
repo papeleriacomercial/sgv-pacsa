@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { BuscadorProspectos } from "@/components/buscador-prospectos";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+import { Cargando } from "@/components/ui/estados";
 
 export default async function Buscar() {
   const supabase = await clienteServidor();
@@ -20,7 +22,9 @@ export default async function Buscar() {
       </header>
 
       <main className="flex flex-col p-4">
-        <BuscadorProspectos />
+        <Suspense fallback={<Cargando />}>
+          <BuscadorProspectos />
+        </Suspense>
       </main>
     </>
   );

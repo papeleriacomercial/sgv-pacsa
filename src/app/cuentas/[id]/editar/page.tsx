@@ -6,8 +6,10 @@ import { clienteNavegador } from "@/lib/supabase/navegador";
 import {
   CADENCIAS,
   LINEAS_PRODUCTO,
+  TIPOS_PUNTO,
   VOLUMENES,
   type LineaProducto,
+  type TipoPunto,
   type Volumen,
 } from "@/lib/catalogos";
 import { Boton } from "@/components/ui/boton";
@@ -47,6 +49,7 @@ export default function EditarProspecto() {
   const [volumen, setVolumen] = useState<Volumen | null>(null);
   const [direccion, setDireccion] = useState("");
   const [poblado, setPoblado] = useState("");
+  const [tipoPunto, setTipoPunto] = useState<TipoPunto>("local");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [cadencia, setCadencia] = useState("");
@@ -56,7 +59,7 @@ export default function EditarProspecto() {
     supabase
       .from("cuentas")
       .select(
-        "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas, volumen, direccion, poblado, lat, lng, dias_cadencia",
+        "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas, volumen, tipo_punto, direccion, poblado, lat, lng, dias_cadencia",
       )
       .eq("id", id)
       .is("deleted_at", null)
@@ -76,6 +79,7 @@ export default function EditarProspecto() {
           setVolumen((data.volumen as Volumen) ?? null);
           setDireccion(data.direccion ?? "");
           setPoblado(data.poblado ?? "");
+          setTipoPunto((data.tipo_punto as TipoPunto) ?? "local");
           setLat(data.lat === null ? "" : String(data.lat));
           setLng(data.lng === null ? "" : String(data.lng));
           setCadencia(data.dias_cadencia ? String(data.dias_cadencia) : "");
@@ -125,6 +129,7 @@ export default function EditarProspecto() {
         contacto_correo: contactoCorreo.trim() || null,
         notas: notas.trim() || null,
         volumen,
+        tipo_punto: tipoPunto,
         direccion: direccion.trim() || null,
         poblado: poblado.trim() || null,
         lat: numLat,
@@ -214,6 +219,19 @@ export default function EditarProspecto() {
                   Opcional. Si la defines, el sistema te avisa cuando se pase.
                 </p>
               </div>
+            </Tarjeta>
+
+            {/* La oficina de negociación no es una tienda: no vende, no recibe
+                entregas y no hace pedidos. Marcarla como local la metería en
+                las rutas de reparto, donde no pinta nada. */}
+            <Tarjeta>
+              <Opciones
+                etiqueta="¿Qué es este punto?"
+                opciones={TIPOS_PUNTO}
+                valor={tipoPunto}
+                onCambio={setTipoPunto}
+                ayuda="Casi siempre es un local. Oficina es donde se negocia el acuerdo de una cadena."
+              />
             </Tarjeta>
 
             {/* Dónde queda la cuenta, las tres formas juntas: para el mapa las
