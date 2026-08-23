@@ -1104,3 +1104,86 @@ servidor.
   grabar, transcribir, o las dos.
 - El **pedido** dentro del resultado `compro`, que ahora puede apoyarse en Solicitudes.
 - El ciclo de **administración**, que todavía no se ha diseñado.
+
+---
+
+## La Agenda y la visita verificada — 2026-08-23
+
+### `20260823220605_visita_verificada`
+
+La regla de qué cuenta como visita verificada, en un solo lugar. Se escribe al revés a
+propósito — **una sola forma de aprobar, tres de no aprobar**:
+
+> verificada = es visita **y** hay check-in **y** la lectura es buena **y** está cerca
+
+Si solo se marcara "lejos del local", apagar la ubicación sería la salida fácil y el control
+quedaría decorativo. Por eso `sin_gps` y la precisión mala tampoco aprueban.
+
+Umbrales en funciones (`metros_para_verificar`, `precision_para_verificar`) y no dispersos por
+el código: son provisionales —doscientos metros es punto de partida para el interior y puede
+quedar corto en una plaza comercial— y cuando se afinen, se afinan en un solo sitio.
+
+La distancia es Haversine sin PostGIS, igual que la validación de duplicados.
+
+**Nada se bloquea.** Bloquear el registro tardío enseña a no registrar, que es mucho peor que
+registrar tarde. Se marca, se cuenta y se ve.
+
+### La Agenda
+
+`/` deja de ser la cartera y pasa a ser la Agenda; la cartera se muda a `/cuentas`. El día
+empieza en lo que hay que hacer, no en una lista para buscar.
+
+**Pestaña Hoy** — tres grupos siempre a la vista:
+
+| Grupo | Qué trae |
+|---|---|
+| Paradas | Compromisos de visita y entrega de muestra, vencidos y de hoy |
+| Llamadas y correos | Todo lo demás, **sin importar el pueblo** |
+| Esperando respuesta | Sus solicitudes pendientes, con las horas |
+
+Los tres juntos porque el día se intercala: maneja, visita, visita, se estaciona a las diez y
+media y hace tres llamadas. **Si a esa hora tiene que cambiar de pantalla para ver a quién
+llamar, no llama** — y una llamada no tiene pueblo, así que no se reprograma por andar en
+otra zona.
+
+Cada renglón dice a qué venta pertenece, ahora que el compromiso hereda la oportunidad.
+
+**Pestaña Mi semana** — los cuatro bloques en vivo, más las jornadas y el botón de
+registrarlas. **La ve él antes que nadie**: el jueves descubre que le faltan seis clientes y
+los visita el viernes, sin que el líder intervenga.
+
+En Cuidado, la lista **con nombres** y no solo el porcentaje: un porcentaje se discute, ocho
+clientes con nombre se trabajan el lunes por la mañana.
+
+Y el aviso del GPS aparece sin acusar a nadie — *"si fue por señal o por registrar al final
+del día, dilo en tu cierre"*. Registrar lejos del local no es una falta: es un hábito, y es
+una conversación de veinte segundos.
+
+### Navegación por rol, definitiva
+
+| Rol | Barra |
+|---|---|
+| Vendedor | Agenda · Listas · Cuentas · Solicitudes · Mapa |
+| Líder | Agenda · Listas · Ventas · Cuentas · Mapa |
+| Gerencia | Agenda · Solicitudes · Ventas · Cuentas · Mapa |
+| Administración | Solicitudes · Cuentas · Mapa |
+
+### Verificación
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Check-in encima del local, precisión 8 m | Verificada | Correcto |
+| Check-in a 2 km | No verificada, marcada fuera del local | Correcto |
+| Check-in encima con precisión de 2 km | No verificada | Correcto |
+| Sin GPS | No verificada | Correcto |
+
+`tsc`, `eslint` y `next build` limpios; veinte rutas. Sin errores de consola ni de servidor.
+
+### Lo que queda
+
+- **El cierre semanal y el contrato.** Es la pieza que cierra el lazo, y la única decisión
+  abierta que la bloquea es grabar, transcribir, o las dos.
+- El **pedido** dentro del resultado `compro`, que ya puede apoyarse en Solicitudes.
+- El ciclo de **administración**.
+- Validar con los tres vendedores los catálogos provisionales: tipos de jornada, motivos de
+  competencia, y qué resultados cuentan como contacto efectivo.

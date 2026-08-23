@@ -1,115 +1,297 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { CalendarClock, Clock, MapPin, Phone } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import { cargarCartera } from "@/lib/cartera";
-import { CuentasConFiltros } from "@/components/cuentas-con-filtros";
-import { Tarjeta } from "@/components/ui/tarjeta";
-import { Insignia } from "@/components/ui/insignia";
-import { MensajeError, Vacio } from "@/components/ui/estados";
-import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
-import { CerrarSesion } from "@/components/cerrar-sesion";
+import { cargarSemana, hoyEnPanama } from "@/lib/semana";
+import { cargarListas } from "@/lib/listas";
+import {
+  TIPOS_INTERACCION,
+  TIPOS_SOLICITUD,
+  type TipoInteraccion,
+  type TipoSolicitud,
+} from "@/lib/catalogos";
+import { MiSemana } from "@/components/mi-semana";
 import { RegistrarJornada } from "@/components/registrar-jornada";
 import { JornadasDeLaSemana } from "@/components/jornadas-de-la-semana";
+import { CerrarSesion } from "@/components/cerrar-sesion";
+import { Tarjeta } from "@/components/ui/tarjeta";
+import { Insignia } from "@/components/ui/insignia";
+import { Vacio } from "@/components/ui/estados";
+import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
-type Rol = "gerente" | "lider" | "vendedor" | "administracion";
+const FECHA = new Intl.DateTimeFormat("es-PA", {
+  dateStyle: "medium",
+  timeZone: "America/Panama",
+});
 
-const ETIQUETA_ROL: Record<Rol, string> = {
-  gerente: "Gerente",
-  lider: "Líder de ventas",
-  vendedor: "Vendedor",
-  administracion: "Administración",
+/** Las que exigen estar ahí. El resto se hace desde donde sea. */
+const DE_CALLE: TipoInteraccion[] = ["visita", "entrega_muestra"];
+
+type Compromiso = {
+  id: string;
+  cuenta_id: string;
+  descripcion: string;
+  fecha_compromiso: string;
+  tipo_accion: TipoInteraccion;
+  cuentas: { nombre: string } | { nombre: string }[] | null;
+  oportunidades: { nombre: string } | { nombre: string }[] | null;
 };
 
-export default async function Inicio() {
+type Pendiente = {
+  id: string;
+  cuenta_id: string;
+  tipo: TipoSolicitud;
+  detalle: string;
+  horas: number;
+  vencida: boolean;
+  cuentas: { nombre: string } | { nombre: string }[] | null;
+};
+
+function nombreDe(x: { nombre: string } | { nombre: string }[] | null) {
+  if (!x) return null;
+  return Array.isArray(x) ? (x[0]?.nombre ?? null) : x.nombre;
+}
+
+/**
+ * La Agenda: la pantalla de todo el día.
+ *
+ * Dos pestañas. **Hoy** es donde trabaja —paradas, llamadas y lo que espera de
+ * la oficina— y **Mi semana** es cómo va.
+ *
+ * Los tres grupos de Hoy están siempre a la vista porque el día se intercala:
+ * maneja, visita, visita, se estaciona a las diez y media y hace tres llamadas.
+ * **Si a esa hora tiene que cambiar de pantalla para ver a quién llamar, no
+ * llama** — y por eso las llamadas están aquí aunque sean de otro pueblo. Una
+ * llamada no tiene pueblo.
+ */
+export default async function Agenda({ searchParams }: PageProps<"/">) {
+  const { vista } = await searchParams;
+  const enSemana = vista === "semana";
+
   const supabase = await clienteServidor();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  // El proxy ya redirige, pero la comprobación de verdad va aquí: la
-  // autorización nunca se delega al proxy (docs/03-seguridad-rls.md).
   if (!user) redirect("/entrar");
 
-  const { data: perfil, error } = await supabase
-    .from("perfiles")
-    .select("nombre, rol, activo")
-    .eq("id", user.id)
-    .maybeSingle();
+  const hoy = hoyEnPanama();
 
-  const { cuentas, vendedores } = await cargarCartera();
+  const [{ data: perfil }, { data: comps }, { data: pend }, semana, listas] =
+    await Promise.all([
+      supabase
+        .from("perfiles")
+        .select("nombre")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("compromisos")
+        .select(
+          "id, cuenta_id, descripcion, fecha_compromiso, tipo_accion, cuentas(nombre), oportunidades(nombre)",
+        )
+        .is("deleted_at", null)
+        .is("cumplido_en", null)
+        .lte("fecha_compromiso", hoy)
+        .order("fecha_compromiso", { ascending: true }),
+      supabase
+        .from("solicitudes_resumen")
+        .select("id, cuenta_id, tipo, detalle, horas, vencida, cuentas(nombre)")
+        .eq("vendedor_id", user.id)
+        .eq("estado", "pendiente")
+        .order("created_at", { ascending: true }),
+      cargarSemana(user.id),
+      cargarListas(),
+    ]);
+
+  const compromisos = (comps ?? []) as unknown as Compromiso[];
+  const paradas = compromisos.filter((c) => DE_CALLE.includes(c.tipo_accion));
+  const escritorio = compromisos.filter(
+    (c) => !DE_CALLE.includes(c.tipo_accion),
+  );
+  const esperando = (pend ?? []) as unknown as Pendiente[];
+  const conLeads = listas.filter((l) => l.sin_tocar > 0);
+
+  function Renglon({ c }: { c: Compromiso }) {
+    const vencido = c.fecha_compromiso < hoy;
+    const venta = nombreDe(c.oportunidades);
+
+    return (
+      <Link href={`/cuentas/${c.cuenta_id}/seguimiento?compromiso=${c.id}`}>
+        <Tarjeta
+          className={`flex flex-col gap-1 ${vencido ? "border-red-200 bg-red-50" : ""}`}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-base font-semibold text-texto">
+              {nombreDe(c.cuentas) ?? "Cuenta"}
+            </p>
+            <Insignia tono={vencido ? "error" : "info"}>
+              {vencido
+                ? FECHA.format(new Date(`${c.fecha_compromiso}T12:00:00`))
+                : "Hoy"}
+            </Insignia>
+          </div>
+
+          <p className="text-sm text-texto-secundario">{c.descripcion}</p>
+
+          {/* Cada renglón dice a qué venta sirve. "Banco Aliado" a secas no
+              distingue si es por los rollos o por las bolsas. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Insignia tono="neutro">
+              {TIPOS_INTERACCION[c.tipo_accion]}
+            </Insignia>
+            {venta && <Insignia tono="info">{venta}</Insignia>}
+          </div>
+        </Tarjeta>
+      </Link>
+    );
+  }
 
   return (
     <>
       <AvisoSinConexion />
 
       <header className="flex items-center justify-between border-b border-borde bg-superficie px-4 py-3">
-        <span className="text-lg font-semibold text-marca">SGV</span>
+        <div>
+          <h1 className="text-lg font-semibold text-marca">Agenda</h1>
+          {perfil?.nombre && (
+            <p className="text-xs text-texto-atenuado">{perfil.nombre}</p>
+          )}
+        </div>
         <CerrarSesion />
       </header>
 
+      {/* Dos vistas de lo mismo. La de todos los días va primero. */}
+      <div className="grid grid-cols-2 border-b border-borde bg-superficie">
+        {(
+          [
+            ["/", "Hoy", !enSemana],
+            ["/?vista=semana", "Mi semana", enSemana],
+          ] as const
+        ).map(([href, etiqueta, activa]) => (
+          <Link
+            key={etiqueta}
+            href={href}
+            aria-current={activa ? "page" : undefined}
+            className={`min-h-tactil flex items-center justify-center border-b-2 text-sm ${
+              activa
+                ? "border-b-marca font-medium text-marca"
+                : "border-b-transparent text-texto-atenuado"
+            }`}
+          >
+            {etiqueta}
+          </Link>
+        ))}
+      </div>
+
       <main className="flex flex-1 flex-col gap-4 p-4">
-        {error && (
-          <MensajeError
-            titulo="No se pudo leer el perfil"
-            detalle={error.message}
-          />
-        )}
-
-        {!error && !perfil && (
-          <MensajeError
-            titulo="Tu usuario no tiene perfil"
-            detalle="La cuenta existe pero le falta su fila en la tabla de perfiles. Pídele a gerencia que la cree."
-          />
-        )}
-
-        {perfil && (
-          <Tarjeta className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-base font-semibold text-texto">
-                {perfil.nombre}
-              </p>
-              <p className="font-mono text-xs text-texto-atenuado">
-                {user.email}
-              </p>
-            </div>
-            <Insignia tono="info">
-              {ETIQUETA_ROL[perfil.rol as Rol] ?? perfil.rol}
-            </Insignia>
-          </Tarjeta>
-        )}
-
-        {/* La jornada se registra al cerrar el día, así que vive arriba y no
-            escondida en un menú: si cuesta encontrarla, no se llena. */}
-        <JornadasDeLaSemana />
-        <RegistrarJornada />
-
-        <div className="grid grid-cols-2 gap-2">
-          <Link
-            href="/cuentas/nuevo"
-            className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-4 text-base font-medium text-white"
-          >
-            <Plus size={18} aria-hidden />
-            Nueva cuenta
-          </Link>
-          <Link
-            href="/buscar"
-            className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
-          >
-            <Search size={18} aria-hidden />
-            Buscar
-          </Link>
-        </div>
-
-        {cuentas.length === 0 ? (
-          <Tarjeta>
-            <Vacio titulo="Todavía no tienes cuentas">
-              Crea la primera con el botón de arriba, o búscalas en el mapa.
-            </Vacio>
-          </Tarjeta>
+        {enSemana ? (
+          <>
+            <MiSemana semana={semana} />
+            <JornadasDeLaSemana />
+            {/* La jornada se registra al cerrar el día. Si cuesta encontrarla,
+                no se llena — y es la coartada del vendedor. */}
+            <RegistrarJornada />
+          </>
         ) : (
-          <CuentasConFiltros cuentas={cuentas} vendedores={vendedores} />
+          <>
+            {compromisos.length === 0 && esperando.length === 0 && (
+              <Tarjeta>
+                <Vacio titulo="Nada pendiente para hoy">
+                  Lo que prometas al registrar un seguimiento aparece aquí con su
+                  fecha. Mientras tanto, tus listas tienen puntos por trabajar.
+                </Vacio>
+              </Tarjeta>
+            )}
+
+            {paradas.length > 0 && (
+              <section className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <MapPin size={16} className="text-marca" aria-hidden />
+                  <h2 className="text-sm font-medium text-texto">Paradas</h2>
+                  <Insignia tono="neutro">{String(paradas.length)}</Insignia>
+                </div>
+                {paradas.map((c) => (
+                  <Renglon key={c.id} c={c} />
+                ))}
+              </section>
+            )}
+
+            {/* Aquí aunque sean de otro pueblo: una llamada no tiene pueblo, y
+                se hacen a media mañana cuando la gente contesta. */}
+            {escritorio.length > 0 && (
+              <section className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Phone size={16} className="text-marca" aria-hidden />
+                  <h2 className="text-sm font-medium text-texto">
+                    Llamadas y correos
+                  </h2>
+                  <Insignia tono="neutro">{String(escritorio.length)}</Insignia>
+                </div>
+                {escritorio.map((c) => (
+                  <Renglon key={c.id} c={c} />
+                ))}
+              </section>
+            )}
+
+            {esperando.length > 0 && (
+              <section className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Clock size={16} className="text-marca" aria-hidden />
+                  <h2 className="text-sm font-medium text-texto">
+                    Esperando respuesta
+                  </h2>
+                  <Insignia tono="neutro">{String(esperando.length)}</Insignia>
+                </div>
+                {esperando.map((s) => (
+                  <Link key={s.id} href="/solicitudes">
+                    <Tarjeta
+                      className={`flex flex-col gap-1 ${s.vencida ? "border-red-200 bg-red-50" : ""}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-base font-semibold text-texto">
+                          {nombreDe(s.cuentas) ?? "Cuenta"}
+                        </p>
+                        <span
+                          className={`shrink-0 font-mono text-xs ${s.vencida ? "text-error" : "text-texto-atenuado"}`}
+                        >
+                          {Math.floor(s.horas)} h
+                        </span>
+                      </div>
+                      <p className="text-sm text-texto-secundario">
+                        {TIPOS_SOLICITUD[s.tipo]} · {s.detalle}
+                      </p>
+                    </Tarjeta>
+                  </Link>
+                ))}
+              </section>
+            )}
+
+            {conLeads.length > 0 && (
+              <section className="flex flex-col gap-2">
+                <h2 className="text-sm font-medium text-texto">Tus listas</h2>
+                {conLeads.slice(0, 4).map((l) => (
+                  <Link key={l.id} href={`/listas/${l.id}`}>
+                    <Tarjeta className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm font-medium text-texto">
+                        {l.nombre}
+                      </span>
+                      <span className="shrink-0 font-mono text-xs text-texto-secundario">
+                        {l.sin_tocar} sin tocar
+                      </span>
+                    </Tarjeta>
+                  </Link>
+                ))}
+              </section>
+            )}
+
+            <Link
+              href="/seguimientos"
+              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
+            >
+              <CalendarClock size={16} aria-hidden />
+              Ver toda la agenda
+            </Link>
+          </>
         )}
       </main>
     </>

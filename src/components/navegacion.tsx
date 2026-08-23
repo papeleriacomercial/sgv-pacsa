@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarClock, Inbox, List, Map, Store, TrendingUp } from "lucide-react";
+import { CalendarDays, Inbox, List, Map, Store, TrendingUp } from "lucide-react";
 
 // Buscar sale de la barra: es la misma acción que el mapa —encontrar puntos
 // nuevos— con otra forma de hacerla, y se llega desde ahí y desde una lista.
@@ -23,29 +23,29 @@ type Ruta = { href: string; etiqueta: string; Icono: typeof Store };
  */
 const POR_ROL: Record<Rol, Ruta[]> = {
   vendedor: [
-    { href: "/", etiqueta: "Cuentas", Icono: Store },
+    { href: "/", etiqueta: "Agenda", Icono: CalendarDays },
     { href: "/listas", etiqueta: "Listas", Icono: List },
-    { href: "/seguimientos", etiqueta: "Seguimientos", Icono: CalendarClock },
+    { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
     { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
     { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],
   lider: [
-    { href: "/", etiqueta: "Cuentas", Icono: Store },
+    { href: "/", etiqueta: "Agenda", Icono: CalendarDays },
     { href: "/listas", etiqueta: "Listas", Icono: List },
-    { href: "/seguimientos", etiqueta: "Seguimientos", Icono: CalendarClock },
     { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
+    { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
     { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],
   gerente: [
-    { href: "/", etiqueta: "Cuentas", Icono: Store },
+    { href: "/", etiqueta: "Agenda", Icono: CalendarDays },
     { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
     { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
-    { href: "/seguimientos", etiqueta: "Seguimientos", Icono: CalendarClock },
+    { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
     { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],
   administracion: [
     { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
-    { href: "/", etiqueta: "Cuentas", Icono: Store },
+    { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
     { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],
 };
@@ -74,8 +74,9 @@ export function Navegacion({ rol }: { rol?: Rol }) {
       style={{ gridTemplateColumns: `repeat(${rutas.length}, minmax(0, 1fr))` }}
     >
       {rutas.map(({ href, etiqueta, Icono }) => {
-        const activo =
-          href === "/" ? ruta === "/" || ruta.startsWith("/cuentas") : ruta.startsWith(href);
+        // La Agenda es la raíz, así que solo se marca en la raíz exacta; si no
+        // se encendería en todas las pantallas.
+        const activo = href === "/" ? ruta === "/" : ruta.startsWith(href);
 
         return (
           <Link

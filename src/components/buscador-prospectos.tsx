@@ -368,7 +368,7 @@ function Buscador() {
       }
     }
 
-    router.push(listaId ? `/listas/${listaId}` : "/");
+    router.push(listaId ? `/listas/${listaId}` : "/cuentas");
     router.refresh();
   }
 
