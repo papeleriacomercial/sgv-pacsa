@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MapPin, MapPinOff } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { insertar } from "@/lib/cola";
 import { obtenerUbicacion, calidadUbicacion, type Ubicacion } from "@/lib/gps";
 import {
   LINEAS_PRODUCTO,
@@ -144,7 +145,7 @@ function Formulario() {
     // registros sin conexión y sincronizarlos después sin renumerar nada.
     const id = crypto.randomUUID();
 
-    const { error: fallo } = await supabase.from("cuentas").insert({
+    const { error: fallo } = await insertar("cuentas", {
       id,
       nombre: nombre.trim(),
       ruc: ruc.trim() || null,
@@ -161,10 +162,10 @@ function Formulario() {
       vendedor_id: user.id,
       // No se manda `tipo`: la base la crea `sin_clasificar`. Llamarla
       // prospecto antes de que alguien la vea afirma algo que no ocurrió.
-    });
+    }, `Cuenta nueva: ${nombre.trim()}`);
 
     if (fallo) {
-      setError(fallo.message);
+      setError(fallo);
       setGuardando(false);
       return;
     }

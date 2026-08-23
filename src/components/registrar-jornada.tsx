@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Truck, X } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { insertar } from "@/lib/cola";
 import {
   DURACIONES_JORNADA,
   TIPOS_JORNADA,
@@ -68,21 +69,25 @@ export function RegistrarJornada() {
       return;
     }
 
-    const { error: fallo } = await supabase.from("jornadas").insert({
-      // El id se genera aquí, como todo lo demás: el celular tiene que poder
-      // registrar sin señal y sincronizar después sin renumerar nada (§16).
-      id: crypto.randomUUID(),
-      vendedor_id: user.id,
-      fecha,
-      tipo,
-      duracion,
-      desde_texto: conRecorrido ? desde.trim() || null : null,
-      hasta_texto: conRecorrido ? hasta.trim() || null : null,
-      notas: notas.trim() || null,
-    });
+    // El id se genera aquí, como todo lo demás: es lo que hace idempotente el
+    // reintento cuando esto se registró manejando de vuelta y sin señal (§16).
+    const { error: fallo } = await insertar(
+      "jornadas",
+      {
+        id: crypto.randomUUID(),
+        vendedor_id: user.id,
+        fecha,
+        tipo,
+        duracion,
+        desde_texto: conRecorrido ? desde.trim() || null : null,
+        hasta_texto: conRecorrido ? hasta.trim() || null : null,
+        notas: notas.trim() || null,
+      },
+      `Jornada del ${fecha}`,
+    );
 
     if (fallo) {
-      setError(fallo.message);
+      setError(fallo);
       setGuardando(false);
       return;
     }

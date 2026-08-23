@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { insertar } from "@/lib/cola";
 import {
   ATIENDE,
   RESUELVE,
@@ -92,20 +93,24 @@ function Formulario() {
 
     const destino: ResuelveSolicitud = esDecisionDeArriba ? "oficina" : resuelve;
 
-    const { error: fallo } = await supabase.from("solicitudes").insert({
-      id: crypto.randomUUID(),
-      cuenta_id: cuentaId,
-      oportunidad_id: oportunidadId,
-      vendedor_id: user.id,
-      tipo,
-      resuelve: destino,
-      detalle: detalle.trim(),
-      monto_estimado: monto ? Number(monto) : null,
-      para_cuando: paraCuando || null,
-    });
+    const { error: fallo } = await insertar(
+      "solicitudes",
+      {
+        id: crypto.randomUUID(),
+        cuenta_id: cuentaId,
+        oportunidad_id: oportunidadId,
+        vendedor_id: user.id,
+        tipo,
+        resuelve: destino,
+        detalle: detalle.trim(),
+        monto_estimado: monto ? Number(monto) : null,
+        para_cuando: paraCuando || null,
+      },
+      `${TIPOS_SOLICITUD[tipo]} de ${nombreCuenta}`,
+    );
 
     if (fallo) {
-      setError(fallo.message);
+      setError(fallo);
       setGuardando(false);
       return;
     }
@@ -113,16 +118,20 @@ function Formulario() {
     // Una acción, dos consecuencias: el encargo sale y el contacto queda en la
     // bitácora. Si fallara, el encargo ya está guardado y eso es lo urgente —
     // se avisa pero no se deshace.
-    await supabase.from("seguimientos").insert({
-      id: crypto.randomUUID(),
-      cuenta_id: cuentaId,
-      vendedor_id: user.id,
-      tipo: "llamada",
-      resultado: tipo === "muestra" ? "pide_muestra" : "pide_cotizacion",
-      notas: `${TIPOS_SOLICITUD[tipo]}: ${detalle.trim()}`,
-      oportunidad_id: oportunidadId,
-      sin_gps: false,
-    });
+    await insertar(
+      "seguimientos",
+      {
+        id: crypto.randomUUID(),
+        cuenta_id: cuentaId,
+        vendedor_id: user.id,
+        tipo: "llamada",
+        resultado: tipo === "muestra" ? "pide_muestra" : "pide_cotizacion",
+        notas: `${TIPOS_SOLICITUD[tipo]}: ${detalle.trim()}`,
+        oportunidad_id: oportunidadId,
+        sin_gps: false,
+      },
+      `Contacto con ${nombreCuenta}`,
+    );
 
     router.replace(`/cuentas/${cuentaId}`);
     router.refresh();

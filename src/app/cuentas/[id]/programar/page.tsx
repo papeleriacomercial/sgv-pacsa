@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { insertar } from "@/lib/cola";
 import { TIPOS_INTERACCION, type TipoInteraccion } from "@/lib/catalogos";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
@@ -77,19 +78,23 @@ export default function ProgramarSeguimiento() {
       return;
     }
 
-    const { error: fallo } = await supabase.from("compromisos").insert({
-      id: crypto.randomUUID(),
-      cuenta_id: id,
-      // Nace de una decisión de planificación, no de una visita.
-      visita_id: null,
-      vendedor_id: user.id,
-      descripcion: descripcion.trim(),
-      fecha_compromiso: fecha,
-      tipo_accion: accion,
-    });
+    const { error: fallo } = await insertar(
+      "compromisos",
+      {
+        id: crypto.randomUUID(),
+        cuenta_id: id,
+        // Nace de una decisión de planificación, no de una visita.
+        visita_id: null,
+        vendedor_id: user.id,
+        descripcion: descripcion.trim(),
+        fecha_compromiso: fecha,
+        tipo_accion: accion,
+      },
+      `Seguimiento programado con ${nombre}`,
+    );
 
     if (fallo) {
-      setError(fallo.message);
+      setError(fallo);
       setGuardando(false);
       return;
     }

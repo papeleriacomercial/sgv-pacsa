@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Camera, MapPin, MapPinOff } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { insertar } from "@/lib/cola";
 import { subirFoto } from "@/lib/fotos";
 import { obtenerUbicacion, calidadUbicacion, type Ubicacion } from "@/lib/gps";
 import {
@@ -228,7 +229,7 @@ function Formulario() {
       }
     }
 
-    const { error: falloVisita } = await supabase.from("seguimientos").insert({
+    const { error: falloVisita } = await insertar("seguimientos", {
       id: visitaId,
       cuenta_id: cuentaId,
       vendedor_id: user.id,
@@ -246,10 +247,10 @@ function Formulario() {
       checkin_precision_m: esVisita ? (ubicacion?.precisionM ?? null) : null,
       sin_gps: esVisita && ubicacion === null,
       oportunidad_id: oportunidadId,
-    });
+    }, `Seguimiento de ${nombreCuenta}`);
 
     if (falloVisita) {
-      setError(falloVisita.message);
+      setError(falloVisita);
       setGuardando(false);
       return;
     }
@@ -285,21 +286,27 @@ function Formulario() {
     }
 
     if (proximoPaso.trim() && fechaCompromiso) {
-      const { error: falloCompromiso } = await supabase
-        .from("compromisos")
-        .insert({
+      const { error: falloCompromiso } = await insertar(
+        "compromisos",
+        {
           id: crypto.randomUUID(),
           cuenta_id: cuentaId,
           visita_id: visitaId,
+          // El próximo paso hereda la venta del seguimiento que lo originó, sin
+          // que él la elija otra vez. Es lo que hace que la agenda sepa a qué
+          // venta sirve cada renglón.
+          oportunidad_id: oportunidadId,
           vendedor_id: user.id,
           descripcion: proximoPaso.trim(),
           fecha_compromiso: fechaCompromiso,
           tipo_accion: accion,
-        });
+        },
+        `Próximo paso de ${nombreCuenta}`,
+      );
 
       if (falloCompromiso) {
         setError(
-          `El seguimiento quedó guardado, pero el compromiso no: ${falloCompromiso.message}`,
+          `El seguimiento quedó guardado, pero el compromiso no: ${falloCompromiso}`,
         );
         setGuardando(false);
         return;

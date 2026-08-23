@@ -996,3 +996,111 @@ corrompe un catálogo.
 - **Pedido dentro del resultado `compro`.** Hoy el resultado existe y clasifica a cliente,
   pero el pedido —qué llevó, cuánto, quién lo factura— llega con Solicitudes.
 - Validar el catálogo de motivos y el de tipos de jornada con los tres vendedores.
+
+---
+
+## Listas, cadenas, solicitudes y cola de sincronización — 2026-08-23
+
+Segundo empujón del día. Cuatro piezas y tres migraciones más.
+
+### Listas — `20260823214958_listas`
+
+Los paquetes de leads, por zona y por objetivo. Resuelven dos cosas a la vez:
+
+1. **Que los leads no ahoguen la cartera.** Cincuenta puntos escogidos un domingo hacían
+   ilegible la lista de treinta cuentas reales. Un lead y una cuenta son objetos económicos
+   distintos —el lead es abundante y desechable, la cuenta es escasa y permanente— y lo que
+   había que separar era la superficie de trabajo, no el registro.
+2. **Que exista el denominador del embudo.** Sin intención declarada, la pregunta *"trabajó
+   50 leads y convirtió 10, ¿qué pasó con los 40?"* es incontestable.
+
+Tabla de unión y no columna en `cuentas`: una cuenta puede estar en más de una lista, y la
+fecha de entrada es dato — es lo que permite decir **"levantaste 60, tocaste 34"**, que es
+calidad de planificación y no tasa de conversión.
+
+`listas.clase` es lo que el vendedor **espera** al armarla; lo real sale de la fecha de cierre
+de cada venta. Las dos conviven a propósito: sin la marca en la lista la mezcla solo se puede
+mirar hacia atrás, y la mezcla es una decisión que se toma antes de empezar. **Cuando lo
+esperado y lo real no coinciden, es un hallazgo de mercado, no un error de captura.**
+
+El paquete es permanente y por zona. Contra el cementerio, `listas_resumen` cuenta cuántos
+llevan más de dos meses esperando: la defensa no es vencerlo por la fuerza —Aguadulce sigue
+siendo Aguadulce— sino mostrar la antigüedad.
+
+Se llenan desde el mapa y la búsqueda con `?lista=`, y desde el expediente.
+
+### Cadenas
+
+Interfaz sobre el esquema de la etapa anterior. El vendedor cuelga las suyas; la cadena que
+cruza territorios —la madre del líder, un punto del de ciudad, otro del interior— la engancha
+el líder, que es quien las negocia. El duplicado ya lo ataja `buscar_duplicados`.
+
+`tipo_punto` en Editar datos: la oficina de negociación no vende ni recibe entregas, y
+marcarla como local la metería en las rutas de reparto.
+
+### Solicitudes — `20260823215723_solicitudes`
+
+El carril de lo que entra. **No es un seguimiento** —un seguimiento es algo que el vendedor
+hizo o prometió— es un encargo con destinatario y con reloj. Conecta con la bandeja de
+administración de §7.2, que estaba en la visión y no se había cruzado con el día del vendedor.
+
+`resuelve` distingue los dos caminos reales: su talonario o la oficina. Registrar los dos
+hace visible la **facturación manual**, que hoy no se ve por ningún lado.
+
+Registrar una solicitud deja también el seguimiento: una acción, dos consecuencias.
+
+**El reloj mide a los dos lados.** El cumplimiento de las 24 horas es visible para todos —si
+los vendedores quedan medidos y la oficina no, esto es control con buena interfaz por mucho
+que lo llamemos contrato.
+
+### Cola de sincronización — `src/lib/cola.ts`
+
+Se adelantó en el orden a propósito: protege todas las escrituras ya construidas, y lo que
+venga después la hereda.
+
+**No es una arquitectura sin conexión completa.** Cubre el caso que de verdad pasa —perder
+la señal un rato— y no el que casi nunca pasa, trabajar días enteros desconectado. Guarda en
+el dispositivo, reintenta al recuperar señal y al abrir, y avisa cuántos quedan.
+
+Lo que la hace correcta es una decisión de §16 tomada el día uno: **los identificadores se
+generan en el cliente**. Un reintento manda la misma fila con la misma llave, así que si la
+primera sí llegó, la segunda choca contra la llave primaria (`23505`) y se descarta sin
+duplicar nada.
+
+Distingue *no llegó* de *llegó y la base dijo que no*: un rechazo por restricción o permiso
+se descarta en vez de reintentarse mil veces, porque si no la cola se atasca y el contador de
+pendientes deja de significar algo.
+
+Conectada en: alta de cuenta, seguimiento, próximo paso, seguimiento programado, jornada y
+solicitud. Todas las capturas de campo.
+
+### Navegación por rol
+
+Los tres oficios no son el mismo. El vendedor de ruta casi nunca abre Oportunidades —vende en
+una o dos visitas, y eso es un pedido— así que no se gana un lugar permanente en su barra; al
+líder sí. Administración solo ve su bandeja y el maestro. Buscar sale de la barra: es la
+misma acción que el mapa con otra forma.
+
+### Verificación
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Un ajeno consulta listas, contenido y la vista | 0 filas | 0 filas |
+| Un ajeno agrega a una lista ajena | Rechazado | `insufficient_privilege` |
+| El dueño ve la suya y la vista cuenta bien | 1 lista, 1 cuenta | Correcto |
+| Un ajeno consulta solicitudes | 0 filas | 0 filas |
+| Cerrar una solicitud sin sello de fecha | Rechazado | `check_violation` |
+| El reloj calcula horas | Sí | Correcto |
+| Cola: guarda, detecta duplicado, avisa, sobrevive JSON corrupto | Sí | Correcto, probado en el navegador |
+
+`tsc`, `eslint` y `next build` limpios; diecinueve rutas. Sin errores de consola ni de
+servidor.
+
+### Lo que falta
+
+- **La Agenda**: la pantalla del día con paradas, llamadas y esperando respuesta, que
+  reemplaza a Inicio y absorbe Seguimientos.
+- **El cierre semanal y el contrato**: el lazo completo. Queda pendiente la decisión de
+  grabar, transcribir, o las dos.
+- El **pedido** dentro del resultado `compro`, que ahora puede apoyarse en Solicitudes.
+- El ciclo de **administración**, que todavía no se ha diseñado.
