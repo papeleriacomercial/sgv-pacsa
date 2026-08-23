@@ -38,10 +38,14 @@ adelantado los tipos de comercio de un país, y la lista crece con cada zona que
 | `tipo_cuenta` | sin_clasificar · prospecto · cliente · descartada |
 | `volumen_cuenta` | alta · media · baja |
 | `etapa_oportunidad` | nuevo · contactado · cotizado · negociacion · ganado · perdido |
-| `resultado_visita` | nueve opciones, ver abajo |
+| `resultado_visita` | diez opciones, ver abajo. Incluye `compro` |
 | `motivo_perdida` | precio · espera_licitacion · no_cumple_especificaciones · sin_interes_real · no_contactar |
 | `motivo_descarte` | no_existe · muy_pequeno · no_usa_productos · sin_interes · ya_atendido · otro |
-| `tipo_interaccion` | visita · llamada · whatsapp · correo · entrega_muestra |
+| `tipo_interaccion` | visita · reunion · llamada · whatsapp · correo · entrega_muestra |
+| `tipo_punto` | local · oficina |
+| `tipo_jornada` | viaje_mercancia · entrega · entrega_urgente · no_pudo_salir · administrativo · personal |
+| `duracion_jornada` | media · completa |
+| `motivo_competencia` | precio · credito · paisanaje · cercania · entrega · especificacion · pedido_minimo · otro |
 | `origen_prospecto` | calle · busqueda · referido · llamada_entrante · otro |
 | `linea_producto` | rollos_fiscales · bolsas_papel · papel_antigrasa · tubos_carton · otros |
 
@@ -145,6 +149,8 @@ Un punto con el que hay relación comercial, sea prospecto o cliente. Se llamaba
 | `vendedor_id` | uuid not null → `perfiles` | |
 | `origen` | `origen_prospecto` not null | |
 | `motivo_descarte` | `motivo_descarte` | Por qué no sirvió. Obligatorio si y solo si `tipo = descartada` |
+| `cuenta_madre_id` | uuid → `cuentas` | De qué cuenta cuelga este punto. Nulo si es independiente |
+| `tipo_punto` | `tipo_punto` not null default `local` | Oficina: solo se negocia, no entra a rutas de reparto |
 | `notas` | text | |
 | `created_at` `updated_at` `created_by` `deleted_at` | | |
 
@@ -170,7 +176,8 @@ interacción puede ser llamada, WhatsApp o correo, no solo una visita.
 | `checkin_lat` / `checkin_lng` / `checkin_precision_m` | numeric | Se guarda la precisión (§10) |
 | `sin_gps` | boolean not null default false | El GPS no enganchó |
 | `resultado` | `resultado_visita` not null | |
-| `proveedor_actual` / `precio_referencia` | text / numeric | Inteligencia de competencia (§7.7) |
+| `proveedor_actual` / `precio_referencia` | text / numeric | Inteligencia de competencia (§7.7). El proveedor se escribe con sugerencia de `competidores` |
+| `motivos_competencia` | `motivo_competencia[]` | Por qué le compra al otro. Varias a la vez: casi nunca es una sola |
 | `foto_path` | text | Bucket `visitas`, que conserva su nombre viejo |
 | `oportunidad_id` | uuid → `oportunidades` | Opcional: la venta concreta sobre la que trató |
 | `notas` | text | |
@@ -180,8 +187,13 @@ interacción puede ser llamada, WhatsApp o correo, no solo una visita.
 
 ### `compromisos`
 
-`id` · `cuenta_id` · `visita_id` · `vendedor_id` · `descripcion` · `tipo_accion` ·
-`fecha_compromiso` · `cumplido_en` · auditoría.
+`id` · `cuenta_id` · `visita_id` · `oportunidad_id` · `vendedor_id` · `descripcion` ·
+`tipo_accion` · `fecha_compromiso` · `cumplido_en` · auditoría.
+
+**`oportunidad_id` dice a qué venta sirve este próximo paso.** Sin él, un renglón de la
+agenda que dice "Banco Aliado" no distingue si es por los rollos de los cajeros o por las
+bolsas de la cafetería, cuando las dos ventas están abiertas con el mismo cliente. Se hereda
+del seguimiento que originó el compromiso, sin que nadie lo elija dos veces.
 
 **`tipo_accion` es qué hay que hacer**, del mismo enum que los seguimientos. Sin ese dato la
 pantalla de Seguimientos no puede pedir "las llamadas de hoy": habría que leer cuarenta
@@ -232,6 +244,45 @@ Sin política de update ni de delete, igual que los seguimientos y la auditoría
 Catálogo abierto y **global**: el vendedor escribe una categoría nueva y queda para todo el
 equipo. Global porque §7.6 necesita que `tipo_comercio` sea comparable con la clasificación
 de Zoho (D-012).
+
+### `jornadas`
+
+`id` · `vendedor_id` · `fecha` · `tipo` · `duracion` · `desde_texto` · `hasta_texto` ·
+`cuentas_atendidas` · `notas` · auditoría.
+
+**En qué se fue el tiempo que no fue vender.** Sin esto, la semana en que el vendedor del
+interior hizo dos viajes a Natá se ve floja — y una métrica injusta no se corrige después:
+se sabotea.
+
+Es la única captura del sistema donde el interés del vendedor y el de la empresa apuntan al
+mismo lado: **es su coartada**, y por eso se alimenta sola. Se presenta como defensa, no
+como control; el encuadre vale más que la funcionalidad.
+
+`duracion` es media o completa a propósito. La pregunta de negocio es si la logística se
+come el 30% o el 60% de la semana (§7.3), no una planilla de nómina — y pedir horas exactas
+a alguien que carga un camión produce números inventados.
+
+De aquí salen **los días vendibles**: cinco menos lo que se fue en otra cosa. La banda de
+expectativa se lee contra ese número y no contra el calendario.
+
+`cuentas_atendidas` es opcional y vale la pena: la entrega también es contacto con el
+cliente, y hoy el del interior ve a los suyos repartiendo sin recibir crédito por ello.
+
+**RLS:** cada quien registra y ve lo suyo, el líder ve a su equipo, gerencia todo. Sin
+UPDATE salvo una excepción — puede corregir lo de hoy. No poder arreglar un "media jornada"
+mal puesto hasta el viernes es lo que hace que se deje de registrar.
+
+### `competidores`
+
+`id` · `nombre` (único sin distinguir mayúsculas) · `activo` · auditoría.
+
+Catálogo abierto y global, igual que `categorias_comercio` (D-012). Existe porque
+`proveedor_actual` era texto libre: "el chino", "chino de la esquina", "Distribuidora Wang"
+y "wang" son cuatro filas que no se pueden sumar, y **sobre texto libre no se construye
+inteligencia de competencia**.
+
+El campo de texto no cambia; lo que cambia es que se escribe con sugerencia. Empujar a que
+todos escriban igual es lo único que hace falta para poder agregar.
 
 ### `descartes`
 

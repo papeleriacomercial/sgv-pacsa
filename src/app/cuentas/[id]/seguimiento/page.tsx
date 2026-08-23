@@ -8,16 +8,24 @@ import { subirFoto } from "@/lib/fotos";
 import { obtenerUbicacion, calidadUbicacion, type Ubicacion } from "@/lib/gps";
 import {
   DESCARTE_SUGERIDO,
+  RESULTADO_VENTA,
+  MOTIVOS_COMPETENCIA,
   MOTIVOS_DESCARTE,
   RESULTADOS,
+  RESULTADOS_CON_COMPETENCIA,
   RESULTADOS_CON_RECONTACTO,
   RESULTADOS_TERMINALES,
   TIPOS_INTERACCION,
+  type MotivoCompetencia,
   type MotivoDescarte,
   type Resultado,
   type TipoCuenta,
   type TipoInteraccion,
 } from "@/lib/catalogos";
+import {
+  CampoCompetidor,
+  registrarCompetidor,
+} from "@/components/campo-competidor";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
@@ -33,9 +41,16 @@ function hoyEnPanama() {
   });
 }
 
-/** Qué se hace con una cuenta que estaba sin clasificar. */
+/**
+ * Qué se hace con una cuenta que estaba sin clasificar.
+ *
+ * Son tres destinos y no dos: si le compró en la misma visita no es un
+ * prospecto —prospecto es quien todavía no compra— es un cliente, y saltar
+ * por prospecto sería registrar un estado por el que nunca pasó.
+ */
 const CLASIFICACION = {
   prospecto: "Sí, queda como prospecto",
+  cliente: "Ya me compró: es cliente",
   descartada: "No, se descarta",
 } as const;
 
@@ -83,6 +98,9 @@ function Formulario() {
   );
   const [notas, setNotas] = useState("");
   const [proveedor, setProveedor] = useState("");
+  const [motivosCompetencia, setMotivosCompetencia] = useState<
+    MotivoCompetencia[]
+  >([]);
   const [precio, setPrecio] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
   const [proximoPaso, setProximoPaso] = useState("");
@@ -140,6 +158,11 @@ function Formulario() {
     resultado !== null && RESULTADOS_TERMINALES.includes(resultado);
   const exigeRecontacto =
     resultado !== null && RESULTADOS_CON_RECONTACTO.includes(resultado);
+  // La ficha de competencia solo aparece con los resultados que implican que
+  // hay alguien más vendiéndole. Pedirla en toda visita duplicaría el tiempo de
+  // captura y enseñaría a elegir resultados que no la disparan.
+  const hayCompetencia =
+    resultado !== null && RESULTADOS_CON_COMPETENCIA.includes(resultado);
   const hayQueClasificar = tipoCuenta === "sin_clasificar";
   const seDescarta = clasificacion === "descartada";
 
@@ -147,7 +170,11 @@ function Formulario() {
   // se apague sin que nadie lo note. Se relaja solo donde inventarlo sería
   // peor: local cerrado, no usa nuestros productos, sin interés, o la cuenta
   // que se acaba de descartar. En todo lo demás sigue siendo obligatorio.
-  const exigeProximoPaso = !esTerminal && !seDescarta;
+  // Con una venta recién cerrada la cuenta no corre riesgo de apagarse: la
+  // cadencia se encarga del resto. Exigir un próximo paso ahí produciría un
+  // compromiso inventado, igual que en los resultados terminales.
+  const huboVenta = resultado === RESULTADO_VENTA;
+  const exigeProximoPaso = !esTerminal && !seDescarta && !huboVenta;
   const empezoElPaso = proximoPaso.trim() !== "" || fechaCompromiso !== "";
 
   const listo =
@@ -179,6 +206,11 @@ function Formulario() {
       return;
     }
 
+    // El competidor escrito se suma al catálogo compartido, si es nuevo.
+    if (hayCompetencia && proveedor.trim()) {
+      await registrarCompetidor(proveedor);
+    }
+
     const visitaId = crypto.randomUUID();
 
     // La foto se sube antes de insertar el seguimiento, no después. Los
@@ -204,6 +236,7 @@ function Formulario() {
       resultado,
       notas: notas.trim() || null,
       proveedor_actual: proveedor.trim() || null,
+      motivos_competencia: hayCompetencia ? motivosCompetencia : [],
       precio_referencia: precio ? Number(precio) : null,
       foto_path: fotoPath,
       // El check-in solo existe en la visita. En lo demás va nulo y `sin_gps`
@@ -367,7 +400,13 @@ function Formulario() {
                   // vendedor la ve marcada y la cambia si no es así.
                   if (hayQueClasificar) {
                     const terminal = RESULTADOS_TERMINALES.includes(nuevo);
-                    setClasificacion(terminal ? "descartada" : "prospecto");
+                    setClasificacion(
+                      nuevo === RESULTADO_VENTA
+                        ? "cliente"
+                        : terminal
+                          ? "descartada"
+                          : "prospecto",
+                    );
                     setMotivoDescarte(
                       terminal ? (DESCARTE_SUGERIDO[nuevo] ?? "otro") : null,
                     );
@@ -395,7 +434,7 @@ function Formulario() {
                   valor={clasificacion}
                   onCambio={(nueva) => {
                     setClasificacion(nueva);
-                    if (nueva === "prospecto") setMotivoDescarte(null);
+                    if (nueva !== "descartada") setMotivoDescarte(null);
                     else if (motivoDescarte === null) setMotivoDescarte("otro");
                   }}
                 />
@@ -422,28 +461,51 @@ function Formulario() {
               />
             </Tarjeta>
 
-            {/* 6. Inteligencia de mercado. */}
-            <Tarjeta className="flex flex-col gap-4">
-              <p className="text-xs text-texto-secundario">
-                Estos dos campos no son obligatorios, pero en seis meses
-                producen el mapa de quién domina cada zona y a qué precio.
-                Capturarlos después es capturarlos nunca.
-              </p>
-              <Campo
-                etiqueta="Proveedor actual"
-                value={proveedor}
-                onChange={(e) => setProveedor(e.target.value)}
-              />
-              <Campo
-                etiqueta="Precio que paga hoy"
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                value={precio}
-                onChange={(e) => setPrecio(e.target.value)}
-              />
-            </Tarjeta>
+            {/* 6. La ficha de competencia. Solo cuando el resultado implica
+                que hay alguien más vendiéndole. */}
+            {hayCompetencia && (
+              <Tarjeta className="flex flex-col gap-4">
+                <div>
+                  <p className="text-sm font-medium text-texto">
+                    ¿A quién le compra?
+                  </p>
+                  <p className="text-xs text-texto-secundario">
+                    Nada de esto es obligatorio, y puedes terminarlo en el
+                    carro. En seis meses es el mapa de quién domina cada zona y
+                    por qué — y es tu munición para la próxima puerta.
+                  </p>
+                </div>
+
+                <CampoCompetidor valor={proveedor} onCambio={setProveedor} />
+
+                {/* Varias a la vez: casi nunca es una sola razón. Le compra al
+                    paisano *y* le da crédito. */}
+                <Opciones
+                  etiqueta="¿Por qué le compra a ese?"
+                  opciones={MOTIVOS_COMPETENCIA}
+                  valor={motivosCompetencia}
+                  multiple
+                  onCambio={(motivo) =>
+                    setMotivosCompetencia((antes) =>
+                      antes.includes(motivo)
+                        ? antes.filter((m) => m !== motivo)
+                        : [...antes, motivo],
+                    )
+                  }
+                />
+
+                <Campo
+                  etiqueta="Precio que paga hoy"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  value={precio}
+                  onChange={(e) => setPrecio(e.target.value)}
+                  ayuda="Si lo suelta. Es la mitad de la conversación de precio."
+                />
+              </Tarjeta>
+            )}
 
             {/* 7. Evidencia. */}
             <Tarjeta className="flex flex-col gap-3">

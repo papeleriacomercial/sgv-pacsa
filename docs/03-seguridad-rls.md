@@ -158,6 +158,22 @@ un hecho del mundo, no información comercial.
 
 ---
 
+## `jornadas` y `competidores`
+
+`jornadas` sigue el modelo de `seguimientos`: cada quien registra y ve lo suyo, el líder ve
+a su equipo, gerencia todo. **Con una excepción deliberada en UPDATE:** el vendedor puede
+corregir el bloque de hoy y solo el de hoy.
+
+Es un equilibrio, no un descuido. Sin UPDATE, un "media jornada" mal puesto queda mal toda la
+semana y el vendedor deja de registrar; con UPDATE abierto, la semana se puede reescribir el
+jueves antes de cerrarla. El corte por fecha del día en Panamá resuelve las dos cosas.
+
+`competidores` es un catálogo compartido, igual que `categorias_comercio`: todos leen,
+cualquiera agrega escribiendo, y solo gerencia puede desactivar o fusionar duplicados. Una
+lista que cada quien viera distinta no serviría para comparar nada.
+
+---
+
 ## La vista `cuentas_resumen`
 
 Una vista **no tiene políticas propias**: hereda las de sus tablas, pero solo si se declara

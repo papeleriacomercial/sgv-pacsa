@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-**Última actualización:** 2026-08-22 · **Rama activa:** `dev`
+**Última actualización:** 2026-08-23 · **Rama activa:** `dev`
 
 Se actualiza al cerrar cada tarea (§15 de la visión). Si una tarea terminó y este archivo
 no cambió, la tarea no terminó.
@@ -909,3 +909,90 @@ registro de logística (su coartada) y la razón del rechazo (su munición y su 
   razones de rechazo con sus palabras, y qué resultados cuentan como contacto efectivo.
 - Categorías direccionables, para que la cobertura no se mida contra un denominador infinito.
 - Quién ve qué, antes de escribir las políticas de RLS.
+
+---
+
+## Etapa 6 — El tiempo del vendedor y la competencia — 2026-08-23
+
+Primera etapa después del replanteamiento de diseño. Tres migraciones aplicadas y
+verificadas en `sgv-pacsa-dev`.
+
+Va primero por una razón práctica: **todo indicador necesita historia**. Si se construyen los
+reportes antes que la instrumentación, el tablero abre vacío y quema su credibilidad en la
+primera semana. Al revés, el día que abra ya tiene semanas adentro — y esas primeras semanas
+son las que van a fijar las bandas de expectativa.
+
+### `20260823213716_ajustes_del_replanteamiento`
+
+Cuatro huecos que se encontraron revisando el flujo de cada rol contra lo construido:
+
+| Arreglo | Por qué |
+|---|---|
+| `resultado_visita` += `compro` | El mejor resultado posible de una visita no tenía dónde registrarse. Sin él, las ventas se iban a registrar como "dejó información" |
+| `tipo_interaccion` += `reunion` | Es la unidad de avance del líder. Contarla como visita la mezcla con pasar por un minisúper |
+| `compromisos.oportunidad_id` | La agenda está hecha de compromisos, y un renglón que dice "Banco Aliado" no distinguía si era por los rollos o por las bolsas |
+| `cuentas.cuenta_madre_id` y `tipo_punto` | Starbucks es un cliente con diez puntos, no once clientes. Y su matriz es una oficina, no una tienda: no entra a rutas de reparto |
+
+### `20260823213719_jornada`
+
+Tabla `jornadas` con RLS en la misma migración (§16). Seis tipos de bloque —viaje por
+mercancía, entrega, entrega urgente, no se pudo salir, administrativo, personal— y dos
+duraciones, media o completa.
+
+**Grueso a propósito.** La pregunta de negocio es si la logística se come el 30% o el 60% de
+la semana, no una planilla de nómina. De aquí salen **los días vendibles**: cinco menos lo
+que se fue en otra cosa, y la expectativa se lee contra ese número.
+
+La excepción de UPDATE —corregir solo el bloque de hoy— es deliberada: sin ella, un "media
+jornada" mal puesto queda mal toda la semana y el vendedor deja de registrar.
+
+### `20260823214153_inteligencia_competencia`
+
+- Enum `motivo_competencia` con ocho valores. **Provisional**: el negocio pidió arrancar con
+  una lista propuesta para poder mostrar la aplicación funcionando, y afinarla después con
+  los tres vendedores usando sus palabras.
+- Tabla `competidores`, catálogo abierto y global como `categorias_comercio` (D-012).
+- `seguimientos.motivos_competencia` en arreglo: casi nunca es una sola razón.
+
+**Por qué el catálogo y no texto libre:** "el chino", "chino de la esquina", "Distribuidora
+Wang" y "wang" son cuatro filas que no se pueden sumar. Sobre texto libre no se construye
+inteligencia de competencia.
+
+### Pantallas
+
+| Pieza | Dónde |
+|---|---|
+| Registrar jornada | Botón en Inicio, se despliega en el sitio |
+| Tu semana | Tarjeta en Inicio con los bloques y los días vendibles restantes |
+| Ficha de competencia | Dentro del seguimiento, **solo** con `quiere_precio`, `stock_suficiente` o `sin_interes` |
+| Clasificación a cliente | El resultado `compro` sugiere `cliente`, no prospecto |
+
+La ficha es condicional a propósito: pedirla en toda visita duplicaría el tiempo de captura y
+enseñaría al vendedor a elegir resultados que no la disparan, que es exactamente cómo se
+corrompe un catálogo.
+
+### Verificación contra `sgv-pacsa-dev`
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| Enums nuevos y valores agregados | Los cuatro | Correcto |
+| `compromisos.oportunidad_id` | Existe | Correcto |
+| `cuentas.cuenta_madre_id` y `tipo_punto` | Existen | Correcto |
+| RLS activo en `jornadas` | Sí, 5 políticas | Correcto |
+| Un usuario ajeno consulta jornadas | 0 filas | 0 filas |
+| El dueño consulta las suyas | Las 2 | Correcto |
+| Corregir la jornada de hoy | Permitido | 1 fila |
+| Corregir la de ayer | Bloqueado | 0 filas |
+
+`tsc --noEmit`, `eslint` y `next build` limpios.
+
+### Lo que falta de esta etapa
+
+- **Cola de sincronización con reintento.** La captura ocurre justo donde no hay señal: el
+  bloque de jornada se registra manejando de Natá, el seguimiento dentro de un local con
+  techo de zinc. No hace falta una arquitectura offline completa — basta con guardar en el
+  dispositivo y reintentar, con indicador visible. Los identificadores ya se generan en el
+  cliente precisamente para esto.
+- **Pedido dentro del resultado `compro`.** Hoy el resultado existe y clasifica a cliente,
+  pero el pedido —qué llevó, cuánto, quién lo factura— llega con Solicitudes.
+- Validar el catálogo de motivos y el de tipos de jornada con los tres vendedores.

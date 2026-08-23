@@ -213,7 +213,19 @@ planear e informar**— y por eso obligaba a inventar hechos para poder usar los
 - Las coordenadas pasan a ser un dato editable de la cuenta, y el check-in solo se pide en
   las visitas (D-018).
 
-### Etapa 6 — Ventas y reportes
+### Etapa 6 — El tiempo del vendedor y la competencia ✅ HECHA
+
+Sale del replanteamiento de diseño del 2026-08-22 y 23 (docs/09 a docs/14). Va primero
+porque **todo indicador necesita historia**: si se construyen los reportes antes que la
+instrumentación, el tablero abre vacío y quema su credibilidad en la primera semana.
+
+- **`jornadas`** — en qué se fue el tiempo que no fue vender, y de ahí los días vendibles.
+- **Ficha de competencia** — quién le vende y por qué, con catálogo abierto de competidores
+  y motivos. Solo aparece con los tres resultados que implican competidor.
+- **Siete arreglos** de lo ya construido: resultado `compro`, tipo `reunion`,
+  `compromisos.oportunidad_id`, cuenta madre y `tipo_punto`.
+
+### Etapa 6b — Ventas y reportes
 
 - Pantalla temporal para capturar la venta mensual por vendedor de 2026.
 - Reportes del mes vigente, desglosados por semana y por vendedor: cuentas nuevas,

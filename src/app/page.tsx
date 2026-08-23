@@ -9,6 +9,8 @@ import { Insignia } from "@/components/ui/insignia";
 import { MensajeError, Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { CerrarSesion } from "@/components/cerrar-sesion";
+import { RegistrarJornada } from "@/components/registrar-jornada";
+import { JornadasDeLaSemana } from "@/components/jornadas-de-la-semana";
 
 type Rol = "gerente" | "lider" | "vendedor" | "administracion";
 
@@ -77,6 +79,11 @@ export default async function Inicio() {
             </Insignia>
           </Tarjeta>
         )}
+
+        {/* La jornada se registra al cerrar el día, así que vive arriba y no
+            escondida en un menú: si cuesta encontrarla, no se llena. */}
+        <JornadasDeLaSemana />
+        <RegistrarJornada />
 
         <div className="grid grid-cols-2 gap-2">
           <Link

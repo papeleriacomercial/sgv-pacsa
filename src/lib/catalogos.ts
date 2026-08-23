@@ -21,6 +21,7 @@ export type Etapa = keyof typeof ETAPAS;
 
 export const RESULTADOS = {
   no_estaba_encargado: "No estaba el encargado",
+  compro: "Compró",
   pide_cotizacion: "Interesado, pide cotización",
   pide_muestra: "Interesado, pide muestra",
   stock_suficiente: "Interesado pero mantiene stock suficiente",
@@ -54,6 +55,9 @@ export const RESULTADOS_CON_RECONTACTO: Resultado[] = ["stock_suficiente"];
  * Son además los que presugieren descartar la cuenta cuando estaba sin
  * clasificar.
  */
+/** Con este resultado la visita terminó en venta: se pide el pedido y la cuenta pasa a cliente. */
+export const RESULTADO_VENTA: Resultado = "compro";
+
 export const RESULTADOS_TERMINALES: Resultado[] = [
   "local_cerrado",
   "no_usa_productos",
@@ -85,6 +89,7 @@ export const MOTIVOS_CON_RECONTACTO: MotivoPerdida[] = [
 
 export const TIPOS_INTERACCION = {
   visita: "Visita",
+  reunion: "Reunión",
   llamada: "Llamada",
   whatsapp: "WhatsApp",
   correo: "Correo",
@@ -210,6 +215,91 @@ export const TONO_VOLUMEN: Record<Volumen, "ok" | "info" | "neutro"> = {
   media: "info",
   baja: "neutro",
 };
+
+/**
+ * Por qué el comercio le compra al competidor y no a nosotros.
+ *
+ * **Lista provisional.** Se arrancó con una propuesta para poder mostrar la
+ * aplicación funcionando; se afina con los tres vendedores usando sus propias
+ * palabras.
+ *
+ * Importa más de lo que parece: estos valores son las únicas preguntas que la
+ * empresa va a poder contestar en dos años. Si "paisanaje" no estuviera,
+ * nunca se podría demostrar que existe; si precio y crédito fueran uno solo,
+ * nunca se sabría cuál de los dos está matando la venta.
+ */
+export const MOTIVOS_COMPETENCIA = {
+  precio: "Se lo dan más barato",
+  credito: "Le dan crédito o plazo",
+  paisanaje: "Le compra a su paisano",
+  cercania: "El proveedor le queda cerca",
+  entrega: "Le entregan más rápido o más seguido",
+  especificacion: "Prefiere ese producto",
+  pedido_minimo: "Nuestro pedido mínimo es muy alto",
+  otro: "Otra razón",
+} as const;
+
+export type MotivoCompetencia = keyof typeof MOTIVOS_COMPETENCIA;
+
+/**
+ * Resultados que implican que hay un competidor detrás.
+ *
+ * La ficha de competencia solo aparece con estos tres. Pedirla en toda visita
+ * duplicaría el tiempo de captura y enseñaría al vendedor a elegir resultados
+ * que no la disparan — que es exactamente cómo se corrompe un catálogo.
+ */
+export const RESULTADOS_CON_COMPETENCIA: Resultado[] = [
+  "quiere_precio",
+  "stock_suficiente",
+  "sin_interes",
+];
+
+/**
+ * En qué se fue el tiempo que no fue vender.
+ *
+ * La lista incluye a propósito lo que de verdad pasa y no solo lo que uno
+ * quisiera: el día que no se pudo salir por calles cerradas es tan real como
+ * el viaje de carga, y si no tiene dónde registrarse, la semana aparece como
+ * flojera. **Provisional hasta validarla con los tres vendedores.**
+ */
+export const TIPOS_JORNADA = {
+  viaje_mercancia: "Viaje por mercancía",
+  entrega: "Entrega a clientes",
+  entrega_urgente: "Entrega urgente imprevista",
+  no_pudo_salir: "No se pudo salir",
+  administrativo: "Administrativo",
+  personal: "Personal o incapacidad",
+} as const;
+
+export type TipoJornada = keyof typeof TIPOS_JORNADA;
+
+/**
+ * Media jornada de resolución alcanza.
+ *
+ * La pregunta de negocio es si la logística se come el 30% o el 60% de la
+ * semana, no una planilla de nómina. Pedirle horas exactas a alguien que está
+ * cargando un camión produce números inventados.
+ */
+export const DURACIONES_JORNADA = {
+  media: "Media jornada",
+  completa: "Jornada completa",
+} as const;
+
+export type DuracionJornada = keyof typeof DURACIONES_JORNADA;
+
+/** Cuánto descuenta cada bloque de los días vendibles de la semana. */
+export const PESO_JORNADA: Record<DuracionJornada, number> = {
+  media: 0.5,
+  completa: 1,
+};
+
+/** Qué clase de punto es la cuenta (docs/13-flujo-lider.html). */
+export const TIPOS_PUNTO = {
+  local: "Local comercial",
+  oficina: "Oficina de negociación",
+} as const;
+
+export type TipoPunto = keyof typeof TIPOS_PUNTO;
 
 /**
  * Cadencias sugeridas, en días.
