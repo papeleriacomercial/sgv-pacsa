@@ -28,6 +28,10 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 | [docs/06-decisiones.md](docs/06-decisiones.md) | Bitácora de decisiones: qué se decidió, cuándo y por qué. | Vivo |
 | [docs/07-estado.md](docs/07-estado.md) | Qué está hecho, qué está en curso, qué falta. | Vivo |
 | [docs/08-plan-v2.md](docs/08-plan-v2.md) | Replanteamiento de 2026-08-21: conciliación con la visión, impacto y plan por etapas. | Vigente |
+| [docs/09-medicion-y-gestion.md](docs/09-medicion-y-gestion.md) | Qué mide el sistema y para qué: efectividad de caza y de cuidado, tiempo operativo, cobertura. Reordena las etapas 6 en adelante. | Propuesta |
+| [docs/10-concepto.html](docs/10-concepto.html) | El concepto acordado el 2026-08-22, para leer de corrido: de sistema de registro a sistema de inteligencia, el contrato semanal y los compromisos de gerencia. | Vigente |
+| [docs/11-diseno-operativo.html](docs/11-diseno-operativo.html) | Cómo se aplica el concepto: la semana paso a paso, las pantallas con su dueño y su momento, qué calcula el sistema solo, y los obstáculos reales. | Vigente |
+| [docs/12-flujo-vendedor.html](docs/12-flujo-vendedor.html) | El ciclo del vendedor de viernes a viernes: sus cinco pantallas, con bocetos y un lunes completo. | Vigente |
 
 `docs/sgv-preview.html` es una maqueta visual de referencia, no especificación.
 

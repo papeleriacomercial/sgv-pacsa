@@ -1,0 +1,711 @@
+<title>La semana como máquina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+
+<style>
+  :root {
+    --marca: #1d293d;
+    --fondo: #f8fafc;
+    --superficie: #ffffff;
+    --superficie-alt: #f1f5f9;
+    --borde: #e2e8f0;
+    --borde-fuerte: #cbd5e1;
+    --texto: #1d293d;
+    --texto-2: #45556c;
+    --texto-3: #7c8ba1;
+    --aviso: #b45309;
+    --aviso-fondo: #fffbeb;
+    --aviso-borde: #fcd34d;
+    --ok: #00863a;
+    --ok-fondo: #f0fdf4;
+    --identidad: #fe9a00;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --marca: #e2e8f0;
+      --fondo: #12181f;
+      --superficie: #1a222c;
+      --superficie-alt: #212b36;
+      --borde: #2c3846;
+      --borde-fuerte: #3d4c5d;
+      --texto: #e7edf4;
+      --texto-2: #a9b7c6;
+      --texto-3: #7c8ba1;
+      --aviso: #fbbf24;
+      --aviso-fondo: #251c08;
+      --aviso-borde: #6b4f10;
+      --ok: #34d399;
+      --ok-fondo: #0c1f17;
+      --identidad: #fe9a00;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --marca: #e2e8f0;
+    --fondo: #12181f;
+    --superficie: #1a222c;
+    --superficie-alt: #212b36;
+    --borde: #2c3846;
+    --borde-fuerte: #3d4c5d;
+    --texto: #e7edf4;
+    --texto-2: #a9b7c6;
+    --texto-3: #7c8ba1;
+    --aviso: #fbbf24;
+    --aviso-fondo: #251c08;
+    --aviso-borde: #6b4f10;
+    --ok: #34d399;
+    --ok-fondo: #0c1f17;
+    --identidad: #fe9a00;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 1.25rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hoja { max-width: 41rem; margin: 0 auto; }
+
+  /* ---------- Cabecera ---------- */
+
+  header.portada {
+    padding: 3.5rem 0 2.25rem;
+    border-bottom: 1px solid var(--borde);
+    margin-bottom: 3rem;
+  }
+
+  .marca-rail {
+    width: 2.5rem; height: 3px;
+    background: var(--identidad);
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+  }
+
+  .eyebrow {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.11em; text-transform: uppercase;
+    color: var(--texto-3);
+    margin: 0 0 0.75rem;
+  }
+
+  h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: clamp(2.1rem, 7vw, 2.9rem);
+    font-weight: 500; line-height: 1.12;
+    letter-spacing: -0.015em; text-wrap: balance;
+    margin: 0 0 1rem;
+  }
+
+  .bajada { font-size: 1.06rem; color: var(--texto-2); margin: 0; text-wrap: pretty; }
+
+  .sello {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.72rem; color: var(--texto-3);
+    margin-top: 1.75rem;
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem;
+  }
+
+  /* ---------- Secciones ---------- */
+
+  section { margin-bottom: 3.25rem; }
+
+  h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.6rem; font-weight: 600;
+    line-height: 1.2; letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 1.25rem;
+    padding-top: 0.4rem;
+    border-top: 2px solid var(--marca);
+  }
+
+  h3 {
+    font-size: 0.98rem; font-weight: 600;
+    line-height: 1.4; margin: 2rem 0 0.5rem;
+  }
+
+  p { margin: 0 0 1.1rem; text-wrap: pretty; }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 600; color: var(--texto); }
+  em { font-style: italic; color: var(--texto-2); }
+
+  /* ---------- Línea de la semana ---------- */
+
+  .semana { display: flex; flex-direction: column; gap: 0; }
+
+  .momento {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0 1.25rem;
+    position: relative;
+    padding-bottom: 1.75rem;
+  }
+
+  .momento:last-child { padding-bottom: 0; }
+
+  .cuando {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--texto-3);
+    padding-top: 0.95rem;
+    text-align: right;
+    line-height: 1.35;
+  }
+
+  .via { position: relative; }
+
+  /* Rail continuo entre momentos */
+  .via::before {
+    content: "";
+    position: absolute;
+    left: -0.75rem; top: 1.25rem; bottom: -1.75rem;
+    width: 1px;
+    background: var(--borde);
+  }
+
+  .momento:last-child .via::before { display: none; }
+
+  .via::after {
+    content: "";
+    position: absolute;
+    left: -1.03rem; top: 1.05rem;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--fondo);
+    border: 2px solid var(--borde-fuerte);
+  }
+
+  .momento.clave .via::after {
+    background: var(--identidad);
+    border-color: var(--identidad);
+  }
+
+  .caja {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 1rem 1.15rem;
+  }
+
+  .momento.clave .caja { border-color: var(--borde-fuerte); }
+
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .chip {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.65rem; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+    background: var(--superficie-alt);
+    color: var(--texto-2);
+    border: 1px solid var(--borde);
+  }
+
+  .chip.tiempo { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 35%, transparent); background: var(--ok-fondo); }
+
+  .caja h3 { margin: 0 0 0.5rem; font-size: 1.02rem; }
+  .caja p { font-size: 0.94rem; color: var(--texto-2); margin: 0 0 0.65rem; }
+  .caja p:last-child { margin-bottom: 0; }
+
+  .caja ol, .caja ul { margin: 0; padding-left: 1.1rem; font-size: 0.94rem; color: var(--texto-2); }
+  .caja li { margin-bottom: 0.35rem; }
+  .caja li:last-child { margin-bottom: 0; }
+
+  @media (max-width: 34rem) {
+    .momento { grid-template-columns: 1fr; gap: 0; padding-left: 1rem; }
+    .cuando { text-align: left; padding-top: 0; padding-bottom: 0.4rem; }
+    .via::before { left: -1rem; top: 0; bottom: -1.75rem; }
+    .via::after { left: -1.28rem; top: -0.05rem; }
+  }
+
+  /* ---------- Pantallas ---------- */
+
+  .pantalla {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 1.15rem 1.25rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .pantalla-cab {
+    display: flex; flex-wrap: wrap;
+    align-items: baseline; gap: 0.5rem 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .pantalla-cab h3 { margin: 0; font-size: 1.05rem; }
+
+  .pantalla p { font-size: 0.93rem; color: var(--texto-2); margin: 0 0 0.6rem; }
+  .pantalla p:last-child { margin-bottom: 0; }
+  .pantalla .nueva { color: var(--ok); }
+
+  /* ---------- Principio ---------- */
+
+  .principio {
+    border-left: 3px solid var(--identidad);
+    padding: 0.1rem 0 0.1rem 1.15rem;
+    margin: 1.75rem 0;
+  }
+
+  .principio p {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.24rem; line-height: 1.45; font-weight: 500;
+    color: var(--texto); margin: 0;
+  }
+
+  /* ---------- Riesgo ---------- */
+
+  .riesgo {
+    background: var(--aviso-fondo);
+    border: 1px solid var(--aviso-borde);
+    border-radius: 8px;
+    padding: 1.1rem 1.2rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .riesgo .etiqueta {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 500;
+    letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--aviso);
+    display: block; margin-bottom: 0.4rem;
+  }
+
+  .riesgo h3 { margin: 0 0 0.45rem; font-size: 1rem; }
+  .riesgo p { font-size: 0.93rem; color: var(--texto-2); margin: 0 0 0.6rem; }
+  .riesgo p:last-child { margin-bottom: 0; }
+
+  /* ---------- Listas ---------- */
+
+  ul.limpia { list-style: none; padding-left: 0; margin: 0 0 1.1rem; }
+  ul.limpia > li { padding-left: 1.15rem; position: relative; margin-bottom: 0.55rem; text-wrap: pretty; }
+  ul.limpia > li:last-child { margin-bottom: 0; }
+  ul.limpia > li::before {
+    content: ""; position: absolute; left: 0; top: 0.68em;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--borde-fuerte);
+  }
+
+  ol { margin: 0 0 1.1rem; padding-left: 1.2rem; }
+  ol li { margin-bottom: 0.5rem; text-wrap: pretty; }
+
+  /* ---------- Tabla ---------- */
+
+  .tabla-envoltura {
+    overflow-x: auto; margin: 1.5rem 0;
+    border: 1px solid var(--borde); border-radius: 8px;
+    background: var(--superficie);
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 28rem; }
+
+  th, td {
+    text-align: left; padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--borde); vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  th {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--texto-3); background: var(--superficie-alt);
+    white-space: nowrap;
+  }
+
+  td:first-child { font-weight: 500; }
+  td.num { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  tfoot td {
+    background: var(--superficie-alt);
+    font-weight: 600; border-top: 1px solid var(--borde-fuerte);
+  }
+
+  footer {
+    margin-top: 4rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--borde);
+    font-size: 0.88rem; color: var(--texto-3);
+  }
+
+  @media (max-width: 30rem) {
+    body { font-size: 16px; padding: 0 1rem 4rem; }
+    header.portada { padding-top: 2.5rem; }
+  }
+</style>
+
+<div class="hoja">
+
+<header class="portada">
+  <div class="marca-rail"></div>
+  <p class="eyebrow">SGV · Diseño operativo</p>
+  <h1>La semana como máquina</h1>
+  <p class="bajada">Cómo se lleva el concepto a la práctica: qué hace cada persona, en qué momento, en qué pantalla, y qué hace el sistema solo. Al final, la respuesta honesta a si esto se puede sostener.</p>
+  <div class="sello">
+    <span>2026-08-22</span>
+    <span>Continúa a docs/10-concepto</span>
+    <span>4 personas · 1 ciclo semanal</span>
+  </div>
+</header>
+
+<section>
+  <h2>La idea que ordena todo el diseño</h2>
+
+  <div class="principio">
+    <p>Nadie escribe un número. El vendedor cuenta lo que pasó; el sistema pone las cifras.</p>
+  </div>
+
+  <p>Esa es la restricción de la que cuelgan todas las decisiones de pantalla que siguen. Si el vendedor tiene que contar sus visitas, sumar sus leads o calcular su cumplimiento, el viernes se vuelve una hora de trabajo administrativo y en tres semanas está inventando cifras redondas.</p>
+
+  <p>El sistema ya tiene todos los hechos: cada seguimiento trae su fecha, su ubicación y su resultado. <strong>Lo único que se le pide al vendedor es lo que la máquina no puede saber</strong>: qué vio, por qué cree que pasó, y qué se propone hacer.</p>
+</section>
+
+<section>
+  <h2>La semana, de principio a fin</h2>
+
+  <div class="semana">
+
+    <div class="momento">
+      <div class="cuando">Lunes a jueves</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips">
+            <span class="chip">Los tres vendedores</span>
+            <span class="chip tiempo">Sin tiempo extra</span>
+          </div>
+          <h3>El campo, igual que hoy</h3>
+          <p>El ritmo no cambia. Usa la aplicación como ya la usa: cuentas, seguimientos, mapa. Tres diferencias:</p>
+          <ul>
+            <li>Abre en <strong>su lista de la semana</strong>, no en un mapa vacío. Ya decidió el viernes a quién iba a ver.</li>
+            <li>Si el resultado sugiere competencia, la pantalla le pide <strong>cuatro toques más</strong>: quién, por qué, a qué precio, foto.</li>
+            <li>Al cerrar el día, si hubo entrega o viaje, registra <strong>un bloque de jornada</strong>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento clave">
+      <div class="cuando">Jueves tarde<br>o viernes AM</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips">
+            <span class="chip">Vendedor</span>
+            <span class="chip tiempo">15 minutos</span>
+            <span class="chip">Pantalla: Mi semana</span>
+          </div>
+          <h3>Cierra la semana y apuesta la siguiente</h3>
+          <ol>
+            <li><strong>Ve sus números, ya calculados.</strong> No los escribe. Visitas, leads tocados y convertidos, cartera en cadencia, horas de logística.</li>
+            <li><strong>Dicta noventa segundos</strong> contra tres preguntas fijas: qué te sorprendió, qué te frenó, qué necesitas de nosotros.</li>
+            <li><strong>Arma el plan de la semana entrante escogiendo</strong>, no escribiendo: qué listas va a trabajar, y el número que apuesta.</li>
+            <li>Envía. Se acabó su parte.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento clave">
+      <div class="cuando">Viernes</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips">
+            <span class="chip">Líder</span>
+            <span class="chip tiempo">2 a 3 horas</span>
+            <span class="chip">Pantalla: Contrato</span>
+          </div>
+          <h3>Lee los dos cierres y responde</h3>
+          <p>Es el bloque nombrado de su día de administración. Ve los dos cierres con sus cifras y su audio, y responde a cada uno por escrito o dictando.</p>
+          <p>Puede <strong>agregar un objetivo</strong> al plan del vendedor. No puede reescribírselo: la autoría se queda con quien lo propuso.</p>
+          <p>Después hace <strong>su propio cierre y su propio plan</strong>, que sube a gerencia igual que los otros dos.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento">
+      <div class="cuando">Viernes PM<br>o lunes AM</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips">
+            <span class="chip">Líder + vendedores</span>
+            <span class="chip tiempo">20 minutos</span>
+            <span class="chip">Sin pantalla</span>
+          </div>
+          <h3>La llamada corta</h3>
+          <p>La agenda es lo que ya está escrito, así que no se gasta en ponerse al día. Lo que se acuerde en la llamada se registra como objetivo, para que no se evapore.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento clave">
+      <div class="cuando">Lunes</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips">
+            <span class="chip">Gerencia</span>
+            <span class="chip tiempo">5 a 10 minutos</span>
+            <span class="chip">Pantalla: Tablero</span>
+          </div>
+          <h3>Mira el estado del lazo, no el detalle</h3>
+          <ol>
+            <li><strong>¿Está completo el ciclo?</strong> Tres cierres, tres respuestas. Lo que falte se ve como hueco.</li>
+            <li><strong>Las excepciones</strong>: quien no cerró, quien lleva dos semanas fuera de banda, solicitudes vencidas.</li>
+            <li><strong>El cierre del líder</strong>, que sí lee completo, y le responde solo a él.</li>
+          </ol>
+          <p>Deliberadamente delgado. Si gerencia entra al detalle de los dos vendedores, el puesto de líder se vacía.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento">
+      <div class="cuando">Lunes<br>siguiente</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips">
+            <span class="chip">Automático</span>
+            <span class="chip tiempo">Cero</span>
+          </div>
+          <h3>La reconciliación</h3>
+          <p>El vendedor abre y ve, sin que nadie lo calcule: <em>“dijiste 20 leads en Aguadulce, tocaste 11”</em>.</p>
+          <p>Este paso es el que convierte el plan en algo real. Sin él, planificar es redactar deseos.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>Las pantallas</h2>
+
+  <p>Cuatro existen y se modifican. Siete son nuevas. <strong>Cada una tiene un dueño y un momento</strong>: si una pantalla no puede contestar <em>quién la abre y cuándo</em>, no debería existir.</p>
+
+  <h3>Nuevas</h3>
+
+  <div class="pantalla">
+    <div class="pantalla-cab"><h3>Listas</h3><span class="chip">Vendedor</span><span class="chip">Planifica y trabaja</span></div>
+    <p>Los leads separados de la cartera, agrupados en colecciones con nombre y período: <em>Aguadulce · septiembre</em>, <em>24 de Diciembre</em>, <em>Cadenas Q4</em>.</p>
+    <p>Resuelve dos cosas con un solo mecanismo: <strong>saca los cincuenta puntos del domingo de encima de las treinta cuentas reales</strong>, y crea el denominador sin el cual no hay embudo. La lista del líder y la ruta del vendedor son el mismo objeto.</p>
+  </div>
+
+  <div class="pantalla">
+    <div class="pantalla-cab"><h3>Mi semana</h3><span class="chip">Vendedor</span><span class="chip">Toda la semana</span></div>
+    <p>Una sola pantalla en dos estados. <strong>De lunes a jueves es pasiva</strong>: muestra sus hechos acumulándose, para que corrija el jueves en vez de excusarse el lunes. <strong>El viernes se abre</strong> para dictar, planificar y enviar.</p>
+    <p>El lunes siguiente muestra arriba la reconciliación de la semana anterior.</p>
+  </div>
+
+  <div class="pantalla">
+    <div class="pantalla-cab"><h3>Jornada</h3><span class="chip">Vendedor</span><span class="chip">Al cerrar el día</span></div>
+    <p>No es una pantalla completa: es una hoja que se abre desde Inicio. Tipo de bloque, media jornada o completa, desde dónde hasta dónde, y a quién se entregó. <strong>Quince segundos.</strong></p>
+    <p>Se presenta como lo que es: <em>“para que la semana que hiciste dos viajes a Natá no se vea floja”</em>.</p>
+  </div>
+
+  <div class="pantalla">
+    <div class="pantalla-cab"><h3>Contrato</h3><span class="chip">Líder</span><span class="chip">Viernes</span></div>
+    <p>Los cierres de los dos vendedores, con cifras y audio, y el espacio para responder. Marca visible de qué respondió y qué no.</p>
+  </div>
+
+  <div class="pantalla">
+    <div class="pantalla-cab"><h3>Tablero</h3><span class="chip">Gerencia</span><span class="chip">Lunes</span></div>
+    <p>Estado del lazo, excepciones y el cierre del líder. Nada más. Es la pantalla que tiene que <strong>resistir la tentación de crecer</strong>.</p>
+  </div>
+
+  <div class="pantalla">
+    <div class="pantalla-cab"><h3>Solicitudes</h3><span class="chip">Vendedor ↔ Gerencia</span><span class="chip">Cuando pasa</span></div>
+    <p>El carril con reloj: precio especial, plazo, condición, comprometer una entrega. Cada una con su cuenta asociada, su hora de entrada y su hora de respuesta.</p>
+    <p>Va aparte del tablero justamente porque es urgente y lo demás no lo es. <strong>Y mide a gerencia</strong>: el porcentaje contestado dentro de 24 horas es visible para todos.</p>
+  </div>
+
+  <div class="pantalla">
+    <div class="pantalla-cab"><h3>Inteligencia</h3><span class="chip">Líder y gerencia</span><span class="chip">Mensual</span></div>
+    <p>Los rechazos agregados por zona, por categoría, por competidor y por razón. Es la pantalla de la que sale la decisión trimestral, y la única razón por la que vale la pena capturar todo lo anterior.</p>
+  </div>
+
+  <h3>Existentes que se modifican</h3>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Pantalla</th><th>Qué cambia</th></tr></thead>
+      <tbody>
+        <tr><td>Registrar seguimiento</td><td>Si el resultado implica competencia, aparece la ficha: competidor desde catálogo, por qué compra allá, precio, foto de la muestra. Condicional, no siempre.</td></tr>
+        <tr><td>Buscar</td><td>El alta en tanda cae en una lista, no en la cartera. Es donde nacen los leads.</td></tr>
+        <tr><td>Cuenta</td><td>“Agregar a lista”, para armar la ruta desde el expediente.</td></tr>
+        <tr><td>Inicio</td><td>La tarjeta de Mi semana arriba, y el botón de registrar jornada.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>La navegación cambia según el rol</h3>
+
+  <p>Hoy la barra tiene cinco entradas iguales para todos. Con esto no alcanza, y tampoco hace falta: <strong>el líder y gerencia no necesitan lo mismo que el vendedor de ruta</strong>.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Rol</th><th>Barra inferior</th></tr></thead>
+      <tbody>
+        <tr><td>Vendedor</td><td>Cuentas · Listas · Seguimientos · Mapa · Mi semana</td></tr>
+        <tr><td>Líder</td><td>Cuentas · Oportunidades · Contrato · Mapa · Mi semana</td></tr>
+        <tr><td>Gerencia</td><td>Tablero · Inteligencia · Solicitudes · Cuentas · Mapa</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Qué hace el sistema sin que nadie lo toque</h2>
+
+  <p>Esta lista es la promesa que sostiene los quince minutos del viernes. Todo lo que está aquí <strong>no lo escribe nadie</strong>:</p>
+
+  <ul class="limpia">
+    <li>Cuenta las visitas de la semana, y cuántas quedaron verificadas por GPS.</li>
+    <li>Deriva el tiempo de venta del primer y el último registro de cada día. Solo la logística se captura a mano.</li>
+    <li>Calcula cuántos leads de cada lista se tocaron, cuántos se volvieron prospecto y cuántos se descartaron, con su motivo.</li>
+    <li>Calcula el porcentaje de la cartera dentro de su cadencia, y arma <strong>la lista con nombres</strong> de los que quedaron fuera.</li>
+    <li>Compara el plan de la semana pasada contra lo ocurrido.</li>
+    <li>Marca los huecos del ciclo: quién no cerró, quién no respondió.</li>
+    <li>Cronometra las solicitudes y calcula el cumplimiento de las 24 horas.</li>
+    <li>Agrupa los rechazos por zona, categoría, competidor y razón.</li>
+  </ul>
+
+  <p>Lo único que se le pide a una persona es <strong>el juicio</strong>: qué vio, por qué cree que pasó, qué se propone, y qué le responde su líder.</p>
+</section>
+
+<section>
+  <h2>¿Cuánto trabajo le cuesta esto al vendedor?</h2>
+
+  <p>Es la pregunta que decide si esto vive o muere, así que conviene hacer la cuenta en vez de estimarla.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead>
+        <tr><th>Momento</th><th>Cuánto</th><th>Cuántas veces</th><th class="num">Semana</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>El hecho, en la puerta</td><td>30 seg</td><td>~15 seguimientos</td><td class="num">7 min</td></tr>
+        <tr><td>La ficha de competencia, en el carro</td><td>2 min</td><td>~4 casos</td><td class="num">8 min</td></tr>
+        <tr><td>El bloque de jornada, al cerrar el día</td><td>15 seg</td><td>5 días</td><td class="num">1 min</td></tr>
+        <tr><td>El cierre y el plan, el viernes</td><td>15 min</td><td>1 vez</td><td class="num">15 min</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="3">Total de captura administrativa</td><td class="num">~31 min</td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <p><strong>Media hora a la semana sobre cuarenta.</strong> Eso es defendible frente a un vendedor, y es la cifra con la que hay que presentárselo — no con un discurso sobre estrategia.</p>
+
+  <p>La ficha de competencia es la única partida grande, y por eso es <strong>condicional</strong>: solo aparece cuando el resultado implica que hay un competidor. Si se pidiera en toda visita, la cuenta se duplicaría y el vendedor empezaría a elegir resultados que no la disparan — que es exactamente cómo se corrompe un catálogo.</p>
+</section>
+
+<section>
+  <h2>¿Se puede llevar a la práctica?</h2>
+
+  <p>Sí, con seis obstáculos reales. Ninguno es teórico y todos tienen respuesta, pero conviene verlos antes de empezar.</p>
+
+  <div class="riesgo">
+    <span class="etiqueta">Obstáculo 1 · Técnico</span>
+    <h3>La captura ocurre justo donde no hay señal</h3>
+    <p>El bloque de jornada se registra manejando de Natá a Santiago; el seguimiento, dentro de un local con techo de zinc. <strong>Si la aplicación exige conexión para guardar, el dato se pierde y el hábito se muere en la primera semana.</strong></p>
+    <p>Esto convierte el modo sin conexión en requisito de esta etapa, no en un remate final. Las cuentas ya nacen con identificador generado en el celular precisamente para esto; falta la cola de sincronización.</p>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">Obstáculo 2 · Técnico</span>
+    <h3>El dictado no es un problema resuelto</h3>
+    <p>El reconocimiento de voz del navegador es irregular en español y no funciona sin conexión. Hay que elegir:</p>
+    <ul class="limpia">
+      <li><strong>Grabar el audio y guardarlo.</strong> Siempre funciona, el líder lo escucha en noventa segundos. Pero no se puede buscar ni agregar.</li>
+      <li><strong>Transcribir en el servidor</strong> cuando haya señal. Se puede buscar y resumir, cuesta un servicio externo.</li>
+    </ul>
+    <p>Recomendación: <strong>grabar siempre, transcribir cuando se pueda</strong>. El audio nunca falla; la transcripción es una mejora sobre algo que ya sirve.</p>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">Obstáculo 3 · Humano</span>
+    <h3>El viernes del líder se lo come su propia venta</h3>
+    <p>Es la falla clásica del jugador-entrenador, y es cuestión de cuándo, no de si. Cuando su trimestre esté en riesgo, lo primero que suelta es lo administrativo, porque su venta es medible hoy y el acompañamiento rinde en tres meses.</p>
+    <p>Lo que lo protege no es disciplina: es que <strong>el hueco se vea sin que nadie lo audite</strong>. Un ritual semanal se muere en silencio, y el tablero tiene que hacer ruido.</p>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">Obstáculo 4 · De diseño</span>
+    <h3>Las listas se llenan y no se vacían</h3>
+    <p>Si agrega cincuenta leads por semana y toca quince, en dos meses tiene trescientos muertos y la pantalla se vuelve un cementerio que ya nadie abre.</p>
+    <p>Por eso <strong>la lista lleva período en el nombre</strong>. Al cerrar el período, lo que no se tocó no desaparece: se decide en bloque —se recicla al siguiente, o se archiva—. Y ese número, <em>cuántos leads levanté y nunca fui a ver</em>, es información sobre la planificación tan valiosa como la tasa de conversión.</p>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">Obstáculo 5 · Humano</span>
+    <h3>El plan se vuelve copiar y pegar</h3>
+    <p>Semana cuatro, repite el plan de la tres. Es la falla más predecible de cualquier ritual de planificación.</p>
+    <p>Dos defensas: que <strong>el plan se arme escogiendo</strong> —listas reales, número apostado— porque un plan ensamblado es más difícil de falsificar que uno tecleado; y que <strong>la reconciliación sea automática y visible</strong>, porque nadie repite una apuesta que quedó públicamente en la mitad.</p>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">Obstáculo 6 · De organización</span>
+    <h3>Gerencia entra al detalle y vacía al líder</h3>
+    <p>Va a haber tentación semanal de comentarle algo directo a un vendedor. La primera vez que ocurra, ese vendedor aprende cuál de las dos respuestas cuenta.</p>
+    <p>La defensa está en el producto, no en la buena intención: <strong>el tablero de gerencia no tiene dónde escribirle a un vendedor.</strong> Solo al líder. Si la pantalla no ofrece la caja, la tentación no existe.</p>
+  </div>
+</section>
+
+<section>
+  <h2>En qué orden se construye, y por qué en ese</h2>
+
+  <p>El orden no es por importancia sino por dependencia: <strong>lo que produce datos va antes que lo que los lee</strong>, porque un tablero que abre vacío quema su credibilidad en la primera semana y ya no la recupera.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Qué</th><th>Por qué ahí</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Jornada y modo sin conexión</td><td>Los datos tienen que empezar a acumularse ya, y se capturan donde no hay señal</td></tr>
+        <tr><td class="num">2</td><td>Listas</td><td>Arregla el problema de los leads mezclados y crea el denominador del embudo</td></tr>
+        <tr><td class="num">3</td><td>Ficha de competencia</td><td>Necesita el catálogo acordado con los vendedores; sin él no se puede empezar</td></tr>
+        <tr><td class="num">4</td><td>Mi semana, pasiva</td><td>Barata, y es lo primero que le devuelve algo al vendedor</td></tr>
+        <tr><td class="num">5</td><td>Cierre, plan y Contrato</td><td>El lazo se cierra. Requiere que 1 a 4 lleven semanas produciendo</td></tr>
+        <tr><td class="num">6</td><td>Solicitudes</td><td>Independiente de todo. Se puede adelantar en cualquier momento</td></tr>
+        <tr><td class="num">7</td><td>Tablero de gerencia</td><td>No sirve hasta que el lazo exista</td></tr>
+        <tr><td class="num">8</td><td>Inteligencia agregada</td><td>Necesita meses de fichas para decir algo</td></tr>
+        <tr><td class="num">9</td><td>Zoho</td><td>Bloqueado por la higiene del maestro, que no es trabajo de programación</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>El punto 6 se puede adelantar hoy.</strong> No depende de nada, es de las piezas más pequeñas, y es la única que le paga al vendedor de inmediato — así que también es la que compra la buena voluntad para todo lo demás.</p>
+
+  <p>Y las expectativas siguen aplazadas a propósito: se corren cuatro a seis semanas con los puntos 1 a 4 andando, se mira la distribución real, y recién entonces se ponen las bandas por perfil.</p>
+</section>
+
+<section>
+  <h2>Lo que hay que tener antes de escribir la primera línea</h2>
+
+  <ul class="limpia">
+    <li><strong>Los tipos de bloque de jornada</strong> — bloquea el punto 1.</li>
+    <li><strong>Las razones de rechazo, con sus palabras</strong> — bloquea el punto 3.</li>
+    <li><strong>Quién ve qué</strong> — si el líder ve la hoja completa de los otros dos o solo gerencia. Va antes de las políticas de seguridad, no después.</li>
+    <li><strong>Grabar, transcribir, o las dos</strong> — decide el costo del punto 5.</li>
+  </ul>
+
+  <p>Las dos primeras salen de sentarse con los vendedores. Es la conversación que sigue.</p>
+</section>
+
+<footer>
+  <p>Diseño operativo. El concepto que lo origina está en <strong>docs/10-concepto.html</strong>; el análisis de medición en <strong>docs/09-medicion-y-gestion.md</strong>. Las decisiones firmes se registran en <strong>docs/06-decisiones.md</strong> a medida que se cierran.</p>
+</footer>
+
+</div>

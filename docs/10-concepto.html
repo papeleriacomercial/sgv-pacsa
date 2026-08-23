@@ -1,0 +1,662 @@
+<title>De registro a inteligencia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+
+<style>
+  :root {
+    /* Tokens del SGV (docs/04-design-system.md), extendidos para documento. */
+    --marca: #1d293d;
+    --marca-suave: #314158;
+    --fondo: #f8fafc;
+    --superficie: #ffffff;
+    --superficie-alt: #f1f5f9;
+    --borde: #e2e8f0;
+    --borde-fuerte: #cbd5e1;
+    --texto: #1d293d;
+    --texto-2: #45556c;
+    --texto-3: #7c8ba1;
+    --aviso: #b45309;
+    --aviso-fondo: #fffbeb;
+    --aviso-borde: #fcd34d;
+    --ok: #00a63e;
+    --identidad: #fe9a00;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --marca: #e2e8f0;
+      --marca-suave: #cbd5e1;
+      --fondo: #12181f;
+      --superficie: #1a222c;
+      --superficie-alt: #212b36;
+      --borde: #2c3846;
+      --borde-fuerte: #3d4c5d;
+      --texto: #e7edf4;
+      --texto-2: #a9b7c6;
+      --texto-3: #7c8ba1;
+      --aviso: #fbbf24;
+      --aviso-fondo: #251c08;
+      --aviso-borde: #6b4f10;
+      --ok: #34d399;
+      --identidad: #fe9a00;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --marca: #e2e8f0;
+    --marca-suave: #cbd5e1;
+    --fondo: #12181f;
+    --superficie: #1a222c;
+    --superficie-alt: #212b36;
+    --borde: #2c3846;
+    --borde-fuerte: #3d4c5d;
+    --texto: #e7edf4;
+    --texto-2: #a9b7c6;
+    --texto-3: #7c8ba1;
+    --aviso: #fbbf24;
+    --aviso-fondo: #251c08;
+    --aviso-borde: #6b4f10;
+    --ok: #34d399;
+    --identidad: #fe9a00;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 1.25rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hoja {
+    max-width: 40rem;
+    margin: 0 auto;
+  }
+
+  /* ---------- Cabecera ---------- */
+
+  header.portada {
+    padding: 3.5rem 0 2.25rem;
+    border-bottom: 1px solid var(--borde);
+    margin-bottom: 3rem;
+  }
+
+  .marca-rail {
+    width: 2.5rem;
+    height: 3px;
+    background: var(--identidad);
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+  }
+
+  .eyebrow {
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--texto-3);
+    margin: 0 0 0.75rem;
+  }
+
+  h1 {
+    font-family: "Newsreader", Georgia, "Times New Roman", serif;
+    font-size: clamp(2.1rem, 7vw, 2.9rem);
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    color: var(--texto);
+    margin: 0 0 1rem;
+  }
+
+  .bajada {
+    font-size: 1.06rem;
+    color: var(--texto-2);
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .sello {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--texto-3);
+    margin-top: 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.1rem;
+  }
+
+  /* ---------- Secciones ---------- */
+
+  section {
+    margin-bottom: 3.25rem;
+  }
+
+  h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    color: var(--texto);
+    margin: 0 0 1.25rem;
+    padding-top: 0.4rem;
+    border-top: 2px solid var(--marca);
+  }
+
+  h3 {
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--texto);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p {
+    margin: 0 0 1.1rem;
+    text-wrap: pretty;
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  strong { font-weight: 600; color: var(--texto); }
+
+  em { font-style: italic; color: var(--texto-2); }
+
+  /* ---------- Principio destacado ---------- */
+
+  .principio {
+    border-left: 3px solid var(--identidad);
+    padding: 0.1rem 0 0.1rem 1.15rem;
+    margin: 1.75rem 0;
+  }
+
+  .principio p {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.24rem;
+    line-height: 1.45;
+    font-weight: 500;
+    color: var(--texto);
+    margin: 0;
+  }
+
+  /* ---------- Corrección ---------- */
+
+  .correccion {
+    background: var(--aviso-fondo);
+    border: 1px solid var(--aviso-borde);
+    border-radius: 8px;
+    padding: 1.1rem 1.2rem;
+    margin: 1.75rem 0;
+  }
+
+  .correccion .etiqueta {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--aviso);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .correccion p {
+    font-size: 0.95rem;
+    color: var(--texto-2);
+    margin: 0 0 0.7rem;
+  }
+
+  .correccion p:last-child { margin-bottom: 0; }
+
+  /* ---------- Listas ---------- */
+
+  ul, ol {
+    margin: 0 0 1.1rem;
+    padding-left: 1.15rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+    text-wrap: pretty;
+  }
+
+  li:last-child { margin-bottom: 0; }
+
+  ul.limpia {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  ul.limpia > li {
+    padding-left: 1.15rem;
+    position: relative;
+  }
+
+  ul.limpia > li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.68em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--borde-fuerte);
+  }
+
+  /* ---------- Tabla ---------- */
+
+  .tabla-envoltura {
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--superficie);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.92rem;
+    min-width: 30rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--borde);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  th {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texto-3);
+    background: var(--superficie-alt);
+    white-space: nowrap;
+  }
+
+  td:first-child { font-weight: 500; }
+
+  /* ---------- Compromisos ---------- */
+
+  .compromiso {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 1.15rem 1.25rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .compromiso .plazo {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--ok);
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .compromiso h3 {
+    margin: 0 0 0.45rem;
+    font-size: 1rem;
+  }
+
+  .compromiso p {
+    font-size: 0.93rem;
+    color: var(--texto-2);
+    margin: 0;
+  }
+
+  /* ---------- Abiertas ---------- */
+
+  .abierta {
+    border: 1px dashed var(--borde-fuerte);
+    border-radius: 8px;
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.75rem;
+    background: var(--superficie);
+  }
+
+  .abierta h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.97rem;
+  }
+
+  .abierta p {
+    font-size: 0.91rem;
+    color: var(--texto-2);
+    margin: 0;
+  }
+
+  /* ---------- Cierre ---------- */
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--borde);
+    font-size: 0.88rem;
+    color: var(--texto-3);
+  }
+
+  @media (max-width: 30rem) {
+    body { font-size: 16px; padding: 0 1rem 4rem; }
+    header.portada { padding-top: 2.5rem; }
+  }
+</style>
+
+<div class="hoja">
+
+<header class="portada">
+  <div class="marca-rail"></div>
+  <p class="eyebrow">SGV · Concepto</p>
+  <h1>De registro a inteligencia</h1>
+  <p class="bajada">Lo que quedó definido en la conversación del 22 de agosto, antes de retomar la construcción. Léelo de corrido: si algo no es lo que quisiste decir, ahí es donde hay que corregir.</p>
+  <div class="sello">
+    <span>2026-08-22</span>
+    <span>Etapas 1 a 5 cerradas</span>
+    <span>Alto antes de la 6</span>
+  </div>
+</header>
+
+<section>
+  <h2>El cambio de enfoque</h2>
+
+  <p>Lo construido hasta ahora es un <strong>sistema de registro</strong>: guarda que la visita ocurrió, dónde y con qué resultado. Estaba bien que empezara así, porque sin registro no hay nada más.</p>
+
+  <p>Lo que decidimos es que no puede quedarse ahí. El objetivo pasa a ser un <strong>sistema de inteligencia</strong>: que la empresa entienda qué está pasando en el mercado y pueda decidir con eso.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead>
+        <tr><th></th><th>Sistema de registro</th><th>Sistema de inteligencia</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Qué guarda</td><td>Que la visita ocurrió</td><td>Qué dijo el mercado</td></tr>
+        <tr><td>A quién sirve</td><td>Al control</td><td>A la decisión</td></tr>
+        <tr><td>Qué produce</td><td>Reportes de actividad</td><td>Cambios de precio, de producto, de zona</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>La herramienta tiene que servir dos propósitos al mismo tiempo: <strong>arma operativa para el vendedor</strong> y <strong>fuente de estrategia para la empresa</strong>. Si solo sirve lo segundo, el vendedor la alimenta mal y no sirve para nada.</p>
+
+  <p>El reporte ABC de facturación no se reemplaza. El SGV <strong>viene a explicarlo</strong>: cuando el ABC se vea flojo, esto tiene que decir por qué.</p>
+</section>
+
+<section>
+  <h2>El principio que sostiene todo</h2>
+
+  <div class="principio">
+    <p>La inteligencia no se extrae. Se intercambia.</p>
+  </div>
+
+  <p>El vendedor del interior no trae el nombre del competidor ni la muestra por una razón racional: hacerlo no le devuelve nada. Cualquier campo que se agregue con esa ecuación se llena con basura o se salta.</p>
+
+  <p>Por eso la pregunta de diseño no es <em>qué queremos saber</em>, sino <strong>qué le devolvemos a cambio</strong>. Y hay exactamente dos capturas donde el interés del vendedor y el de la empresa apuntan al mismo lado:</p>
+
+  <ul class="limpia">
+    <li><strong>El tiempo de logística</strong> — es su coartada. Él quiere que quede constancia de que el martes se fue a Natá.</li>
+    <li><strong>La razón del rechazo</strong> — es su munición para la próxima puerta, y su defensa cuando el problema es el precio y no él.</li>
+  </ul>
+
+  <p>Esas dos se van a alimentar solas. Todo lo demás hay que empujarlo, y por eso hay que pedir poco.</p>
+</section>
+
+<section>
+  <h2>Qué medimos, y qué decidimos no medir</h2>
+
+  <h3>Tres oficios distintos, no tres vendedores iguales</h3>
+
+  <p>Medir a los tres con la misma vara garantiza que el líder salga mal siempre —su ciclo es de meses— y que el de ciudad salga bien inflando visitas cortas. Mismo vocabulario de métricas para los tres, <strong>expectativas distintas por perfil</strong>.</p>
+
+  <p>Y con tres personas <strong>no se hacen rankings</strong>. Tres datos no son una distribución. Esto sirve para tener tres conversaciones individuales.</p>
+
+  <h3>Ningún número único de efectividad</h3>
+
+  <p>Un índice compuesto esconde la respuesta: si el vendedor marca 62% no sabes si hablarle de que arranca tarde, de que no convierte, o de que la logística le comió la semana. Y se sube por el lado más fácil de inflar.</p>
+
+  <p>En su lugar, <strong>cuatro bloques con semáforo propio</strong>, comparados contra la expectativa de su perfil:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead>
+        <tr><th>Bloque</th><th>Contesta</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Dónde se fue la semana</td><td>¿Estuvo trabajando?</td></tr>
+        <tr><td>Caza</td><td>¿Está construyendo futuro?</td></tr>
+        <tr><td>Cuidado</td><td>¿Está cuidando lo que hay?</td></tr>
+        <tr><td>Cierre</td><td>¿Va a entrar plata?</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>El territorio, no la persona</h3>
+
+  <p>Si al cabo de dos meses el 60% de los rechazos en Aguadulce dice <em>paisanaje</em>, eso <strong>no es un hallazgo sobre el vendedor: es un hallazgo sobre la estrategia de canal</strong>, y la decisión es de gerencia.</p>
+
+  <p>Capturar bien el rechazo hace dos cosas a la vez: da la estrategia y defiende al vendedor. Sin ese dato, la conversación seguirá siendo <em>“es que allá los chinos tienen precio”</em>, que es una queja.</p>
+
+  <h3>Sin reloj marcador</h3>
+
+  <p>Para saber si arranca a las diez no hace falta marcar entrada. Basta con <strong>la hora de la primera visita verificada por GPS</strong>, que exige estar en algún lado, leída como tendencia de varias semanas y nunca como día suelto.</p>
+</section>
+
+<section>
+  <h2>Los tres huecos que hay que llenar</h2>
+
+  <h3>1. El tiempo</h3>
+
+  <p>El sistema no sabe que el martes se fue a Natá. Sin eso, su semana se ve floja cuando no lo estaba — y <strong>una métrica injusta no se corrige después: se sabotea</strong>.</p>
+
+  <p>Lo barato: <strong>no hay que pedirle las horas de venta</strong>, esas ya están en la marca de tiempo de cada seguimiento. Solo hay que pedirle lo invisible, la logística, en bloques gruesos de media jornada. Nada de planilla.</p>
+
+  <p>Y contesta la pregunta de negocio que hay detrás: <em>¿cuánto me cuesta que el vendedor reparta, y me conviene poner un chofer?</em></p>
+
+  <h3>2. La inteligencia</h3>
+
+  <p>Hoy la empresa guarda religiosamente sus ventas en Zoho y <strong>tira a la basura sus rechazos</strong>. Pero la venta dice una sola cosa; los cuarenta rechazos dicen qué quiere el mercado: a qué precio sí compran, qué plazo necesitan, qué especificación falta, qué competidor existe.</p>
+
+  <p>Falta capturar quién es el competidor <strong>desde un catálogo, no como texto libre</strong> —cinco formas de escribir “el chino” no se pueden sumar— y sobre todo <strong>por qué le compran a ese y no a nosotros</strong>.</p>
+
+  <h3>3. La intención</h3>
+
+  <p>Todo lo construido mira al pasado. Lo que describiste —sentarse en Santiago un domingo, abrir Aguadulce en el mapa y armar la lista de lo que va a trabajar— es otra cosa: <strong>declarar una intención</strong>, y el sistema no tiene dónde ponerla.</p>
+
+  <p>Dos consecuencias grandes:</p>
+
+  <ul class="limpia">
+    <li><strong>Sin intención declarada no hay embudo.</strong> La pregunta <em>“trabajó 50 leads y convirtió 10, ¿qué pasó con los 40?”</em> hoy es literalmente incontestable, porque el sistema no sabe que había 50.</li>
+    <li><strong>Un plan declarado vuelve visible sin vigilar.</strong> No hace falta saber a qué hora salió si se ve que declaró veinte y al viernes tocó seis.</li>
+  </ul>
+
+  <p>Y hay una economía ahí: la lista de ruta del vendedor del interior y la lista de cadenas del líder <strong>son el mismo concepto</strong> — una colección con nombre, un dueño y una intención. Un solo mecanismo resuelve los dos.</p>
+
+  <div class="correccion">
+    <span class="etiqueta">Corrección de diseño</span>
+    <p>Poner “sin clasificar” como estado de la cuenta fue correcto en el modelo de datos y <strong>equivocado en la pantalla</strong>: cincuenta puntos escogidos en el mapa un domingo ahogan las treinta cuentas reales que se trabajan.</p>
+    <p>Un lead y una cuenta son objetos distintos — el lead es abundante y desechable, la cuenta es escasa y permanente. Lo que hay que separar es <strong>la superficie de trabajo</strong>, no necesariamente el registro.</p>
+  </div>
+
+  <p>Al cerrar el embudo, dos respuestas que <strong>nunca deben ir en la misma cifra</strong>: los que no se tocaron (problema de actividad, es sobre él) y los que se tocaron y no pegaron (hallazgo de mercado, es sobre el producto y el precio).</p>
+</section>
+
+<section>
+  <h2>El contrato semanal</h2>
+
+  <div class="principio">
+    <p>Él declara qué va a hacer. La gerencia responde con contexto y objetivos, sin reescribirle el plan. La semana siguiente el sistema pone lado a lado lo prometido y lo ocurrido. Y él comenta qué pasó.</p>
+  </div>
+
+  <p>Ese ciclo es lo que hoy no existe, y es lo que convierte todo lo anterior en una herramienta de gestión en vez de un archivo.</p>
+
+  <h3>Quién le escribe a quién</h3>
+
+  <p>Gerencia → líder → los dos vendedores. Y una regla que hay que sostener desde el primer día:</p>
+
+  <div class="principio">
+    <p>Lees a los tres. Le escribes solo al líder.</p>
+  </div>
+
+  <p>La primera vez que le respondas directo a un vendedor, ese vendedor aprende cuál de las dos respuestas cuenta, y en un mes escribe para ti. El líder queda como copia y le pagas más justamente para eso.</p>
+
+  <p>El acompañamiento inicial es la excepción, <strong>con fecha de vencimiento explícita</strong>: seis semanas entrando con el líder, después él responde solo.</p>
+
+  <h3>El líder está en el mismo contrato</h3>
+
+  <p>Entrega plan y reporte hacia arriba, igual que los otros dos. Si exige algo que él no hace, es un mecanismo de control y así lo van a leer. Y de paso resuelve, con el mismo instrumento, que su pipeline lento deje de ser opaco para gerencia.</p>
+
+  <h3>El ritmo</h3>
+
+  <ul class="limpia">
+    <li><strong>Jueves tarde o viernes temprano</strong> — los dos vendedores cierran la semana y proponen la siguiente.</li>
+    <li><strong>Viernes</strong> — el líder lee, responde y arma el suyo. Es su día de administración.</li>
+    <li><strong>Viernes tarde o lunes temprano</strong> — la llamada corta, con todo ya escrito.</li>
+    <li><strong>Lunes</strong> — el vendedor arranca con el contrato cerrado en la mano.</li>
+  </ul>
+
+  <p><strong>Esto no reemplaza la reunión.</strong> Un canal escrito es peor que una llamada para negociar y empujar; donde gana es en que sobrevive. El encuadre es <em>“la reunión ahora dura veinte minutos y no se olvida nada”</em>, no <em>“ya no nos reunimos”</em>.</p>
+
+  <h3>Cuánto cuesta a cada quien</h3>
+
+  <p>Asimétrico a propósito, coherente con quién está pagado para esto: <strong>el lado del vendedor cabe en quince minutos</strong> —dicta noventa segundos y arma su plan escogiendo, no redactando—; <strong>el del líder puede tomar el día</strong>.</p>
+
+  <h3>Dos reglas que evitan que se degrade</h3>
+
+  <ul class="limpia">
+    <li><strong>La narrativa va anclada.</strong> Primero los números que el sistema ya sabe, después la explicación. Un relato suelto se vuelve teatro en un mes; uno anclado tiene que reconciliar con la realidad. Y tres preguntas concretas —qué te sorprendió, qué te frenó, qué necesitas de nosotros— producen información; una caja abierta produce prosa.</li>
+    <li><strong>El plan se compara solo.</strong> Si nadie contrasta lo prometido contra lo ocurrido, el plan es un deseo. El sistema tiene que mostrar <em>“dijiste 20, tocaste 11”</em> sin que nadie lo calcule.</li>
+  </ul>
+
+  <div class="correccion">
+    <span class="etiqueta">Cuidado con la palabra “rebatir”</span>
+    <p>Se cuestiona, se pregunta, se agrega contexto, se agrega un objetivo. <strong>No se reescribe.</strong> Si el plan se edita desde arriba deja de ser su plan, y toda la virtud de abajo hacia arriba se evapora en una semana.</p>
+    <p>Un plan flojo con su nombre encima es más útil que uno bueno impuesto: el flojo revela cómo piensa, que es lo que quieres saber del que está solo en el interior.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Los compromisos de la gerencia</h2>
+
+  <p>El encuadre no es compensarle el viernes —eso lo vuelve una transacción donde él siempre sale perdiendo—. Es <strong>eliminar lo que hoy le hace perder ventas</strong>.</p>
+
+  <div class="compromiso">
+    <span class="plazo">24 horas hábiles</span>
+    <h3>La respuesta que desbloquea</h3>
+    <p>Toda solicitud que solo la gerencia puede decidir —precio especial, plazo, condición de crédito, comprometer una entrega— tiene respuesta escrita en 24 horas hábiles; mismo día si entra antes del mediodía. Es el único de los tres que le paga hoy y no en tres semanas. <strong>“No” cuenta como respuesta:</strong> se trabaja con un no en cuatro horas, no con silencio de tres días.</p>
+  </div>
+
+  <div class="compromiso">
+    <span class="plazo">Semanal, sin excepción</span>
+    <h3>Ninguna semana se queda sin respuesta</h3>
+    <p>Todo plan recibe respuesta escrita antes del lunes, aunque sean tres líneas. La regla es sobre existencia, no sobre calidad. Una sola semana en silencio enseña la lección de forma permanente. Si el líder no pudo, responde gerencia.</p>
+  </div>
+
+  <div class="compromiso">
+    <span class="plazo">Una por trimestre</span>
+    <h3>Una decisión visible, atribuida a lo que ellos levantaron</h3>
+    <p>Al menos una decisión trimestral anunciada diciendo de dónde salió: <em>“revisamos los 40 rechazos del interior; el 60% no es precio, es crédito; probamos 30 días en Coclé”</em>. Lo que importa es la atribución. Si capturan tres meses y nunca ven que movió algo, dejan de capturar — y hacen bien.</p>
+  </div>
+
+  <h3>Lo que decidimos no comprometer</h3>
+
+  <ul class="limpia">
+    <li>Responder todo. El incumplimiento contaminaría los tres de arriba.</li>
+    <li>Una respuesta narrativa de gerencia a los vendedores. Ese es el trabajo del líder.</li>
+    <li>Ajustar precios cuando reporten competencia. Se compromete revisar, no ceder.</li>
+  </ul>
+
+  <h3>La simetría que lo vuelve creíble</h3>
+
+  <p>Si los vendedores quedan medidos y la gerencia no, esto es control con buena interfaz. Por eso <strong>el tiempo de respuesta de gerencia y del líder se mide igual y es visible para todos</strong>: <em>solicitudes contestadas dentro de 24 h · semanas sin respuesta</em>.</p>
+
+  <p>Y no se compromete para siempre: <strong>doce semanas con revisión en la doce</strong>, explícito y con fecha. Un piloto que se ajusta no es un fracaso; un ritual permanente que se apaga solo, sí.</p>
+</section>
+
+<section>
+  <h2>Las fronteras que pusimos</h2>
+
+  <h3>La prueba que decide qué entra a la aplicación</h3>
+
+  <div class="principio">
+    <p>Si una sección no usa los datos, no va en la aplicación.</p>
+  </div>
+
+  <p>Escribir un plan y comentarlo se puede hacer en un documento compartido, gratis, hoy. Lo único que justifica construirlo aquí es <strong>el anclaje</strong>: que el plan referencie cuentas reales y que los resultados se reconcilien solos.</p>
+
+  <ul class="limpia">
+    <li><strong>Las noticias internas quedan fuera.</strong> Con cuatro personas no hay masa crítica; se publican tres cosas y después la sección vacía hace que todo el tablero se sienta muerto. Competencia nueva o subida de materia prima caben en el lineamiento semanal, que sí tiene dueño y fecha.</li>
+    <li><strong>La solicitud de precio es su propio carril</strong>, no una sección del tablero. Es transaccional, bloqueante y urgente: necesita reloj, no un lugar donde reposar entre cosas sin urgencia.</li>
+    <li><strong>Cada campo de inteligencia necesita una decisión con nombre.</strong> Si no se puede decir qué decisión alimenta y quién la toma, no se captura. La inteligencia que nadie usa no es neutral: mata el hábito.</li>
+    <li><strong>El argumentario es contenido, no software.</strong> El sistema puede poner el contraargumento en la mano en el momento exacto, pero si nadie lo escribe, el checklist es burocracia. Escribirlo es tarea de gerencia y del líder.</li>
+    <li><strong>Dos momentos con precios distintos.</strong> Parado en la puerta se captura el hecho; en el carro o de noche cabe el perfil completo. El sistema pide en el segundo momento, no bloquea en el primero.</li>
+    <li><strong>Esto no se muda a Zoho.</strong> Zoho guarda transacciones; esto guarda por qué <em>no</em> hubo transacción, que es información que ningún sistema contable tiene dónde poner. Exportar sí; migrar no.</li>
+  </ul>
+
+  <h3>Una restricción de orden que no se puede saltar</h3>
+
+  <p>Una capa estratégica montada sobre datos operativos flojos <strong>produce tonterías con mucha confianza</strong>. El reporte que se abre con <em>“18 visitas, 4 leads convertidos”</em> necesita que esas 18 visitas estén registradas.</p>
+
+  <p>Traducción: diseñar esto ahora, sí. Lanzar la narrativa antes de que existan los hechos que referencia, no. Y toda métrica necesita historia, así que <strong>se instrumenta primero y se reporta después</strong> — si no, el tablero abre vacío y quema su credibilidad en la primera semana.</p>
+
+  <h3>Un hallazgo que quedó anotado</h3>
+
+  <p>La inteligencia también aplica a los clientes actuales. Un cliente compra rollos y las bolsas se las compra al chino: <strong>hoy eso es invisible</strong> — aparece como cliente activo y en realidad se tiene el 30% de su bolsillo. Probablemente sea la venta más barata disponible, y no requiere conseguir un solo cliente nuevo.</p>
+</section>
+
+<section>
+  <h2>Lo que falta decidir</h2>
+
+  <p>Ninguna de estas sale del código. Las tres primeras salen de sentarse con los vendedores, y son las que bloquean la construcción.</p>
+
+  <div class="abierta">
+    <h3>Las razones de rechazo, con sus palabras</h3>
+    <p>Es el catálogo más importante del sistema: <strong>son las únicas preguntas que la empresa va a poder contestar en dos años</strong>. Si no está “paisanaje”, nunca se podrá demostrar que existe. Si “precio” y “crédito” van juntos, nunca se sabrá cuál está matando la venta.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>Los tipos de actividad operativa</h3>
+    <p>Para el registro de tiempo. Salen de reconstruir con ellos una semana real, no de una lista hecha en la oficina.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>Las categorías direccionables</h3>
+    <p>Qué tipos de comercio son universo real para rollos fiscales, bolsas, antigrasa y tubos. Sin esto, la cobertura se mide contra un denominador infinito y siempre se ve mal.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>Quién ve qué</h3>
+    <p>Si el líder ve la hoja semanal completa de los otros dos o solo gerencia. Hay que decidirlo antes de escribir las políticas de seguridad, no después.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>Las expectativas — aplazadas a propósito</h3>
+    <p>Nada de fijar “40 interacciones” desde la oficina: el día que se anuncia una meta, se cumple exactamente y ni una más. Se corren cuatro a seis semanas, se mira la distribución real, y recién ahí se pone la expectativa <strong>por perfil y como banda</strong>.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>Por dónde escala un desacuerdo</h3>
+    <p>Cuando el líder y un vendedor no se pongan de acuerdo y gerencia ya no esté en la llamada semanal. Si no existe el camino, vuelve a WhatsApp justo en el momento que más importa.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Documento de concepto. El detalle del análisis está en <strong>docs/09-medicion-y-gestion.md</strong>; las decisiones firmes se registran en <strong>docs/06-decisiones.md</strong> a medida que se cierran.</p>
+</footer>
+
+</div>

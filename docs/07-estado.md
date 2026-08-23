@@ -831,3 +831,81 @@ programar un seguimiento sin registrar nada, y corregir las coordenadas de una c
 Sigue abierta la excepción de la Etapa 5 —cerrar una oportunidad vencida como ganada o
 perdida sin mover la fecha— y ahora se le suma D-017, que es la misma idea aplicada al
 próximo paso: no obligar a inventar una fecha futura para poder registrar un final.
+
+---
+
+## Alto de diseño: de registro a inteligencia — 2026-08-22
+
+Antes de arrancar la Etapa 6, gerencia pidió un alto para replantear **para qué existe el
+sistema**. No se escribió código: la sesión completa fue de diseño, y produjo tres documentos.
+
+**El cambio de enfoque.** Lo construido es un sistema de registro. El objetivo pasa a ser un
+sistema de **inteligencia**: que la empresa entienda qué está pasando en el mercado y pueda
+decidir con eso. Las dos cosas a la vez — arma operativa para el vendedor, fuente de
+estrategia para la empresa.
+
+**El principio del que cuelga todo:** la inteligencia no se extrae, se intercambia. Solo se
+sostienen las capturas donde el interés del vendedor coincide con el de la empresa: el
+registro de logística (su coartada) y la razón del rechazo (su munición y su defensa).
+
+### Documentos producidos
+
+| Documento | Qué contiene |
+|---|---|
+| `docs/09-medicion-y-gestion.md` | El análisis: doble medición de caza y cuidado, tres oficios distintos, por qué no un número único, cobertura. |
+| `docs/10-concepto.html` | El concepto acordado, para leer de corrido. |
+| `docs/11-diseno-operativo.html` | La semana como máquina: pantallas con dueño y momento, qué calcula el sistema solo, los seis obstáculos. |
+| `docs/12-flujo-vendedor.html` | El ciclo del vendedor con bocetos de pantalla. Reescrito limpio al final de la sesión. |
+
+### Decisiones de organización que tomó gerencia
+
+- **El líder responde a los dos vendedores; gerencia responde solo al líder.** Gerencia lee a
+  los tres pero no le escribe a un vendedor: la primera vez que lo haga, el líder queda como
+  copia. Acompañamiento inicial de seis semanas, con fecha de vencimiento explícita.
+- **El líder entrega plan y reporte hacia arriba**, igual que los otros dos. Si exige algo que
+  él no hace, es control y así lo van a leer.
+- **El viernes es su día de administración** — está pagado para eso, y es el compromiso que
+  hace viable todo el ciclo.
+- **Esto no reemplaza la reunión:** acompaña a una llamada corta semanal.
+- Tres compromisos de gerencia: **24 horas hábiles** para lo que desbloquea, **ninguna semana
+  sin respuesta**, y **una decisión visible por trimestre** atribuida al dato que ellos
+  levantaron. Con **doce semanas de piloto** y revisión.
+
+### Diseño del vendedor que quedó cerrado
+
+- Cinco pantallas: **Agenda · Listas · Cuentas · Mapa · Oportunidades**. Cuentas deja de ser
+  el inicio; Buscar se mete en el Mapa; Seguimientos desaparece de la barra y su contenido se
+  muda a Agenda.
+- **Agenda** es la pantalla de todo el día, con tres grupos: paradas, llamadas y correos, y
+  esperando respuesta. El cierre semanal es un formulario, no una pantalla.
+- **Listas** son paquetes de leads por zona, permanentes. Lo que tiene período es el
+  compromiso de trabajarlos.
+- **El plan reparte rutas por día** y se apuesta **por cantidad, no por nombre**.
+- **Solicitudes** es el carril de lo que entra —pedido, cotización, muestra, precio— con campo
+  de *quién lo resuelve*: él con su talonario, o la oficina. Conecta con §7.2.
+- **Una cuenta puede colgar de otra**: Starbucks es un cliente con diez puntos. Cadencia por
+  sucursal, y la madre lleva la suya. El vendedor cuelga las suyas; el líder puede colgar
+  cualquiera, que es lo que resuelve la cadena que cruza territorios.
+- **El día que se cae se registra como bloque de jornada**, y la expectativa se lee contra
+  días vendibles, no contra la semana del calendario.
+- Cuatro números distintos de los mismos hechos: interacciones, cuentas tocadas, cuentas
+  puestas al día, compromisos cumplidos. **Se apuesta en cuentas; el esfuerzo se mide en
+  interacciones.**
+
+### Dos huecos encontrados en lo ya construido
+
+1. **La cadencia se reinicia con cualquier seguimiento**, incluido "no estaba el encargado".
+   Permite refrescar la cartera pasando por el frente sin hablar con nadie. Debe reiniciarse
+   con **contacto efectivo**.
+2. **El modo sin conexión sube de prioridad.** La captura ocurre justo donde no hay señal —el
+   bloque de jornada manejando de Natá, el seguimiento en un local con techo de zinc—. Deja de
+   ser el remate del plan y pasa a ser requisito de la primera etapa.
+
+### Lo que queda pendiente
+
+- **El líder**: su ciclo no se ha revisado todavía. Es lo siguiente.
+- **Gerencia y administración**: tampoco.
+- Los catálogos que solo salen de sentarse con los vendedores: tipos de bloque de jornada,
+  razones de rechazo con sus palabras, y qué resultados cuentan como contacto efectivo.
+- Categorías direccionables, para que la cobertura no se mida contra un denominador infinito.
+- Quién ve qué, antes de escribir las políticas de RLS.

@@ -1,0 +1,1001 @@
+<title>El ciclo del vendedor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+
+<style>
+  :root {
+    --marca: #1d293d;
+    --fondo: #f8fafc;
+    --superficie: #ffffff;
+    --superficie-alt: #f1f5f9;
+    --borde: #e2e8f0;
+    --borde-fuerte: #cbd5e1;
+    --texto: #1d293d;
+    --texto-2: #45556c;
+    --texto-3: #7c8ba1;
+    --aviso: #b45309;
+    --aviso-fondo: #fffbeb;
+    --aviso-borde: #fcd34d;
+    --ok: #00863a;
+    --ok-fondo: #f0fdf4;
+    --info: #1d4ed8;
+    --info-fondo: #eff6ff;
+    --error: #be123c;
+    --error-fondo: #fff1f2;
+    --identidad: #fe9a00;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --marca: #e2e8f0;
+      --fondo: #12181f;
+      --superficie: #1a222c;
+      --superficie-alt: #212b36;
+      --borde: #2c3846;
+      --borde-fuerte: #3d4c5d;
+      --texto: #e7edf4;
+      --texto-2: #a9b7c6;
+      --texto-3: #7c8ba1;
+      --aviso: #fbbf24;
+      --aviso-fondo: #251c08;
+      --aviso-borde: #6b4f10;
+      --ok: #34d399;
+      --ok-fondo: #0c1f17;
+      --info: #7ab0ff;
+      --info-fondo: #0e1b30;
+      --error: #fb7185;
+      --error-fondo: #2a1119;
+      --identidad: #fe9a00;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --marca: #e2e8f0;
+    --fondo: #12181f;
+    --superficie: #1a222c;
+    --superficie-alt: #212b36;
+    --borde: #2c3846;
+    --borde-fuerte: #3d4c5d;
+    --texto: #e7edf4;
+    --texto-2: #a9b7c6;
+    --texto-3: #7c8ba1;
+    --aviso: #fbbf24;
+    --aviso-fondo: #251c08;
+    --aviso-borde: #6b4f10;
+    --ok: #34d399;
+    --ok-fondo: #0c1f17;
+    --info: #7ab0ff;
+    --info-fondo: #0e1b30;
+    --error: #fb7185;
+    --error-fondo: #2a1119;
+    --identidad: #fe9a00;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 17px; line-height: 1.65;
+    margin: 0; padding: 0 1.25rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hoja { max-width: 41rem; margin: 0 auto; }
+
+  header.portada {
+    padding: 3.5rem 0 2.25rem;
+    border-bottom: 1px solid var(--borde);
+    margin-bottom: 3rem;
+  }
+
+  .marca-rail { width: 2.5rem; height: 3px; background: var(--identidad); border-radius: 2px; margin-bottom: 1.5rem; }
+
+  .eyebrow {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.11em; text-transform: uppercase;
+    color: var(--texto-3); margin: 0 0 0.75rem;
+  }
+
+  h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: clamp(2.1rem, 7vw, 2.9rem);
+    font-weight: 500; line-height: 1.12;
+    letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 1rem;
+  }
+
+  .bajada { font-size: 1.06rem; color: var(--texto-2); margin: 0; text-wrap: pretty; }
+
+  .sello {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.72rem; color: var(--texto-3); margin-top: 1.75rem;
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem;
+  }
+
+  section { margin-bottom: 3.25rem; }
+
+  h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.6rem; font-weight: 600; line-height: 1.2;
+    letter-spacing: -0.01em; text-wrap: balance;
+    margin: 0 0 1.25rem; padding-top: 0.4rem;
+    border-top: 2px solid var(--marca);
+  }
+
+  h3 { font-size: 0.98rem; font-weight: 600; line-height: 1.4; margin: 2rem 0 0.5rem; }
+
+  p { margin: 0 0 1.1rem; text-wrap: pretty; }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 600; color: var(--texto); }
+  em { font-style: italic; color: var(--texto-2); }
+
+  .principio { border-left: 3px solid var(--identidad); padding: 0.1rem 0 0.1rem 1.15rem; margin: 1.75rem 0; }
+  .principio p { font-family: "Newsreader", Georgia, serif; font-size: 1.24rem; line-height: 1.45; font-weight: 500; color: var(--texto); margin: 0; }
+
+  ul.limpia { list-style: none; padding-left: 0; margin: 0 0 1.1rem; }
+  ul.limpia > li { padding-left: 1.15rem; position: relative; margin-bottom: 0.55rem; text-wrap: pretty; }
+  ul.limpia > li:last-child { margin-bottom: 0; }
+  ul.limpia > li::before { content: ""; position: absolute; left: 0; top: 0.68em; width: 5px; height: 5px; border-radius: 50%; background: var(--borde-fuerte); }
+
+  ol { margin: 0 0 1.1rem; padding-left: 1.2rem; }
+  ol li { margin-bottom: 0.5rem; text-wrap: pretty; }
+
+  /* ---------- Boceto de pantalla ---------- */
+
+  .boceto {
+    max-width: 22rem;
+    margin: 1.5rem auto 1.75rem;
+    border: 1px solid var(--borde-fuerte);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--fondo);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  }
+
+  .b-barra {
+    background: var(--superficie);
+    border-bottom: 1px solid var(--borde);
+    padding: 0.7rem 0.9rem;
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--marca);
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  }
+
+  .b-barra .sub { font-family: "Geist Mono", ui-monospace, monospace; font-size: 0.66rem; font-weight: 400; color: var(--texto-3); letter-spacing: 0.04em; }
+
+  .b-cuerpo { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .b-tarjeta {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 0.6rem 0.7rem;
+    font-size: 0.8rem; line-height: 1.45;
+    color: var(--texto-2);
+  }
+
+  .b-tarjeta .t { font-weight: 600; color: var(--texto); font-size: 0.83rem; display: block; }
+  .b-tarjeta .m { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--texto); }
+  .b-tarjeta.atenuada { opacity: 0.5; }
+  .b-tarjeta.destacada { border-color: var(--borde-fuerte); }
+
+  .b-seccion {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.62rem; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--texto-3);
+    margin: 0.4rem 0 -0.1rem 0.15rem;
+  }
+
+  .b-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+
+  .b-boton {
+    background: var(--marca); color: var(--fondo);
+    border-radius: 8px; padding: 0.55rem;
+    text-align: center; font-size: 0.82rem; font-weight: 500;
+  }
+
+  .b-boton.suave { background: var(--superficie); color: var(--texto); border: 1px solid var(--borde-fuerte); }
+
+  .b-nav {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    border-top: 1px solid var(--borde); background: var(--superficie);
+  }
+
+  .b-nav span {
+    font-size: 0.58rem; text-align: center;
+    padding: 0.5rem 0.15rem; color: var(--texto-3);
+    border-top: 2px solid transparent; line-height: 1.2;
+  }
+
+  .b-nav span.on { color: var(--marca); font-weight: 600; border-top-color: var(--identidad); }
+
+  .pill {
+    display: inline-block;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.6rem; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.12rem 0.35rem; border-radius: 4px;
+    border: 1px solid var(--borde);
+    background: var(--superficie-alt); color: var(--texto-2);
+    white-space: nowrap;
+  }
+  .pill.ok { color: var(--ok); background: var(--ok-fondo); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
+  .pill.info { color: var(--info); background: var(--info-fondo); border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+  .pill.aviso { color: var(--aviso); background: var(--aviso-fondo); border-color: var(--aviso-borde); }
+  .pill.error { color: var(--error); background: var(--error-fondo); border-color: color-mix(in srgb, var(--error) 35%, transparent); }
+
+  .pie-boceto {
+    font-size: 0.82rem; color: var(--texto-3);
+    text-align: center; max-width: 24rem;
+    margin: -1rem auto 2rem; text-wrap: pretty;
+  }
+
+  .hora {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--identidad); display: block; margin: 2rem 0 0.3rem;
+  }
+
+  /* ---------- Cadena de flujo ---------- */
+
+  .cadena { display: flex; flex-direction: column; gap: 0; margin: 1.5rem 0; }
+  .eslabon {
+    background: var(--superficie); border: 1px solid var(--borde);
+    border-radius: 8px; padding: 0.8rem 1rem;
+    font-size: 0.9rem; color: var(--texto-2);
+  }
+  .eslabon .donde {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.62rem; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--texto-3); display: block; margin-bottom: 0.2rem;
+  }
+  .eslabon strong { display: block; font-size: 0.95rem; margin-bottom: 0.15rem; }
+  .flecha { text-align: center; color: var(--borde-fuerte); font-size: 1.1rem; line-height: 1; padding: 0.35rem 0; }
+
+  /* ---------- Línea de la semana ---------- */
+
+  .semana { display: flex; flex-direction: column; gap: 0; }
+
+  .momento {
+    display: grid; grid-template-columns: 5.5rem 1fr;
+    gap: 0 1.25rem; position: relative; padding-bottom: 1.75rem;
+  }
+  .momento:last-child { padding-bottom: 0; }
+
+  .cuando {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--texto-3); padding-top: 0.95rem;
+    text-align: right; line-height: 1.35;
+  }
+
+  .via { position: relative; }
+  .via::before {
+    content: ""; position: absolute;
+    left: -0.75rem; top: 1.25rem; bottom: -1.75rem;
+    width: 1px; background: var(--borde);
+  }
+  .momento:last-child .via::before { display: none; }
+  .via::after {
+    content: ""; position: absolute;
+    left: -1.03rem; top: 1.05rem;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--fondo); border: 2px solid var(--borde-fuerte);
+  }
+  .momento.clave .via::after { background: var(--identidad); border-color: var(--identidad); }
+
+  .caja {
+    background: var(--superficie); border: 1px solid var(--borde);
+    border-radius: 8px; padding: 1rem 1.15rem;
+  }
+  .momento.clave .caja { border-color: var(--borde-fuerte); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }
+  .chip {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.65rem; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.2rem 0.45rem; border-radius: 4px;
+    background: var(--superficie-alt); color: var(--texto-2);
+    border: 1px solid var(--borde);
+  }
+  .chip.tiempo { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 35%, transparent); background: var(--ok-fondo); }
+
+  .caja h3 { margin: 0 0 0.5rem; font-size: 1.02rem; }
+  .caja p { font-size: 0.94rem; color: var(--texto-2); margin: 0 0 0.65rem; }
+  .caja p:last-child { margin-bottom: 0; }
+  .caja ol, .caja ul { margin: 0; padding-left: 1.1rem; font-size: 0.94rem; color: var(--texto-2); }
+  .caja li { margin-bottom: 0.35rem; }
+  .caja li:last-child { margin-bottom: 0; }
+
+  @media (max-width: 34rem) {
+    .momento { grid-template-columns: 1fr; gap: 0; padding-left: 1rem; }
+    .cuando { text-align: left; padding-top: 0; padding-bottom: 0.4rem; }
+    .via::before { left: -1rem; top: 0; bottom: -1.75rem; }
+    .via::after { left: -1.28rem; top: -0.05rem; }
+  }
+
+  /* ---------- Tabla ---------- */
+
+  .tabla-envoltura { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--borde); border-radius: 8px; background: var(--superficie); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 28rem; }
+  th, td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  th {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--texto-3); background: var(--superficie-alt); white-space: nowrap;
+  }
+  td:first-child { font-weight: 500; }
+  td.num { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .riesgo {
+    background: var(--aviso-fondo); border: 1px solid var(--aviso-borde);
+    border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1.5rem 0;
+  }
+  .riesgo .etiqueta {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--aviso); display: block; margin-bottom: 0.4rem;
+  }
+  .riesgo p { font-size: 0.93rem; color: var(--texto-2); margin: 0 0 0.6rem; }
+  .riesgo p:last-child { margin-bottom: 0; }
+
+  .abierta {
+    border: 1px dashed var(--borde-fuerte); border-radius: 8px;
+    padding: 1rem 1.15rem; margin-bottom: 0.75rem; background: var(--superficie);
+  }
+  .abierta h3 { margin: 0 0 0.35rem; font-size: 0.97rem; }
+  .abierta p { font-size: 0.91rem; color: var(--texto-2); margin: 0; }
+
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--borde); font-size: 0.88rem; color: var(--texto-3); }
+
+  @media (max-width: 30rem) {
+    body { font-size: 16px; padding: 0 1rem 4rem; }
+    header.portada { padding-top: 2.5rem; }
+    .boceto { max-width: 100%; }
+  }
+</style>
+
+<div class="hoja">
+
+<header class="portada">
+  <div class="marca-rail"></div>
+  <p class="eyebrow">SGV · Flujo del vendedor</p>
+  <h1>El ciclo del vendedor</h1>
+  <p class="bajada">Cómo trabaja el vendedor de campo, de viernes a viernes: sus cinco pantallas, qué hace en cada una y en qué momento. Versión limpia, con todo lo acordado incorporado.</p>
+  <div class="sello">
+    <span>2026-08-22</span>
+    <span>Continúa a docs/11-diseno-operativo</span>
+    <span>El líder va aparte</span>
+  </div>
+</header>
+
+<section>
+  <h2>Las cinco pantallas</h2>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Pantalla</th><th>Cuándo la abre</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>Agenda</td><td><strong>Todo el día</strong>, y el jueves para cerrar</td><td>Lo que debe hoy y cómo va la semana. Es donde trabaja</td></tr>
+        <tr><td>Listas</td><td>Al planificar, y para ver cuánto le falta</td><td>Los paquetes de leads que armó, por zona</td></tr>
+        <tr><td>Cuentas</td><td>Cuando busca a alguien concreto</td><td>Consulta y corrección del expediente</td></tr>
+        <tr><td>Mapa</td><td>Al explorar o armar paquete</td><td>Ver dónde está todo y escoger puntos nuevos</td></tr>
+        <tr><td>Oportunidades</td><td>Cuando hay algo concreto en juego</td><td>Las ventas que está negociando</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Respecto a lo construido hoy cambian tres cosas. <strong>Cuentas deja de ser la pantalla de inicio</strong> —el día empieza en Agenda y Cuentas pasa a ser lo que en realidad es, la pantalla de consulta—. <strong>Buscar se mete dentro del Mapa</strong>, porque es la misma acción con otra forma. Y <strong>Seguimientos desaparece de la barra</strong>: su contenido se mudó a Agenda.</p>
+
+  <p>El cierre semanal y el registro de jornada <strong>no son pantallas</strong>: son formularios que se abren desde Agenda, igual que Registrar seguimiento. Los formularios no ocupan lugar en la barra.</p>
+</section>
+
+<section>
+  <h2>Cómo se reparte el trabajo entre Agenda y Listas</h2>
+
+  <p>Un vendedor de campo se hace dos preguntas, y cada pantalla contesta una:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Pregunta</th><th>Pantalla</th><th>Eje</th></tr></thead>
+      <tbody>
+        <tr><td>¿Qué debo hoy, esté donde esté?</td><td>Agenda</td><td>La fecha</td></tr>
+        <tr><td>¿A quién no he tocado en Aguadulce?</td><td>Listas</td><td>El lugar</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>El mismo cliente puede salir en las dos, porque un compromiso tiene fecha <em>y</em> lugar. No son dos tareas: <strong>cuando registra el seguimiento desaparece de los dos lados a la vez.</strong></p>
+
+  <p>Y los leads no ensucian la agenda: los cincuenta puntos que escogió el domingo <strong>no generan compromisos</strong>, porque nadie prometió nada sobre ellos. Solo entran a la agenda los que ya se trabajaron y dejaron un próximo paso.</p>
+
+  <h3>Dentro de la agenda hay dos clases de trabajo</h3>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Trabajo de calle</th><th>Trabajo de escritorio</th></tr></thead>
+      <tbody>
+        <tr><td>Qué es</td><td>Visitas y entregas</td><td>Llamadas, WhatsApp, correos</td></tr>
+        <tr><td>Lo limita</td><td>Dónde está parado</td><td>La hora a la que contestan</td></tr>
+        <tr><td>¿Se reprograma si anda en otro pueblo?</td><td>Sí</td><td><strong>No. No tiene pueblo</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>No compiten por el mismo momento: <strong>se intercalan</strong>. Maneja, visita, visita, se estaciona a las diez y media y hace tres llamadas, sigue visitando.</p>
+
+  <div class="principio">
+    <p>Si a las diez y media tiene que cambiar de pantalla para ver a quién llamar, no llama.</p>
+  </div>
+
+  <p>Por eso Agenda trae los tres grupos siempre a la vista: <strong>paradas</strong>, <strong>llamadas y correos</strong>, y <strong>esperando respuesta</strong>. Y por eso Listas queda como lo que es —la pantalla de planificación— y no como la del día.</p>
+</section>
+
+<section>
+  <h2>Un lunes completo</h2>
+
+  <p>El vendedor del interior, en Santiago. Su plan dijo que el lunes es Aguadulce.</p>
+
+  <span class="hora">7:40 · En su casa</span>
+  <p>Abre y cae en Agenda. Lo primero que necesita a esa hora no es buscar un cliente: es saber qué va a hacer hoy.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Agenda</span><span class="sub">LUN 25 · SEM 34</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta destacada">
+        <span class="t">Hoy: Aguadulce</span>
+        <div class="b-fila" style="margin-top:.3rem">15 leads · 4 clientes <span class="m">0 / 19</span></div>
+      </div>
+      <div class="b-tarjeta">
+        <span class="t">Respuesta de Damián</span>
+        “Dale con Aguadulce. Si el tema del crédito sale otra vez, anótalo con el nombre del competidor.”
+      </div>
+      <div class="b-tarjeta atenuada">
+        <span class="t">Semana pasada</span>
+        <div class="b-fila">Apostaste 33 <span class="m">tocaste 31</span></div>
+      </div>
+      <p class="b-seccion">Paradas · 19</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Minisúper La Fe</span><span class="pill error">Vence hoy</span></div>
+        Llevar cotización de rollos
+      </div>
+      <div class="b-tarjeta atenuada">
+        <div class="b-fila"><span class="t">Super Chitré</span><span class="pill aviso">Fuera de ruta</span></div>
+        <div class="b-fila">Visita · 3 días vencida <span class="pill">Reprogramar</span></div>
+      </div>
+      <p class="b-seccion">Llamadas y correos · 3</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Panadería El Trigo</span><span class="pill">Chitré</span></div>
+        Confirmar si probó la muestra
+      </div>
+      <p class="b-seccion">Esperando respuesta · 1</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Abarrotería Chen</span><span class="pill aviso">18 h</span></div>
+        Precio especial · pedido a gerencia
+      </div>
+      <div class="b-boton suave">Registrar jornada</div>
+    </div>
+    <div class="b-nav"><span class="on">Agenda</span><span>Listas</span><span>Cuentas</span><span>Mapa</span><span>Oportunidades</span></div>
+  </div>
+  <p class="pie-boceto">La visita a Chitré queda fuera de ruta y la reprograma antes de salir. Las llamadas se quedan: las hará desde Aguadulce.</p>
+
+  <span class="hora">7:42 · Toca “Hoy: Aguadulce”</span>
+  <p>Entra a la ruta. Arriba lo que él escogió; abajo lo que el sistema sabe que le queda de paso.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Aguadulce</span><span class="sub">0 / 19</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">Tu paquete · 15 sin tocar</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Super Xin Hua</span><span class="pill aviso">Sin clasificar</span></div>
+        Minisúper · 1.2 km
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Fonda Doña Chichi</span><span class="pill aviso">Sin clasificar</span></div>
+        Restaurante · 1.4 km
+      </div>
+      <p class="b-seccion">Ya son tuyos aquí · 4</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Minisúper La Fe</span><span class="pill error">Vence hoy</span></div>
+        Llevar cotización de rollos
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Abarrotería Chen</span><span class="pill aviso">Fuera de cadencia</span></div>
+        <div class="b-fila">Rollos fiscales <span class="m">38 días</span></div>
+      </div>
+      <p class="b-seccion">Ya trabajados hoy · 0</p>
+      <div class="b-boton suave">Agregar puntos desde el mapa</div>
+    </div>
+    <div class="b-nav"><span>Agenda</span><span class="on">Listas</span><span>Cuentas</span><span>Mapa</span><span>Oportunidades</span></div>
+  </div>
+  <p class="pie-boceto">La misma parada del carro, dos conversaciones distintas: a uno lo conoce y al otro no.</p>
+
+  <span class="hora">9:15 · Frente al Super Xin Hua</span>
+  <p>Toca el punto, entra al expediente, <strong>Registrar seguimiento</strong>. Treinta segundos: qué hizo, check-in automático, resultado. Como la cuenta estaba sin clasificar, le pregunta si queda como prospecto o se descarta.</p>
+
+  <p>El resultado fue <em>“tiene proveedor, quiere precio”</em>, así que aparece la ficha de competencia. Esa parte la termina en el carro.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Registrar seguimiento</span><span class="sub">SUPER XIN HUA</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta atenuada"><span class="t">✓ Visita · check-in preciso</span></div>
+      <div class="b-tarjeta atenuada"><span class="t">✓ Tiene proveedor, quiere precio</span></div>
+      <div class="b-tarjeta destacada">
+        <span class="t">¿Quién se lo vende hoy?</span>
+        <div class="b-fila" style="margin-top:.3rem"><span class="pill info">Distribuidora Wang</span><span class="pill">+ otro</span></div>
+      </div>
+      <div class="b-tarjeta destacada">
+        <span class="t">¿Por qué le compra a ese?</span>
+        <div class="b-fila" style="margin-top:.3rem;flex-wrap:wrap;gap:.25rem"><span class="pill info">Crédito 30 días</span><span class="pill">Precio</span><span class="pill">Paisano</span><span class="pill">Cercanía</span></div>
+      </div>
+      <div class="b-tarjeta"><div class="b-fila"><span class="t">Precio que paga</span><span class="m">$1.85</span></div></div>
+      <div class="b-tarjeta"><span class="t">📷 Foto de la muestra del competidor</span></div>
+      <div class="b-boton">Guardar</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Condicional: solo aparece cuando el resultado implica que hay competidor.</p>
+
+  <span class="hora">10:05 · Entra a una plaza</span>
+  <p>Ve seis locales que Google no tenía. Los visita con <strong>Crear y registrar visita</strong>, el botón del alta pensado para estar parado frente al local.</p>
+
+  <p>Como hoy está comprometido con Aguadulce y la cuenta nace en Aguadulce, <strong>entra sola a la ruta del día y cuenta para la apuesta</strong>. La cuenta guarda su origen —calle, no búsqueda— así que después el reporte puede separarlos.</p>
+
+  <div class="principio">
+    <p>Si el lead encontrado en la calle no contara, el sistema estaría castigando la mejor forma de prospectar que existe.</p>
+  </div>
+
+  <span class="hora">10:30 · Estacionado a la sombra</span>
+  <p>Hora de que contesten. Abre Agenda, grupo <strong>Llamadas y correos</strong>, y hace las tres. No cambió de pantalla ni reprogramó nada.</p>
+
+  <span class="hora">14:00 · Lo llaman de La Chorrera</span>
+  <p>Comercial Vega quiere cuatro cajas para el jueves. Entra al expediente y toca <strong>Solicitud</strong>.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Nueva solicitud</span><span class="sub">COMERCIAL VEGA</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta">
+        <span class="t">¿Qué necesita?</span>
+        <div class="b-fila" style="margin-top:.3rem;flex-wrap:wrap;gap:.25rem"><span class="pill info">Pedido</span><span class="pill">Cotización</span><span class="pill">Muestra</span><span class="pill">Precio</span></div>
+      </div>
+      <div class="b-tarjeta"><span class="t">Detalle</span>4 cajas de rollos 80mm</div>
+      <div class="b-tarjeta">
+        <span class="t">¿Quién lo resuelve?</span>
+        <div class="b-fila" style="margin-top:.3rem"><span class="pill">Yo, con talonario</span><span class="pill info">La oficina · factura fiscal</span></div>
+      </div>
+      <div class="b-tarjeta"><div class="b-fila"><span class="t">Para cuándo</span><span class="m">jue 28</span></div></div>
+      <div class="b-tarjeta atenuada"><span class="t">✓ Queda como llamada en la bitácora</span>No hay que registrarlo aparte</div>
+      <div class="b-boton">Enviar a administración</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Veinte segundos, y sale de su cabeza.</p>
+
+  <span class="hora">18:20 · De vuelta en Santiago</span>
+  <p>Pasó por Natá a cargar. Toca <strong>Registrar jornada</strong> desde Agenda: viaje por mercancía, media jornada, Natá → Aguadulce. Quince segundos, y es lo que defiende su semana.</p>
+</section>
+
+<section>
+  <h2>Lo que le llega sin que lo busque</h2>
+
+  <p>Un cliente que llama pidiendo cotización, haciendo un pedido o pidiendo muestra <strong>no es un seguimiento</strong>. Un seguimiento es algo que él hizo o prometió. Esto es un encargo que entra, y la mayoría necesita que alguien más de la empresa actúe.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Qué llega</th><th>Quién actúa</th><th>Termina en</th></tr></thead>
+      <tbody>
+        <tr><td>Pedido</td><td>Él con su talonario, o administración</td><td>Factura</td></tr>
+        <tr><td>Cotización</td><td>Él con su libreta, o administración</td><td>Cotización enviada</td></tr>
+        <tr><td>Muestra</td><td>Despacho</td><td>Muestra entregada</td></tr>
+        <tr><td>Precio especial o plazo</td><td>Gerencia</td><td>Sí o no, en 24 horas</td></tr>
+        <tr><td>Consulta</td><td>Él</td><td>La contesta y ya</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="principio">
+    <p>Una solicitud no es una tarea suya: es un encargo con destinatario y con reloj.</p>
+  </div>
+
+  <p>Por eso va al carril de <strong>Solicitudes</strong> y no a la agenda: si cae entre lo suyo se pierde, y nadie de la oficina se entera de que hay un pedido esperando. Esto no es alcance nuevo — §7.2 de la visión ya define administración con “bandejas de cotización, alta de clientes y pedidos”.</p>
+
+  <h3>Los dos caminos, en un solo campo</h3>
+
+  <p>Un pedido lo puede facturar él con su talonario, o mandarlo a la oficina cuando el cliente necesita factura fiscal. Los dos son reales y ninguno es el excepcional, así que la solicitud pregunta <strong>quién lo resuelve</strong>: si es él, se queda en <em>Esperando respuesta</em> como pendiente propio; si es la oficina, sale con reloj y vuelve cuando esté lista.</p>
+
+  <p>Beneficio que no se ve de entrada: <strong>hoy la facturación manual es invisible</strong>. Con esto se puede ver al mes qué proporción del negocio salió del talonario y cuál de la oficina.</p>
+
+  <h3>Se registra una vez y cuenta dos veces</h3>
+
+  <p>Al guardar la solicitud, el sistema <strong>deja también el seguimiento</strong> —una llamada con resultado “pide cotización”— sin que él lo escriba. El encargo llega a la oficina y el contacto cuenta para la cadencia del cliente.</p>
+</section>
+
+<section>
+  <h2>Las listas: cómo se arman y cómo se vacían</h2>
+
+  <p>Planificar no es un solo acto, son dos, y ocurren en momentos distintos:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Armar el paquete</th><th>Comprometerlo</th></tr></thead>
+      <tbody>
+        <tr><td>Cuándo</td><td>Cuando le da la gana. Un domingo, una noche</td><td>El viernes, al cerrar la semana</td></tr>
+        <tr><td>Dónde</td><td>Mapa y Buscar</td><td>Agenda, en el cierre</td></tr>
+        <tr><td>Qué hace</td><td>Escoge puntos de Aguadulce y los mete en el paquete</td><td>Dice “el lunes bajo a Aguadulce y apuesto 15”</td></tr>
+        <tr><td>Duración</td><td>El paquete vive meses</td><td>El compromiso dura una semana</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>El paquete no se cierra</h3>
+
+  <p><strong>Es permanente y por zona.</strong> Aguadulce va a existir mientras exista Aguadulce; lo que tiene período es el compromiso de trabajarlo. Así que si puso 15 y alcanzó 10:</p>
+
+  <ol>
+    <li>Al volver, el paquete muestra <strong>5 sin tocar</strong> arriba y los 10 trabajados atenuados abajo, con lo que resultó de cada uno.</li>
+    <li>El viernes ve <em>“Aguadulce: 5 sin tocar”</em> y decide si vuelve con esos o los engorda antes.</li>
+    <li>Si los engorda, toca <strong>Agregar puntos</strong> y el mapa abre centrado en Aguadulce <strong>con lo que ya tiene marcado</strong>, para que no reescoja lo mismo ni lo que ya descartó.</li>
+  </ol>
+
+  <p>Ese último punto es el que hace que funcione, y ya está construido: la función que pinta el semáforo en la búsqueda es la misma que evita reescoger un punto que fue suyo, que descartó, o que es de un compañero.</p>
+
+  <h3>El número que sale de aquí</h3>
+
+  <p><strong>“Levantaste 15, tocaste 10.”</strong> Al mes: <em>“levantaste 60, tocaste 34”</em>. Eso no es tasa de conversión, es <strong>calidad de planificación</strong> — y un vendedor que levanta el doble de lo que alcanza todas las semanas no tiene problema de esfuerzo, tiene un plan mal calibrado. Otra conversación completamente.</p>
+
+  <div class="riesgo">
+    <span class="etiqueta">El riesgo del cementerio</span>
+    <p>Un paquete permanente acumula muertos. La defensa no es vencerlo por la fuerza —Aguadulce sigue siendo Aguadulce— sino <strong>mostrar la antigüedad</strong>: <em>“12 leads llevan más de dos meses en tu lista sin que los toques”</em>. Ahí decide en bloque: los deja, o los descarta con motivo. Y ese motivo también es información.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Cadenas: un cliente, diez puntos</h2>
+
+  <p>El líder cerró con Starbucks: una negociación, un contrato. Pero hay diez tiendas y cada gerente hace su propio pedido. Si se crean once cuentas sueltas, el sistema cuenta once clientes nuevos y son uno.</p>
+
+  <p>Las dos son cuentas de verdad —la sucursal tiene dirección e historia, la madre tiene RUC y contrato— así que no hace falta entidad nueva: <strong>basta con que una cuenta pueda colgar de otra</strong>.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Número</th><th>A qué nivel</th><th>Starbucks vale</th></tr></thead>
+      <tbody>
+        <tr><td>Clientes</td><td>Cuenta madre</td><td class="num">1</td></tr>
+        <tr><td>Clientes nuevos ganados</td><td>Cuenta madre</td><td class="num">1</td></tr>
+        <tr><td>Interacciones</td><td>Donde ocurrieron</td><td class="num">10</td></tr>
+        <tr><td>Puntos atendidos</td><td>Sucursal</td><td class="num">10</td></tr>
+        <tr><td>Cadencia</td><td>Sucursal, y la madre la suya</td><td>Cada tienda a su ritmo</td></tr>
+        <tr><td>Oportunidad</td><td>Cuenta madre</td><td>Se negocia una vez</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Así el reporte deja de mentir en las dos direcciones: <em>“24 clientes en 38 puntos”</em> es verdad; <em>“38 clientes”</em> infla la cartera y <em>“24 interacciones”</em> le roba trabajo que sí hizo.</p>
+
+  <h3>La cadencia va en los dos niveles</h3>
+
+  <p>Cada tienda lleva la suya, porque cada gerente pide a su ritmo y la visita ocurre en el punto. Y <strong>la madre lleva la suya aparte, para el comprador central</strong>: si nadie habla con la central en cuatro meses eso es riesgo, aunque las diez tiendas estén al día. Es la clase de cliente que se pierde sin que nadie lo vea venir.</p>
+
+  <p>El vendedor lo ve por punto —seis tiendas que le toca visitar—; gerencia lo ve enrollado: <em>“Starbucks — 6 de 10 puntos fuera de cadencia”</em>. Un cliente en riesgo, no seis.</p>
+
+  <h3>Quién cuelga</h3>
+
+  <p>El vendedor, sobre sus propias cuentas: nadie más sabe que la tienda que acaba de visitar pertenece a la cadena que él atiende. Pero <strong>una cadena nacional cruza territorios por definición</strong> — la madre es del líder, Multiplaza es del vendedor de ciudad y Santiago del interior. Y el RLS no deja que el del interior vea una madre que no es suya.</p>
+
+  <div class="principio">
+    <p>El vendedor cuelga las suyas de las suyas. El líder puede colgar cualquiera.</p>
+  </div>
+
+  <p>Funciona porque las cadenas son terreno del líder: él las negocia y él tiene el panorama nacional. El vendedor crea su sucursal, el líder la engancha el viernes. Y si el del interior no ve la madre y crea una suelta, <strong>la validación de duplicados ya lo ataja</strong>: responde <em>“Starbucks Panamá ya existe, es de Damián”</em> sin abrirle el expediente.</p>
+
+  <h3>Dar de alta diez sucursales tiene que ser barato</h3>
+
+  <ul class="limpia">
+    <li><strong>Agregar sucursal</strong> desde la cuenta madre, heredando categoría, productos y condiciones. Solo se escribe el nombre del punto y se marca en el mapa.</li>
+    <li>El botón <em>¿Tiene más sucursales?</em> de la búsqueda ya las encuentra a nivel nacional. Falta el paso siguiente: agregarlas como sucursales, en tanda.</li>
+  </ul>
+
+  <h3>Y la pregunta que esto destapa</h3>
+
+  <div class="principio">
+    <p>Llamar a diez gerentes que ya compran todos los meses, ¿es vender o es tomar pedidos?</p>
+  </div>
+
+  <p>Es trabajo necesario y hay que verlo, pero <strong>no es caza</strong>: nadie negocia nada, se levanta una orden que iba a llegar igual. Es la misma pregunta que las entregas del interior — <em>¿es el líder quien debe hacerlo?</em> — y hoy no hay con qué decidirla.</p>
+
+  <p>Lo bueno es que no hay que capturar nada: <strong>una interacción que termina en solicitud de tipo pedido es toma de pedido</strong>, y el sistema lo deduce solo.</p>
+
+  <div class="riesgo">
+    <span class="etiqueta">Lo que esto no resuelve</span>
+    <p>Agrupar por marca no es agrupar por dueño. Un grupo con tres marcas distintas no se detecta así: eso es §7.9, la cadena marca → sociedad → directores, y es otro módulo con otra fuente.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Cuando el día no sale como estaba planeado</h2>
+
+  <p>Entrega urgente que le tumba el viaje, calles cerradas, el carro, una incapacidad. De cómo responda el sistema depende que confíe en él o que lo odie.</p>
+
+  <p>No hace falta mecanismo nuevo: <strong>es el mismo bloque de jornada</strong>, con el catálogo ampliado a lo que de verdad pasa.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Tipo de bloque</th><th>Ejemplo</th></tr></thead>
+      <tbody>
+        <tr><td>Viaje por mercancía</td><td>Santiago → Natá → Santiago</td></tr>
+        <tr><td>Entrega</td><td>Seis clientes en Aguadulce</td></tr>
+        <tr><td>Entrega urgente imprevista</td><td>Se cayó la ruta por atender un pedido</td></tr>
+        <tr><td>No se pudo salir</td><td>Calles cerradas, manifestación, el carro</td></tr>
+        <tr><td>Administrativo</td><td>Cotizaciones, cobros, papeleo</td></tr>
+        <tr><td>Personal o incapacidad</td><td>Enfermedad, permiso</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="principio">
+    <p>La banda de expectativa se mide contra días vendibles, no contra la semana del calendario.</p>
+  </div>
+
+  <p>Si perdió el martes por calles cerradas y el jueves fue de carretera, <strong>su semana tuvo tres días de venta, no cinco</strong>. Sin eso, toda semana con logística parece un fracaso — la injusticia exacta que este diseño existe para quitar.</p>
+
+  <p>Y el lunes, al ver un bloque de imprevisto donde estaba la ruta, la aplicación <strong>no la marca incumplida: la arrastra</strong> y pregunta a qué día la mueve.</p>
+
+  <div class="riesgo">
+    <span class="etiqueta">La contrapartida honesta</span>
+    <p>Si marcar “no se pudo salir” fuera gratis, toda semana floja sería un imprevisto. No se bloquea —bloquearlo obligaría a mentir— pero <strong>se cuenta y se ve</strong>. Tres en un mes es una conversación; uno en un trimestre es la vida.</p>
+  </div>
+</section>
+
+<section>
+  <h2>El viernes: cerrar y apostar</h2>
+
+  <p>Cuatro pasos, quince minutos, desde Agenda:</p>
+
+  <ol>
+    <li><strong>Tus números.</strong> Ya calculados. Solo los confirma.</li>
+    <li><strong>Cuéntame.</strong> Tres preguntas fijas con botón de grabar: qué te sorprendió, qué te frenó, qué necesitas de nosotros. Noventa segundos hablando.</li>
+    <li><strong>La semana entrante.</strong> Reparte las rutas en los cinco días y le pone cantidad a cada una.</li>
+    <li><strong>Enviar.</strong></li>
+  </ol>
+
+  <p><strong>La grabación no es el reporte.</strong> El reporte son los números. Los noventa segundos son la interpretación — tres preguntas sobre la semana, no un relato de cinco días, y por eso alcanzan.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Cerrar la semana 34</span><span class="sub">PASO 3 DE 4</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">Reparte tus rutas</p>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Lunes · Aguadulce</span><span class="m">15</span></div>
+        <div class="b-fila">La lista tiene 50 sin tocar <span class="pill">Cuántos</span></div>
+      </div>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Martes · Río Hato</span><span class="m">10</span></div>
+        <div class="b-fila">La lista tiene 22 sin tocar <span class="pill">Cuántos</span></div>
+      </div>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Miércoles · Penonomé</span><span class="m">8</span></div>
+        <div class="b-fila">La lista tiene 14 sin tocar <span class="pill">Cuántos</span></div>
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Jueves · Viaje a Natá</span><span class="pill">Sin ruta</span></div>
+        Carga y entregas
+      </div>
+      <div class="b-tarjeta atenuada"><span class="t">Viernes</span>Sin asignar</div>
+      <p class="b-seccion">Tu apuesta de la semana</p>
+      <div class="b-tarjeta destacada"><div class="b-fila"><span class="t">Leads que vas a tocar</span><span class="m">33</span></div></div>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Clientes que vas a visitar</span><span class="m">12</span></div>
+        Tienes 18 fuera de cadencia
+      </div>
+      <div class="b-tarjeta atenuada">Tu promedio de las últimas 4 semanas: <span class="m">31 leads · 10 clientes</span></div>
+      <div class="b-boton">Continuar</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Se compromete por cantidad, no por nombre. Cuál de los 50 va a ver lo decide manejando.</p>
+
+  <h3>Por qué por cantidad</h3>
+
+  <p>Nombrar quince por adelantado sería precisión falsa: en la calle el orden lo pone la geografía. Y hay un efecto peor — <strong>si nombrara los quince, el día que visite tres que no estaban en la lista el sistema diría que incumplió</strong>, cuando hizo exactamente su trabajo.</p>
+
+  <ul class="limpia">
+    <li><strong>La cantidad va por día, pero se evalúa por semana.</strong> Si el lunes hizo diez de quince y el martes vuelve a completar cinco, la apuesta se cumplió. El reparto es blando a propósito.</li>
+    <li><strong>Son dos apuestas:</strong> leads que va a tocar y clientes que va a visitar. Si solo apostara leads, la cartera se descuida.</li>
+    <li><strong>El sistema le muestra su historia, no le pone la meta.</strong> El número lo escribe él: en el momento en que la aplicación lo proponga, deja de ser su plan.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Qué se cuenta</h2>
+
+  <p>Interacciones y cuentas no son lo mismo: tres llamadas al mismo cliente son tres interacciones y un cliente atendido. De los mismos hechos salen cuatro números.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Número</th><th>Unidad</th><th>Qué mide</th></tr></thead>
+      <tbody>
+        <tr><td>Interacciones</td><td>Cada seguimiento</td><td><strong>Esfuerzo</strong> — cuánto se movió</td></tr>
+        <tr><td>Cuentas tocadas</td><td>Cuenta única</td><td><strong>Cobertura</strong> — a cuántos llegó</td></tr>
+        <tr><td>Cuentas puestas al día</td><td>Salió de fuera de cadencia</td><td><strong>Cuidado</strong> — el resultado</td></tr>
+        <tr><td>Compromisos cumplidos</td><td>Compromiso cerrado</td><td><strong>Confiabilidad</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="principio">
+    <p>Se apuesta en cuentas. El esfuerzo se mide en interacciones. Nunca al revés.</p>
+  </div>
+
+  <p>No se apuesta sobre el número inflable: si la apuesta fuera “45 interacciones”, en tres semanas habría 45 interacciones de quince segundos. Como es en cuentas distintas, la única forma de subirla es llegarle a más gente.</p>
+
+  <p>Los doce clientes salen de tres bolsas que se solapan —compromisos con fecha, fuera de cadencia, y los que quedan de paso en la ruta— y el sistema le muestra el tamaño de cada una al apostar.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Semana 34 · cerrada</span><span class="sub">RUBÉN · INTERIOR</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">Esfuerzo</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Interacciones <span class="m">47</span></div>
+        <div class="b-fila">Visitas · con GPS <span class="m">31 · 27</span></div>
+        <div class="b-fila">Llamadas y WhatsApp <span class="m">16</span></div>
+        <div class="b-fila">Días vendibles <span class="m">3 de 5</span></div>
+      </div>
+      <p class="b-seccion">Caza</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Leads tocados <span class="m">31 de 33</span></div>
+        <div class="b-fila">De lista · de la calle <span class="m">26 · 5</span></div>
+        <div class="b-fila">Pasaron a prospecto <span class="m">9</span></div>
+      </div>
+      <p class="b-seccion">Cuidado</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Clientes atendidos <span class="m">12 de 12</span></div>
+        <div class="b-fila">Salieron de fuera de cadencia <span class="m">9</span></div>
+        <div class="b-fila">Compromisos cumplidos <span class="m">7 de 8</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="pie-boceto">Cuarenta y siete interacciones sobre treinta y ocho cuentas distintas, en tres días vendibles.</p>
+
+  <div class="riesgo">
+    <span class="etiqueta">Un hueco de lo ya construido</span>
+    <p>Hoy la cadencia se reinicia con <em>cualquier</em> seguimiento registrado, incluido “no estaba el encargado”. Eso permitiría refrescar la cartera pasando por el frente sin hablar con nadie.</p>
+    <p>La corrección: <strong>la cadencia se reinicia con contacto efectivo, no con el intento.</strong> El intento sigue contando como esfuerzo y queda en la bitácora, pero no pone al cliente al día.</p>
+  </div>
+</section>
+
+<section>
+  <h2>El ciclo, de viernes a viernes</h2>
+
+  <div class="semana">
+
+    <div class="momento clave">
+      <div class="cuando">Jue tarde<br>o vie AM</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips"><span class="chip">Vendedor</span><span class="chip tiempo">15 min</span></div>
+          <h3>Cierra y apuesta</h3>
+          <p>Confirma números, graba noventa segundos, reparte las rutas en los cinco días con su cantidad, envía.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento">
+      <div class="cuando">Viernes</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips"><span class="chip">Líder</span><span class="chip tiempo">2 a 3 h</span></div>
+          <h3>Responde</h3>
+          <p><strong>Una respuesta por vendedor</strong>, no una por día. Puede agregar un objetivo; no reescribe el plan.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento">
+      <div class="cuando">Vie PM<br>o lun AM</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips"><span class="chip">Los tres</span><span class="chip tiempo">20 min</span></div>
+          <h3>La llamada corta</h3>
+          <p>La agenda es lo que ya está escrito. Lo que se acuerde queda como objetivo.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento clave">
+      <div class="cuando">Lunes</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips"><span class="chip">Vendedor</span><span class="chip tiempo">1 min</span></div>
+          <h3>Arranca con el día cargado</h3>
+          <p>La respuesta del líder, la reconciliación de la semana pasada, y la ruta de hoy ya puesta.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento">
+      <div class="cuando">Lun a jue</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips"><span class="chip">Vendedor</span><span class="chip tiempo">~16 min en toda la semana</span></div>
+          <h3>El campo</h3>
+          <p>Paradas, llamadas a media mañana, solicitudes que entran, bloque de jornada al cerrar el día. Todo desde Agenda.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="momento">
+      <div class="cuando">Jueves</div>
+      <div class="via">
+        <div class="caja">
+          <div class="chips"><span class="chip">Automático</span></div>
+          <h3>El aviso</h3>
+          <p>Va 9 de 12 leads y 6 clientes sin ver. Le queda el viernes para corregir. <strong>Nadie tuvo que decírselo.</strong></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p>Y vuelve a empezar. <strong>Un formulario por semana para el vendedor.</strong> Todo lo demás lo calcula el sistema.</p>
+
+  <h3>Cuánto le cuesta, sumado</h3>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Momento</th><th>Cuánto</th><th>Veces</th><th class="num">Semana</th></tr></thead>
+      <tbody>
+        <tr><td>El hecho, en la puerta</td><td>30 seg</td><td>~15</td><td class="num">7 min</td></tr>
+        <tr><td>Ficha de competencia, en el carro</td><td>2 min</td><td>~4</td><td class="num">8 min</td></tr>
+        <tr><td>Bloque de jornada</td><td>15 seg</td><td>5 días</td><td class="num">1 min</td></tr>
+        <tr><td>Solicitudes que entran</td><td>20 seg</td><td>~3</td><td class="num">1 min</td></tr>
+        <tr><td>El cierre del viernes</td><td>15 min</td><td>1</td><td class="num">15 min</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Media hora a la semana sobre cuarenta.</strong> Ese es el número con el que hay que presentárselo, no con un discurso sobre estrategia.</p>
+</section>
+
+<section>
+  <h2>Lo que falta decidir</h2>
+
+  <div class="abierta">
+    <h3>Los tipos de bloque de jornada</h3>
+    <p>La tabla de arriba es una propuesta. La lista real sale de reconstruir con ellos una semana de verdad, no de escribirla en la oficina.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>Las razones de rechazo, con sus palabras</h3>
+    <p>Es el catálogo más importante del sistema: son las únicas preguntas que la empresa va a poder contestar en dos años.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>Cuáles resultados cuentan como contacto efectivo</h3>
+    <p>“No estaba el encargado” claramente no. ¿Y “solo dejé información”? De esa lista depende que la cadencia signifique algo.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>Grabar, transcribir, o las dos</h3>
+    <p>El audio nunca falla y se escucha en noventa segundos; la transcripción permite buscar y resumir, y cuesta un servicio externo. Recomendación: grabar siempre, transcribir cuando haya señal.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>La factura manual en Zoho</h3>
+    <p>Si él factura de su talonario, ¿la oficina la vuelve a emitir después o queda en papel? De eso depende si la venta del interior se puede conciliar contra Books.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>El plazo de la bandeja de administración</h3>
+    <p>Un pedido sin plazo de respuesta es un pedido perdido, igual que un precio. Hace falta el mismo reloj que le pusimos a gerencia.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Flujo del vendedor. <strong>El líder va en su propio documento</strong>, porque su día no se parece a este: vende por teléfono, persigue cadenas, su ciclo es de meses y los viernes administra. El diseño operativo general está en <strong>docs/11-diseno-operativo.html</strong> y el concepto en <strong>docs/10-concepto.html</strong>.</p>
+</footer>
+
+</div>
