@@ -38,12 +38,14 @@ const POR_ROL: Record<Rol, Ruta[]> = {
     { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
     { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],
+  // Mercado no entra a su barra: lo mira una vez al mes y le quitaría el Mapa,
+  // que es donde arma sus listas de zona. Se llega desde Agenda · Mi semana.
   lider: [
     { href: "/", etiqueta: "Agenda", Icono: CalendarDays },
     { href: "/listas", etiqueta: "Listas", Icono: List },
     { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
-    { href: "/mercado", etiqueta: "Mercado", Icono: Radar },
     { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
+    { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],
   // Gerencia no registra nada: es el único rol que solo lee y decide. Su
   // pantalla es el tablero, y arranca ahí.

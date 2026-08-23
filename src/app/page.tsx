@@ -6,6 +6,7 @@ import {
   Clock,
   MapPin,
   Phone,
+  Radar,
   Users,
 } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
@@ -284,13 +285,23 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
             {/* El otro lado del contrato. Solo aparece para quien acompaña a
                 alguien: el líder y gerencia. */}
             {(perfil?.rol === "lider" || perfil?.rol === "gerente") && (
-              <Link
-                href="/contrato"
-                className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
-              >
-                <Users size={18} aria-hidden />
-                Responder a mi equipo
-              </Link>
+              <>
+                <Link
+                  href="/contrato"
+                  className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
+                >
+                  <Users size={18} aria-hidden />
+                  Responder a mi equipo
+                </Link>
+                {/* Se mira una vez al mes: no se gana un lugar en la barra. */}
+                <Link
+                  href="/mercado"
+                  className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
+                >
+                  <Radar size={18} aria-hidden />
+                  Qué dice el mercado
+                </Link>
+              </>
             )}
           </>
         ) : (

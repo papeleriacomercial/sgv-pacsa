@@ -1401,3 +1401,39 @@ servidor.
   ninguna cifra usa la distinción todavía. Importa cuando exista el informe mensual.
 - **Zoho**, y con él toda la mitad de retención.
 - Validar los catálogos provisionales, y fijar los umbrales con datos reales.
+
+---
+
+## Cierre del día: navegación y documentos de inducción — 2026-08-23
+
+**Un arreglo:** al meter Mercado en la barra del líder le había quitado el Mapa, que es donde
+arma sus listas de zona. Mercado lo mira una vez al mes, así que sale de la barra y se llega
+desde Agenda · Mi semana — igual que Contrato.
+
+### La navegación, definitiva
+
+| Rol | Barra |
+|---|---|
+| Vendedor | Agenda · Listas · Cuentas · Solicitudes · Mapa |
+| Líder | Agenda · Listas · Ventas · Cuentas · Mapa |
+| Gerencia | Tablero · Solicitudes · Mercado · Ventas · Cuentas |
+| Administración | Solicitudes · Cuentas · Mapa |
+
+Contrato y Mercado no tienen lugar propio para el líder: se usan uno y cuatro días al año
+respectivamente, y una entrada permanente para eso estorba el resto del tiempo.
+
+### Los tres documentos de flujo, al día
+
+`docs/12`, `docs/13` y `docs/14` son el material con el que gerencia le va a presentar la
+aplicación al equipo, así que se actualizaron con la navegación real y con una sección nueva
+al final de cada uno: **qué de esto ya está construido**, marcado pieza por pieza.
+
+Lo que queda marcado como pendiente en esos documentos:
+
+- **Vendedor**: la Agenda todavía no dice "hoy toca Aguadulce" — el plan reparte por día en el
+  cierre, pero hace falta que el primer ciclo dé la vuelta para tener de dónde leerlo. Y
+  corregir la hora del seguimiento hacia atrás.
+- **Líder**: clases de día en su plan, la apuesta por nombre para las ventas grandes, y marcar
+  la venta estancada por días sin movimiento. Las tres son de su cierre y salen juntas.
+- **Gerencia**: el informe mensual, y las dos partes bloqueadas por las categorías
+  direccionables y por Zoho.
