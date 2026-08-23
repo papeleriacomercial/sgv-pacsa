@@ -1,0 +1,1104 @@
+<title>El ciclo del líder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+
+<style>
+  :root {
+    --marca: #1d293d;
+    --fondo: #f8fafc;
+    --superficie: #ffffff;
+    --superficie-alt: #f1f5f9;
+    --borde: #e2e8f0;
+    --borde-fuerte: #cbd5e1;
+    --texto: #1d293d;
+    --texto-2: #45556c;
+    --texto-3: #7c8ba1;
+    --aviso: #b45309;
+    --aviso-fondo: #fffbeb;
+    --aviso-borde: #fcd34d;
+    --ok: #00863a;
+    --ok-fondo: #f0fdf4;
+    --info: #1d4ed8;
+    --info-fondo: #eff6ff;
+    --error: #be123c;
+    --error-fondo: #fff1f2;
+    --identidad: #fe9a00;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --marca: #e2e8f0;
+      --fondo: #12181f;
+      --superficie: #1a222c;
+      --superficie-alt: #212b36;
+      --borde: #2c3846;
+      --borde-fuerte: #3d4c5d;
+      --texto: #e7edf4;
+      --texto-2: #a9b7c6;
+      --texto-3: #7c8ba1;
+      --aviso: #fbbf24;
+      --aviso-fondo: #251c08;
+      --aviso-borde: #6b4f10;
+      --ok: #34d399;
+      --ok-fondo: #0c1f17;
+      --info: #7ab0ff;
+      --info-fondo: #0e1b30;
+      --error: #fb7185;
+      --error-fondo: #2a1119;
+      --identidad: #fe9a00;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --marca: #e2e8f0;
+    --fondo: #12181f;
+    --superficie: #1a222c;
+    --superficie-alt: #212b36;
+    --borde: #2c3846;
+    --borde-fuerte: #3d4c5d;
+    --texto: #e7edf4;
+    --texto-2: #a9b7c6;
+    --texto-3: #7c8ba1;
+    --aviso: #fbbf24;
+    --aviso-fondo: #251c08;
+    --aviso-borde: #6b4f10;
+    --ok: #34d399;
+    --ok-fondo: #0c1f17;
+    --info: #7ab0ff;
+    --info-fondo: #0e1b30;
+    --error: #fb7185;
+    --error-fondo: #2a1119;
+    --identidad: #fe9a00;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 17px; line-height: 1.65;
+    margin: 0; padding: 0 1.25rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hoja { max-width: 41rem; margin: 0 auto; }
+
+  header.portada {
+    padding: 3.5rem 0 2.25rem;
+    border-bottom: 1px solid var(--borde);
+    margin-bottom: 3rem;
+  }
+
+  .marca-rail { width: 2.5rem; height: 3px; background: var(--identidad); border-radius: 2px; margin-bottom: 1.5rem; }
+
+  .eyebrow {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.11em; text-transform: uppercase;
+    color: var(--texto-3); margin: 0 0 0.75rem;
+  }
+
+  h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: clamp(2.1rem, 7vw, 2.9rem);
+    font-weight: 500; line-height: 1.12;
+    letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 1rem;
+  }
+
+  .bajada { font-size: 1.06rem; color: var(--texto-2); margin: 0; text-wrap: pretty; }
+
+  .sello {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.72rem; color: var(--texto-3); margin-top: 1.75rem;
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem;
+  }
+
+  section { margin-bottom: 3.25rem; }
+
+  h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.6rem; font-weight: 600; line-height: 1.2;
+    letter-spacing: -0.01em; text-wrap: balance;
+    margin: 0 0 1.25rem; padding-top: 0.4rem;
+    border-top: 2px solid var(--marca);
+  }
+
+  h3 { font-size: 0.98rem; font-weight: 600; line-height: 1.4; margin: 2rem 0 0.5rem; }
+
+  p { margin: 0 0 1.1rem; text-wrap: pretty; }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 600; color: var(--texto); }
+  em { font-style: italic; color: var(--texto-2); }
+
+  .principio { border-left: 3px solid var(--identidad); padding: 0.1rem 0 0.1rem 1.15rem; margin: 1.75rem 0; }
+  .principio p { font-family: "Newsreader", Georgia, serif; font-size: 1.24rem; line-height: 1.45; font-weight: 500; color: var(--texto); margin: 0; }
+
+  ul.limpia { list-style: none; padding-left: 0; margin: 0 0 1.1rem; }
+  ul.limpia > li { padding-left: 1.15rem; position: relative; margin-bottom: 0.55rem; text-wrap: pretty; }
+  ul.limpia > li:last-child { margin-bottom: 0; }
+  ul.limpia > li::before { content: ""; position: absolute; left: 0; top: 0.68em; width: 5px; height: 5px; border-radius: 50%; background: var(--borde-fuerte); }
+
+  ol { margin: 0 0 1.1rem; padding-left: 1.2rem; }
+  ol li { margin-bottom: 0.5rem; text-wrap: pretty; }
+
+  .boceto {
+    max-width: 22rem; margin: 1.5rem auto 1.75rem;
+    border: 1px solid var(--borde-fuerte); border-radius: 14px;
+    overflow: hidden; background: var(--fondo);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  }
+
+  .b-barra {
+    background: var(--superficie); border-bottom: 1px solid var(--borde);
+    padding: 0.7rem 0.9rem; font-size: 0.85rem; font-weight: 600;
+    color: var(--marca);
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  }
+  .b-barra .sub { font-family: "Geist Mono", ui-monospace, monospace; font-size: 0.66rem; font-weight: 400; color: var(--texto-3); letter-spacing: 0.04em; }
+
+  .b-cuerpo { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .b-tarjeta {
+    background: var(--superficie); border: 1px solid var(--borde);
+    border-radius: 8px; padding: 0.6rem 0.7rem;
+    font-size: 0.8rem; line-height: 1.45; color: var(--texto-2);
+  }
+  .b-tarjeta .t { font-weight: 600; color: var(--texto); font-size: 0.83rem; display: block; }
+  .b-tarjeta .m { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--texto); }
+  .b-tarjeta.atenuada { opacity: 0.5; }
+  .b-tarjeta.destacada { border-color: var(--borde-fuerte); }
+
+  .b-seccion {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.62rem; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--texto-3); margin: 0.4rem 0 -0.1rem 0.15rem;
+  }
+
+  .b-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+
+  .b-boton {
+    background: var(--marca); color: var(--fondo);
+    border-radius: 8px; padding: 0.55rem;
+    text-align: center; font-size: 0.82rem; font-weight: 500;
+  }
+  .b-boton.suave { background: var(--superficie); color: var(--texto); border: 1px solid var(--borde-fuerte); }
+
+  .b-nav {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    border-top: 1px solid var(--borde); background: var(--superficie);
+  }
+  .b-nav span {
+    font-size: 0.58rem; text-align: center; padding: 0.5rem 0.15rem;
+    color: var(--texto-3); border-top: 2px solid transparent; line-height: 1.2;
+  }
+  .b-nav span.on { color: var(--marca); font-weight: 600; border-top-color: var(--identidad); }
+
+  .pill {
+    display: inline-block;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.6rem; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.12rem 0.35rem; border-radius: 4px;
+    border: 1px solid var(--borde);
+    background: var(--superficie-alt); color: var(--texto-2);
+    white-space: nowrap;
+  }
+  .pill.ok { color: var(--ok); background: var(--ok-fondo); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
+  .pill.info { color: var(--info); background: var(--info-fondo); border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+  .pill.aviso { color: var(--aviso); background: var(--aviso-fondo); border-color: var(--aviso-borde); }
+  .pill.error { color: var(--error); background: var(--error-fondo); border-color: color-mix(in srgb, var(--error) 35%, transparent); }
+
+  .pie-boceto {
+    font-size: 0.82rem; color: var(--texto-3);
+    text-align: center; max-width: 24rem;
+    margin: -1rem auto 2rem; text-wrap: pretty;
+  }
+
+  .hora {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--identidad); display: block; margin: 2rem 0 0.3rem;
+  }
+
+  .tabla-envoltura { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--borde); border-radius: 8px; background: var(--superficie); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 28rem; }
+  th, td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  th {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--texto-3); background: var(--superficie-alt); white-space: nowrap;
+  }
+  td:first-child { font-weight: 500; }
+  td.num { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .riesgo {
+    background: var(--aviso-fondo); border: 1px solid var(--aviso-borde);
+    border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1.5rem 0;
+  }
+  .riesgo .etiqueta {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--aviso); display: block; margin-bottom: 0.4rem;
+  }
+  .riesgo p { font-size: 0.93rem; color: var(--texto-2); margin: 0 0 0.6rem; }
+  .riesgo p:last-child { margin-bottom: 0; }
+
+  .abierta {
+    border: 1px dashed var(--borde-fuerte); border-radius: 8px;
+    padding: 1rem 1.15rem; margin-bottom: 0.75rem; background: var(--superficie);
+  }
+  .abierta h3 { margin: 0 0 0.35rem; font-size: 0.97rem; }
+  .abierta p { font-size: 0.91rem; color: var(--texto-2); margin: 0; }
+
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--borde); font-size: 0.88rem; color: var(--texto-3); }
+
+  @media (max-width: 30rem) {
+    body { font-size: 16px; padding: 0 1rem 4rem; }
+    header.portada { padding-top: 2.5rem; }
+    .boceto { max-width: 100%; }
+  }
+</style>
+
+<div class="hoja">
+
+<header class="portada">
+  <div class="marca-rail"></div>
+  <p class="eyebrow">SGV · Flujo del líder</p>
+  <h1>El ciclo del líder</h1>
+  <p class="bajada">Hace tres trabajos a la vez y uno de ellos es invisible con las métricas del vendedor de ruta. Sus cinco pantallas, qué hereda del esquema anterior y qué necesita distinto.</p>
+  <div class="sello">
+    <span>2026-08-23</span>
+    <span>Continúa a docs/12-flujo-vendedor</span>
+  </div>
+</header>
+
+<section>
+  <h2>Las palabras que usamos</h2>
+
+  <p>Antes de nada, el vocabulario — porque si no lo entiende el vendedor, no sirve. Estas son las palabras del sistema y lo que quiere decir cada una:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Palabra</th><th>Qué es</th></tr></thead>
+      <tbody>
+        <tr><td>Cuenta</td><td>Cualquier negocio registrado, esté en el estado que esté</td></tr>
+        <tr><td>Lead</td><td>Un punto escogido del mapa. Nadie lo ha visitado ni contactado</td></tr>
+        <tr><td>Prospecto</td><td>Ya lo visitaron, sirve, todavía no compra</td></tr>
+        <tr><td>Cliente</td><td>Ya compró</td></tr>
+        <tr><td>Seguimiento</td><td>El registro de algo que ya pasó: una visita, una llamada</td></tr>
+        <tr><td>Compromiso</td><td>Lo que prometió hacer, con su fecha</td></tr>
+        <tr><td><strong>Oportunidad</strong></td><td><strong>Una venta en marcha que va a tomar tiempo</strong></td></tr>
+        <tr><td><strong>Pedido</strong></td><td><strong>Una venta que ya ocurrió</strong></td></tr>
+        <tr><td>Solicitud</td><td>Algo que le pide a la oficina: cotización, factura, muestra, precio</td></tr>
+        <tr><td>Lista</td><td>Un grupo de leads, por zona o por objetivo</td></tr>
+        <tr><td>Ruta</td><td>La lista que le toca trabajar hoy</td></tr>
+        <tr><td>Cadencia</td><td>Cada cuánto hay que visitar a un cliente</td></tr>
+        <tr><td>Jornada</td><td>Un bloque de tiempo que no fue venta: viaje, entrega, día perdido</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">Palabras que dejo de usar</span>
+    <p><strong>“Pipeline”</strong> — la venía usando con tres significados distintos: la pantalla, el conjunto de ventas abiertas, y una clase de día. En el sistema esa pantalla se llama <strong>Oportunidades</strong> y con eso alcanza.</p>
+    <p><strong>“Horizonte”</strong> — palabra inventada para algo que ya tiene nombre: <strong>cuánto tarda en cerrarse una venta</strong>.</p>
+    <p>Y en la aplicación construida, la pantalla todavía dice “Pipeline” en el título. Hay que cambiarla a <strong>Oportunidades</strong>, que es como quedó en el plan v2.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Tres trabajos en la misma semana</h2>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Trabajo</th><th>Qué es</th><th>Ritmo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Caza ejecutiva</strong></td><td>Barrer Calle 50, Costa del Este, Punta Pacífica buscando negocios de perfil medio y alto</td><td>Se ve en el día</td></tr>
+        <tr><td><strong>Ventas grandes</strong></td><td>Bancos, financieras, cadenas. Conseguir a la persona, preparar, reunirse, esperar</td><td>Meses</td></tr>
+        <tr><td><strong>Administración del equipo</strong></td><td>Leer y responder a los dos vendedores</td><td>Un día a la semana</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Más un cuarto que aparece sin invitación: <strong>levantar pedidos en las sucursales de las cadenas que él mismo cerró</strong>. Diez gerentes de Starbucks que piden cada mes.</p>
+
+  <h3>El problema no son las pantallas, es que dos de esos trabajos son invisibles</h3>
+
+  <p>La caza se ve: sale, camina, registra visitas con GPS. Es igual que el vendedor de ruta y las métricas que ya diseñamos la miden bien.</p>
+
+  <p>Las ventas grandes <strong>no se ven</strong>. Seis horas preparando una propuesta para el banco, cuatro intentos de llamada para conseguir al jefe de compras, una reunión de cuarenta minutos que mueve la venta de verdad. Medido con la vara del vendedor de ruta, eso son <em>seis interacciones</em> — y al lado de las cuarenta y siete de Rubén se ve flojo.</p>
+
+  <div class="principio">
+    <p>Es la misma injusticia que la de los viajes a Natá, y necesita la misma corrección: hacer visible el trabajo que no deja rastro.</p>
+  </div>
+
+  <p>Con la diferencia de que en el interior lo invisible es la carretera, y aquí es la preparación y la espera.</p>
+</section>
+
+<section>
+  <h2>Sus cinco pantallas</h2>
+
+  <p>Hereda el esquema del vendedor casi entero. Lo que cambia es que <strong>Oportunidades vuelve a la barra</strong> —las ventas que tardan meses son su trabajo principal, no un anexo—.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Pantalla</th><th>Igual que el vendedor</th><th>Qué cambia</th></tr></thead>
+      <tbody>
+        <tr><td>Agenda</td><td>Sí, con sus dos pestañas</td><td>Su mezcla es llamadas, correos y reuniones, no visitas. Y el viernes se convierte en <strong>Contrato</strong></td></tr>
+        <tr><td>Listas</td><td>Sí, mismo mecanismo</td><td>Dos clases: <em>zonas de ciudad</em> y <em>objetivos nombrados</em></td></tr>
+        <tr><td>Oportunidades</td><td>—</td><td><strong>Entra a la barra.</strong> Es su pantalla principal</td></tr>
+        <tr><td>Cuentas</td><td>Sí</td><td>Prepara reuniones aquí. Consulta más, corrige menos</td></tr>
+        <tr><td>Mapa</td><td>Sí</td><td>Barre zonas de la ciudad por perfil, no pueblos por cobertura</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Contrato no ocupa lugar propio.</strong> Solo importa un día de cinco, así que aparece dentro de Agenda cuando llega el viernes. Una entrada permanente para algo que se usa el veinte por ciento de los días estorba el otro ochenta.</p>
+</section>
+
+<section>
+  <h2>Sus listas son de dos clases</h2>
+
+  <p>El mecanismo es idéntico —un paquete permanente, se compromete una cantidad por semana— pero lo que hay adentro no se parece.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Lista de zona</th><th>Lista de objetivos</th></tr></thead>
+      <tbody>
+        <tr><td>Ejemplo</td><td>Costa del Este · Punta Pacífica</td><td>Bancos y financieras · Cadenas Q4</td></tr>
+        <tr><td>Cómo se arma</td><td>Barriendo el mapa, filtrando por perfil</td><td>Por nombre: uno ya sabe cuáles son</td></tr>
+        <tr><td>Cuántos</td><td>Veinte, treinta</td><td>Diez, quince</td></tr>
+        <tr><td>Qué son los puntos</td><td>Locales comerciales</td><td>Sobre todo <strong>oficinas de negociación</strong></td></tr>
+        <tr><td>Qué se hace con ellos</td><td>Se visitan</td><td>Se persigue a una persona</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Esa última fila importa más de lo que parece. <strong>A un banco no se le vende en la sucursal.</strong> El mapa te da veinte sucursales y ninguna sirve: la decisión está en una oficina corporativa que no aparece buscando “banco”. Por eso sus objetivos son casi todos del tipo <em>oficina de negociación</em> — la distinción que agregamos para las cadenas resulta ser justo la que él necesita todos los días.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Listas</span><span class="sub">DAMIÁN</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">Zonas</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Costa del Este</span><span class="m">18 sin tocar</span></div>
+        <div class="b-fila">Comprometidos esta semana <span class="m">6</span></div>
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Calle 50</span><span class="m">24 sin tocar</span></div>
+        <div class="b-fila">14 llevan más de 2 meses <span class="pill aviso">Revisar</span></div>
+      </div>
+      <p class="b-seccion">Objetivos</p>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Banca corporativa</span><span class="pill info">Grande</span></div>
+        <div class="b-fila">Contactados 4 de 6 · con reunión 2 · cotizados 1</div>
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Bancos medianos</span><span class="pill">Rápida</span></div>
+        <div class="b-fila">Contactados 5 de 9 · 2 cerrados</div>
+      </div>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Supermercados corporativos</span><span class="pill info">Grande</span></div>
+        <div class="b-fila">Contactados 3 de 5 · 2 en negociación</div>
+      </div>
+      <div class="b-boton suave">Nueva lista</div>
+    </div>
+    <div class="b-nav"><span>Agenda</span><span class="on">Listas</span><span>Oportunidades</span><span>Cuentas</span><span>Mapa</span></div>
+  </div>
+  <p class="pie-boceto">La lista de objetivos muestra avance por etapa, no solo cuántos quedan. Es el plan que gerencia pedía tener a la vista.</p>
+
+  <p>Y ahí se resuelve, sin construir nada nuevo, la queja original de gerencia: <em>“su enfoque no está basado en un plan que yo tenga a la vista”</em>. <strong>La lista de objetivos es el plan</strong>, y su avance por etapa dice si se está moviendo.</p>
+</section>
+
+<section>
+  <h2>Qué objetivos ponerle</h2>
+
+  <p>En su cartera hay dos clases de venta y no se parecen en nada:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Venta rápida</th><th>Venta grande</th></tr></thead>
+      <tbody>
+        <tr><td>Cuánto tarda</td><td>Días o semanas</td><td>Meses</td></tr>
+        <tr><td>Quiénes son</td><td>Restaurante, minisúper, farmacia suelta, panadería</td><td>Banco, financiera, cadena de supermercados, gobierno</td></tr>
+        <tr><td>Cuánto vale</td><td>Poco, pero entra ya</td><td>Mucho, pero tarda</td></tr>
+        <tr><td>Qué hace por la empresa</td><td><strong>Paga el mes</strong></td><td><strong>Construye el año</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Eso es todo el vocabulario que hace falta. Dos clases, nada más.</p>
+
+  <h3>Por qué falla decirle “este mes trabaja bancos”</h3>
+
+  <p>Un banco tarda seis meses. Si dedica el mes a bancos, cierra cero — y el mes se ve vacío aunque haya trabajado bien. Al mes siguiente, para que no le vuelva a pasar, se vuelca a lo rápido. Y el banco que valía diez veces más se queda a medio empezar.</p>
+
+  <div class="principio">
+    <p>Si solo hace ventas rápidas, nunca aterriza un banco. Si solo hace ventas grandes, no factura en seis meses.</p>
+  </div>
+
+  <p>Él ya resuelve eso mezclando las dos, y hace bien. <strong>El problema no es que mezcle: es que nadie sabe cómo está mezclando</strong>, así que no se puede decir si la mezcla es la correcta ni corregirla a tiempo.</p>
+
+  <h3>La corrección: dos varas, no una</h3>
+
+  <p>Las dos clases de venta no se pueden medir igual, y ahí está la causa de fondo del problema:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Clase</th><th>Se le mide</th><th>Cada cuánto se revisa</th></tr></thead>
+      <tbody>
+        <tr><td>Ventas rápidas</td><td><strong>Cuánto dinero cerró</strong></td><td>Cada mes</td></tr>
+        <tr><td>Ventas grandes</td><td><strong>Si avanzaron</strong>: reuniones conseguidas, etapas que subieron</td><td>Cada tres meses</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">Esto es lo importante de toda la sección</span>
+    <p>Si a las ventas grandes se les mide con dinero cerrado <em>este mes</em>, siempre van a dar cero — porque todavía no cierran. Y una cosa que siempre da cero, se abandona.</p>
+    <p><strong>La forma de medir es la que hace que el líder deje de perseguir bancos.</strong> No es falta de ganas.</p>
+  </div>
+
+  <h3>Qué le dices el lunes</h3>
+
+  <p>No le dictas los nombres —él conoce el mercado mejor que la oficina— pero sí le pones un mínimo que no puede bajar:</p>
+
+  <div class="principio">
+    <p>“Nunca me bajes de tres ventas grandes trabajándose. Lo que tienes que facturar este mes lo sacas de las rápidas.”</p>
+  </div>
+
+  <p>Dos frases. Él decide si esas tres grandes son bancos, financieras o una cadena de farmacias — eso es cosa suya. Y lo que se revisa cada mes es distinto para cada mitad:</p>
+
+  <ul class="limpia">
+    <li><strong>De las rápidas:</strong> cuánto facturó.</li>
+    <li><strong>De las tres grandes:</strong> si se movieron. Una reunión conseguida, una cotización entregada, una etapa que subió. Si las tres están congeladas hace dos meses, ahí hay conversación aunque el mes de dinero haya salido bien.</li>
+  </ul>
+
+  <p>Si con el tiempo el mínimo de tres se cumple sin esfuerzo, se sube. Pero el número fino sale de tres meses de datos, igual que las bandas de los vendedores — <strong>no se inventa desde la oficina.</strong></p>
+
+  <h3>Lo que esto permite ver</h3>
+
+  <p>Cuando la mezcla está declarada, se puede cruzar con el reparto de días que él ya declara en su plan:</p>
+
+  <div class="principio">
+    <p>Si tiene tres ventas grandes vivas y ni un solo día de oficina en la semana, esas tres ventas están abandonadas.</p>
+  </div>
+
+  <p>No es una conversación sobre esfuerzo. Es sobre si le está dedicando el tiempo que él mismo dijo que le iba a dedicar.</p>
+
+  <h3>Y la pregunta del mes cambia</h3>
+
+  <p>Cada venta en marcha ya lleva su fecha estimada de cierre desde la Etapa 5. Sumadas, dicen aproximadamente cuándo entra la plata:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>En vez de</th><th>Preguntar</th></tr></thead>
+      <tbody>
+        <tr><td><em>“¿Qué cerraste este mes?”</em></td><td><em>“¿Qué se ve entrando en los próximos tres meses, y por qué octubre está vacío?”</em></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>La primera se contesta mirando atrás y ya no se puede corregir. La segunda se contesta en agosto, cuando todavía se puede hacer algo con octubre.</p>
+
+  <h3>Qué necesita el sistema</h3>
+
+  <h3>La clase vive en dos lugares, y no es redundancia</h3>
+
+  <p>Llegué a decir que la clase se deduce sola de la fecha estimada de cierre y que la lista no necesitaba el campo. <strong>Estaba equivocado</strong>, y la razón es que las dos cosas ocurren en momentos distintos:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>En la lista</th><th>En la venta</th></tr></thead>
+      <tbody>
+        <tr><td>Qué es</td><td>Lo que él <strong>espera</strong> al armarla</td><td>Lo que <strong>resultó</strong>, según la fecha de cierre</td></tr>
+        <tr><td>Cuándo se pone</td><td>Al crear el grupo, antes de contactar a nadie</td><td>Al abrir la venta, o cuando se mueve la fecha</td></tr>
+        <tr><td>Para qué sirve</td><td><strong>Planificar la mezcla</strong></td><td><strong>Medir la mezcla real</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Sin el campo en la lista, la mezcla solo se puede mirar hacia atrás — y la mezcla es una decisión que él toma antes de empezar, no algo que se observa después.</p>
+
+  <h3>Y la misma categoría puede ser de las dos clases</h3>
+
+  <p>Eso es lo que terminó de convencerme: un supermercado regional de tres tiendas cierra en semanas; una cadena corporativa tarda meses. <strong>“Supermercados” no es el eje</strong> — el eje es qué tan duro está ese grupo en particular, y eso es un juicio suyo al armarlo. Por eso arma listas como:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Lista</th><th>Clase</th><th>Cuántos</th></tr></thead>
+      <tbody>
+        <tr><td>Supermercados regionales</td><td><span class="pill">Rápida</span></td><td class="num">18</td></tr>
+        <tr><td>Supermercados corporativos</td><td><span class="pill info">Grande</span></td><td class="num">5</td></tr>
+        <tr><td>Bancos medianos</td><td><span class="pill">Rápida</span></td><td class="num">9</td></tr>
+        <tr><td>Banca corporativa</td><td><span class="pill info">Grande</span></td><td class="num">6</td></tr>
+        <tr><td>Panaderías Calle 50</td><td><span class="pill">Rápida</span></td><td class="num">14</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Ahí está su mezcla declarada, antes de levantar el teléfono. Y al abrir una venta desde una lista marcada como grande, <strong>la fecha estimada de cierre viene sugerida a meses y no a semanas</strong> — le ahorra el paso y de paso evita el optimismo del primer día.</p>
+
+  <div class="principio">
+    <p>Cuando lo esperado y lo que resultó no coinciden, eso no es un error de captura: es un hallazgo de mercado.</p>
+  </div>
+
+  <p>Si marcó “bancos medianos” como rápida y las seis ventas que salieron de ahí terminaron tardando cuatro meses, <strong>su lectura de ese segmento estaba equivocada</strong> — y saberlo vale más que cualquiera de las dos marcas por separado. Es información sobre el mercado, no sobre él.</p>
+
+  <h3>Qué necesita el sistema</h3>
+
+  <ul class="limpia">
+    <li><strong>La lista lleva su clase esperada</strong>: rápida o grande. Un campo, dos opciones, se pone al crearla.</li>
+    <li><strong>La venta lleva la real</strong>, deducida de su fecha estimada de cierre. Sin capturar nada.</li>
+    <li><strong>Oportunidades separada en las dos clases</strong>, además de por etapa.</li>
+    <li><strong>Una vista por mes de cierre</strong>, que es la que contesta cuándo entra la plata. No existía.</li>
+    <li><strong>En su cierre semanal, cuántas grandes tiene vivas</strong>, con el mínimo al lado.</li>
+    <li><strong>En la Agenda, una marca</strong> —no una sección— en lo que pertenece a una venta grande.</li>
+  </ul>
+
+  <p>Y una propiedad que se conserva: <strong>si empuja la fecha tres veces, la venta pasa sola de rápida a grande.</strong> Lo esperado no cambia; lo real sí. Que es justo lo que hay que poder comparar.</p>
+
+  <h3>Una venta grande “viva” es una con oportunidad abierta</h3>
+
+  <p>Conviene fijarlo ahora, porque si no el mínimo de tres se cumple con nombres en una lista. <strong>Un banco al que nunca contactó no es una venta grande viva: es un nombre.</strong></p>
+
+  <p>Viva quiere decir: tiene una oportunidad abierta, con monto y con fecha estimada de cierre a más de un mes. Eso ya obliga a haber hablado con alguien.</p>
+
+  <p>Es decir: <strong>el mínimo se cuenta sobre ventas abiertas, no sobre listas.</strong> Tener una lista de seis bancos corporativos marcada como grande es haber planificado; tener tres ventas abiertas con ellos es haber empezado. Las dos cosas se miran, pero solo la segunda cuenta para el piso.</p>
+</section>
+
+<section>
+  <h2>Un día del líder</h2>
+
+  <span class="hora">7:50 · En la oficina</span>
+  <p>Abre Agenda. Su <em>Hoy</em> no se parece al del vendedor de ruta: casi no hay paradas y sí hay mucha llamada, y arriba aparece la venta que se está enfriando.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Agenda</span><span class="sub">MAR 26 · SEM 35</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta destacada">
+        <span class="t">Hoy: Calle 50</span>
+        <div class="b-fila" style="margin-top:.3rem">Día de calle · 14 leads <span class="m">0 / 17</span></div>
+      </div>
+      <p class="b-seccion">Calle 50 · 17</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Panadería La Espiga</span><span class="pill aviso">Sin clasificar</span></div>
+        Panadería · 300 m
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Café Unido</span><span class="pill aviso">Sin clasificar</span></div>
+        Cafetería · 450 m
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Grupo Rey · compras</span><span class="m">14:30</span></div>
+        <div class="b-fila">Reunión · presentar propuesta</div>
+        <div class="b-fila"><span class="pill info">Rollos térmicos · $9,800</span></div>
+      </div>
+      <p class="b-seccion">Se está enfriando · 2</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Banco Aliado</span><span class="pill error">34 días</span></div>
+        <div class="b-fila"><span class="pill info">Rollos ATM · $14,200</span> Cotizado</div>
+      </div>
+      <p class="b-seccion">Llamadas y correos · 7 · <span style="text-transform:none;letter-spacing:0">2 de venta grande</span></p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Financiera del Istmo</span><span class="pill">4º intento</span></div>
+        <div class="b-fila">Conseguir al jefe de compras</div>
+        <div class="b-fila"><span class="pill info">Rollos y bolsas · sin monto</span></div>
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Starbucks · 6 tiendas</span><span class="pill">Pedidos</span></div>
+        Levantar la orden del mes
+      </div>
+      <p class="b-seccion">Esperando respuesta · 2</p>
+      <div class="b-tarjeta atenuada">
+        <div class="b-fila"><span class="t">Multibank</span><span class="pill aviso">6 h</span></div>
+        <div class="b-fila">Precio especial <span class="pill">Bolsas cafetería</span></div>
+      </div>
+    </div>
+    <div class="b-nav"><span class="on">Agenda</span><span>Listas</span><span>Oportunidades</span><span>Cuentas</span><span>Mapa</span></div>
+  </div>
+  <p class="pie-boceto">Mismo esqueleto que el vendedor. Cada renglón que pertenece a una venta la nombra debajo.</p>
+
+  <h3>Su lista de zona se ve igual que la del interior</h3>
+
+  <p>Arma “Panaderías Calle 50” en el mapa, le asigna el martes en el cierre del viernes, y el martes la Agenda abre con esa lista arriba. <strong>Idéntico al vendedor de ruta.</strong></p>
+
+  <p>Con una diferencia que importa: <strong>el renglón de la lista no dice si hay que ir o llamar.</strong> Es un lead por trabajar, y él decide en el momento — a la panadería de la esquina entra, a la de seis cuadras la llama primero. Lo que hizo queda registrado en el seguimiento, que es donde corresponde.</p>
+
+  <p>Y si el día está declarado como <em>calle</em>, la lista viene ordenada por cercanía. Si está declarado como <em>oficina</em>, no — porque no va a manejar hacia ninguna.</p>
+
+  <p>Dos grupos que el vendedor de ruta no tiene, y que son la mitad de su día:</p>
+
+  <p>Y una decisión que conviene explicar porque se nota en el dibujo: <strong>la Agenda no separa por clase de venta, solo la marca.</strong> A las nueve de la mañana una llamada al banco y una a la panadería son las dos una llamada por hacer; agruparlas por clase obligaría a pensar en categorías antes de trabajar. Pero la marca sí está, para que vea de un vistazo que de siete llamadas solo dos son de venta grande — que es lo primero que se cae cuando el día aprieta.</p>
+
+  <ul class="limpia">
+    <li><strong>Se está enfriando</strong> — ventas en marcha que llevan demasiado sin moverse. Es el equivalente de “fuera de cadencia”, pero aplicado a las ventas en vez de a los clientes. Cuando una venta tarda meses, se muere de silencio sin que nadie lo note.</li>
+    <li><strong>Reuniones</strong> — separadas de las visitas a propósito. Ver más abajo.</li>
+  </ul>
+
+  <span class="hora">9:30 · Cuatro intentos a la financiera</span>
+  <p>Llama, no está, deja mensaje. Registra el seguimiento en diez segundos: llamada, <em>no estaba el encargado</em>, próximo paso mañana. Es el mismo formulario del vendedor con tres bloques visibles.</p>
+
+  <p>Ese cuarto intento tiene un valor que conviene no perder: <strong>conseguir a la persona es la parte difícil de su trabajo</strong>, y el conteo de intentos por contacto conseguido es una medida real de qué tan duro está el mercado ejecutivo.</p>
+
+  <span class="hora">14:30 · Reunión en Grupo Rey</span>
+  <p>Cuarenta minutos con el jefe de compras. Registra: reunión, con check-in en su oficina, resultado, y mueve la oportunidad de <em>contactado</em> a <em>cotizado</em>.</p>
+
+  <div class="riesgo">
+    <span class="etiqueta">Falta un tipo de interacción</span>
+    <p>El catálogo tiene visita, llamada, WhatsApp, correo y entrega de muestra. <strong>No tiene reunión</strong>, y para él es la unidad que importa: una reunión conseguida con un jefe de compras es el avance real, y cuesta semanas de insistencia.</p>
+    <p>Contarla como “visita” la mezcla con pasar por un minisúper. Son cosas distintas y hay que poder contarlas aparte.</p>
+  </div>
+
+  <span class="hora">16:00 · Los pedidos de Starbucks</span>
+  <p>Seis llamadas a seis gerentes de tienda. Cada una termina en una solicitud de tipo pedido, así que <strong>el sistema las cuenta solo como toma de pedidos</strong>, sin que él marque nada.</p>
+
+  <p>Al final del mes ese número contesta la pregunta que gerencia no puede contestar hoy: <em>¿cuánto de la semana del líder se va en levantar órdenes que iban a llegar igual?</em></p>
+</section>
+
+<section>
+  <h2>Dónde nace una venta grande</h2>
+
+  <p>Tu sospecha era que se crea desde el registro de seguimiento, y te preocupaba que eso hiciera su formulario distinto al de los otros dos. <strong>Se crea ahí, y el formulario sigue siendo el mismo.</strong></p>
+
+  <p>Funciona con la misma mecánica de bloques condicionales que ya tiene: el bloque de pedido aparece cuando el resultado es <em>compró</em>; el de oportunidad aparece cuando el resultado dice que hay una venta empezando —<em>pide cotización</em>, <em>quiere precio</em>, <em>pide muestra</em>—.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Registrar seguimiento</span><span class="sub">GRUPO REY</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta atenuada"><span class="t">✓ Reunión · resultado: pide cotización</span></div>
+      <div class="b-tarjeta destacada">
+        <span class="t">¿Esta venta va a tomar tiempo?</span>
+        <div class="b-fila" style="margin-top:.3rem;flex-wrap:wrap;gap:.25rem"><span class="pill info">Abrir una venta</span><span class="pill">Se resuelve en la próxima visita</span></div>
+        Si vas a volver más de una vez por lo mismo, ábrela
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Nombre</span><span class="m">Rollos térmicos</span></div>
+        <div class="b-fila">Monto estimado <span class="m">$9,800</span></div>
+        <div class="b-fila">Cierra alrededor de <span class="m">nov</span> <span class="pill info">Grande</span></div>
+      </div>
+      <div class="b-boton">Guardar</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Un bloque más, opcional. El vendedor de ruta lo ve y casi siempre lo salta.</p>
+
+  <div class="principio">
+    <p>El formulario es idéntico para los tres. Lo que cambia es cuál bloque toca cada uno.</p>
+  </div>
+
+  <p>El vendedor de ruta también recibe “pide cotización”, y también ve el bloque — solo que casi siempre elige <em>se resuelve en la próxima visita</em> y sigue. Nadie tiene una pantalla especial.</p>
+
+  <h3>El otro camino</h3>
+
+  <p>Desde la pantalla de Oportunidades o desde el expediente de la cuenta, cuando decide perseguir algo antes de que haya pasado nada — <em>“voy a ir por Banco Aliado este trimestre”</em>. Los dos caminos existen porque los dos ocurren.</p>
+
+  <p>Con un cuidado: <strong>abrir una venta que nadie ha empezado a trabajar no la vuelve real.</strong> Si a los treinta días no se ha movido, aparece como estancada — que es exactamente lo que es.</p>
+</section>
+
+<section>
+  <h2>Cada renglón dice a qué venta pertenece</h2>
+
+  <p>Esto que describiste está bien y falta construirlo. <strong>“Banco Aliado” a secas no alcanza</strong>: puede tener dos ventas abiertas al mismo tiempo —rollos para los cajeros y bolsas para la cafetería— y un compromiso sin referencia no dice cuál de las dos.</p>
+
+  <p>Entonces cada renglón de la Agenda lleva las dos cosas: <strong>la cuenta arriba y la venta debajo.</strong></p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Renglón</th><th>Qué muestra</th></tr></thead>
+      <tbody>
+        <tr><td>Compromiso de una venta</td><td>Banco Aliado · <em>Rollos ATM · $14,200</em></td></tr>
+        <tr><td>Compromiso sin venta</td><td>Panadería La Espiga · solo la cuenta</td></tr>
+        <tr><td>Solicitud esperando</td><td>Multibank · <em>Bolsas cafetería</em></td></tr>
+        <tr><td>Lead de la lista</td><td>Solo el nombre: todavía no hay nada que referenciar</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">Hueco en lo construido</span>
+    <p>El <strong>seguimiento</strong> ya se puede ligar a una venta —<code>oportunidad_id</code> existe desde la Etapa 5—. El <strong>compromiso</strong> no, y el compromiso es de lo que está hecha la Agenda.</p>
+    <p>Falta ese vínculo. Cuando un seguimiento ligado a una venta deja un próximo paso, <strong>el compromiso debería heredar la liga solo</strong>, sin que él tenga que elegirla otra vez.</p>
+  </div>
+
+  <h3>Y el lazo se cierra por los dos lados</h3>
+
+  <ul class="limpia">
+    <li><strong>Desde la Agenda</strong> ve a qué venta sirve cada cosa que va a hacer hoy.</li>
+    <li><strong>Desde la venta</strong> ve todo lo que tiene pendiente sobre ella: los seguimientos que ya ocurrieron, los compromisos que quedan por delante y las solicitudes que están esperando.</li>
+  </ul>
+
+  <p>Sin la segunda mitad, abrir una venta que lleva dos meses obliga a reconstruir de memoria qué se prometió. Con ella, la bitácora y lo pendiente están en la misma pantalla — que es justo lo que hace falta antes de una reunión.</p>
+</section>
+
+<section>
+  <h2>Qué contesta cada pantalla</h2>
+
+  <p>Esta tabla habría evitado la confusión: cada pregunta se contesta en un lugar, y ninguna pantalla contesta dos.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Pregunta</th><th>Dónde se contesta</th><th>Mira hacia</th></tr></thead>
+      <tbody>
+        <tr><td>¿Qué hago hoy?</td><td>Agenda · Hoy</td><td>Ahora</td></tr>
+        <tr><td>¿A quién no he tocado?</td><td>Listas</td><td>Ahora</td></tr>
+        <tr><td>¿Qué hice esta semana?</td><td>Agenda · Mi semana · el cierre</td><td><strong>Atrás</strong></td></tr>
+        <tr><td>¿Cuánto va a entrar y cuándo?</td><td>Oportunidades · por mes</td><td><strong>Adelante</strong></td></tr>
+        <tr><td>¿Qué falta en esta venta?</td><td>La venta misma</td><td>Las dos</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="riesgo">
+    <span class="etiqueta">El error que cometí explicándolo</span>
+    <p>Hablé de ver el hueco de octubre y después te mostré el cierre semanal, que <strong>mira hacia atrás</strong> y nunca va a contestar eso. Son dos pantallas distintas para dos preguntas distintas, y no lo dije.</p>
+  </div>
+</section>
+
+<section>
+  <h2>La pantalla de Oportunidades</h2>
+
+  <p>No la había dibujado y es la suya. Tiene <strong>dos vistas de lo mismo</strong>, y cada una contesta una pregunta distinta:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Vista</th><th>Contesta</th><th>Cuándo la mira</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Por etapa</strong></td><td>¿En qué momento está cada venta?</td><td>Al trabajar el día</td></tr>
+        <tr><td><strong>Por mes de cierre</strong></td><td>¿Cuánto va a entrar y cuándo?</td><td>Al cerrar el mes, con gerencia</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>La primera existe hoy. <strong>La segunda es la que faltaba</strong>, y es a la que me refería con lo de octubre:</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Oportunidades</span><span class="sub">POR MES DE CIERRE</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta">
+        <div class="b-fila" style="flex-wrap:wrap;gap:.25rem"><span class="pill">Por etapa</span><span class="pill info">Por mes</span></div>
+      </div>
+      <p class="b-seccion">Septiembre</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">4 ventas</span><span class="m">$18,400</span></div>
+        <div class="b-fila">Farmacias Arrocha <span class="pill info">Grande</span></div>
+        <div class="b-fila">Rest. La Terraza <span class="pill">Rápida</span></div>
+      </div>
+      <p class="b-seccion">Octubre</p>
+      <div class="b-tarjeta destacada" style="border-color:var(--aviso-borde);background:var(--aviso-fondo)">
+        <div class="b-fila"><span class="t">1 venta</span><span class="m">$2,100</span></div>
+        Aquí no hay nada. Se ve en agosto, se puede arreglar en septiembre
+      </div>
+      <p class="b-seccion">Noviembre</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">3 ventas</span><span class="m">$41,000</span></div>
+        <div class="b-fila">Banco Aliado <span class="pill info">Grande</span></div>
+      </div>
+      <p class="b-seccion">Sin fecha · 2</p>
+      <div class="b-tarjeta atenuada">
+        <div class="b-fila"><span class="t">$8,900</span><span class="pill aviso">Ponerles fecha</span></div>
+        No se pueden proyectar hasta que tengan una
+      </div>
+    </div>
+    <div class="b-nav"><span>Agenda</span><span>Listas</span><span class="on">Oportunidades</span><span>Cuentas</span><span>Mapa</span></div>
+  </div>
+  <p class="pie-boceto">El hueco de octubre no es una alarma del sistema: es que se ve solo cuando las ventas se ordenan por mes.</p>
+
+  <p>Dos cosas que salen de esta vista y no de ninguna otra:</p>
+
+  <ul class="limpia">
+    <li><strong>El hueco.</strong> En agosto ya se sabe que octubre está vacío, y en agosto todavía se puede hacer algo — meter ventas rápidas que cierren en seis semanas. Cuando llega octubre ya no.</li>
+    <li><strong>Las que no tienen fecha.</strong> Una venta sin fecha estimada es invisible para la proyección, y son las que se pudren calladas. Verlas juntas obliga a ponerles una o cerrarlas.</li>
+  </ul>
+
+  <h3>Y aquí se ve la mezcla</h3>
+
+  <p>Cada venta trae su marca de rápida o grande, así que la misma pantalla contesta si la mezcla está bien: si todo lo de los próximos dos meses es rápido y lo grande está en noviembre y diciembre, está bien repartido. Si no hay nada grande en ningún mes, el año viene flojo aunque el mes se vea bien.</p>
+</section>
+
+<section>
+  <h2>Su cierre se mide distinto</h2>
+
+  <p>Mismos cuatro bloques en la forma, contenido distinto — porque medir su semana con la vara del vendedor de ruta daría una lectura falsa en las dos direcciones.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Semana 35 · cerrada</span><span class="sub">SEM · MES</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">Esfuerzo</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Interacciones <span class="m">22 · 84</span></div>
+        <div class="b-fila">Reuniones <span class="m">3 · 9</span></div>
+        <div class="b-fila">Intentos por contacto logrado <span class="m">3.4</span></div>
+        <div class="b-fila">Días declarados <span class="m">2 calle · 2 oficina · 1 admin</span></div>
+      </div>
+      <p class="b-seccion">Caza ejecutiva</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Leads tocados <span class="m">6 de 6 · 21</span></div>
+        <div class="b-fila">Objetivos que avanzaron <span class="m">2 · 7</span></div>
+        <div class="b-fila">Reuniones conseguidas <span class="m">1 · 4</span></div>
+      </div>
+      <p class="b-seccion">Ventas rápidas</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Cerradas</span><span class="m">3 · $4,900</span></div>
+        <div class="b-fila">Abiertas <span class="m">7 · $21,300</span></div>
+        <div class="b-fila">Perdidas <span class="m">1</span></div>
+      </div>
+      <p class="b-seccion">Ventas grandes</p>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Vivas</span><span class="m">4 · mínimo 3</span><span class="pill ok">Cumple</span></div>
+        <div class="b-fila">Avanzaron de etapa <span class="m">2</span></div>
+        <div class="b-fila">Reuniones conseguidas <span class="m">1</span></div>
+        <div class="b-fila">Sin moverse +30 días <span class="m">1 · $19,800</span></div>
+        <div class="b-fila">En marcha <span class="m">$71,100</span></div>
+      </div>
+      <p class="b-seccion">Equipo</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Respondió a <span class="m">2 de 2</span></div>
+        <div class="b-fila">Semanas sin responder <span class="m">0</span></div>
+        <div class="b-fila">Toma de pedidos <span class="m">18 · 38% de sus interacciones</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="pie-boceto">Las dos clases van separadas: las rápidas se leen en dinero, las grandes en movimiento.</p>
+
+  <p>Ahí está la distinción que faltaba. <strong>Las rápidas se leen en dinero cerrado, las grandes en si se movieron</strong>, y el mínimo de tres aparece al lado del conteo para que no haya que acordarse de él.</p>
+
+  <p>Y veintidós interacciones suyas no se comparan con las cuarenta y siete de Rubén: son oficios distintos y bandas distintas.</p>
+
+  <p>Cuatro cifras que no existen en el cierre del vendedor de ruta, y cada una está por una razón:</p>
+
+  <ul class="limpia">
+    <li><strong>Reuniones conseguidas</strong> — su unidad de avance real. Tres reuniones con jefes de compras valen más que treinta visitas de mostrador, y sin este número no se ve.</li>
+    <li><strong>Intentos por contacto logrado</strong> — mide qué tan duro está el mercado ejecutivo, no qué tan flojo está él. Si sube de tres a seis, algo cambió afuera.</li>
+    <li><strong>Estancadas más de treinta días</strong> — la alarma de la venta que se enfrió. D-005 dejó <em>negociación</em> como etapa ancha a propósito; esta cifra es lo que evita que se vuelva un basurero.</li>
+    <li><strong>Toma de pedidos como porcentaje</strong> — cuánto de su semana no fue vender. Es el dato que le falta a gerencia para decidir si eso lo sigue haciendo él.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>El conflicto estructural de su semana</h2>
+
+  <p>Sus tres trabajos no compiten en igualdad de condiciones:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Trabajo</th><th>Se siente</th><th>Qué le pasa cuando aprieta</th></tr></thead>
+      <tbody>
+        <tr><td>Caza</td><td>Urgente y productivo</td><td>Se mantiene</td></tr>
+        <tr><td>Ventas grandes</td><td>Importante</td><td>Se mantiene: es su cuota</td></tr>
+        <tr><td><strong>Administración</strong></td><td>Ni urgente ni visible</td><td><strong>Es la primera que suelta</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Es la falla clásica del jugador-entrenador y es cuestión de cuándo, no de si. Su venta es medible este mes; acompañar a dos personas rinde en tres.</p>
+
+  <h3>Lo que lo protege</h3>
+
+  <p><strong>No es disciplina, es que el hueco se vea.</strong> El bloque de Equipo en su propio cierre —<em>respondió a 2 de 2, semanas sin responder: 0</em>— hace que su trabajo de líder se mida como cualquier otra cosa. Un ritual semanal se muere en silencio, y el tablero tiene que hacer ruido.</p>
+
+  <h3>Y que declare cómo reparte la semana</h3>
+
+  <p>El vendedor de ruta reparte <em>zonas</em> por día. El líder reparte <strong>clases de día</strong>, con el mismo mecanismo del cierre del viernes:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Clase de día</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Calle</strong></td><td>Sale a visitar y a buscar negocios nuevos en una zona</td></tr>
+        <tr><td><strong>Oficina</strong></td><td>Llamadas, propuestas y reuniones de las ventas que ya tiene en marcha</td></tr>
+        <tr><td><strong>Cadenas</strong></td><td>Levantar los pedidos de las sucursales</td></tr>
+        <tr><td><strong>Administración</strong></td><td>El viernes: leer, responder y cerrar</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Si declara dos días de oficina y uno de administración, y la semana termina con cinco días de calle y cero respuestas, <strong>eso se ve sin que nadie tenga que auditar nada</strong>. Y si pasa dos semanas seguidas, es una conversación de gerencia con él — que es exactamente el mismo trato que él le da a sus dos vendedores.</p>
+</section>
+
+<section>
+  <h2>Su plan de la semana</h2>
+
+  <p>El mecanismo es el mismo que el de los otros dos: <strong>las listas se van llenando cuando quiera</strong> —un domingo, una noche, cada vez que encuentra algo en el mapa— y el viernes se compromete con una cantidad de cada una.</p>
+
+  <p>Igual reparte las listas en los días y le pone número a cada una. Dos ajustes chicos y uno grande.</p>
+
+  <h3>Chico: un día aguanta más de una lista</h3>
+
+  <p>Al vendedor del interior la geografía se lo impide — no puede estar en Aguadulce y en Chitré el mismo día. En la ciudad las distancias son de minutos, así que el líder puede hacer panaderías de Calle 50 por la mañana y restaurantes de San Francisco por la tarde.</p>
+
+  <p>No es un caso especial suyo: al de ciudad le pasa igual, y hasta el del interior podría querer dos pueblos cercanos el mismo día. <strong>El formulario deja poner más de una lista por día, y ya.</strong></p>
+
+  <h3>Chico: hay días sin ninguna lista</h3>
+
+  <p>Un día de oficina o uno de administración no lleva lista. Se marca como lo que es y no pide cantidad.</p>
+
+  <h3>Grande: lo rápido se compromete en cantidad, lo grande por nombre</h3>
+
+  <div class="principio">
+    <p>Se pueden contar panaderías. No se pueden contar bancos.</p>
+  </div>
+
+  <p>Decir <em>“voy a tocar 3 de banca corporativa”</em> no significa nada cuando la lista tiene seis nombres y cada uno es una historia distinta. Ahí la pregunta no es cuántos, es <strong>cuál y qué avance</strong>: conseguir la reunión, entregar la propuesta, sacar la orden de compra.</p>
+
+  <p>Y si el plan solo llevara cantidades de las listas rápidas, <strong>las ventas grandes se caerían del plan otra vez</strong> — que es exactamente lo que estamos tratando de evitar. Por eso su apuesta tiene tres partes:</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Cerrar la semana 35</span><span class="sub">PASO 3 DE 4</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">Reparte tus días</p>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Lunes · calle</span><span class="m">14</span></div>
+        <div class="b-fila">Panaderías Calle 50 <span class="pill">Rápida</span></div>
+      </div>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Martes · calle</span><span class="m">10 + 6</span></div>
+        <div class="b-fila">Restaurantes San Francisco <span class="pill">Rápida</span></div>
+        <div class="b-fila">Minisúper Costa del Este <span class="pill">Rápida</span></div>
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Miércoles · oficina</span><span class="pill">Sin lista</span></div>
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Jueves · cadenas</span><span class="pill">Pedidos</span></div>
+      </div>
+      <div class="b-tarjeta atenuada">
+        <div class="b-fila"><span class="t">Viernes · administración</span></div>
+      </div>
+      <p class="b-seccion">Tu apuesta</p>
+      <div class="b-tarjeta destacada"><div class="b-fila"><span class="t">Leads que vas a tocar</span><span class="m">30</span></div></div>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Clientes que vas a visitar</span><span class="m">5</span></div>
+        Tienes 9 fuera de cadencia
+      </div>
+      <p class="b-seccion">Ventas grandes que vas a mover</p>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Banco Aliado</span><span class="pill info">Rollos ATM</span></div>
+        Conseguir la reunión con compras
+      </div>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Supermercados Xtra</span><span class="pill info">Bolsas</span></div>
+        Entregar la propuesta
+      </div>
+      <div class="b-tarjeta atenuada">Tienes 4 grandes vivas · mínimo 3 <span class="pill ok">Cumple</span></div>
+      <div class="b-boton">Continuar</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Dos números para lo rápido. Nombres y avances concretos para lo grande.</p>
+
+  <p>Esa tercera parte es corta a propósito — dos o tres renglones — y se arma escogiendo de sus ventas abiertas, no escribiendo. <strong>Es lo que hace que las grandes tengan que aparecer en el plan todas las semanas</strong>, aunque no vayan a cerrar en ninguna.</p>
+
+  <h3>Y así se lee su cumplimiento</h3>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Qué prometió</th><th>Cómo se verifica</th></tr></thead>
+      <tbody>
+        <tr><td>30 leads</td><td>Se cuentan solos</td></tr>
+        <tr><td>5 clientes</td><td>Se cuentan solos</td></tr>
+        <tr><td>Banco Aliado: conseguir la reunión</td><td>¿Hubo una reunión registrada con esa venta? Sí o no</td></tr>
+        <tr><td>Xtra: entregar la propuesta</td><td>¿Avanzó de etapa o quedó un seguimiento sobre ella? Sí o no</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Los dos primeros son números; los otros dos son sí o no. Y el sí o no no lo marca él — <strong>sale de si hubo o no un seguimiento ligado a esa venta durante la semana</strong>, que es justo el vínculo que hay que construir.</p>
+</section>
+
+<section>
+  <h2>El viernes: Contrato</h2>
+
+  <p>Su día de administración, dentro de Agenda. Lee los dos cierres —números, audio y plan— responde a cada uno, y hace el suyo.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Contrato · semana 35</span><span class="sub">VIE</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Rubén · Interior</span><span class="pill aviso">Sin responder</span></div>
+        <div class="b-fila">Apostó 33 <span class="m">tocó 31</span></div>
+        <div class="b-fila">Verificadas <span class="m">87%</span></div>
+        <div class="b-fila">Días con evidencia <span class="m">3 de 4</span></div>
+        <div class="b-fila">Logística <span class="m">2 jornadas</span></div>
+        <div style="margin-top:.35rem" class="pill">▶ Audio 1:24</div>
+      </div>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Elías · Ciudad</span><span class="pill ok">Respondido</span></div>
+        <div class="b-fila">Apostó 15 <span class="m">tocó 17</span></div>
+      </div>
+      <p class="b-seccion">Tu propio cierre</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Bancos y financieras</span><span class="m">9 de 15</span></div>
+        <div class="b-fila">Ventas en marcha <span class="m">$92,400</span></div>
+      </div>
+      <div class="b-boton">Cerrar mi semana</div>
+    </div>
+    <div class="b-nav"><span class="on">Agenda</span><span>Listas</span><span>Oportunidades</span><span>Cuentas</span><span>Mapa</span></div>
+  </div>
+  <p class="pie-boceto">Una respuesta por vendedor, no una por día. Agrega objetivos; no reescribe planes.</p>
+
+  <p>Y sube el suyo a gerencia con el mismo formato: números, noventa segundos de audio, y el plan de los cinco días. <strong>Está en el mismo contrato que exige</strong> — si no, es un mecanismo de control y así lo van a leer sus dos vendedores.</p>
+</section>
+
+<section>
+  <h2>Lo que cambia respecto a lo construido</h2>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Qué</th><th>Por qué</th></tr></thead>
+      <tbody>
+        <tr><td>Agregar <strong>reunión</strong> a los tipos de interacción</td><td>Es su unidad de avance y hoy se mezcla con las visitas de mostrador</td></tr>
+        <tr><td>Marcar la oportunidad <strong>estancada</strong> por días sin movimiento</td><td>Con ciclos de meses, una venta se muere de silencio</td></tr>
+        <tr><td>La lista de objetivos muestra <strong>avance por etapa</strong></td><td>Es el plan del líder que gerencia pedía ver</td></tr>
+        <tr><td>Ligar el <strong>compromiso</strong> a la venta, no solo el seguimiento</td><td>La Agenda está hecha de compromisos, y sin la liga no dice a qué venta sirve cada cosa</td></tr>
+        <tr><td>Vista de Oportunidades <strong>por mes de cierre</strong></td><td>Es la única que dice cuándo entra la plata</td></tr>
+        <tr><td>Declarar <strong>clases de día</strong> en el plan</td><td>Es lo que hace visible que la administración no se cayó</td></tr>
+        <tr><td>Bandas propias por perfil</td><td>Veintidós interacciones suyas no se comparan con cuarenta y siete de ruta</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Todo lo demás lo hereda tal cual del vendedor: las cuatro pantallas, el formulario único de seguimiento, las solicitudes, el bloque de jornada, el cierre de los cuatro pasos y las reglas de coordenadas.</p>
+</section>
+
+<section>
+  <h2>Lo que falta decidir</h2>
+
+  <div class="abierta">
+    <h3>¿A partir de cuánto tiempo una venta es “grande”?</h3>
+    <p>Un mes es un corte razonable para empezar, pero el número bueno sale de mirar cuánto tardaron de verdad las cuentas que se cerraron el año pasado. Es de las pocas cosas que Zoho sí puede contestar hoy.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Tres ventas grandes es el mínimo correcto?</h3>
+    <p>Menos, y una que se caiga deja el año vacío. Más, y no le alcanza el tiempo para moverlas de verdad con todo lo demás que hace.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Cuántos días sin movimiento hacen una oportunidad estancada?</h3>
+    <p>Treinta es un punto de partida, pero un banco puede tardar sesenta legítimamente entre una reunión y la siguiente. Quizá el umbral deba depender de la etapa: quince días en <em>contactado</em> es distinto de sesenta en <em>negociación</em>.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿La reunión lleva check-in?</h3>
+    <p>Si es en la oficina del cliente, sí y sirve igual que en una visita. Si es virtual, no hay dónde. Habría que distinguir reunión presencial de virtual, o aceptar que la reunión no se verifica por GPS.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Quién atiende las sucursales de las cadenas que él cierra?</h3>
+    <p>Es la decisión de fondo que el número de toma de pedidos va a informar. Si el 38% de su semana se va levantando órdenes, la pregunta es si eso pasa a los vendedores de ruta, a administración, o a un pedido que el cliente hace solo.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Gerencia ve el detalle de los dos vendedores o solo el del líder?</h3>
+    <p>Quedó dicho que gerencia lee a los tres pero escribe solo al líder. Falta decidir si el <em>tablero</em> le muestra el detalle de los vendedores o solo las excepciones. Va antes de escribir las políticas de seguridad.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Flujo del líder. El del vendedor de ruta está en <strong>docs/12-flujo-vendedor.html</strong>; el diseño operativo general en <strong>docs/11-diseno-operativo.html</strong> y el concepto en <strong>docs/10-concepto.html</strong>. Falta el ciclo de gerencia y el de administración.</p>
+</footer>
+
+</div>

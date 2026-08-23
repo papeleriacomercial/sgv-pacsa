@@ -31,7 +31,9 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 | [docs/09-medicion-y-gestion.md](docs/09-medicion-y-gestion.md) | Qué mide el sistema y para qué: efectividad de caza y de cuidado, tiempo operativo, cobertura. Reordena las etapas 6 en adelante. | Propuesta |
 | [docs/10-concepto.html](docs/10-concepto.html) | El concepto acordado el 2026-08-22, para leer de corrido: de sistema de registro a sistema de inteligencia, el contrato semanal y los compromisos de gerencia. | Vigente |
 | [docs/11-diseno-operativo.html](docs/11-diseno-operativo.html) | Cómo se aplica el concepto: la semana paso a paso, las pantallas con su dueño y su momento, qué calcula el sistema solo, y los obstáculos reales. | Vigente |
-| [docs/12-flujo-vendedor.html](docs/12-flujo-vendedor.html) | El ciclo del vendedor de viernes a viernes: sus cinco pantallas, con bocetos y un lunes completo. | Vigente |
+| [docs/12-flujo-vendedor.html](docs/12-flujo-vendedor.html) | El ciclo del vendedor de ruta: sus cuatro pantallas, con bocetos y un lunes completo. | Vigente |
+| [docs/13-flujo-lider.html](docs/13-flujo-lider.html) | El ciclo del líder: ventas rápidas, ventas grandes y administración del equipo en la misma semana. | Vigente |
+| [docs/14-flujo-gerencia.html](docs/14-flujo-gerencia.html) | El ciclo de gerencia: el tablero del lunes, la media hora con el líder y el informe mensual. | Vigente |
 
 `docs/sgv-preview.html` es una maqueta visual de referencia, no especificación.
 

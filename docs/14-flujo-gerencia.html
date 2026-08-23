@@ -1,0 +1,528 @@
+<title>El ciclo de gerencia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+
+<style>
+  :root {
+    --marca: #1d293d;
+    --fondo: #f8fafc;
+    --superficie: #ffffff;
+    --superficie-alt: #f1f5f9;
+    --borde: #e2e8f0;
+    --borde-fuerte: #cbd5e1;
+    --texto: #1d293d;
+    --texto-2: #45556c;
+    --texto-3: #7c8ba1;
+    --aviso: #b45309;
+    --aviso-fondo: #fffbeb;
+    --aviso-borde: #fcd34d;
+    --ok: #00863a;
+    --ok-fondo: #f0fdf4;
+    --info: #1d4ed8;
+    --info-fondo: #eff6ff;
+    --error: #be123c;
+    --error-fondo: #fff1f2;
+    --identidad: #fe9a00;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --marca: #e2e8f0;
+      --fondo: #12181f;
+      --superficie: #1a222c;
+      --superficie-alt: #212b36;
+      --borde: #2c3846;
+      --borde-fuerte: #3d4c5d;
+      --texto: #e7edf4;
+      --texto-2: #a9b7c6;
+      --texto-3: #7c8ba1;
+      --aviso: #fbbf24;
+      --aviso-fondo: #251c08;
+      --aviso-borde: #6b4f10;
+      --ok: #34d399;
+      --ok-fondo: #0c1f17;
+      --info: #7ab0ff;
+      --info-fondo: #0e1b30;
+      --error: #fb7185;
+      --error-fondo: #2a1119;
+      --identidad: #fe9a00;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --marca: #e2e8f0;
+    --fondo: #12181f;
+    --superficie: #1a222c;
+    --superficie-alt: #212b36;
+    --borde: #2c3846;
+    --borde-fuerte: #3d4c5d;
+    --texto: #e7edf4;
+    --texto-2: #a9b7c6;
+    --texto-3: #7c8ba1;
+    --aviso: #fbbf24;
+    --aviso-fondo: #251c08;
+    --aviso-borde: #6b4f10;
+    --ok: #34d399;
+    --ok-fondo: #0c1f17;
+    --info: #7ab0ff;
+    --info-fondo: #0e1b30;
+    --error: #fb7185;
+    --error-fondo: #2a1119;
+    --identidad: #fe9a00;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 17px; line-height: 1.65;
+    margin: 0; padding: 0 1.25rem 5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hoja { max-width: 41rem; margin: 0 auto; }
+
+  header.portada {
+    padding: 3.5rem 0 2.25rem;
+    border-bottom: 1px solid var(--borde);
+    margin-bottom: 3rem;
+  }
+
+  .marca-rail { width: 2.5rem; height: 3px; background: var(--identidad); border-radius: 2px; margin-bottom: 1.5rem; }
+
+  .eyebrow {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.11em; text-transform: uppercase;
+    color: var(--texto-3); margin: 0 0 0.75rem;
+  }
+
+  h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: clamp(2.1rem, 7vw, 2.9rem);
+    font-weight: 500; line-height: 1.12;
+    letter-spacing: -0.015em; text-wrap: balance; margin: 0 0 1rem;
+  }
+
+  .bajada { font-size: 1.06rem; color: var(--texto-2); margin: 0; text-wrap: pretty; }
+
+  .sello {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.72rem; color: var(--texto-3); margin-top: 1.75rem;
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem;
+  }
+
+  section { margin-bottom: 3.25rem; }
+
+  h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.6rem; font-weight: 600; line-height: 1.2;
+    letter-spacing: -0.01em; text-wrap: balance;
+    margin: 0 0 1.25rem; padding-top: 0.4rem;
+    border-top: 2px solid var(--marca);
+  }
+
+  h3 { font-size: 0.98rem; font-weight: 600; line-height: 1.4; margin: 2rem 0 0.5rem; }
+
+  p { margin: 0 0 1.1rem; text-wrap: pretty; }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 600; color: var(--texto); }
+  em { font-style: italic; color: var(--texto-2); }
+
+  .principio { border-left: 3px solid var(--identidad); padding: 0.1rem 0 0.1rem 1.15rem; margin: 1.75rem 0; }
+  .principio p { font-family: "Newsreader", Georgia, serif; font-size: 1.24rem; line-height: 1.45; font-weight: 500; color: var(--texto); margin: 0; }
+
+  ul.limpia { list-style: none; padding-left: 0; margin: 0 0 1.1rem; }
+  ul.limpia > li { padding-left: 1.15rem; position: relative; margin-bottom: 0.55rem; text-wrap: pretty; }
+  ul.limpia > li:last-child { margin-bottom: 0; }
+  ul.limpia > li::before { content: ""; position: absolute; left: 0; top: 0.68em; width: 5px; height: 5px; border-radius: 50%; background: var(--borde-fuerte); }
+
+  ol { margin: 0 0 1.1rem; padding-left: 1.2rem; }
+  ol li { margin-bottom: 0.5rem; text-wrap: pretty; }
+
+  .boceto {
+    max-width: 22rem; margin: 1.5rem auto 1.75rem;
+    border: 1px solid var(--borde-fuerte); border-radius: 14px;
+    overflow: hidden; background: var(--fondo);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  }
+
+  .b-barra {
+    background: var(--superficie); border-bottom: 1px solid var(--borde);
+    padding: 0.7rem 0.9rem; font-size: 0.85rem; font-weight: 600;
+    color: var(--marca);
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  }
+  .b-barra .sub { font-family: "Geist Mono", ui-monospace, monospace; font-size: 0.66rem; font-weight: 400; color: var(--texto-3); letter-spacing: 0.04em; }
+
+  .b-cuerpo { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .b-tarjeta {
+    background: var(--superficie); border: 1px solid var(--borde);
+    border-radius: 8px; padding: 0.6rem 0.7rem;
+    font-size: 0.8rem; line-height: 1.45; color: var(--texto-2);
+  }
+  .b-tarjeta .t { font-weight: 600; color: var(--texto); font-size: 0.83rem; display: block; }
+  .b-tarjeta .m { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--texto); }
+  .b-tarjeta.atenuada { opacity: 0.5; }
+  .b-tarjeta.destacada { border-color: var(--borde-fuerte); }
+
+  .b-seccion {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.62rem; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--texto-3); margin: 0.4rem 0 -0.1rem 0.15rem;
+  }
+
+  .b-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+
+  .b-boton {
+    background: var(--marca); color: var(--fondo);
+    border-radius: 8px; padding: 0.55rem;
+    text-align: center; font-size: 0.82rem; font-weight: 500;
+  }
+  .b-boton.suave { background: var(--superficie); color: var(--texto); border: 1px solid var(--borde-fuerte); }
+
+  .b-nav {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    border-top: 1px solid var(--borde); background: var(--superficie);
+  }
+  .b-nav span {
+    font-size: 0.58rem; text-align: center; padding: 0.5rem 0.15rem;
+    color: var(--texto-3); border-top: 2px solid transparent; line-height: 1.2;
+  }
+  .b-nav span.on { color: var(--marca); font-weight: 600; border-top-color: var(--identidad); }
+
+  .pill {
+    display: inline-block;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.6rem; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.12rem 0.35rem; border-radius: 4px;
+    border: 1px solid var(--borde);
+    background: var(--superficie-alt); color: var(--texto-2);
+    white-space: nowrap;
+  }
+  .pill.ok { color: var(--ok); background: var(--ok-fondo); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
+  .pill.info { color: var(--info); background: var(--info-fondo); border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+  .pill.aviso { color: var(--aviso); background: var(--aviso-fondo); border-color: var(--aviso-borde); }
+  .pill.error { color: var(--error); background: var(--error-fondo); border-color: color-mix(in srgb, var(--error) 35%, transparent); }
+
+  .pie-boceto {
+    font-size: 0.82rem; color: var(--texto-3);
+    text-align: center; max-width: 24rem;
+    margin: -1rem auto 2rem; text-wrap: pretty;
+  }
+
+  .hora {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--identidad); display: block; margin: 2rem 0 0.3rem;
+  }
+
+  .tabla-envoltura { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--borde); border-radius: 8px; background: var(--superficie); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 28rem; }
+  th, td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  th {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--texto-3); background: var(--superficie-alt); white-space: nowrap;
+  }
+  td:first-child { font-weight: 500; }
+  td.num { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .riesgo {
+    background: var(--aviso-fondo); border: 1px solid var(--aviso-borde);
+    border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1.5rem 0;
+  }
+  .riesgo .etiqueta {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.66rem; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--aviso); display: block; margin-bottom: 0.4rem;
+  }
+  .riesgo p { font-size: 0.93rem; color: var(--texto-2); margin: 0 0 0.6rem; }
+  .riesgo p:last-child { margin-bottom: 0; }
+
+  .abierta {
+    border: 1px dashed var(--borde-fuerte); border-radius: 8px;
+    padding: 1rem 1.15rem; margin-bottom: 0.75rem; background: var(--superficie);
+  }
+  .abierta h3 { margin: 0 0 0.35rem; font-size: 0.97rem; }
+  .abierta p { font-size: 0.91rem; color: var(--texto-2); margin: 0; }
+
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--borde); font-size: 0.88rem; color: var(--texto-3); }
+
+  @media (max-width: 30rem) {
+    body { font-size: 16px; padding: 0 1rem 4rem; }
+    header.portada { padding-top: 2.5rem; }
+    .boceto { max-width: 100%; }
+  }
+</style>
+
+<div class="hoja">
+
+<header class="portada">
+  <div class="marca-rail"></div>
+  <p class="eyebrow">SGV · Flujo de gerencia</p>
+  <h1>El ciclo de gerencia</h1>
+  <p class="bajada">Diez minutos el lunes, media hora con el líder, y una mirada larga una vez al mes. Lo que ve, lo que no debe ver, y por qué su pantalla tiene que resistirse a crecer.</p>
+  <div class="sello">
+    <span>2026-08-23</span>
+    <span>Continúa a docs/13-flujo-lider</span>
+  </div>
+</header>
+
+<section>
+  <h2>Lo primero es lo que su pantalla NO hace</h2>
+
+  <p>El puesto de líder existe para que gerencia no tenga tres frentes de ventas, y para que mañana aguante un cuarto y un quinto vendedor. Si el tablero pone el detalle de los tres al frente todas las semanas, <strong>en seis meses gerencia está leyendo quince documentos</strong> y el puesto que creó para evitarlo quedó vacío.</p>
+
+  <div class="principio">
+    <p>Lee a los tres. Le escribe solo al líder.</p>
+  </div>
+
+  <p>Y la defensa de esa regla está en el producto, no en la buena intención: <strong>el tablero no tiene dónde escribirle a un vendedor.</strong> Solo al líder. Si la pantalla no ofrece la caja, la tentación no existe.</p>
+
+  <p>El acompañamiento de las primeras seis semanas es la excepción, con fecha de vencimiento explícita. Después el líder responde solo.</p>
+</section>
+
+<section>
+  <h2>Su semana: dos momentos y nada más</h2>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Cuándo</th><th>Qué</th><th>Cuánto</th></tr></thead>
+      <tbody>
+        <tr><td>Lunes temprano</td><td>Mira el tablero</td><td><strong>10 minutos</strong></td></tr>
+        <tr><td>Lunes</td><td>Media hora con el líder, en persona</td><td><strong>30 minutos</strong></td></tr>
+        <tr><td>Cuando entre</td><td>Contestar lo que desbloquea</td><td>24 horas hábiles</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Cuarenta minutos a la semana. Si el diseño le pide más, no lo va a hacer — y un tablero que se abre una vez cada tres semanas es peor que no tenerlo, porque nadie confía en un número que no se mira.</p>
+</section>
+
+<section>
+  <h2>El tablero del lunes</h2>
+
+  <p>Tres cosas, en este orden, y ninguna más:</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Tablero</span><span class="sub">LUN 1 SEP · SEM 35</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">1 · ¿Se cerró el ciclo?</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Cierres entregados <span class="m">3 de 3</span> <span class="pill ok">Completo</span></div>
+        <div class="b-fila">Respuestas del líder <span class="m">2 de 2</span> <span class="pill ok">Completo</span></div>
+      </div>
+      <p class="b-seccion">2 · Excepciones · 2</p>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Rubén · Interior</span><span class="pill error">Revisar</span></div>
+        <div class="b-fila">Visitas verificadas <span class="m">42%</span></div>
+        <div class="b-fila">Días con evidencia <span class="m">1 de 4</span></div>
+        <div class="b-fila">Semanas seguidas así <span class="m">2</span></div>
+      </div>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Damián · Líder</span><span class="pill aviso">Mirar</span></div>
+        <div class="b-fila">Ventas grandes vivas <span class="m">2 · mínimo 3</span></div>
+      </div>
+      <p class="b-seccion">3 · El cierre del líder</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Rápidas cerradas <span class="m">$4,900</span></div>
+        <div class="b-fila">Grandes: avanzaron <span class="m">2</span></div>
+        <div class="b-fila">Entrando en 90 días <span class="m">$61,500</span></div>
+        <div style="margin-top:.35rem" class="pill">▶ Audio 1:52</div>
+      </div>
+      <div class="b-boton">Responderle a Damián</div>
+      <div class="b-tarjeta atenuada">
+        <div class="b-fila">Tu tiempo de respuesta <span class="m">9 de 10 en 24 h</span></div>
+      </div>
+    </div>
+    <div class="b-nav"><span class="on">Tablero</span><span>Solicitudes</span><span>Mercado</span><span>Cuentas</span><span>Mapa</span></div>
+  </div>
+  <p class="pie-boceto">Una semana normal cabe en una pantalla. La lista de excepciones sirve porque casi siempre está corta.</p>
+
+  <h3>Por qué las excepciones y no todo</h3>
+
+  <div class="principio">
+    <p>El tablero semanal muestra lo que está fuera de lo normal, no todo lo que pasó.</p>
+  </div>
+
+  <p>Cada número que diseñamos para el vendedor y el líder podría caber aquí, y ese es justamente el riesgo: <strong>un tablero que lo muestra todo tarda cuarenta minutos y deja de abrirse.</strong> Lo que pasó completo vive en el informe mensual, que se lee con calma.</p>
+
+  <p>La última línea es a propósito: <strong>su propio cumplimiento también está en el tablero.</strong> Si los vendedores quedan medidos y gerencia no, esto es control con buena interfaz por mucho que lo llamemos contrato.</p>
+</section>
+
+<section>
+  <h2>Lo que ve hacia abajo</h2>
+
+  <div class="principio">
+    <p>Acceso completo, presentación mínima.</p>
+  </div>
+
+  <p>Puede abrir el cierre entero de cualquiera de los tres, con sus números y su audio, y el expediente de cualquier cuenta. <strong>No está ciego.</strong> Lo que cambia es que el tablero no se lo pone al frente: llega ahí desde una excepción, con un toque, cuando hay una razón.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Qué</th><th>¿Lo ve?</th><th>¿Se lo presenta el tablero?</th></tr></thead>
+      <tbody>
+        <tr><td>Cierre completo del líder</td><td>Sí</td><td><strong>Sí, cada lunes</strong></td></tr>
+        <tr><td>Cierre completo de cada vendedor</td><td>Sí</td><td>No, solo si hay excepción</td></tr>
+        <tr><td>Audio de cada vendedor</td><td>Sí</td><td>No</td></tr>
+        <tr><td>Respuestas del líder a los vendedores</td><td>Sí</td><td>No, solo si falta alguna</td></tr>
+        <tr><td>Expediente y bitácora de cualquier cuenta</td><td>Sí</td><td>No</td></tr>
+        <tr><td>Escribirle a un vendedor</td><td><strong>No</strong></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Esa última fila es la única restricción de verdad, y es de diseño, no de permisos: puede leerlo todo, pero el canal de respuesta pasa por el líder.</p>
+</section>
+
+<section>
+  <h2>La media hora con el líder</h2>
+
+  <p>Están en la misma ciudad, así que es en persona. Sin agenda se vuelve conversación, así que cuatro puntos fijos:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Qué se revisa</th><th>Cuánto</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>¿Se cerró el ciclo con los dos? Si falta una respuesta, por qué</td><td class="num">3 min</td></tr>
+        <tr><td class="num">2</td><td>Las excepciones del tablero: qué pasó y qué va a hacer</td><td class="num">10 min</td></tr>
+        <tr><td class="num">3</td><td>Sus ventas grandes: cuáles se movieron, cuáles no, y qué se ve entrando en 90 días</td><td class="num">10 min</td></tr>
+        <tr><td class="num">4</td><td><strong>Qué necesita de gerencia</strong></td><td class="num">7 min</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>El punto 4 no es relleno: es el mismo principio que sostiene todo el sistema, aplicado un nivel más arriba. <strong>Si la reunión solo sirve para pedirle cuentas, en dos meses la esquiva.</strong> De ahí salen compromisos de gerencia, y quedan escritos igual que los suyos.</p>
+
+  <p>Y al terminar, gerencia responde por escrito lo que quedó — corto, tres líneas. Lo hablado se olvida; lo escrito sobrevive a la semana siguiente.</p>
+</section>
+
+<section>
+  <h2>Una vez al mes: la mirada larga</h2>
+
+  <p>Aquí sí se ve todo, y por eso está separado del lunes. Se lee sentado, una vez, y es donde aparecen las respuestas a lo que gerencia realmente quería saber cuando empezó esto:</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Informe del mes</span><span class="sub">AGOSTO</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">Efectividad de caza</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Leads trabajados <span class="m">312</span></div>
+        <div class="b-fila">Pasaron a prospecto <span class="m">94 · 30%</span></div>
+        <div class="b-fila">Prospectos que compraron <span class="m">28 · 30%</span></div>
+        <div class="b-fila">Días promedio lead → cliente <span class="m">21</span></div>
+      </div>
+      <p class="b-seccion">Efectividad de cuidado</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Cartera dentro de cadencia <span class="m">76%</span></div>
+        <div class="b-fila">Clientes sin ver +60 días <span class="m">14</span></div>
+        <div class="b-fila">Recompra vs venta nueva <span class="m">68% · 32%</span></div>
+      </div>
+      <p class="b-seccion">Dónde se fue el tiempo</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Rubén · logística <span class="m">7 jornadas de 20</span></div>
+        <div class="b-fila">Elías · logística <span class="m">3 de 20</span></div>
+        <div class="b-fila">Damián · levantar pedidos <span class="m">38%</span></div>
+      </div>
+      <p class="b-seccion">Qué dice el mercado</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Rechazos con motivo <span class="m">148</span></div>
+        <div class="b-fila">Crédito a 30 días <span class="m">41%</span></div>
+        <div class="b-fila">Precio <span class="m">27%</span></div>
+        <div class="b-fila">Le compra a su paisano <span class="m">19%</span></div>
+      </div>
+      <p class="b-seccion">Cobertura</p>
+      <div class="b-tarjeta">
+        <div class="b-fila">Restaurantes <span class="m">44% de la cartera</span></div>
+        <div class="b-fila">Ferreterías <span class="m">2%</span></div>
+        <div class="b-fila">Aguadulce: farmacias <span class="m">3 de ~40</span></div>
+      </div>
+    </div>
+    <div class="b-nav"><span>Tablero</span><span>Solicitudes</span><span class="on">Mercado</span><span>Cuentas</span><span>Mapa</span></div>
+  </div>
+  <p class="pie-boceto">Cinco bloques, cada uno contesta una de las preguntas con las que arrancó este replanteamiento.</p>
+
+  <p>Los cinco bloques no son decorativos: son exactamente las cinco preguntas del principio. <strong>Qué tan efectivos son consiguiendo clientes nuevos, qué tan bien cuidan los que hay, en qué se les va el tiempo, qué dice el mercado que no compra, y qué no estamos mirando.</strong></p>
+
+  <div class="riesgo">
+    <span class="etiqueta">Qué falta y de qué depende</span>
+    <p>Dos de esos bloques están incompletos sin Zoho. <strong>“Prospectos que compraron” y “recompra vs venta nueva”</strong> se pueden armar con los pedidos que registra el vendedor, pero la verdad de la facturación está en Books — y <em>“qué clientes dejaron de comprar”</em> no se puede contestar de ninguna otra forma.</p>
+    <p>Y el bloque de cobertura necesita la lista de categorías direccionables. Contra un universo infinito, la cartera siempre se ve minúscula.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Cada trimestre: la decisión</h2>
+
+  <p>Es el tercer compromiso de gerencia, y el que sostiene todo lo demás: <strong>al menos una decisión por trimestre anunciada diciendo de dónde salió.</strong></p>
+
+  <div class="principio">
+    <p>“Revisamos los 148 rechazos del mes. El 41% no es precio, es crédito. Vamos a probar 30 días en minisúper de Coclé.”</p>
+  </div>
+
+  <p>Lo que importa no es la decisión: es la atribución. Si capturan competencia y motivos durante tres meses y nunca ven que movió algo, <strong>dejan de capturar — y hacen bien.</strong> La inteligencia que nadie usa no es neutral: mata el hábito de levantarla.</p>
+
+  <p>Y de este informe salen además las dos decisiones grandes que gerencia planteó al principio, ahora con números en vez de intuición:</p>
+
+  <ul class="limpia">
+    <li><strong>¿Conviene poner un chofer?</strong> Siete jornadas de veinte se le van al del interior en logística. Ahí está el costo, y del otro lado lo que produciría vendiendo esos días.</li>
+    <li><strong>¿El líder debe seguir levantando pedidos de sucursales?</strong> El 38% de sus interacciones. Es su tarifa por hora contra la de alguien más.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Sus cuatro pantallas</h2>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Pantalla</th><th>Cuándo</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Tablero</strong></td><td>Lunes, 10 minutos</td><td>El lazo, las excepciones, el cierre del líder</td></tr>
+        <tr><td><strong>Solicitudes</strong></td><td>Cuando entra algo</td><td>Precios, plazos y condiciones, con su reloj de 24 horas</td></tr>
+        <tr><td><strong>Mercado</strong></td><td>Una vez al mes</td><td>El informe largo: caza, cuidado, tiempo, rechazos, cobertura</td></tr>
+        <tr><td><strong>Cuentas</strong> y <strong>Mapa</strong></td><td>Cuando quiere mirar algo</td><td>Consulta libre de toda la cartera</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Ninguna pantalla de captura. <strong>Gerencia no registra nada</strong> — salvo responder solicitudes y responderle al líder. Es el único rol del sistema que solo lee y decide.</p>
+</section>
+
+<section>
+  <h2>Lo que falta decidir</h2>
+
+  <div class="abierta">
+    <h3>¿Qué cruza el umbral para entrar a excepciones?</h3>
+    <p>Visitas verificadas por debajo de X, días con evidencia por debajo de Y, semanas sin respuesta, ventas grandes bajo el mínimo, solicitudes vencidas. Los números salen de las primeras semanas, pero la lista de <em>qué</em> se vigila hay que fijarla antes.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿El informe mensual se genera solo o lo arma alguien?</h3>
+    <p>Automático es más barato y llega siempre. Pero un informe sin nadie que lo interprete se vuelve papel. Podría ser que lo genere el sistema y el líder le escriba tres líneas encima antes de que gerencia lo lea.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Administración es un cuarto rol con su propia pantalla?</h3>
+    <p>La bandeja de pedidos y cotizaciones de §7.2 necesita a alguien atendiéndola, con su propio reloj. Falta diseñar ese ciclo — es lo que queda después de este documento.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Gerencia ve la cartera completa o solo agregados?</h3>
+    <p>Aquí quedó dicho que ve todo. Hay que confirmarlo antes de escribir las políticas de seguridad, porque una vez escritas cambiarlas cuesta más.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Flujo de gerencia. El del vendedor de ruta está en <strong>docs/12-flujo-vendedor.html</strong> y el del líder en <strong>docs/13-flujo-lider.html</strong>. Falta el ciclo de administración. El concepto que origina todo esto está en <strong>docs/10-concepto.html</strong>.</p>
+</footer>
+
+</div>

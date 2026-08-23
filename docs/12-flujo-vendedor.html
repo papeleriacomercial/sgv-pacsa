@@ -201,7 +201,7 @@
   .b-boton.suave { background: var(--superficie); color: var(--texto); border: 1px solid var(--borde-fuerte); }
 
   .b-nav {
-    display: grid; grid-template-columns: repeat(5, 1fr);
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
     border-top: 1px solid var(--borde); background: var(--superficie);
   }
 
@@ -377,24 +377,47 @@
 </header>
 
 <section>
-  <h2>Las cinco pantallas</h2>
+  <h2>Las cuatro pantallas</h2>
 
   <div class="tabla-envoltura">
     <table>
       <thead><tr><th>Pantalla</th><th>Cuándo la abre</th><th>Para qué</th></tr></thead>
       <tbody>
-        <tr><td>Agenda</td><td><strong>Todo el día</strong>, y el jueves para cerrar</td><td>Lo que debe hoy y cómo va la semana. Es donde trabaja</td></tr>
-        <tr><td>Listas</td><td>Al planificar, y para ver cuánto le falta</td><td>Los paquetes de leads que armó, por zona</td></tr>
+        <tr><td>Agenda</td><td><strong>Todo el día</strong></td><td>Dos pestañas: <em>Hoy</em> y <em>Mi semana</em>. Es donde trabaja y donde planifica</td></tr>
+        <tr><td>Listas</td><td>Al armar paquetes y ver cuánto le falta</td><td>Los paquetes de leads por zona</td></tr>
         <tr><td>Cuentas</td><td>Cuando busca a alguien concreto</td><td>Consulta y corrección del expediente</td></tr>
-        <tr><td>Mapa</td><td>Al explorar o armar paquete</td><td>Ver dónde está todo y escoger puntos nuevos</td></tr>
-        <tr><td>Oportunidades</td><td>Cuando hay algo concreto en juego</td><td>Las ventas que está negociando</td></tr>
+        <tr><td>Mapa</td><td>Al explorar o armar paquete</td><td>Ver dónde está todo y escoger puntos nuevos. Buscar vive adentro</td></tr>
       </tbody>
     </table>
   </div>
 
-  <p>Respecto a lo construido hoy cambian tres cosas. <strong>Cuentas deja de ser la pantalla de inicio</strong> —el día empieza en Agenda y Cuentas pasa a ser lo que en realidad es, la pantalla de consulta—. <strong>Buscar se mete dentro del Mapa</strong>, porque es la misma acción con otra forma. Y <strong>Seguimientos desaparece de la barra</strong>: su contenido se mudó a Agenda.</p>
+  <p>Cuatro, no cinco. <strong>Oportunidades sale de la barra del vendedor de ruta</strong>, y más abajo está el porqué. Sigue existiendo y se llega desde el expediente cuando hace falta, pero no se gana un lugar permanente en alguien que casi no la usa.</p>
 
-  <p>El cierre semanal y el registro de jornada <strong>no son pantallas</strong>: son formularios que se abren desde Agenda, igual que Registrar seguimiento. Los formularios no ocupan lugar en la barra.</p>
+  <p>Respecto a lo construido hoy: <strong>Cuentas deja de ser la pantalla de inicio</strong> —el día empieza en Agenda y Cuentas pasa a ser lo que en realidad es, la pantalla de consulta—; <strong>Buscar se mete dentro del Mapa</strong>; y <strong>Seguimientos desaparece</strong>, su contenido se mudó a Agenda.</p>
+
+  <h3>Agenda tiene dos pestañas</h3>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Pestaña</th><th>Qué trae</th><th>Cuándo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Hoy</strong></td><td>Paradas, llamadas y correos, esperando respuesta. La ruta del día</td><td>Todo el día, muchas veces</td></tr>
+        <tr><td><strong>Mi semana</strong></td><td>El plan de los cinco días, cómo va, la respuesta del líder, el botón de cerrar, y las semanas anteriores</td><td>Lunes al arrancar, jueves al cerrar</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Ahí está la respuesta a dónde planifica y dónde ve su cierre: <strong>los dos viven en la pestaña Mi semana</strong>. Cerrar la semana y registrar jornada son formularios que se abren desde ahí; los formularios no ocupan lugar en la barra.</p>
+
+  <h3>Dónde empieza y dónde termina la semana</h3>
+
+  <div class="principio">
+    <p>Tu semana se corta cuando cierras. Lo que hagas después cuenta para la siguiente.</p>
+  </div>
+
+  <p>Si cierra el jueves a las cuatro, esa semana cubre desde el cierre anterior hasta ese momento. Es la única regla que no deja ambigüedad, y se explica en una frase.</p>
+
+  <p><strong>La consecuencia honesta:</strong> lo que haga en la calle el viernes cuenta para la semana siguiente. Se acepta porque el viernes es sobre todo administración y planificación, y porque el líder necesita los números escritos <em>antes</em> del viernes para poder responder antes del lunes. Si el negocio prefiere que el viernes de campo cuente en su propia semana, el corte se mueve a viernes por la tarde — pero entonces la respuesta del líder llega el lunes y no el viernes.</p>
 </section>
 
 <section>
@@ -482,7 +505,7 @@
       </div>
       <div class="b-boton suave">Registrar jornada</div>
     </div>
-    <div class="b-nav"><span class="on">Agenda</span><span>Listas</span><span>Cuentas</span><span>Mapa</span><span>Oportunidades</span></div>
+    <div class="b-nav"><span class="on">Agenda</span><span>Listas</span><span>Cuentas</span><span>Mapa</span></div>
   </div>
   <p class="pie-boceto">La visita a Chitré queda fuera de ruta y la reprograma antes de salir. Las llamadas se quedan: las hará desde Aguadulce.</p>
 
@@ -513,20 +536,63 @@
       <p class="b-seccion">Ya trabajados hoy · 0</p>
       <div class="b-boton suave">Agregar puntos desde el mapa</div>
     </div>
-    <div class="b-nav"><span>Agenda</span><span class="on">Listas</span><span>Cuentas</span><span>Mapa</span><span>Oportunidades</span></div>
+    <div class="b-nav"><span>Agenda</span><span class="on">Listas</span><span>Cuentas</span><span>Mapa</span></div>
   </div>
   <p class="pie-boceto">La misma parada del carro, dos conversaciones distintas: a uno lo conoce y al otro no.</p>
 
   <span class="hora">9:15 · Frente al Super Xin Hua</span>
-  <p>Toca el punto, entra al expediente, <strong>Registrar seguimiento</strong>. Treinta segundos: qué hizo, check-in automático, resultado. Como la cuenta estaba sin clasificar, le pregunta si queda como prospecto o se descarta.</p>
-
-  <p>El resultado fue <em>“tiene proveedor, quiere precio”</em>, así que aparece la ficha de competencia. Esa parte la termina en el carro.</p>
+  <p>Toca el punto en la ruta, entra al expediente y toca <strong>Registrar seguimiento</strong>. Un solo formulario resuelve todo lo que pasó ahí: qué hizo, qué resultó, en qué queda la cuenta y cuándo vuelve.</p>
 
   <div class="boceto">
     <div class="b-barra"><span>Registrar seguimiento</span><span class="sub">SUPER XIN HUA</span></div>
     <div class="b-cuerpo">
-      <div class="b-tarjeta atenuada"><span class="t">✓ Visita · check-in preciso</span></div>
-      <div class="b-tarjeta atenuada"><span class="t">✓ Tiene proveedor, quiere precio</span></div>
+      <p class="b-seccion">1 · ¿Qué hiciste?</p>
+      <div class="b-tarjeta">
+        <div class="b-fila" style="flex-wrap:wrap;gap:.25rem"><span class="pill info">Visita</span><span class="pill">Llamada</span><span class="pill">WhatsApp</span><span class="pill">Correo</span></div>
+      </div>
+      <p class="b-seccion">2 · Check-in</p>
+      <div class="b-tarjeta atenuada"><span class="t">📍 Ubicación precisa</span>Se tomó sola al abrir</div>
+      <p class="b-seccion">3 · Resultado</p>
+      <div class="b-tarjeta">
+        <div class="b-fila" style="flex-wrap:wrap;gap:.25rem"><span class="pill info">Tiene proveedor, quiere precio</span></div>
+        <div class="b-fila" style="flex-wrap:wrap;gap:.25rem;margin-top:.3rem"><span class="pill">Compró</span><span class="pill">Pide cotización</span><span class="pill">Pide muestra</span><span class="pill">+5</span></div>
+      </div>
+      <p class="b-seccion">4 · Esta cuenta estaba sin clasificar</p>
+      <div class="b-tarjeta destacada">
+        <span class="t">¿En qué queda?</span>
+        <div class="b-fila" style="margin-top:.3rem;flex-wrap:wrap;gap:.25rem"><span class="pill info">Prospecto</span><span class="pill">Cliente</span><span class="pill">Descartar</span></div>
+        Sugerido por el resultado
+      </div>
+      <p class="b-seccion">5 · Próximo paso</p>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Llevarle precio de rollos</span><span class="m">jue 28</span></div>
+        <div class="b-fila" style="margin-top:.3rem;flex-wrap:wrap;gap:.25rem"><span class="pill info">Visita</span><span class="pill">Llamada</span></div>
+      </div>
+      <div class="b-boton">Guardar</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Nada de esto lo lleva a otra pantalla. Abre en modo visita, con el check-in ya tomado.</p>
+
+  <p>Tres cosas que quedan resueltas en ese mismo formulario, sin ir a ningún otro lado:</p>
+
+  <ul class="limpia">
+    <li><strong>Abre en modo visita y el check-in se toma solo.</strong> Solo lo cambia si fue llamada — y entonces el check-in desaparece, porque una llamada no tiene ubicación.</li>
+    <li><strong>La cuenta deja de estar sin clasificar ahí mismo.</strong> El bloque 4 aparece solo cuando hace falta, con la respuesta ya sugerida según el resultado: <em>quiere precio</em> sugiere prospecto; <em>local cerrado</em> sugiere descartar. Un toque para confirmar o cambiar.</li>
+    <li><strong>El próximo paso es el seguimiento que crea.</strong> Texto, fecha y qué acción será. Al guardar, aparece en su Agenda con esa fecha — y así es como un lead entra por primera vez a la agenda.</li>
+  </ul>
+
+  <div class="riesgo">
+    <span class="etiqueta">Es un solo formulario, no tres</span>
+    <p>No hay una pantalla para leads, otra para prospectos y otra para clientes. <strong>Es la misma</strong>, y lo que cambia son los bloques que aparecen según lo que va contestando:</p>
+    <p><strong>Bloque 4</strong> solo si la cuenta estaba sin clasificar · <strong>ficha de competencia</strong> solo si el resultado implica competidor · <strong>bloque de pedido</strong> solo si compró.</p>
+    <p>Un cliente de siempre al que le pasa visitando ve tres bloques: qué hiciste, resultado, próximo paso. Diez segundos.</p>
+  </div>
+
+  <p>Y como el resultado implica que hay competencia, después del guardado aparece la ficha. Esa sí es opcional y la puede terminar en el carro:</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Ficha de competencia</span><span class="sub">SUPER XIN HUA</span></div>
+    <div class="b-cuerpo">
       <div class="b-tarjeta destacada">
         <span class="t">¿Quién se lo vende hoy?</span>
         <div class="b-fila" style="margin-top:.3rem"><span class="pill info">Distribuidora Wang</span><span class="pill">+ otro</span></div>
@@ -540,7 +606,57 @@
       <div class="b-boton">Guardar</div>
     </div>
   </div>
-  <p class="pie-boceto">Condicional: solo aparece cuando el resultado implica que hay competidor.</p>
+  <p class="pie-boceto">Solo aparece cuando el resultado implica que hay competidor.</p>
+
+  <span class="hora">9:40 · En el local de al lado, le compran</span>
+  <p>El dueño no quiere cotización: quiere tres cajas ahora. <strong>Es el mejor resultado posible de una visita, y hoy el sistema no tiene dónde ponerlo.</strong></p>
+
+  <div class="riesgo">
+    <span class="etiqueta">Hueco en lo construido</span>
+    <p>El catálogo de resultados se diseñó para prospectar y tiene nueve opciones: no estaba el encargado, pide cotización, pide muestra, mantiene stock, quiere precio, no usa nuestros productos, sin interés, local cerrado, dejó información.</p>
+    <p><strong>Ninguna dice “compró”.</strong> Falta agregarlo, y es el que más importa.</p>
+  </div>
+
+  <p>Con ese resultado el formulario cambia solo:</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Registrar seguimiento</span><span class="sub">ABARROTERÍA LI</span></div>
+    <div class="b-cuerpo">
+      <p class="b-seccion">3 · Resultado</p>
+      <div class="b-tarjeta"><span class="pill info">Compró</span></div>
+      <p class="b-seccion">4 · Esta cuenta estaba sin clasificar</p>
+      <div class="b-tarjeta destacada">
+        <span class="t">¿En qué queda?</span>
+        <div class="b-fila" style="margin-top:.3rem;flex-wrap:wrap;gap:.25rem"><span class="pill">Prospecto</span><span class="pill info">Cliente</span><span class="pill">Descartar</span></div>
+        Compró: pasa directo a cliente
+      </div>
+      <p class="b-seccion">5 · El pedido</p>
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">3 cajas rollos 80mm</span><span class="m">$126.00</span></div>
+        <div class="b-fila" style="margin-top:.3rem"><span class="pill info">Yo · talonario</span><span class="pill">La oficina · fiscal</span></div>
+        <div class="b-fila" style="margin-top:.3rem">Entrega <span class="pill info">Se la dejé ahora</span></div>
+      </div>
+      <p class="b-seccion">6 · Próximo paso</p>
+      <div class="b-tarjeta atenuada"><span class="t">Volver a pasar</span>Sugerido: 30 días</div>
+      <div class="b-boton">Guardar</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Una sola pantalla: la visita, la venta, el salto a cliente y la próxima pasada.</p>
+
+  <h3>Qué pasa por dentro con esa venta</h3>
+
+  <ul class="limpia">
+    <li><strong>Salta de sin clasificar a cliente, no a prospecto.</strong> Prospecto es quien todavía no compra; si compró, es cliente. Se lo sugiere el resultado y él confirma.</li>
+    <li><strong>El pedido nace como solicitud</strong>, con el mismo campo de quién lo resuelve: si fue de su talonario queda cerrado ahí mismo; si necesita factura fiscal sale a la bandeja de administración.</li>
+    <li><strong>La entrega es parte del pedido</strong>, no un compromiso aparte. Si se la dejó del carro, se cierra; si hay que traerla de Natá, queda con fecha y aparece como parada cuando toque.</li>
+    <li><strong>El próximo paso se presugiere y se puede dejar</strong>, porque con una venta cerrada la cuenta no está en riesgo de apagarse. La cadencia se encarga del resto.</li>
+  </ul>
+
+  <div class="riesgo">
+    <span class="etiqueta">Una frontera que conviene fijar ahora</span>
+    <p>Esa venta <strong>no crea una oportunidad</strong>. Una oportunidad que nace y muere en el mismo segundo es burocracia, y llenaría el pipeline de ventas de ruta de cien dólares hasta volverlo inútil para pronosticar.</p>
+    <p><strong>Oportunidad es una negociación que toma tiempo. Pedido es una venta que ya ocurrió.</strong> El líder vive en oportunidades; el vendedor de ruta vive en pedidos. Por eso los dos usan la misma aplicación de forma tan distinta.</p>
+  </div>
 
   <span class="hora">10:05 · Entra a una plaza</span>
   <p>Ve seis locales que Google no tenía. Los visita con <strong>Crear y registrar visita</strong>, el botón del alta pensado para estar parado frente al local.</p>
@@ -578,6 +694,241 @@
 
   <span class="hora">18:20 · De vuelta en Santiago</span>
   <p>Pasó por Natá a cargar. Toca <strong>Registrar jornada</strong> desde Agenda: viaje por mercancía, media jornada, Natá → Aguadulce. Quince segundos, y es lo que defiende su semana.</p>
+</section>
+
+<section>
+  <h2>Las coordenadas, y el vendedor que registra tarde</h2>
+
+  <p>Pasa y va a seguir pasando: visitó el local, se fue, y a las ocho de la noche en su casa se acuerda de que no registró. Si el sistema no está preparado, le graba a ese prospecto <strong>las coordenadas de su casa</strong> y la cartera queda envenenada.</p>
+
+  <p>La defensa empieza por una separación que ya está en el diseño y conviene repetir, porque de ahí sale todo lo demás:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Ubicación de la cuenta</th><th>Check-in del seguimiento</th></tr></thead>
+      <tbody>
+        <tr><td>Qué es</td><td>Dónde queda el local</td><td>Dónde estaba el vendedor al registrar</td></tr>
+        <tr><td>Se corrige</td><td>Sí, cuantas veces haga falta</td><td>Nunca: es bitácora</td></tr>
+        <tr><td>Dónde vive</td><td>Editar datos</td><td>El registro del seguimiento</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="principio">
+    <p>El check-in nunca escribe sobre la ubicación de la cuenta. Son dos campos distintos y no se tocan.</p>
+  </div>
+
+  <p>Eso solo ya resuelve tu segunda pregunta: <strong>un lead escogido del mapa nace con las coordenadas de Google y las conserva para siempre.</strong> Pasar a prospecto y después a cliente no las cambia, y registrar la visita tampoco. La pantalla de seguimiento no fuerza nada sobre la cuenta: toma el check-in, lo guarda en el seguimiento, y ahí muere.</p>
+
+  <h3>Los cuatro casos, y qué protege a cada uno</h3>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Cómo nació la cuenta</th><th>De dónde salen sus coordenadas</th><th>Riesgo</th></tr></thead>
+      <tbody>
+        <tr><td>Escogida del mapa</td><td>Del punto de Google</td><td>Ninguno</td></tr>
+        <tr><td>Creada frente al local</td><td>GPS del momento, con su precisión</td><td>Ninguno</td></tr>
+        <tr><td><strong>Creada en la casa, tarde</strong></td><td><strong>GPS de la casa</strong></td><td><strong>Alto</strong></td></tr>
+        <tr><td>Creada sin señal</td><td>Ninguna: queda sin ubicar</td><td>Bajo — se ve y se corrige</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>El tercero es el que hay que atajar, y se ataja en el alta: <strong>la ubicación se muestra antes de guardar, con la salida a un toque.</strong></p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Nueva cuenta</span><span class="sub">21:40</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta destacada">
+        <span class="t">📍 Dónde queda el local</span>
+        <div class="b-fila" style="margin-top:.3rem">Tu ubicación · precisa <span class="pill ok">8 m</span></div>
+        <div class="b-fila" style="margin-top:.35rem"><span class="pill info">No estoy ahí · marcar en el mapa</span></div>
+        Esto es dónde queda el negocio, no dónde estás tú
+      </div>
+      <div class="b-tarjeta"><span class="t">Nombre del negocio</span>Abarrotería Li</div>
+      <div class="b-boton">Crear y registrar visita</div>
+      <div class="b-boton suave">Crear solamente</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Cero toques extra en el caso normal. Uno solo cuando está registrando desde la casa.</p>
+
+  <p>Es el mismo componente de tres caminos que ya existe en Editar datos —escribirlas, “estoy aquí”, o tocarlas en el mapa— movido también al alta. Y el mapa abre donde él está, que es lo más probable que le sirva.</p>
+
+  <h3>El seguimiento registrado lejos del local</h3>
+
+  <p>Aquí la respuesta es distinta, y a propósito: <strong>no se corrige, se marca.</strong></p>
+
+  <p>Si registra desde la casa, el check-in dice la casa — y eso es verdad, ahí estaba. El sistema no debe dejarlo mentir ni debe fingir que fue una visita verificada. Lo que hace es comparar:</p>
+
+  <ul class="limpia">
+    <li><strong>Check-in cerca del local</strong> — visita verificada. Cuenta para la métrica.</li>
+    <li><strong>Check-in lejos del local</strong> — se guarda igual, marcada como <em>registrada fuera del local</em>. No cuenta como verificada.</li>
+    <li><strong>Sin GPS</strong> — se guarda marcada como <em>sin ubicación</em>, que es lo que ya hace hoy.</li>
+  </ul>
+
+  <div class="principio">
+    <p>No se bloquea. Bloquear el registro tardío enseña a no registrar, que es mucho peor que registrar tarde.</p>
+  </div>
+
+  <p>Y así la métrica de <strong>visitas verificadas por GPS</strong> sigue significando algo. Era la única cifra difícil de inflar de todo el sistema —hay que estar físicamente ahí— y si los registros tardíos contaran como verificados, dejaría de servir. Con la marca, un vendedor con 15 visitas y 4 registradas fuera del local no cometió una falta: tiene un hábito, y es una conversación de veinte segundos.</p>
+
+  <h3>Que pueda decir cuándo fue de verdad</h3>
+
+  <p>La visita ocurrió a las tres de la tarde aunque la esté registrando a las ocho. Sellarla a las ocho es tan falso como sellarle la casa.</p>
+
+  <p>Entonces el formulario deja <strong>corregir la hora hacia atrás, dentro del mismo día</strong>. La fecha de creación queda real y sin tocar, así que la distancia entre las dos se ve — pero el hecho queda contado como ocurrió.</p>
+
+  <h3>Y de paso, la visita mejora el mapa</h3>
+
+  <p>Cuando el check-in <em>sí</em> es preciso y está cerca pero no encima —Google puso el pin a sesenta metros, que pasa seguido en el interior— es el mejor momento posible para arreglarlo, porque está parado ahí:</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Registrar seguimiento</span><span class="sub">SUPER XIN HUA</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta atenuada"><span class="t">📍 Ubicación precisa · 8 m</span></div>
+      <div class="b-tarjeta destacada">
+        <span class="t">Estás a 62 m de donde el mapa dice que queda</span>
+        <div class="b-fila" style="margin-top:.3rem"><span class="pill info">Corregir a donde estoy</span><span class="pill">Dejarlo así</span></div>
+      </div>
+      <div class="b-boton">Guardar</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Un toque, y la calidad del mapa de la cartera sube con cada visita.</p>
+
+  <p>Es la única vez que el check-in toca la ubicación de la cuenta, y solo porque él lo pidió expresamente.</p>
+</section>
+
+<section>
+  <h2>Que registrar desde la casa no se vuelva costumbre</h2>
+
+  <p>Si registrar tarde no cuesta nada, el martes de lluvia alguien se queda en la casa y marca quince seguimientos desde el sofá para cumplir el plan de la semana. No es pensar mal: es que la puerta existe y hay que cerrarla.</p>
+
+  <h3>Primero, tapar el hueco obvio</h3>
+
+  <p>Marcar “fuera del local” no sirve de nada si apagar la ubicación es la salida fácil. Entonces la regla se escribe al revés — <strong>una sola forma de aprobar, tres de no aprobar</strong>:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Situación</th><th>¿Visita verificada?</th></tr></thead>
+      <tbody>
+        <tr><td>Check-in preciso y cerca del local</td><td><strong>Sí</strong></td></tr>
+        <tr><td>Check-in lejos del local</td><td>No</td></tr>
+        <tr><td>Sin GPS</td><td>No</td></tr>
+        <tr><td>Check-in con precisión de dos kilómetros</td><td>No</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Sin esto, apagar la ubicación convertiría el control en decorativo.</p>
+
+  <h3>El indicador que de verdad delata el sofá</h3>
+
+  <p>El porcentaje de verificadas ayuda, pero hay uno mejor y es casi gratis de calcular: <strong>de cuántos puntos distintos salieron los registros del día.</strong></p>
+
+  <div class="principio">
+    <p>Quince visitas registradas desde un mismo punto no son una ruta. Son un sofá.</p>
+  </div>
+
+  <p>Una jornada de campo real deja quince coordenadas distintas repartidas en kilómetros. Y de ahí sale el número que le sirve a gerencia, que es uno solo y se entiende sin explicación:</p>
+
+  <div class="principio">
+    <p>Días con evidencia de campo: 1 de 4 declarados.</p>
+  </div>
+
+  <p>Un día con evidencia es un día con varias visitas verificadas en puntos distintos. Es la prueba de que salió de la casa, y no depende de creerle a nadie.</p>
+
+  <h3>Dónde se ven estos números</h3>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th>Quién</th><th>Dónde</th><th>Qué ve</th></tr></thead>
+      <tbody>
+        <tr><td>El vendedor</td><td>Agenda · Mi semana</td><td><em>Visitas 31 · verificadas 27.</em> Lo ve él primero, sin que nadie se lo diga</td></tr>
+        <tr><td>El líder</td><td>Contrato, el viernes</td><td>En la tarjeta de cada vendedor: <em>verificadas 87% · días con evidencia 3 de 4</em>. En ámbar si cae de la banda</td></tr>
+        <tr><td>Gerencia</td><td>Tablero, los lunes</td><td>Solo como <strong>excepción</strong>: aparece cuando cruza el umbral, y no aparece cuando todo está normal</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Y en el tablero mensual, la <strong>tendencia</strong>: una semana rara no es nada, cuatro seguidas son un patrón. Esa distinción es la que evita acusar a alguien por un martes con el celular descargado.</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Tablero · excepciones</span><span class="sub">LUN · GERENCIA</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta destacada">
+        <div class="b-fila"><span class="t">Rubén · Interior</span><span class="pill error">Revisar</span></div>
+        <div class="b-fila">Visitas verificadas <span class="m">42%</span></div>
+        <div class="b-fila">Días con evidencia <span class="m">1 de 4</span></div>
+        <div class="b-fila">Semanas seguidas así <span class="m">2</span></div>
+      </div>
+      <div class="b-tarjeta atenuada">
+        <div class="b-fila"><span class="t">Elías · Ciudad</span><span class="pill ok">Normal</span></div>
+        No aparece en excepciones
+      </div>
+    </div>
+  </div>
+  <p class="pie-boceto">Una lista de excepciones sirve justamente porque casi siempre está vacía.</p>
+
+  <h3>Los límites, dichos claro</h3>
+
+  <ul class="limpia">
+    <li><strong>El GPS prueba presencia, no conversación.</strong> Alguien decidido maneja hasta el pueblo, registra quince visitas desde el carro sin entrar a ningún local, y todo se ve impecable. Ningún sistema de ubicación resuelve eso.</li>
+    <li><strong>Lo que sí lo delata es lo que viene después.</strong> Las visitas inventadas no producen pedidos, ni cotizaciones, ni avances de etapa, ni fichas de competencia. <strong>El embudo se queda estéril en tres semanas</strong>, y esa es la evidencia de verdad. Actividad sin resultado es la señal.</li>
+    <li><strong>Vigilar de más también cuesta.</strong> Si el tono es “te estamos viendo”, el vendedor honesto que registró desde la casa a las ocho porque se le olvidó se siente acusado y deja de registrar. Y ahí perdimos el dato y la confianza en el mismo golpe.</li>
+  </ul>
+
+  <div class="principio">
+    <p>Visible siempre, automático nunca. El número abre una conversación; no la cierra.</p>
+  </div>
+
+  <p>Nada se bloquea y nadie recibe una alerta acusatoria. El líder ve <em>“el martes registraste todo desde un mismo punto”</em> y pregunta. Muchas veces la respuesta es legítima —registró todo al final del día en el carro, se le descargó el celular— y esa respuesta también es información.</p>
+</section>
+
+<section>
+  <h2>Cambiar el día sobre la marcha</h2>
+
+  <p>El lunes por la mañana sale un pedido urgente en Chitré. Decide ir allá hoy y dejar Aguadulce para el martes. Eso no es incumplir el plan: <strong>es replanificar, y es lo que hace un vendedor que piensa.</strong></p>
+
+  <p>Se hace desde Agenda, arriba de <em>Hoy</em>, en un solo gesto:</p>
+
+  <div class="boceto">
+    <div class="b-barra"><span>Cambiar el día</span><span class="sub">LUN 25</span></div>
+    <div class="b-cuerpo">
+      <div class="b-tarjeta">
+        <span class="t">Hoy ibas a Aguadulce</span>
+        <div class="b-fila" style="margin-top:.3rem">¿A dónde vas? <span class="pill info">Chitré</span></div>
+      </div>
+      <div class="b-tarjeta destacada">
+        <span class="t">Aguadulce se mueve a</span>
+        <div class="b-fila" style="margin-top:.3rem"><span class="pill info">Martes</span><span class="pill">Miércoles</span><span class="pill">Esta semana no</span></div>
+      </div>
+      <div class="b-tarjeta destacada">
+        <span class="t">3 compromisos vencían hoy en Aguadulce</span>
+        <div class="b-fila" style="margin-top:.3rem"><span class="pill info">Moverlos todos al martes</span></div>
+        En bloque, no uno por uno
+      </div>
+      <div class="b-tarjeta">
+        <span class="t">¿Por qué el cambio?</span>
+        <div class="b-fila" style="margin-top:.3rem;flex-wrap:wrap;gap:.25rem"><span class="pill info">Pedido urgente</span><span class="pill">Cliente lo pidió</span><span class="pill">No se pudo salir</span><span class="pill">Otro</span></div>
+      </div>
+      <div class="b-boton">Cambiar</div>
+    </div>
+  </div>
+  <p class="pie-boceto">Al terminar, Hoy muestra Chitré. Aguadulce desaparece de la vista de hoy y reaparece el martes.</p>
+
+  <p>Tres cosas que resuelve ese formulario a la vez:</p>
+
+  <ul class="limpia">
+    <li><strong>Las rutas se intercambian.</strong> Los leads no tienen fecha, así que moverlos no cuesta nada: es cambiar de qué día cuelga cada paquete.</li>
+    <li><strong>Los compromisos sí tienen fecha y se mueven en bloque.</strong> Tres visitas prometidas en Aguadulce pasan al martes con un toque, no con tres. Y cada una suma a su contador de reprogramaciones — a la cuarta, el sistema pregunta si la cuenta sigue siendo real.</li>
+    <li><strong>El motivo queda registrado, y ahí es donde se anota el evento extraordinario.</strong> No hace falta otro lugar: cambiar el plan y decir por qué es el mismo gesto.</li>
+  </ul>
+
+  <div class="principio">
+    <p>La apuesta de la semana no cambia. Cambió el orden, no el compromiso.</p>
+  </div>
+
+  <p>Si el motivo fue que perdió el día entero —calles cerradas, el carro— entonces sí se registra además como <strong>bloque de jornada</strong>, y esa es la diferencia: mover el plan no gasta un día, perderlo sí. El bloque de jornada es lo que descuenta días vendibles.</p>
 </section>
 
 <section>
@@ -632,6 +983,12 @@
     </table>
   </div>
 
+  <div class="principio">
+    <p>El paquete se llena hasta donde quiera. Lo que se compromete es un número, y vive en el plan de la semana.</p>
+  </div>
+
+  <p>Si en el mapa escogió cincuenta puntos de Aguadulce, el paquete tiene cincuenta. Eso no es una promesa de visitarlos: es su terreno de caza en esa zona. La cabecera del paquete muestra las dos cosas para que no se confundan — <em>“50 sin tocar · 15 comprometidos esta semana”</em>.</p>
+
   <h3>El paquete no se cierra</h3>
 
   <p><strong>Es permanente y por zona.</strong> Aguadulce va a existir mientras exista Aguadulce; lo que tiene período es el compromiso de trabajarlo. Así que si puso 15 y alcanzó 10:</p>
@@ -655,11 +1012,61 @@
 </section>
 
 <section>
+  <h2>Oportunidades: el vendedor de ruta casi no entra</h2>
+
+  <p>Preguntaste en qué momento entra a Oportunidades si ya tiene su registro de seguimiento. La respuesta honesta es <strong>casi nunca</strong>, y por eso sacamos la pantalla de su barra.</p>
+
+  <div class="principio">
+    <p>Si vas a tener que volver más de una vez por la misma venta, es una oportunidad. Si se resuelve en la visita, es un pedido.</p>
+  </div>
+
+  <p>El vendedor de ruta vende en una o dos visitas: entra, muestra, le compran o no. Eso es un <strong>pedido</strong>, y se registra dentro del mismo seguimiento. Abrirle una oportunidad a cada venta de ciento veinte dólares llenaría el pipeline de ruido hasta volverlo inútil.</p>
+
+  <p>Sí la usa en el caso menos frecuente: un supermercado que pide cotización formal, la evalúa dos semanas, negocia y decide. Ahí hay una venta que vive en el tiempo, con monto y fecha de cierre, y tiene sentido seguirla. Se crea desde el expediente de la cuenta, que es de donde nace naturalmente.</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Vendedor de ruta</th><th>Líder</th></tr></thead>
+      <tbody>
+        <tr><td>Dónde vive</td><td>Pedidos</td><td>Oportunidades</td></tr>
+        <tr><td>Ciclo típico</td><td>Una o dos visitas</td><td>Meses</td></tr>
+        <tr><td>Cuántas al mes</td><td>Una o ninguna</td><td>Es su trabajo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Es la misma distinción de siempre, vista desde otro lado: <strong>oportunidad es una negociación que toma tiempo; pedido es una venta que ya ocurrió</strong>. Que los dos vendedores usen la misma aplicación de forma tan distinta no es un problema de diseño — es que hacen trabajos distintos.</p>
+</section>
+
+<section>
   <h2>Cadenas: un cliente, diez puntos</h2>
 
   <p>El líder cerró con Starbucks: una negociación, un contrato. Pero hay diez tiendas y cada gerente hace su propio pedido. Si se crean once cuentas sueltas, el sistema cuenta once clientes nuevos y son uno.</p>
 
-  <p>Las dos son cuentas de verdad —la sucursal tiene dirección e historia, la madre tiene RUC y contrato— así que no hace falta entidad nueva: <strong>basta con que una cuenta pueda colgar de otra</strong>.</p>
+  <p>Las dos son cuentas de verdad —la tienda tiene dirección e historia, la madre tiene RUC y contrato— así que no hace falta entidad nueva: <strong>basta con que una cuenta pueda colgar de otra</strong>.</p>
+
+  <h3>La madre no es una sucursal principal: es una oficina</h3>
+
+  <p>Aquí hay una distinción que faltaba. <strong>La cuenta madre de Starbucks no es una tienda.</strong> Es una oficina administrativa donde se negocia: no vende al público, no recibe entregas y no hace pedidos. Tratarla como sucursal la metería en las rutas de reparto y en la cadencia de visita comercial, donde no pinta nada.</p>
+
+  <p>Así que la cuenta lleva <strong>qué clase de punto es</strong>:</p>
+
+  <div class="tabla-envoltura">
+    <table>
+      <thead><tr><th></th><th>Local comercial</th><th>Oficina de negociación</th></tr></thead>
+      <tbody>
+        <tr><td>Qué pasa ahí</td><td>Se vende y se entrega</td><td>Se negocia el acuerdo marco</td></tr>
+        <tr><td>Aparece como parada de ruta</td><td>Sí</td><td>No</td></tr>
+        <tr><td>Recibe entregas</td><td>Sí</td><td>No</td></tr>
+        <tr><td>Cadencia</td><td>De visita comercial</td><td>De contacto con el comprador central</td></tr>
+        <tr><td>Ejemplo</td><td>Starbucks Multiplaza</td><td>Starbucks Panamá</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>No es forzoso que la madre sea oficina: una cadena chica puede tener un local principal que además es donde se negocia. Por eso es un campo y no una regla.</p>
+
+  <p><strong>Dónde se elige:</strong> no en el alta de la calle —eso mataría los treinta segundos y no aplica ahí— sino al crear la cuenta madre desde la oficina, y en Editar datos. Es donde se arman las cadenas de todos modos.</p>
 
   <div class="tabla-envoltura">
     <table>
@@ -693,10 +1100,12 @@
 
   <p>Funciona porque las cadenas son terreno del líder: él las negocia y él tiene el panorama nacional. El vendedor crea su sucursal, el líder la engancha el viernes. Y si el del interior no ve la madre y crea una suelta, <strong>la validación de duplicados ya lo ataja</strong>: responde <em>“Starbucks Panamá ya existe, es de Damián”</em> sin abrirle el expediente.</p>
 
-  <h3>Dar de alta diez sucursales tiene que ser barato</h3>
+  <h3>Dar de alta la cadena tiene que ser barato</h3>
+
+  <p>El orden natural es el que describiste: <strong>primero se negocia en la oficina, después se abren los puntos.</strong> Se crea la cuenta madre como oficina, se cierra el acuerdo, y de ahí cuelgan las tiendas a medida que entran.</p>
 
   <ul class="limpia">
-    <li><strong>Agregar sucursal</strong> desde la cuenta madre, heredando categoría, productos y condiciones. Solo se escribe el nombre del punto y se marca en el mapa.</li>
+    <li><strong>Agregar punto</strong> desde la cuenta madre, heredando categoría, productos y condiciones del acuerdo. Solo se escribe el nombre del local y se marca en el mapa.</li>
     <li>El botón <em>¿Tiene más sucursales?</em> de la búsqueda ya las encuentra a nivel nacional. Falta el paso siguiente: agregarlas como sucursales, en tanda.</li>
   </ul>
 
@@ -834,31 +1243,49 @@
 
   <p>Los doce clientes salen de tres bolsas que se solapan —compromisos con fecha, fuera de cadencia, y los que quedan de paso en la ruta— y el sistema le muestra el tamaño de cada una al apostar.</p>
 
+  <p>Faltaban tres cosas en la versión anterior: <strong>las conversiones a cliente, las ventas, y el acumulado del mes</strong>. Con eso el cierre se lee completo — la columna de la derecha es el mes:</p>
+
   <div class="boceto">
-    <div class="b-barra"><span>Semana 34 · cerrada</span><span class="sub">RUBÉN · INTERIOR</span></div>
+    <div class="b-barra"><span>Semana 34 · cerrada</span><span class="sub">SEM · MES</span></div>
     <div class="b-cuerpo">
       <p class="b-seccion">Esfuerzo</p>
       <div class="b-tarjeta">
-        <div class="b-fila">Interacciones <span class="m">47</span></div>
+        <div class="b-fila">Interacciones <span class="m">47 · 168</span></div>
         <div class="b-fila">Visitas · con GPS <span class="m">31 · 27</span></div>
-        <div class="b-fila">Llamadas y WhatsApp <span class="m">16</span></div>
-        <div class="b-fila">Días vendibles <span class="m">3 de 5</span></div>
+        <div class="b-fila">Llamadas y WhatsApp <span class="m">16 · 61</span></div>
+        <div class="b-fila">Días vendibles <span class="m">3 · 14</span></div>
       </div>
       <p class="b-seccion">Caza</p>
       <div class="b-tarjeta">
-        <div class="b-fila">Leads tocados <span class="m">31 de 33</span></div>
+        <div class="b-fila">Leads tocados <span class="m">31 de 33 · 118</span></div>
         <div class="b-fila">De lista · de la calle <span class="m">26 · 5</span></div>
-        <div class="b-fila">Pasaron a prospecto <span class="m">9</span></div>
+        <div class="b-fila">Lead → prospecto <span class="m">9 · 34</span></div>
+        <div class="b-fila">Lead → cliente directo <span class="m">2 · 6</span></div>
+        <div class="b-fila">Prospecto → cliente <span class="m">3 · 11</span></div>
+        <div class="b-fila">Descartados <span class="m">6 · 21</span></div>
+      </div>
+      <p class="b-seccion">Ventas</p>
+      <div class="b-tarjeta">
+        <div class="b-fila"><span class="t">Pedidos</span><span class="m">14 · $3,180</span></div>
+        <div class="b-fila">De cliente que recompra <span class="m">9 · $2,140</span></div>
+        <div class="b-fila">De prospecto que cerró <span class="m">3 · $780</span></div>
+        <div class="b-fila">De lead que compró de una <span class="m">2 · $260</span></div>
+        <div class="b-fila">Talonario · oficina <span class="m">5 · 9</span></div>
       </div>
       <p class="b-seccion">Cuidado</p>
       <div class="b-tarjeta">
-        <div class="b-fila">Clientes atendidos <span class="m">12 de 12</span></div>
-        <div class="b-fila">Salieron de fuera de cadencia <span class="m">9</span></div>
-        <div class="b-fila">Compromisos cumplidos <span class="m">7 de 8</span></div>
+        <div class="b-fila">Clientes atendidos <span class="m">12 de 12 · 41</span></div>
+        <div class="b-fila">Salieron de fuera de cadencia <span class="m">9 · 28</span></div>
+        <div class="b-fila">Cartera en cadencia <span class="m">18 de 24</span></div>
+        <div class="b-fila">Compromisos cumplidos <span class="m">7 de 8 · 29 de 33</span></div>
       </div>
     </div>
   </div>
   <p class="pie-boceto">Cuarenta y siete interacciones sobre treinta y ocho cuentas distintas, en tres días vendibles.</p>
+
+  <p>La partida de <strong>Ventas</strong> es nueva y merece un comentario, porque cambia el orden de las cosas: al registrarse el pedido en el momento de la venta, <strong>el reporte de ventas existe sin necesidad de Zoho</strong>. Zoho lo confirma después y corrige lo que haga falta, pero ya no hace de cuello de botella para que gerencia vea qué se vendió esta semana.</p>
+
+  <p>Y el desglose por origen es la parte que vale: <strong>una venta a un lead nuevo no significa lo mismo que la recompra de un cliente de siempre.</strong> Sumadas en un solo número, un vendedor que solo recoge recompras se ve igual que uno que está abriendo mercado.</p>
 
   <div class="riesgo">
     <span class="etiqueta">Un hueco de lo ya construido</span>
@@ -974,6 +1401,11 @@
   </div>
 
   <div class="abierta">
+    <h3>El resultado “Compró”</h3>
+    <p>Falta en el catálogo de nueve, y es el que más importa. Hay que agregarlo antes de que el vendedor salga a la calle, o va a registrar sus ventas como “dejó información”.</p>
+  </div>
+
+  <div class="abierta">
     <h3>Cuáles resultados cuentan como contacto efectivo</h3>
     <p>“No estaba el encargado” claramente no. ¿Y “solo dejé información”? De esa lista depende que la cadencia signifique algo.</p>
   </div>
@@ -991,6 +1423,31 @@
   <div class="abierta">
     <h3>El plazo de la bandeja de administración</h3>
     <p>Un pedido sin plazo de respuesta es un pedido perdido, igual que un precio. Hace falta el mismo reloj que le pusimos a gerencia.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>El corte de la semana: ¿jueves o viernes?</h3>
+    <p>Con corte el jueves, el líder responde el viernes y el lunes arranca con todo escrito — pero el campo del viernes cuenta para la semana siguiente. Con corte el viernes pasa lo contrario. Hay que escoger cuál molesta menos.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿A cuántos metros se considera “fuera del local”?</h3>
+    <p>Doscientos metros es un punto de partida razonable para el interior, pero en una plaza comercial o un centro urbano puede quedar corto o largo. Conviene mirarlo con datos reales de las primeras semanas antes de fijarlo.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Cuántas visitas verificadas hacen un “día con evidencia”?</h3>
+    <p>Tres en puntos distintos parece razonable, pero depende del día: una jornada dedicada a una cadena grande puede tener dos paradas legítimas. Sale de mirar las primeras semanas.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Se le dice al vendedor desde el principio que esto se mide?</h3>
+    <p>Recomiendo que sí, y en la misma frase que el registro de logística: <em>“esto existe para que tu semana de dos viajes a Natá no se vea floja, y para que el que sale a la calle no se vea igual que el que no sale”</em>. Enterarse después es lo que rompe la confianza.</p>
+  </div>
+
+  <div class="abierta">
+    <h3>¿Se registra el monto del pedido en el momento?</h3>
+    <p>Si se captura, el reporte de ventas existe sin Zoho. Si no, hay que esperar la factura. Yo lo pediría: son dos campos y desbloquean toda la partida de ventas del cierre.</p>
   </div>
 </section>
 
