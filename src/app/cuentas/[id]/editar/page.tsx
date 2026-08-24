@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import {
-  CADENCIAS,
   LINEAS_PRODUCTO,
   TIPOS_PUNTO,
   VOLUMENES,
@@ -17,6 +16,7 @@ import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError } from "@/components/ui/estados";
+import { CampoCadencia } from "@/components/campo-cadencia";
 import { asegurarCategoria, CampoCategoria } from "@/components/campo-categoria";
 import { CampoCoordenadas } from "@/components/campo-coordenadas";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
@@ -190,38 +190,7 @@ export default function EditarProspecto() {
                 ayuda="Tu estimación de cuánto puede comprar esta cuenta."
               />
 
-              {/* Contra qué se mide "días sin contacto". Sin cadencia, el
-                  número es solo un número: 20 días es alarma en un restaurante
-                  y normal en una oficina. */}
-              <div>
-                <p className="text-sm font-medium text-texto">
-                  Cada cuánto contactarla
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {CADENCIAS.map((c) => (
-                    <button
-                      key={c.dias}
-                      type="button"
-                      aria-pressed={cadencia === String(c.dias)}
-                      onClick={() =>
-                        setCadencia(
-                          cadencia === String(c.dias) ? "" : String(c.dias),
-                        )
-                      }
-                      className={`min-h-tactil rounded-lg border px-3 text-sm ${
-                        cadencia === String(c.dias)
-                          ? "border-marca bg-marca text-white"
-                          : "border-borde bg-superficie text-texto"
-                      }`}
-                    >
-                      {c.etiqueta}
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-1 text-xs text-texto-atenuado">
-                  Opcional. Si la defines, el sistema te avisa cuando se pase.
-                </p>
-              </div>
+              <CampoCadencia valor={cadencia} onCambio={setCadencia} />
             </Tarjeta>
 
             {/* La oficina de negociación no es una tienda: no vende, no recibe

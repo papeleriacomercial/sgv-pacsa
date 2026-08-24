@@ -1723,3 +1723,25 @@ Todas dentro de transacciones revertidas: no dejaron rastro.
 **Pendiente de verificar en pantalla:** las dos pantallas nuevas solo se pueden ver entrando
 con usuario y contraseña. La comprobación de que `/categorias` redirige a `/entrar` sin sesión
 sí se hizo.
+
+---
+
+## Cadencias: de cuatro a ocho, más una libre — 2026-08-24
+
+Observación de gerencia editando una cuenta: entre mensual y trimestral no había nada, y
+después de trimestral tampoco. Propuso además una fecha específica para los casos raros.
+
+Las ocho opciones y el número libre están hechos. **La fecha específica no, y es deliberado**
+(D-024): una cadencia es un ritmo que se repite, y una fecha ocurre una vez. Para «volver el 15
+de marzo» ya está el próximo paso, que entra a la agenda; guardado como cadencia sería un dato
+muerto dentro de la ficha.
+
+| Qué | Dónde |
+|---|---|
+| Ocho cadencias sugeridas y los límites de la base | [src/lib/catalogos.ts](../src/lib/catalogos.ts) |
+| Campo con «Otra» y número libre de días | [src/components/campo-cadencia.tsx](../src/components/campo-cadencia.tsx) |
+
+Sin migración: `cuentas_cadencia_valida` ya aceptaba de 1 a 365 días.
+
+El campo dice en meses lo que se escribe en días —«240 días · unos 8 meses»— porque «cada 240
+días» no se entiende de un vistazo y el punto de escribirlo a mano es poder comprobarlo.

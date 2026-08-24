@@ -579,3 +579,31 @@ cuándo mostrarlo y en el celular a veces no aparece.
 Se agrega un aviso explícito cuando lo escrito no está en el catálogo: *«"mimisuper" es nueva.
 Va a quedar en el catálogo para todo el equipo»*. Crear una categoría tiene que ser un acto
 consciente, no el resultado de no haber encontrado la que ya existía.
+
+---
+
+## D-024 — La cadencia es un ritmo, no una fecha
+
+**Fecha:** 2026-08-24
+
+**Decisión.** Las cadencias sugeridas pasan a ser ocho —semanal, quincenal, mensual,
+bimestral, trimestral, cada 4, 5 y 6 meses— más **«Otra»**, que abre un número libre de días
+(1 a 365, lo que ya admitía la base). **No se agrega la opción de fijar una fecha.**
+
+**Por qué las ocho.** El salto de mensual a trimestral dejaba fuera media papelería: un colegio
+compra por trimestre escolar, una oficina de contabilidad se surte dos veces al año, y quien
+tiene bodega pide cada cuatro o cinco meses. Con «Mensual» eran alarma permanente; con
+«Trimestral», invisibles medio año. Una cadencia mal puesta es peor que ninguna: enseña a
+ignorar el aviso.
+
+**Por qué no la fecha.** Una cadencia es **un ritmo que se repite**; una fecha ocurre una vez y
+al día siguiente ya no significa nada. «Volver el 15 de marzo» ya tiene su herramienta —el
+**próximo paso**, que entra a la agenda y se cumple o no—. Guardarlo como cadencia lo sacaría
+de la agenda y lo convertiría en un dato muerto dentro de la ficha.
+
+El caso que motivó la pregunta —un cliente que tarda ocho meses— queda cubierto por «Otra»:
+240 días. Lo que no cabe es más de un año, y a propósito: eso no es una cadencia, es una cuenta
+que se dejó de atender.
+
+**Vocabulario.** Se conservan las palabras del negocio hasta trimestral, y de ahí en adelante
+se dice en llano: «Cada 4 meses» se entiende sin pensar, «cuatrimestral» hay que traducirlo.

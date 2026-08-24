@@ -414,10 +414,30 @@ export type TipoPunto = keyof typeof TIPOS_PUNTO;
  * "Días sin contacto" por sí solo no dice si algo está bien: 20 días sin ver a
  * un restaurante que recompra cada 15 es una alarma; a una oficina que compra
  * cada tres meses, es normal. La cadencia es contra qué se mide.
+ *
+ * **El salto de mensual a trimestral dejaba fuera media papelería.** Un colegio
+ * compra por trimestre escolar, una oficina de contabilidad se surte dos veces
+ * al año, y quien tiene bodega pide cada cuatro o cinco meses. Ponerles
+ * "Mensual" los volvía alarma permanente; ponerles "Trimestral" los volvía
+ * invisibles medio año.
+ *
+ * Se mantienen las palabras conocidas hasta trimestral —son las que usa el
+ * negocio— y de ahí en adelante se dice en llano: "Cada 4 meses" se entiende
+ * sin pensar, "cuatrimestral" hay que traducirlo.
+ *
+ * Más de seis meses existe y se pone a mano: la base admite hasta 365 días.
  */
 export const CADENCIAS = [
   { dias: 7, etiqueta: "Semanal" },
   { dias: 15, etiqueta: "Quincenal" },
   { dias: 30, etiqueta: "Mensual" },
+  { dias: 60, etiqueta: "Bimestral" },
   { dias: 90, etiqueta: "Trimestral" },
+  { dias: 120, etiqueta: "Cada 4 meses" },
+  { dias: 150, etiqueta: "Cada 5 meses" },
+  { dias: 180, etiqueta: "Cada 6 meses" },
 ];
+
+/** Lo que acepta la base: `cuentas_cadencia_valida` (1 a 365 días). */
+export const CADENCIA_MINIMA = 1;
+export const CADENCIA_MAXIMA = 365;
