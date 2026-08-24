@@ -168,11 +168,11 @@ export type MotivoDescarte = keyof typeof MOTIVOS_DESCARTE;
 /**
  * Ciclo de vida de la cuenta (plan v2).
  *
- *   sin_clasificar → prospecto → cliente
+ *   potencial → prospecto → cliente
  *                 ↘ descartada
  *
  * Una cuenta creada desde la oficina, planificando sobre el mapa, nace
- * **sin clasificar**: nadie la ha visitado ni contactado, y llamarla prospecto
+ * **potencial**: nadie ha ido ni la ha contactado, y llamarla prospecto
  * afirma algo que no ocurrió. El primer seguimiento la resuelve: o pasa a
  * prospecto, o se descarta con su motivo.
  *
@@ -180,7 +180,7 @@ export type MotivoDescarte = keyof typeof MOTIVOS_DESCARTE;
  * Zoho lo confirma o lo corrige. Ver D-010.
  */
 export const TIPOS_CUENTA = {
-  sin_clasificar: "Sin clasificar",
+  potencial: "Potencial",
   prospecto: "Prospecto",
   cliente: "Cliente",
   descartada: "Descartada",
@@ -191,19 +191,19 @@ export type TipoCuenta = keyof typeof TIPOS_CUENTA;
 /**
  * El tono es estado, no decoración (§17).
  *
- * "Sin clasificar" va en aviso porque es trabajo pendiente, no un estado
+ * "Potencial" va en aviso porque es trabajo pendiente, no un estado
  * estable: alguien tiene que ir a verla. "Descartada" va en neutro y no en
  * error: no es una falla, es una cuenta cerrada con su explicación.
  */
 export const TONO_TIPO: Record<TipoCuenta, "ok" | "aviso" | "info" | "neutro"> = {
-  sin_clasificar: "aviso",
+  potencial: "aviso",
   prospecto: "info",
   cliente: "ok",
   descartada: "neutro",
 };
 
 /** Cuentas que siguen en juego. Las descartadas no estorban el trabajo del día. */
-export const TIPOS_VIVOS: TipoCuenta[] = ["sin_clasificar", "prospecto", "cliente"];
+export const TIPOS_VIVOS: TipoCuenta[] = ["potencial", "prospecto", "cliente"];
 
 /** Volumen estimado por el vendedor (plan v2, Etapa 2). */
 export const VOLUMENES = {

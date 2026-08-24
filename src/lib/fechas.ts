@@ -38,7 +38,7 @@ export function haceDias(dias: number): string {
 }
 
 /**
- * Lo que lleva un lead en su lista sin que nadie lo toque.
+ * Lo que lleva un potencial en su lista sin que nadie lo toque.
  *
  * Recién agregado se dice en pasado —es un hecho—; a partir del día siguiente
  * se dice en presente, porque ya es una espera. La diferencia es la que hay

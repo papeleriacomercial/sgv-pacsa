@@ -128,7 +128,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
       // El de la semana pasada trae la apuesta contra la que se reconcilia.
       supabase
         .from("cierres")
-        .select("apuesta_leads, apuesta_clientes, respuesta, respondido_en")
+        .select("apuesta_potenciales, apuesta_clientes, respuesta, respondido_en")
         .eq("vendedor_id", user.id)
         .lt("semana", lunes)
         .order("semana", { ascending: false })
@@ -144,7 +144,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
     (c) => !DE_CALLE.includes(c.tipo_accion),
   );
   const esperando = (pend ?? []) as unknown as Pendiente[];
-  const conLeads = listas.filter((l) => l.sin_tocar > 0);
+  const conPotenciales = listas.filter((l) => l.sin_tocar > 0);
 
   function Renglon({ c }: { c: Compromiso }) {
     const vencido = c.fecha_compromiso < hoy;
@@ -241,16 +241,16 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
 
             {/* La reconciliación. Nadie la calcula: sale sola, y es lo que
                 convierte el plan en algo real en vez de un deseo. */}
-            {anterior?.apuesta_leads !== null &&
-              anterior?.apuesta_leads !== undefined && (
+            {anterior?.apuesta_potenciales !== null &&
+              anterior?.apuesta_potenciales !== undefined && (
                 <Tarjeta className="flex flex-col gap-1">
                   <p className="text-xs text-texto-secundario">
                     Lo que apostaste la semana pasada
                   </p>
                   <div className="flex items-baseline justify-between gap-2 text-sm">
-                    <span className="text-texto-secundario">Leads</span>
+                    <span className="text-texto-secundario">Potenciales</span>
                     <span className="font-mono text-texto">
-                      dijiste {anterior.apuesta_leads} · tocaste{" "}
+                      dijiste {anterior.apuesta_potenciales} · tocaste{" "}
                       {semana.cuentasTocadas}
                     </span>
                   </div>
@@ -386,10 +386,10 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
               </section>
             )}
 
-            {conLeads.length > 0 && (
+            {conPotenciales.length > 0 && (
               <section className="flex flex-col gap-2">
                 <h2 className="text-sm font-medium text-texto">Tus listas</h2>
-                {conLeads.slice(0, 4).map((l) => (
+                {conPotenciales.slice(0, 4).map((l) => (
                   <Link key={l.id} href={`/listas/${l.id}`}>
                     <Tarjeta className="flex items-baseline justify-between gap-2">
                       <span className="text-sm font-medium text-texto">

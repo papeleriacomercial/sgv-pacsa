@@ -14,7 +14,7 @@ type Fila = {
   sorprendio: string | null;
   freno: string | null;
   necesito: string | null;
-  apuesta_leads: number | null;
+  apuesta_potenciales: number | null;
   apuesta_clientes: number | null;
   enviado_en: string | null;
   respuesta: string | null;
@@ -55,7 +55,7 @@ export default async function Contrato() {
   const { data } = await supabase
     .from("cierres")
     .select(
-      "id, vendedor_id, semana, numeros, sorprendio, freno, necesito, apuesta_leads, apuesta_clientes, enviado_en, respuesta, respondido_en, perfiles(nombre)",
+      "id, vendedor_id, semana, numeros, sorprendio, freno, necesito, apuesta_potenciales, apuesta_clientes, enviado_en, respuesta, respondido_en, perfiles(nombre)",
     )
     .neq("vendedor_id", user.id)
     .not("enviado_en", "is", null)
@@ -73,7 +73,7 @@ export default async function Contrato() {
       sorprendio: c.sorprendio,
       freno: c.freno,
       necesito: c.necesito,
-      apuestaLeads: c.apuesta_leads,
+      apuestaPotenciales: c.apuesta_potenciales,
       apuestaClientes: c.apuesta_clientes,
       respuesta: c.respuesta,
       respondido: c.respondido_en !== null,

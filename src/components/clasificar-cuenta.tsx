@@ -16,7 +16,7 @@ import { MensajeError } from "@/components/ui/estados";
 /**
  * Mover la cuenta por su ciclo de vida.
  *
- *   sin_clasificar → prospecto → cliente
+ *   potencial → prospecto → cliente
  *                 ↘ descartada
  *
  * Los tres saltos son hechos comerciales distintos y ninguno se deduce solo:
@@ -132,7 +132,7 @@ export function ClasificarCuenta({
       {error && <MensajeError titulo="No se pudo guardar" detalle={error} />}
 
       <div className="grid grid-cols-2 gap-2">
-        {tipo === "sin_clasificar" && (
+        {tipo === "potencial" && (
           <Boton
             tono="secundario"
             ancho

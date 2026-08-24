@@ -174,7 +174,7 @@ pantallas. Hacerlo después significa escribir dos veces el mismo código.
 ### Etapa 3 — Filtros y colorización ✅ HECHA
 
 Un solo motor de filtros que sirve a la lista y al mapa: tipo de cuenta, categoría,
-producto de interés, volumen, días sin contacto, próximos N días, sin clasificar, sin
+producto de interés, volumen, días sin contacto, próximos N días, potenciales, sin
 ubicación, por reactivar, y por vendedor para líder y gerencia.
 
 Colorización de los pines según el filtro elegido, con leyenda obligatoria, incluida la
@@ -206,7 +206,7 @@ No estaba en el plan: salió de revisar las pantallas de las Etapas 4 y 5 el 202
 cuatro observaciones del negocio apuntaban al mismo hueco —**el sistema no distinguía entre
 planear e informar**— y por eso obligaba a inventar hechos para poder usar los formularios.
 
-- La cuenta nace **sin clasificar**; el primer seguimiento la vuelve prospecto o la descarta
+- La cuenta nace como **potencial**; el primer seguimiento la vuelve prospecto o la descarta
   con su motivo. Descartar no borra (D-015).
 - **Registrar** y **programar** un seguimiento pasan a ser dos pantallas (D-016).
 - El próximo paso deja de ser obligatorio en los tres resultados terminales (D-017).

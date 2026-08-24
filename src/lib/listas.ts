@@ -4,7 +4,7 @@ import type { ClaseVenta, TipoLista } from "@/lib/catalogos";
 /**
  * Las listas y su contenido.
  *
- * Una lista es dónde caza; la agenda es qué debe. Un lead no aparece en la
+ * Una lista es dónde caza; la agenda es qué debe. Un potencial no aparece en la
  * agenda hasta que se toca y deja un próximo paso — por eso los cincuenta
  * puntos del domingo no ahogan lo que hay que hacer hoy.
  */

@@ -38,7 +38,7 @@ export default async function Cierre() {
     cargarListas(),
     supabase
       .from("cierres")
-      .select("id, sorprendio, freno, necesito, plan, apuesta_leads, apuesta_clientes, enviado_en")
+      .select("id, sorprendio, freno, necesito, plan, apuesta_potenciales, apuesta_clientes, enviado_en")
       .eq("vendedor_id", user.id)
       .eq("semana", semanaActual)
       .maybeSingle(),

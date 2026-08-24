@@ -164,7 +164,7 @@ function Formulario() {
       // Lo único de Google Places que puede guardarse indefinidamente.
       place_id: placeId,
       vendedor_id: user.id,
-      // No se manda `tipo`: la base la crea `sin_clasificar`. Llamarla
+      // No se manda `tipo`: la base la crea `potencial`. Llamarla
       // prospecto antes de que alguien la vea afirma algo que no ocurrió.
     }, `Cuenta nueva: ${nombre.trim()}`);
 
@@ -180,7 +180,7 @@ function Formulario() {
         .insert({ lista_id: listaId, cuenta_id: id });
     }
 
-    // Los dos caminos crean la misma cuenta sin clasificar; lo que cambia es a
+    // Los dos caminos crean el mismo potencial; lo que cambia es a
     // dónde lleva. Desde la calle se sigue derecho a registrar la visita, que
     // es la que decide si es prospecto o se descarta.
     router.replace(conVisita ? `/cuentas/${id}/seguimiento` : `/cuentas/${id}`);
@@ -363,7 +363,7 @@ function Formulario() {
             </Boton>
             <p className="text-xs text-texto-atenuado">
               Si estás frente al local, registra la visita ahora. Si la estás
-              poniendo en el mapa para ir después, queda sin clasificar hasta
+              poniendo en el mapa para ir después, queda como potencial hasta
               que alguien la trabaje.
             </p>
           </div>

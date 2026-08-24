@@ -24,7 +24,7 @@ type Previo = {
   freno: string | null;
   necesito: string | null;
   plan: unknown;
-  apuesta_leads: number | null;
+  apuesta_potenciales: number | null;
   apuesta_clientes: number | null;
   enviado_en: string | null;
 };
@@ -68,8 +68,8 @@ export function FormularioCierre({
     }
     return base;
   });
-  const [apuestaLeads, setApuestaLeads] = useState(
-    previo?.apuesta_leads ? String(previo.apuesta_leads) : "",
+  const [apuestaPotenciales, setApuestaPotenciales] = useState(
+    previo?.apuesta_potenciales ? String(previo.apuesta_potenciales) : "",
   );
   const [apuestaClientes, setApuestaClientes] = useState(
     previo?.apuesta_clientes ? String(previo.apuesta_clientes) : "",
@@ -128,7 +128,7 @@ export function FormularioCierre({
         freno: freno.trim() || null,
         necesito: necesito.trim() || null,
         plan,
-        apuesta_leads: apuestaLeads ? Number(apuestaLeads) : null,
+        apuesta_potenciales: apuestaPotenciales ? Number(apuestaPotenciales) : null,
         apuesta_clientes: apuestaClientes ? Number(apuestaClientes) : null,
         enviado_en: new Date().toISOString(),
       },
@@ -316,12 +316,12 @@ export function FormularioCierre({
           <Tarjeta className="flex flex-col gap-4">
             <p className="text-sm font-medium text-texto">Tu apuesta</p>
             <Campo
-              etiqueta="Leads que vas a tocar"
+              etiqueta="Potenciales que vas a tocar"
               type="number"
               inputMode="numeric"
               min="0"
-              value={apuestaLeads}
-              onChange={(e) => setApuestaLeads(e.target.value)}
+              value={apuestaPotenciales}
+              onChange={(e) => setApuestaPotenciales(e.target.value)}
               ayuda={
                 sumaDelPlan > 0
                   ? `Repartiste ${sumaDelPlan} entre los días.`
@@ -355,8 +355,8 @@ export function FormularioCierre({
           <Tarjeta className="flex flex-col gap-2">
             <p className="text-sm font-medium text-texto">Listo para enviar</p>
             <p className="text-sm text-texto-secundario">
-              Apuestas <span className="font-mono">{apuestaLeads || 0}</span>{" "}
-              leads y{" "}
+              Apuestas <span className="font-mono">{apuestaPotenciales || 0}</span>{" "}
+              potenciales y{" "}
               <span className="font-mono">{apuestaClientes || 0}</span> clientes
               para la semana del {semanaEntrante}.
             </p>

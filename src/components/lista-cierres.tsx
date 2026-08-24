@@ -18,7 +18,7 @@ export type CierreDeAlguien = {
   sorprendio: string | null;
   freno: string | null;
   necesito: string | null;
-  apuestaLeads: number | null;
+  apuestaPotenciales: number | null;
   apuestaClientes: number | null;
   respuesta: string | null;
   respondido: boolean;
@@ -151,11 +151,11 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
               </div>
             )}
 
-            {c.apuestaLeads !== null && (
+            {c.apuestaPotenciales !== null && (
               <p className="text-sm text-texto-secundario">
                 Apuesta la semana entrante:{" "}
-                <span className="font-mono text-texto">{c.apuestaLeads}</span>{" "}
-                leads
+                <span className="font-mono text-texto">{c.apuestaPotenciales}</span>{" "}
+                potenciales
                 {c.apuestaClientes !== null && (
                   <>
                     {" y "}

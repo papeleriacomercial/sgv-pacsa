@@ -26,10 +26,10 @@ const ETIQUETA_ROL: Record<Rol, string> = {
  * ser lo que en realidad es — la pantalla de consulta. Buscar un cliente,
  * corregir datos, revisar un expediente.
  *
- * **Los leads no se ven aquí.** Un lead es abundante y desechable; una cuenta
+ * **Los potenciales no se ven aquí.** Un potencial es abundante y desechable; una cuenta
  * es escasa y permanente, y mezclarlos hace que la segunda se pierda: veinte
  * puntos de Aguadulce un día, veinte de Chitré al otro, y en un mes hay cien
- * sin clasificar tapando las treinta que de verdad se trabajan.
+ * potenciales tapando las treinta cuentas que de verdad se trabajan.
  *
  * Escondidos no es lo mismo que ocultos: arriba se dice cuántos hay y dónde
  * están, y el panel de filtros los trae con un interruptor.
@@ -55,7 +55,7 @@ export default async function Cuentas() {
 
   // Se cuentan aquí y no en el cliente porque el aviso tiene que aparecer
   // aunque el filtro los esté escondiendo — que es siempre.
-  const leads = cuentas.filter((c) => c.tipo === "sin_clasificar").length;
+  const potenciales = cuentas.filter((c) => c.tipo === "potencial").length;
 
   return (
     <>
@@ -124,15 +124,15 @@ export default async function Cuentas() {
           </Link>
         </div>
 
-        {leads > 0 && (
+        {potenciales > 0 && (
           <Link
             href="/listas"
             className="flex min-h-tactil items-center gap-3 rounded-lg border border-borde bg-superficie px-4 py-2 text-sm text-texto"
           >
             <ListChecks size={18} className="shrink-0 text-texto-atenuado" aria-hidden />
             <span>
-              <strong className="font-mono">{leads}</strong>
-              {leads === 1 ? " lead sin clasificar" : " leads sin clasificar"}
+              <strong className="font-mono">{potenciales}</strong>
+              {potenciales === 1 ? " potencial" : " potenciales"}
               {" — no se muestran aquí. Están en tus listas."}
             </span>
           </Link>

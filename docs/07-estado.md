@@ -522,7 +522,7 @@ vista no pierde los filtros.
 
 Nombre · tipo de cuenta · volumen · producto de interés · tipo de comercio · poblado ·
 vendedor · sin contacto hace más de N días · con compromiso en los próximos N días · fuera
-de cadencia · sin clasificar · sin ubicación.
+de cadencia · potenciales · sin ubicación.
 
 Las opciones de tipo de comercio y poblado **salen de los datos**, no de una lista fija: si
 nadie usó una categoría, no se ofrece como filtro.
@@ -727,15 +727,15 @@ Sale de cuatro observaciones del negocio sobre las pantallas de las Etapas 4 y 5
 apuntaban al mismo hueco: **el sistema no distinguía entre planear e informar**, y por eso
 obligaba a inventar hechos para poder usar los formularios.
 
-### 1. La cuenta nace sin clasificar (D-015)
+### 1. La cuenta nace como potencial (D-015)
 
 `tipo_cuenta` pasa de dos valores a cuatro:
 
-    sin_clasificar → prospecto → cliente
+    potencial → prospecto → cliente
                   ↘ descartada
 
 Una cuenta creada desde el mapa, en la oficina, no es un prospecto: nadie la ha visto. Nace
-`sin_clasificar` y el primer seguimiento la resuelve. La clasificación se presugiere según el
+`potencial` y el primer seguimiento la resuelve. La clasificación se presugiere según el
 resultado —los resultados terminales proponen descartarla, con su motivo ya elegido— pero la
 decide el vendedor, no un automatismo.
 
@@ -771,7 +771,7 @@ pide cuando la interacción es una visita**. Antes se pedía siempre, incluso en
 ### El alta ahora tiene dos botones
 
 - **Crear y registrar visita** — está frente al local; sigue derecho al seguimiento.
-- **Crear solamente** — la está poniendo en el mapa para ir después; queda sin clasificar.
+- **Crear solamente** — la está poniendo en el mapa para ir después; queda como potencial.
 
 Los dos crean la misma cuenta. Lo que cambia es a dónde lleva.
 
@@ -786,7 +786,7 @@ La intención va primero porque decide el resto de la pantalla.
 
 - `soloSinClasificar` se renombró a `soloSinCategoria`, etiquetado **"Sin categoría"**. Antes
   significaba "sin tipo de comercio" y chocaba de frente con el nuevo tipo de cuenta.
-- El filtro de tipo de cuenta ahora ofrece los cuatro valores; "Sin clasificar" es la cola de
+- El filtro de tipo de cuenta ahora ofrece los cuatro valores; «Potencial» es la cola de
   trabajo.
 - Atajo nuevo: **"Mostrar descartadas"**.
 - La colorización por tipo ofrece cuatro colores y la leyenda solo nombra los que están en
@@ -797,11 +797,11 @@ La intención va primero porque decide el resto de la pantalla.
 | Prueba | Esperado | Resultado |
 |---|---|---|
 | Valores del enum `tipo_cuenta` | Los cuatro, en orden | Correcto |
-| Valor por omisión de `cuentas.tipo` | `sin_clasificar` | Correcto |
+| Valor por omisión de `cuentas.tipo` | `potencial` | Correcto |
 | Descartada sin motivo | Rechazada | `check_violation` |
 | Prospecto con motivo | Rechazado | `check_violation` |
 | Descartada con motivo | Aceptada | Correcto |
-| Cuenta simple | Nace `sin_clasificar` | Correcto |
+| Cuenta simple | Nace `potencial` | Correcto |
 | `cuentas_resumen` rehecha | Existe con `security_invoker=true` | Correcto |
 | La vista con un usuario ajeno | 0 filas | 0 filas |
 | La vista con el vendedor dueño | Sus 4 cuentas, con días calculados | Correcto |
@@ -878,7 +878,7 @@ registro de logística (su coartada) y la razón del rechazo (su munición y su 
   muda a Agenda.
 - **Agenda** es la pantalla de todo el día, con tres grupos: paradas, llamadas y correos, y
   esperando respuesta. El cierre semanal es un formulario, no una pantalla.
-- **Listas** son paquetes de leads por zona, permanentes. Lo que tiene período es el
+- **Listas** son paquetes de potenciales por zona, permanentes. Lo que tiene período es el
   compromiso de trabajarlos.
 - **El plan reparte rutas por día** y se apuesta **por cantidad, no por nombre**.
 - **Solicitudes** es el carril de lo que entra —pedido, cotización, muestra, precio— con campo
@@ -1005,14 +1005,14 @@ Segundo empujón del día. Cuatro piezas y tres migraciones más.
 
 ### Listas — `20260823214958_listas`
 
-Los paquetes de leads, por zona y por objetivo. Resuelven dos cosas a la vez:
+Los paquetes de potenciales, por zona y por objetivo. Resuelven dos cosas a la vez:
 
-1. **Que los leads no ahoguen la cartera.** Cincuenta puntos escogidos un domingo hacían
-   ilegible la lista de treinta cuentas reales. Un lead y una cuenta son objetos económicos
-   distintos —el lead es abundante y desechable, la cuenta es escasa y permanente— y lo que
+1. **Que los potenciales no ahoguen la cartera.** Cincuenta puntos escogidos un domingo hacían
+   ilegible la lista de treinta cuentas reales. Un potencial y una cuenta son objetos económicos
+   distintos —el potencial es abundante y desechable, la cuenta es escasa y permanente— y lo que
    había que separar era la superficie de trabajo, no el registro.
 2. **Que exista el denominador del embudo.** Sin intención declarada, la pregunta *"trabajó
-   50 leads y convirtió 10, ¿qué pasó con los 40?"* es incontestable.
+   50 potenciales y convirtió 10, ¿qué pasó con los 40?"* es incontestable.
 
 Tabla de unión y no columna en `cuentas`: una cuenta puede estar en más de una lista, y la
 fecha de entrada es dato — es lo que permite decir **"levantaste 60, tocaste 34"**, que es
@@ -1551,24 +1551,24 @@ sin explicación.
 
 ---
 
-## Los leads salían en la cartera — 2026-08-23
+## Los potenciales salían en la cartera — 2026-08-23
 
-Segundo reporte del gerente armando Aguadulce, y el más de fondo: los leads levantados en tanda
-aparecían en `/cuentas`. Proyectó el desenlace antes de sufrirlo —cien leads sin atender tapando
+Segundo reporte del gerente armando Aguadulce, y el más de fondo: los potenciales levantados en tanda
+aparecían en `/cuentas`. Proyectó el desenlace antes de sufrirlo —cien potenciales sin atender tapando
 la cartera en un mes—.
 
-Era D-015 aplicado a medias: se creó la superficie aparte para los leads y **no se los sacó de
+Era D-015 aplicado a medias: se creó la superficie aparte para los potenciales y **no se los sacó de
 la cartera**, así que caían en los dos lados.
 
 | Qué | Dónde |
 |---|---|
-| `sin_clasificar` escondido por omisión | [src/lib/filtros.ts](../src/lib/filtros.ts) |
-| Interruptor «Mostrar leads» | [src/components/panel-filtros.tsx](../src/components/panel-filtros.tsx) |
+| `potencial` escondido por omisión | [src/lib/filtros.ts](../src/lib/filtros.ts) |
+| Interruptor «Mostrar potenciales» | [src/components/panel-filtros.tsx](../src/components/panel-filtros.tsx) |
 | Aviso con el conteo y enlace a Listas | [src/app/cuentas/page.tsx](../src/app/cuentas/page.tsx) |
 | `lista` y `cuenta` sobreviven al panel | [src/lib/filtros.ts](../src/lib/filtros.ts), [src/components/cuentas-con-filtros.tsx](../src/components/cuentas-con-filtros.tsx) |
-| El mapa de una lista pide los leads | [src/app/listas/[id]/page.tsx](../src/app/listas/[id]/page.tsx) |
+| El mapa de una lista pide los potenciales | [src/app/listas/[id]/page.tsx](../src/app/listas/[id]/page.tsx) |
 
-Sin migración: es filtro de pantalla, no de esquema. Los leads siguen viviendo en `cuentas`
+Sin migración: es filtro de pantalla, no de esquema. Los potenciales siguen viviendo en `cuentas`
 —ver D-019 para por qué no van en tabla aparte—. **Escondido no es oculto:** la cartera dice
 cuántos hay y a dónde ir por ellos.
 
@@ -1590,7 +1590,7 @@ con motivo—, no achicando la lista.
 
 ## La leyenda de la búsqueda ahora cuenta — 2026-08-23
 
-Pregunta de gerencia: si el vendedor levanta los leads de Aguadulce, ¿puede el líder entrar al
+Pregunta de gerencia: si el vendedor levanta los potenciales de Aguadulce, ¿puede el líder entrar al
 mapa de Aguadulce y ver cuáles fueron seleccionados y cuáles no, para verificar que el barrido
 está completo?
 
@@ -1617,9 +1617,9 @@ color del pin y el número no puedan discrepar.
 
 ---
 
-## Los leads dicen desde cuándo esperan — 2026-08-23
+## Los potenciales dicen desde cuándo esperan — 2026-08-23
 
-Pedido de gerencia: en las listas, saber si un lead se levantó anteayer o lleva medio año ahí.
+Pedido de gerencia: en las listas, saber si un potencial se levantó anteayer o lleva medio año ahí.
 Sin fecha se ven exactamente igual.
 
 `listas_cuentas.agregada_en` ya se guardaba desde que se creó la tabla —*«la fecha de entrada
@@ -1635,7 +1635,7 @@ Sin migración: el dato ya estaba.
 
 **Tres cosas que no son obvias.**
 
-1. **Ocupa el hueco de la última interacción**, que en un lead sin tocar está vacío. La ficha no
+1. **Ocupa el hueco de la última interacción**, que en un potencial sin tocar está vacío. La ficha no
    crece ni cambia de alto — §17 exige que se pueda escanear de un vistazo.
 2. **A los 60 días se pone en ámbar**, que es el mismo umbral con que `listas_resumen` cuenta
    los viejos. Si no coincidieran, la lista diría «3 llevan mucho» y ninguna ficha se vería
@@ -1785,3 +1785,33 @@ cuenta en varias listas muestra la primera y cuántas más: dos nombres no caben
 
 **Pendiente de verificar en pantalla:** el cambio es de maquetación y solo se ve con sesión
 iniciada.
+
+---
+
+## De «lead» a «potencial» — 2026-08-24
+
+Cambio de vocabulario pedido por gerencia. Barrido completo: pantallas, esquema, código y
+documentación. Ver D-025.
+
+| Qué | Antes | Ahora |
+|---|---|---|
+| El término en toda la interfaz | lead / leads | potencial / potenciales |
+| Estado de la cuenta | `sin_clasificar` | `potencial` |
+| Columna del contrato semanal | `cierres.apuesta_leads` | `cierres.apuesta_potenciales` |
+| Bandera de filtro | `incluirSinClasificar` | `incluirPotenciales` |
+| El puntaje 1–5 de §7.5 | «potencial» | **«puntaje»** |
+
+Tres migraciones: [el rename de la columna](../supabase/migrations/20260824021500_potenciales_en_vez_de_leads.sql),
+[el del valor del enum](../supabase/migrations/20260824022000_tipo_potencial.sql) y
+[el comentario del puntaje](../supabase/migrations/20260824022500_puntaje_no_potencial.sql).
+
+**Lo delicado era el enum.** `alter type ... rename value` rompe cualquier vista o política que
+guarde el literal en su definición; se comprobó antes contra `pg_policy` y `pg_views` que no
+hubiera ninguna. Verificado después: el valor por omisión de `cuentas.tipo` quedó en
+`'potencial'::tipo_cuenta` y las 12 cuentas de dev respondieron al nombre nuevo sin tocar
+una fila.
+
+**El choque que había que resolver.** «Potencial» ya significaba el puntaje 1–5 de §7.5. Se
+renombró ese puntaje a «puntaje» antes de que exista, que es cuando sale barato.
+
+`docs/00-vision.md` queda sin tocar, por la regla de siempre: es el levantamiento original.

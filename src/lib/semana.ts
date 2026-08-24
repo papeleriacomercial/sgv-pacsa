@@ -14,7 +14,7 @@ import {
  * visitar, los visita el viernes — y eso ocurre sin que el líder intervenga.
  *
  * Todo se calcula aquí. El vendedor no escribe ni un número: si tuviera que
- * contar sus visitas o sumar sus leads, el cierre del viernes se volvería una
+ * contar sus visitas o sumar sus potenciales, el cierre del viernes se volvería una
  * hora de trabajo administrativo y en tres semanas estaría inventando cifras
  * redondas.
  *

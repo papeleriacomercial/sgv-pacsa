@@ -47,7 +47,7 @@ function hoyEnPanama() {
 }
 
 /**
- * Qué se hace con una cuenta que estaba sin clasificar.
+ * Qué se hace con una cuenta que era un potencial.
  *
  * Son tres destinos y no dos: si le compró en la misma visita no es un
  * prospecto —prospecto es quien todavía no compra— es un cliente, y saltar
@@ -187,7 +187,7 @@ function Formulario() {
     resultado !== null && RESULTADOS_CON_COMPETENCIA.includes(resultado);
   const puedeSerVentaLarga =
     resultado !== null && RESULTADOS_CON_VENTA_LARGA.includes(resultado);
-  const hayQueClasificar = tipoCuenta === "sin_clasificar";
+  const hayQueClasificar = tipoCuenta === "potencial";
   const seDescarta = clasificacion === "descartada";
 
   // §6 obliga a dejar próximo paso, y esa regla es la que evita que una cuenta
@@ -280,7 +280,7 @@ function Formulario() {
       return;
     }
 
-    // La cuenta sin clasificar se resuelve aquí, con el hecho a la vista, y no
+    // El potencial se resuelve aquí, con el hecho a la vista, y no
     // en una bandeja aparte que nadie vacía.
     if (hayQueClasificar && clasificacion) {
       const { error: falloTipo } = await supabase
@@ -518,12 +518,12 @@ function Formulario() {
               />
             </Tarjeta>
 
-            {/* 4. Si la cuenta estaba sin clasificar, se resuelve aquí. */}
+            {/* 4. Si la cuenta era un potencial, se resuelve aquí. */}
             {hayQueClasificar && (
               <Tarjeta className="flex flex-col gap-4 border-amber-200 bg-amber-50">
                 <div>
                   <p className="text-sm font-medium text-texto">
-                    Esta cuenta estaba sin clasificar
+                    Esta cuenta era un potencial
                   </p>
                   <p className="text-xs text-texto-secundario">
                     Nadie la había visitado ni contactado. Este es el momento de

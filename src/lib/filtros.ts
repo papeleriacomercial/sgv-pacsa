@@ -59,18 +59,18 @@ export type Filtros = {
    */
   incluirDescartadas: boolean;
   /**
-   * Los leads tampoco se ven aquí por omisión.
+   * Los potenciales tampoco se ven aquí por omisión.
    *
    * **Es la mitad que faltaba de las listas.** Separarlos en su pantalla no
    * sirvió de nada mientras seguían cayendo en la cartera: veinte puntos
    * escogidos un domingo, veinte más el martes en Chitré, y en un mes hay cien
-   * sin clasificar tapando las treinta cuentas reales que se trabajan.
+   * potenciales tapando las treinta cuentas reales que se trabajan.
    *
-   * Un lead es abundante y desechable; una cuenta es escasa y permanente. La
-   * cartera es de las segundas. Los leads viven en sus listas hasta que
-   * alguien los toque — y ahí dejan de ser leads.
+   * Un potencial es abundante y desechable; una cuenta es escasa y permanente. La
+   * cartera es de las segundas. Los potenciales viven en sus listas hasta que
+   * alguien los toque — y ahí dejan de ser potenciales.
    */
-  incluirSinClasificar: boolean;
+  incluirPotenciales: boolean;
 };
 
 export const FILTROS_VACIOS: Filtros = {
@@ -87,7 +87,7 @@ export const FILTROS_VACIOS: Filtros = {
   soloSinUbicacion: false,
   soloFueraDeCadencia: false,
   incluirDescartadas: false,
-  incluirSinClasificar: false,
+  incluirPotenciales: false,
 };
 
 export function contarActivos(f: Filtros): number {
@@ -105,7 +105,7 @@ export function contarActivos(f: Filtros): number {
     (f.soloSinUbicacion ? 1 : 0) +
     (f.soloFueraDeCadencia ? 1 : 0) +
     (f.incluirDescartadas ? 1 : 0) +
-    (f.incluirSinClasificar ? 1 : 0)
+    (f.incluirPotenciales ? 1 : 0)
   );
 }
 
@@ -123,11 +123,11 @@ export function aplicar(cuentas: Cuenta[], f: Filtros): Cuenta[] {
       return false;
     }
 
-    // Los leads, igual. La cartera es de cuentas que alguien ya trabajó.
+    // Los potenciales, igual. La cartera es de cuentas que alguien ya trabajó.
     if (
-      c.tipo === "sin_clasificar" &&
-      !f.incluirSinClasificar &&
-      !f.tipos.includes("sin_clasificar")
+      c.tipo === "potencial" &&
+      !f.incluirPotenciales &&
+      !f.tipos.includes("potencial")
     ) {
       return false;
     }
@@ -243,7 +243,7 @@ export function colorizar(
 ): { color: (c: Cuenta) => string; leyenda: EntradaLeyenda[] } {
   if (dimension === "tipo") {
     const tonos: Record<TipoCuenta, string> = {
-      sin_clasificar: COLOR.aviso,
+      potencial: COLOR.aviso,
       prospecto: COLOR.info,
       cliente: COLOR.ok,
       descartada: COLOR.atenuado,
@@ -382,7 +382,7 @@ const BANDERAS = [
   "soloSinUbicacion",
   "soloFueraDeCadencia",
   "incluirDescartadas",
-  "incluirSinClasificar",
+  "incluirPotenciales",
 ] as const;
 
 export function desdeUrl(p: URLSearchParams): Filtros {

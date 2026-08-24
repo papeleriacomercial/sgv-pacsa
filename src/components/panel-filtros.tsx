@@ -176,7 +176,7 @@ export function PanelFiltros({
                 onChange={(e) => set({ texto: e.target.value })}
               />
 
-              {/* "Sin clasificar" es la cola de trabajo: cuentas puestas en el
+              {/* "Potencial" es la cola de trabajo: cuentas puestas en el
               mapa desde la oficina que nadie ha ido a ver todavía. Aparece
               primero porque es lo que hay que vaciar. */}
               <Grupo titulo="Tipo de cuenta">
@@ -325,7 +325,7 @@ export function PanelFiltros({
                 >
                   Fuera de cadencia
                 </Pastilla>
-                {/* No confundir con el tipo de cuenta "sin clasificar": esto
+                {/* No confundir con el tipo de cuenta «potencial»: esto
                 es la cuenta a la que le falta el tipo de comercio. */}
                 <Pastilla
                   activo={filtros.soloSinCategoria}
@@ -354,15 +354,15 @@ export function PanelFiltros({
                 >
                   Mostrar descartadas
                 </Pastilla>
-                {/* Los leads viven en sus listas. Aquí se traen solo cuando
+                {/* Los potenciales viven en sus listas. Aquí se traen solo cuando
                     hace falta buscar uno por nombre. */}
                 <Pastilla
-                  activo={filtros.incluirSinClasificar}
+                  activo={filtros.incluirPotenciales}
                   onClick={() =>
-                    set({ incluirSinClasificar: !filtros.incluirSinClasificar })
+                    set({ incluirPotenciales: !filtros.incluirPotenciales })
                   }
                 >
-                  Mostrar leads
+                  Mostrar potenciales
                 </Pastilla>
               </Grupo>
 

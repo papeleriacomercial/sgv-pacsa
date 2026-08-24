@@ -92,7 +92,7 @@ export default async function Expediente({
     .order("created_at", { ascending: false });
 
   const descartada = prospecto.tipo === "descartada";
-  const sinClasificar = prospecto.tipo === "sin_clasificar";
+  const esPotencial = prospecto.tipo === "potencial";
   const vigente = compromisos?.[0];
   const vencido = vigente ? vigente.fecha_compromiso < hoyEnPanama() : false;
   const ultima = visitas?.[0];
@@ -132,13 +132,13 @@ export default async function Expediente({
 
         {/* La cola de trabajo hecha visible: una cuenta puesta en el mapa desde
             la oficina no es un prospecto hasta que alguien va y lo comprueba. */}
-        {sinClasificar && (
+        {esPotencial && (
           <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
             <HelpCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
             <div>
-              <p className="text-sm font-medium">Sin clasificar</p>
+              <p className="text-sm font-medium">Potencial</p>
               <p className="text-xs">
-                Nadie la ha visitado ni contactado todavía. Al registrar el
+                Nadie ha ido ni la ha contactado todavía. Al registrar el
                 primer seguimiento decides si queda como prospecto o se descarta.
               </p>
             </div>

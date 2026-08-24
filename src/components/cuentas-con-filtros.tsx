@@ -52,7 +52,7 @@ export function CuentasConFiltros({
 
   // El estado nace de la dirección, no de valores vacíos. Volver atrás desde
   // una cuenta devuelve exactamente la vista que se estaba mirando: sin esto,
-  // corregir diez cuentas sin clasificar obliga a rearmar el filtro diez veces.
+  // corregir diez potenciales obliga a rearmar el filtro diez veces.
   const [filtros, setFiltros] = useState<Filtros>(() => desdeUrl(parametros));
   const [abierto, setAbierto] = useState(false);
   const [vista, setVista] = useState<"lista" | "mapa">(

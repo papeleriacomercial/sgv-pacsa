@@ -10,7 +10,7 @@ import { Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
 /**
- * Los paquetes de leads, por zona y por objetivo.
+ * Los paquetes de potenciales, por zona y por objetivo.
  *
  * Es la pantalla de planificación, no la del día: aquí arma los grupos y ve
  * cuánto le falta de cada uno. Lo que hace hoy vive en la agenda.

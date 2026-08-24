@@ -319,7 +319,7 @@ fijo.
 React.
 
 **Por qué.** Con el estado en memoria, entrar a una cuenta y volver lo perdía todo. El
-negocio lo encontró trabajando: para corregir cuentas sin clasificar había que rearmar el
+negocio lo encontró trabajando: para corregir potenciales había que rearmar el
 filtro después de cada una, y con diez cuentas eso vuelve el trabajo en tanda inviable.
 
 Efecto secundario que sale gratis: **la vista queda enlazable**. Un líder puede mandarle a
@@ -330,12 +330,12 @@ o el botón de atrás tardaría veinte toques en salir de la pantalla.
 
 ---
 
-## D-015 — La cuenta nace sin clasificar, y descartarla no la borra
+## D-015 — La cuenta nace como potencial, y descartarla no la borra
 
 **Fecha:** 2026-08-22
 
-**Decisión.** `tipo_cuenta` pasa de dos valores a cuatro: `sin_clasificar`, `prospecto`,
-`cliente`, `descartada`. El valor por omisión al crear una cuenta es `sin_clasificar`, y la
+**Decisión.** `tipo_cuenta` pasa de dos valores a cuatro: `potencial`, `prospecto`,
+`cliente`, `descartada`. El valor por omisión al crear una cuenta es `potencial`, y la
 promoción a prospecto —o el descarte, con su motivo obligatorio— la resuelve el vendedor al
 registrar el primer seguimiento.
 
@@ -358,7 +358,7 @@ tabla.
 es lo que evita que otro vendedor repita el viaje. La cuenta descartada conserva su visita y
 su motivo; simplemente sale de la cartera del día salvo que se pidan las descartadas.
 
-Efecto secundario buscado: **la cola de trabajo se vuelve visible**. "Sin clasificar" es un
+Efecto secundario buscado: **la cola de trabajo se vuelve visible**. «Potencial» es un
 filtro de tipo de cuenta, y lo que hay ahí es exactamente lo que falta ir a ver.
 
 **Consecuencia en el catálogo.** `motivo_descarte` gana el valor `sin_interes`. El enum nació
@@ -445,44 +445,44 @@ De paso se corrige el orden del formulario de seguimiento: **la intención va pr
 porque decide el resto de la pantalla. Una llamada no tiene check-in ni foto del local, y
 pedírselos enseña al vendedor a saltarse campos, que es el hábito que después vacía la base.
 El orden queda: intención → check-in (solo si es visita) → resultado → clasificación (solo si
-la cuenta estaba sin clasificar) → notas → proveedor y precio → evidencia → próximo paso.
+la cuenta era un potencial) → notas → proveedor y precio → evidencia → próximo paso.
 
 ---
 
-## D-019 — La cartera no muestra leads
+## D-019 — La cartera no muestra potenciales
 
 **Fecha:** 2026-08-23
 
-**Decisión.** `/cuentas` esconde por omisión las cuentas con `tipo = 'sin_clasificar'`, igual
-que ya escondía las descartadas. Se traen con el interruptor **«Mostrar leads»** del panel de
+**Decisión.** `/cuentas` esconde por omisión las cuentas con `tipo = 'potencial'`, igual
+que ya escondía las descartadas. Se traen con el interruptor **«Mostrar potenciales»** del panel de
 filtros, o eligiendo ese tipo. El mapa de una lista las pide expresamente
-(`incluirSinClasificar=1`), porque una lista **son** leads.
+(`incluirPotenciales=1`), porque una lista **son** potenciales.
 
-**Por qué.** Armando la primera lista real —Aguadulce— los leads levantados en tanda cayeron a
+**Por qué.** Armando la primera lista real —Aguadulce— los potenciales levantados en tanda cayeron a
 la cartera y la taparon. El gerente proyectó el problema antes de que ocurriera, con la
 aritmética exacta: *«si quedan 10 sin atender al día siguiente estoy en Chitré y alimento 20
-leads más a cuentas, en un mes tendré más de 100 leads no atendidos en cuentas»*.
+potenciales más a cuentas, en un mes tendré más de 100 potenciales no atendidos en cuentas»*.
 
 La causa es que D-015 resolvió esto a medias: creó las listas como superficie aparte para los
-leads pero **nunca los sacó de la cartera**, así que siguieron cayendo en los dos lados.
+potenciales pero **nunca los sacó de la cartera**, así que siguieron cayendo en los dos lados.
 
-**El criterio, que vale más que la regla.** Un lead es abundante y desechable; una cuenta es
-escasa y permanente. Mezclarlos no perjudica a los leads: perjudica a las cuentas. La cartera
+**El criterio, que vale más que la regla.** Un potencial es abundante y desechable; una cuenta es
+escasa y permanente. Mezclarlos no perjudica a los potenciales: perjudica a las cuentas. La cartera
 es la pantalla de consulta —buscar un cliente, revisar un expediente— y ese uso muere si hay
 que pasar por cien puntos que nadie ha visitado.
 
 **Alternativas consideradas.**
 
-- *No guardar los leads en `cuentas`, sino en una tabla de candidatos que «asciende» al
+- *No guardar los potenciales en `cuentas`, sino en una tabla de candidatos que «asciende» al
   tocarlos.* Descartada: obliga a duplicar ficha, ubicación, cadencia y RLS, y a migrar de
   tabla en el momento más frágil —el vendedor parado en la puerta, sin señal—. El identificador
   cambiaría justo cuando el modo offline exige que no cambie (§16).
-- *Borrar los leads viejos.* Contra el borrado lógico de §16 y contra el sentido: saber que ese
+- *Borrar los potenciales viejos.* Contra el borrado lógico de §16 y contra el sentido: saber que ese
   punto ya se levantó evita volver a levantarlo.
 - *Mostrarlos al final de la lista.* No resuelve nada: siguen contando en los totales y
   apareciendo en el filtro por poblado.
 
-**Lo que no se hizo, a propósito.** No se les pone caducidad. Un lead que nadie tocó en tres
+**Lo que no se hizo, a propósito.** No se les pone caducidad. Un potencial que nadie tocó en tres
 meses sigue siendo válido; lo que envejece es **la lista**, y eso ya se mide con
 `sin_tocar_hace_mucho`. Abandonar una zona es decisión del vendedor, no de un cron.
 
@@ -607,3 +607,46 @@ que se dejó de atender.
 
 **Vocabulario.** Se conservan las palabras del negocio hasta trimestral, y de ahí en adelante
 se dice en llano: «Cada 4 meses» se entiende sin pensar, «cuatrimestral» hay que traducirlo.
+
+---
+
+## D-025 — «Lead» sale del vocabulario: se llama potencial
+
+**Fecha:** 2026-08-24
+
+**Decisión.** El término **lead** desaparece del proyecto —pantallas, esquema, código y
+documentación— y en su lugar va **potencial**. Alcanza también al estado de la cuenta: el valor
+`sin_clasificar` del enum `tipo_cuenta` pasa a llamarse `potencial`.
+
+La escalera queda legible en el orden en que ocurre:
+
+```
+potencial → prospecto → cliente
+                     ↘ descartada
+```
+
+**Por qué.** §14 manda nomenclatura en español, en el esquema y en la interfaz. «Lead» era el
+único anglicismo que había entrado, y encima al lugar más visible: la apuesta que el vendedor
+escribe cada viernes. La aplicación se le presenta a tres vendedores panameños; una palabra que
+hay que explicar antes de usarla es una palabra que sobra.
+
+**Por qué también el estado.** `sin_clasificar` describía el estado desde dentro del sistema
+—«todavía no le pusimos etiqueta»— y la pantalla lo repetía tal cual. Visto desde la calle es
+otra cosa: un comercio que puede comprarnos y al que nadie ha ido. Eso es un potencial, y decirlo
+así convierte una etiqueta administrativa en una oportunidad.
+
+**Se renombra la columna y el valor del enum, no solo la etiqueta.** Un esquema que dice
+`apuesta_leads` mientras la pantalla dice «potenciales» obliga a traducir mentalmente cada vez
+que se lee una consulta, y esa traducción se equivoca. `alter type ... rename value` fue seguro
+porque se comprobó antes que ninguna vista ni política guardara el literal en su definición; el
+valor por omisión de `cuentas.tipo` sobrevivió porque apunta al valor del enum, no a su texto.
+
+**Consecuencia que hubo que resolver.** «Potencial» ya nombraba otra cosa: el puntaje 1–5 de
+§7.5, que se calculará desde la facturación de Zoho. Ese puntaje pasa a llamarse **puntaje** a
+secas. Dos cosas distintas con el mismo nombre en el mismo sistema garantizan que alguien las
+confunda, y la confusión no habría aparecido hasta que el puntaje existiera —cuando ya sería
+cara de deshacer—.
+
+`docs/00-vision.md` **no se toca**: es el levantamiento original y ahí «lead» y «potencial»
+quedan como se dijeron en su momento. Esta entrada es el puente entre ese texto y el
+vocabulario actual.

@@ -170,12 +170,12 @@ Contenido fijo, en tres líneas —actualizado 2026-08-24—:
 |---|---|---|
 | 1 | Nombre | Semáforo de estado (color + ícono + etiqueta) |
 | 2 | Tipo de comercio | Lista a la que pertenece, si tiene |
-| 3 | **Zona**, y de quién es cuando hay varios vendedores a la vista | Última interacción, o cuánto lleva esperando si es un lead |
+| 3 | **Zona**, y de quién es cuando hay varios vendedores a la vista | Última interacción, o cuánto lleva esperando si es un potencial |
 
 Si un dato falta, se muestra en `slate-400` como dato ausente. No se omite la línea: la
 ficha debe tener siempre la misma altura para que las listas sean escaneables.
 
-**El potencial estimado salió de la ficha.** Era el puntaje calculado de §7.5, que se
+**El puntaje estimado salió de la ficha.** Era el puntaje 1–5 de §7.5, que se
 alimenta de la facturación de Zoho y todavía no existe; como el campo nunca llegó a la base,
 todas las fichas decían «Sin calificar». Un tercio de la tarjeta gastado en no decir nada,
 mientras la cartera se mezclaba sin que se supiera si una cuenta era de Aguadulce o de

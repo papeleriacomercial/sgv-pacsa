@@ -184,12 +184,12 @@ Es el planteamiento más claro de gerencia y el sistema casi lo soporta ya.
 
 El embudo ya existe en el modelo de datos. Falta leerlo:
 
-    sin_clasificar → prospecto → cotizado → primera factura
+    potencial → prospecto → cotizado → primera factura
 
 | Indicador | ¿Se puede hoy? |
 |---|---|
 | Cuentas nuevas creadas en la semana, por origen | Sí |
-| Sin clasificar que se resolvieron (prospecto o descartada) | Sí |
+| Potenciales que se resolvieron (prospecto o descartada) | Sí |
 | Prospectos que llegaron a cotización | Sí |
 | **Tiempo medio de cada salto** | Sí |
 | Cotizados que llegaron a primera factura | **No — necesita Zoho** |
@@ -250,7 +250,7 @@ expectativa de su perfil, no contra un estándar único.
 | Bloque | Qué muestra | Pregunta que contesta |
 |---|---|---|
 | **1. Dónde se fue la semana** | Horas de venta, horas de logística, días sin actividad, amplitud de jornada | ¿Estuvo trabajando? |
-| **2. Caza** | Cuentas nuevas, sin clasificar resueltas, prospectos que avanzaron, cotizaciones | ¿Está construyendo futuro? |
+| **2. Caza** | Cuentas nuevas, potenciales resueltos, prospectos que avanzaron, cotizaciones | ¿Está construyendo futuro? |
 | **3. Cuidado** | % de cartera en cadencia, y **la lista con nombre** de los que están fuera | ¿Está cuidando lo que hay? |
 | **4. Cierre** | Oportunidades por etapa, cuáles vencidas, monto en juego | ¿Va a entrar plata? |
 

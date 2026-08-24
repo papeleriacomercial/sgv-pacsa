@@ -452,7 +452,7 @@ function Buscador() {
         // y los filtros de la cartera por poblado no encuentran nada — que es
         // exactamente lo que pasaba al abrir el mapa desde una lista.
         poblado: pobladoLista,
-        // Sin `tipo`: entran sin clasificar. Agregarlas en tanda desde el
+        // Sin `tipo`: entran como potenciales. Agregarlas en tanda desde el
         // directorio no las convierte en prospectos, solo las pone en la cola
         // de lo que hay que ir a ver (D-015).
       }));

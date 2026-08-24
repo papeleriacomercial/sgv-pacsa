@@ -35,7 +35,7 @@ adelantado los tipos de comercio de un país, y la lista crece con cada zona que
 | Enum | Valores |
 |---|---|
 | `rol_usuario` | gerente · lider · vendedor · administracion |
-| `tipo_cuenta` | sin_clasificar · prospecto · cliente · descartada |
+| `tipo_cuenta` | potencial · prospecto · cliente · descartada |
 | `volumen_cuenta` | alta · media · baja |
 | `etapa_oportunidad` | nuevo · contactado · cotizado · negociacion · ganado · perdido |
 | `resultado_visita` | diez opciones, ver abajo. Incluye `compro` |
@@ -56,7 +56,7 @@ adelantado los tipos de comercio de un país, y la lista crece con cada zona que
 
 ### `tipo_cuenta` — el ciclo de vida de la cuenta
 
-    sin_clasificar → prospecto → cliente
+    potencial → prospecto → cliente
                   ↘ descartada
 
 Una cuenta nace de dos formas distintas y hasta la migración `ciclo_de_vida_cuenta` las dos
@@ -67,7 +67,7 @@ quedaban iguales:
 2. **En la oficina**, planificando sobre el mapa. No hay contacto todavía.
 
 La segunda produce cuentas que nadie ha visitado ni contactado, y llamarlas "prospecto"
-afirma algo que no ocurrió. `sin_clasificar` es lo que son hasta que alguien las trabaje, y
+afirma algo que no ocurrió. `potencial` es lo que son hasta que alguien las trabaje, y
 esa cola es lo que el vendedor tiene que vaciar.
 
 **`descartada` no es borrado.** La cuenta conserva su visita y su motivo: saber que alguien
@@ -140,10 +140,10 @@ Un punto con el que hay relación comercial, sea prospecto o cliente. Se llamaba
 |---|---|---|
 | `id` | uuid PK | Generado en el cliente |
 | `nombre` | text not null | |
-| `tipo` | `tipo_cuenta` not null default `sin_clasificar` | Dónde va la cuenta en su ciclo de vida (D-010, D-015) |
+| `tipo` | `tipo_cuenta` not null default `potencial` | Dónde va la cuenta en su ciclo de vida (D-010, D-015) |
 | `ruc` | text | Único entre vivos. Señal de duplicado (§6) |
 | `tipo_comercio` | text | Alimenta y se alimenta de `categorias_comercio` |
-| `volumen` | `volumen_cuenta` | Juicio del vendedor. Distinto del potencial calculado de §7.5 |
+| `volumen` | `volumen_cuenta` | Juicio del vendedor. Distinto del puntaje calculado de §7.5 |
 | `contacto_nombre` `contacto_telefono` `contacto_whatsapp` `contacto_correo` | text | |
 | `lat` / `lng` | numeric | GPS del vendedor o punto del mapa: **dato propio** |
 | `direccion` | text | Cómo se llega. Las coordenadas sirven al mapa, esto a la gente |
@@ -282,7 +282,7 @@ mal puesto hasta el viernes es lo que hace que se deje de registrar.
 `listas`: `id` · `vendedor_id` · `nombre` · `tipo` · `clase` · `poblado` · `archivada` ·
 auditoría. `listas_cuentas`: `lista_id` · `cuenta_id` · `agregada_en` · `agregada_por`.
 
-Los paquetes de leads. Resuelven dos cosas: que cincuenta puntos escogidos un domingo no
+Los paquetes de potenciales. Resuelven dos cosas: que cincuenta puntos escogidos un domingo no
 ahoguen la cartera, y que **exista el denominador del embudo** — sin intención declarada, la
 pregunta *"trabajó 50 y convirtió 10, ¿qué pasó con los 40?"* es incontestable.
 
@@ -314,7 +314,7 @@ Vista `solicitudes_resumen` con las horas y si está vencida. El reloj mide a lo
 ### `cierres`
 
 `id` · `vendedor_id` · `semana` · `numeros` · `sorprendio` · `freno` · `necesito` ·
-`plan` · `apuesta_leads` · `apuesta_clientes` · `enviado_en` · `respuesta` · auditoría.
+`plan` · `apuesta_potenciales` · `apuesta_clientes` · `enviado_en` · `respuesta` · auditoría.
 
 El contrato semanal. `numeros` se **congela** en vez de recalcularse: la semana 34 tiene que
 seguir diciendo en diciembre lo que dijo en agosto, y un histórico que se mueve solo no sirve

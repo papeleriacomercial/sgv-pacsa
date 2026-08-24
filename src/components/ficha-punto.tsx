@@ -14,8 +14,8 @@ type Props = {
   /**
    * Días que lleva el punto en su lista sin que nadie lo toque.
    *
-   * Ocupa el mismo hueco que la última interacción, que en un lead sin tocar
-   * está vacío. Un lead sin fecha es indistinguible de otro: no se sabe si se
+   * Ocupa el mismo hueco que la última interacción, que en un potencial sin tocar
+   * está vacío. Un potencial sin fecha es indistinguible de otro: no se sabe si se
    * levantó anteayer o si lleva dos meses ahí.
    */
   esperaDias?: number | null;
@@ -50,11 +50,15 @@ const FALTA = "text-texto-atenuado";
  * - En medio, de qué tipo de comercio y a qué lista pertenece.
  * - Abajo, **dónde queda y de quién es**, contra cuándo se le habló.
  *
- * La línea de abajo llevaba «Potencial 3/5», que era una promesa de §7.5 —el
- * puntaje calculado desde la facturación— sin construir. Como `potencial`
- * nunca llegó a existir, todas las fichas decían «Sin calificar»: un tercio de
- * la tarjeta gastado en no decir nada, mientras la cartera se mezclaba sin que
- * se supiera si una cuenta era de Aguadulce o de Chitré.
+ * La línea de abajo llevaba el puntaje 1–5 de §7.5, que se calcula desde la
+ * facturación de Zoho y no está construido. Como el campo nunca llegó a la
+ * base, todas las fichas decían «Sin calificar»: un tercio de la tarjeta
+ * gastado en no decir nada, mientras la cartera se mezclaba sin que se
+ * supiera si una cuenta era de Aguadulce o de Chitré.
+ *
+ * Ojo al volver a ponerlo: **«potencial» ya no es el nombre de ese puntaje**
+ * sino el de una cuenta que nadie ha tocado (D-025). El puntaje se llama
+ * puntaje.
  */
 export function FichaPunto({
   id,
