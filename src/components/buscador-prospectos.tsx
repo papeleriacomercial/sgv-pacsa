@@ -109,25 +109,57 @@ type Candidato = {
 
 type Orden = "cercania" | "resenas";
 
+/** Las cuatro situaciones en que puede estar un punto del directorio. */
+type Situacion = "nuevo" | "mio" | "de_otro" | "descartado";
+
+function situacionDe(c: Candidato): Situacion {
+  if (c.estado?.motivo_descarte) return "descartado";
+  if (c.estado?.es_mio) return "mio";
+  if (c.estado?.cuenta_id) return "de_otro";
+  return "nuevo";
+}
+
 /**
- * Leyenda de colores.
+ * Leyenda de colores, que además cuenta.
  *
  * En la lista, cada tarjeta trae su estado escrito. En el mapa no: hasta que
  * tocas el pin, el color va solo. Esta leyenda es lo que cumple la regla de
  * §17 —los estados nunca dependen solo del color— en la vista de mapa.
+ *
+ * **Los números la convierten en otra cosa.** Al líder le sirve para revisar el
+ * barrido de una zona sin ir punto por punto: corre la misma búsqueda que corrió
+ * el vendedor y lee *«31 de otro vendedor, 5 descartados, 7 nuevos»*. Esos 7 son
+ * los que nadie ha levantado. Con los colores solos habría que contarlos a ojo.
  */
-const LEYENDA = [
-  { color: COLOR.ok, texto: "Nuevo" },
-  { color: COLOR.info, texto: "Tuyo" },
-  { color: COLOR.aviso, texto: "De otro vendedor" },
-  { color: COLOR.atenuado, texto: "Descartado" },
-  { color: COLOR.marca, texto: "Elegido" },
+const LEYENDA: { clave: Situacion; color: string; texto: string }[] = [
+  { clave: "nuevo", color: COLOR.ok, texto: "Nuevo" },
+  { clave: "mio", color: COLOR.info, texto: "Tuyo" },
+  { clave: "de_otro", color: COLOR.aviso, texto: "De otro vendedor" },
+  { clave: "descartado", color: COLOR.atenuado, texto: "Descartado" },
 ];
 
-function Leyenda() {
+function Leyenda({
+  resultados,
+  elegidos,
+}: {
+  resultados: Candidato[];
+  elegidos: number;
+}) {
+  const conteo = resultados.reduce<Record<Situacion, number>>(
+    (acc, c) => {
+      acc[situacionDe(c)] += 1;
+      return acc;
+    },
+    { nuevo: 0, mio: 0, de_otro: 0, descartado: 0 },
+  );
+
+  // Solo se listan las situaciones que de verdad aparecen: un vendedor en su
+  // propia zona no tiene por qué leer «0 de otro vendedor».
+  const presentes = LEYENDA.filter(({ clave }) => conteo[clave] > 0);
+
   return (
     <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-lg border border-borde bg-superficie px-3 py-2">
-      {LEYENDA.map(({ color, texto }) => (
+      {presentes.map(({ clave, color, texto }) => (
         <span
           key={texto}
           className="flex items-center gap-1.5 text-xs text-texto-secundario"
@@ -137,19 +169,40 @@ function Leyenda() {
             className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
             style={{ backgroundColor: color }}
           />
+          <strong className="font-mono text-texto">{conteo[clave]}</strong>
           {texto}
         </span>
       ))}
+      {elegidos > 0 && (
+        <span className="flex items-center gap-1.5 text-xs text-texto-secundario">
+          <span
+            aria-hidden
+            className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: COLOR.marca }}
+          />
+          <strong className="font-mono text-texto">{elegidos}</strong>
+          Elegido
+        </span>
+      )}
     </div>
   );
 }
 
-/** El color del pin dice en qué estado está el punto (§17). */
+/**
+ * El color del pin dice en qué estado está el punto (§17).
+ *
+ * Sale de la misma clasificación que cuenta la leyenda: así el color y el
+ * número no pueden discrepar.
+ */
+const COLOR_SITUACION: Record<Situacion, string> = {
+  nuevo: COLOR.ok,
+  mio: COLOR.info,
+  de_otro: COLOR.aviso,
+  descartado: COLOR.atenuado,
+};
+
 function colorDe(c: Candidato) {
-  if (c.estado?.motivo_descarte) return COLOR.atenuado;
-  if (c.estado?.es_mio) return COLOR.info;
-  if (c.estado?.cuenta_id) return COLOR.aviso;
-  return COLOR.ok;
+  return COLOR_SITUACION[situacionDe(c)];
 }
 
 const FECHA = new Intl.DateTimeFormat("es-PA", {
@@ -673,7 +726,7 @@ function Buscador() {
             </div>
           </div>
 
-          <Leyenda />
+          <Leyenda resultados={resultados} elegidos={elegidos.length} />
 
           {/* Ordenar por reseñas es lo que separa un supermercado de 400 de
               una tienda de 12. Es el proxy de tráfico de §7.5. */}

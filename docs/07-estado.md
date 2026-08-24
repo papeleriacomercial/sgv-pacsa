@@ -1576,7 +1576,41 @@ De paso salió un error que nadie había visto: en `/mapa?lista=X`, tocar un fil
 `lista=X` de la dirección y aparecía la cartera entera (D-020). El arreglo del mapa vacío de
 ayer se habría roto el mismo día.
 
-**Pendiente de mirar con datos reales.** Si una lista de zona termina con muchos sin tocar, el
-problema no es la pantalla sino **el tamaño con que se levantan las listas**.
-`sin_tocar_hace_mucho` ya lo está midiendo; con un mes de uso se sabrá si hay que sugerir un
-tope al crearlas.
+**Una nota que quedó mal escrita y se corrige aquí.** Se sugirió que una lista con muchos sin
+tocar señalaba un problema de tamaño. **No es así, y el modelo es al revés a propósito:** la
+lista se alimenta del tamaño que se quiera —Aguadulce es Aguadulce y se levanta entero— y el
+compromiso no está en la lista sino en **el plan de la semana**, donde el vendedor apuesta
+cuántos va a tocar. Una lista larga no es deuda; es inventario.
+
+Lo que sí mide `sin_tocar_hace_mucho` es **antigüedad**, no exceso: puntos que llevan meses en
+la lista sin que nadie los mire. Eso se resuelve decidiendo en bloque —dejarlos o descartarlos
+con motivo—, no achicando la lista.
+
+---
+
+## La leyenda de la búsqueda ahora cuenta — 2026-08-23
+
+Pregunta de gerencia: si el vendedor levanta los leads de Aguadulce, ¿puede el líder entrar al
+mapa de Aguadulce y ver cuáles fueron seleccionados y cuáles no, para verificar que el barrido
+está completo?
+
+**Ya se podía, y no hacía falta construir nada:** `estado_de_puntos` es `security definer` y
+devuelve, para cada punto de Google, si hay cuenta, de quién es, y si fue descartado con qué
+motivo y por quién. El líder corre la misma búsqueda y lee el mapa por colores.
+
+Lo que faltaba era el número. **La leyenda ahora cuenta:** *«31 de otro vendedor · 5
+descartados · 7 nuevos»*. Los verdes son los huecos. Antes había que contarlos a ojo.
+
+De paso, `colorDe()` y la leyenda pasan a leer la misma función `situacionDe()`, para que el
+color del pin y el número no puedan discrepar.
+
+**Los límites, escritos para no pedirle de más:**
+
+- Es **por categoría**. Si el vendedor barrió farmacias y el líder busca panaderías, todo sale
+  verde y no prueba nada.
+- Es una **foto, no un indicador**. No queda guardado ningún porcentaje de cobertura; hay que
+  correr la búsqueda. Un número permanente exige antes la lista de categorías que cuentan como
+  mercado nuestro — sigue pendiente y sigue bloqueando §7.5.
+- **El gris es lo que hace justa la revisión.** Un descartado no es un hueco. Sin esa
+  distinción el líder leería como pereza lo que fue trabajo hecho, y el vendedor aprendería a
+  no descartar nada para no salir mal — el hábito que vacía la base.
