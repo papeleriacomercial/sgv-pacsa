@@ -18,7 +18,11 @@ import { NextResponse, type NextRequest } from "next/server";
  * no este archivo. Ver docs/03-seguridad-rls.md.
  */
 
-const RUTAS_PUBLICAS = ["/entrar"];
+// El manifiesto tiene que servirse sin sesión: el teléfono lo pide *antes*
+// de que nadie entre, y redirigirlo a /entrar rompe la instalación en la
+// pantalla de inicio sin dar ningún error visible. Los íconos ya salían
+// libres porque el `matcher` excluye los .svg.
+const RUTAS_PUBLICAS = ["/entrar", "/manifest.webmanifest"];
 
 export async function proxy(request: NextRequest) {
   let respuesta = NextResponse.next({ request });

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { Navegacion } from "@/components/navegacion";
+import { BarraMarca } from "@/components/barra-marca";
 
 type Rol = "gerente" | "lider" | "vendedor" | "administracion";
 
@@ -40,8 +41,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SGV",
-  description: "Sistema de Gestión de Ventas",
+  // Lo que se lee en la pestaña, al compartir un enlace y en la lista de
+  // aplicaciones instaladas. Antes decía «SGV» a secas, que no le dice nada
+  // a quien no sabe ya lo que es.
+  title: {
+    default: "SGV · Papelería Comercial",
+    template: "%s · SGV",
+  },
+  description: "Sistema de Gestión de Ventas de Papelería Comercial.",
+  applicationName: "SGV",
+  appleWebApp: { capable: true, title: "SGV", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -57,6 +66,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        {/* La identidad va arriba de todo y en todas las pantallas. Sin
+            sesión no se dibuja: la pantalla de entrada trae la suya, más
+            grande, porque ahí sí hay sitio y es lo primero que se ve. */}
+        {rol && <BarraMarca rol={rol} />}
         {children}
         <Navegacion rol={rol} />
       </body>

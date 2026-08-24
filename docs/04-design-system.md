@@ -242,3 +242,35 @@ configuración del celular cambia el contraste justo cuando más se necesita. Si
 necesidad, se agregará como preferencia explícita del usuario, nunca automática.
 
 Ver D-006 en `06-decisiones.md`.
+
+---
+
+## Identidad — agregado 2026-08-24
+
+La aplicación no decía en ninguna parte de quién era ni cómo se llamaba. La maqueta de
+referencia (`docs/sgv-preview.html`, heredada del SGP) resolvía eso con un bloque en la barra
+lateral: **Papelería Comercial** en blanco sobre azul marino, y debajo «SGV · Gerencia».
+
+Aquí no hay barra lateral —esto se usa con una mano en la calle— así que ese bloque **se
+acuesta**:
+
+| Dónde | Qué se ve |
+|---|---|
+| Todas las pantallas con sesión | Una franja de 32 px: `Papelería Comercial` a la izquierda, `SGV · <rol>` a la derecha, sobre `--color-marca`, con filo ámbar de 2 px |
+| Pantalla de entrada | El bloque completo: dueño arriba, sistema debajo. Es la única pantalla con sitio de sobra y la primera que ve alguien que no conoce la aplicación |
+| Pestaña del navegador | `SGV · Papelería Comercial` |
+| Instalada en el teléfono | `SGV` bajo el ícono; `SGV · Papelería Comercial` en la lista de aplicaciones |
+
+**Una línea y no dos.** La cabecera de cada pantalla ya ocupa unos 48 px; un bloque de marca de
+dos líneas encima dejaría casi cien de cromo antes del primer dato, en un teléfono y a pleno
+sol.
+
+**El filo ámbar** es la regla del ámbar en su otro sentido: en el cromo significa **identidad**,
+no riesgo. Es el mismo gesto que el subrayado naranja del SGP, y es lo que hace que quien usa el
+SGP reconozca el SGV de inmediato.
+
+**El ícono** (`src/app/icon.svg`) es el monograma SGV en blanco sobre marino, con una barra
+ámbar debajo — el mismo filo, en pequeño. Sustituye al favicon que traía Next.js de fábrica.
+
+**Pendiente:** el ícono de pantalla de inicio de iOS necesita un PNG; hoy solo hay SVG, que
+Android sí acepta.

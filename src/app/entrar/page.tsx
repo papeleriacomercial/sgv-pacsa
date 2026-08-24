@@ -44,10 +44,18 @@ export default function Entrar() {
       <AvisoSinConexion />
       <main className="flex flex-1 items-center justify-center p-4">
         <Tarjeta className="w-full max-w-sm">
-          <h1 className="text-2xl font-semibold text-marca">SGV</h1>
-          <p className="mt-1 text-sm text-texto-secundario">
-            Sistema de Gestión de Ventas
-          </p>
+          {/* Aquí sí va el bloque completo, como en la maqueta: el dueño
+              arriba y el sistema debajo. Es la única pantalla donde hay
+              sitio de sobra y la primera que ve alguien que no conoce la
+              aplicación. */}
+          <div className="-mx-4 -mt-4 mb-6 rounded-t-lg border-b-2 border-b-aviso bg-marca px-4 py-4">
+            <p className="text-lg font-semibold tracking-tight text-white">
+              Papelería Comercial
+            </p>
+            <p className="mt-0.5 text-sm text-texto-atenuado">
+              SGV · Sistema de Gestión de Ventas
+            </p>
+          </div>
 
           <form onSubmit={entrar} className="mt-6 flex flex-col gap-4">
             <Campo
