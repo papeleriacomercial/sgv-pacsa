@@ -1745,3 +1745,43 @@ Sin migración: `cuentas_cadencia_valida` ya aceptaba de 1 a 365 días.
 
 El campo dice en meses lo que se escribe en días —«240 días · unos 8 meses»— porque «cada 240
 días» no se entiende de un vistazo y el punto de escribirlo a mano es poder comprobarlo.
+
+---
+
+## La ficha dice dónde queda y de quién es — 2026-08-24
+
+Dos observaciones de gerencia sobre la pantalla de Cuentas: qué significa el «sin calificar»
+que sale en todas las tarjetas, y que con la cartera mezclada no se sabe si una cuenta es de
+Aguadulce, de Chitré o de la lista de bancos.
+
+**Lo primero era una promesa sin construir.** «Potencial 3/5» es el puntaje de §7.5, que se
+calcula desde la facturación de Zoho y todavía no existe; el campo nunca llegó a la base, así
+que la ficha decía «Sin calificar» en el cien por ciento de los casos. Ocupaba un tercio de la
+tarjeta.
+
+Ese hueco lo toma ahora lo que sí se sabe:
+
+| Línea | Izquierda | Derecha |
+|---|---|---|
+| 1 | Nombre | Estado |
+| 2 | Tipo de comercio | **Lista** a la que pertenece |
+| 3 | **Zona** · **vendedor** | Última interacción o espera |
+
+| Qué | Dónde |
+|---|---|
+| La ficha, sin `potencial` y con `zona`, `lista` y `vendedor` | [ficha-punto.tsx](../src/components/ficha-punto.tsx) |
+| Las listas de cada cuenta se cargan con la cartera | [src/lib/cartera.ts](../src/lib/cartera.ts) |
+| La cartera pasa los tres datos | [cuentas-con-filtros.tsx](../src/components/cuentas-con-filtros.tsx) |
+
+**El vendedor solo aparece cuando hay más de uno a la vista.** A un vendedor mirando su propia
+cartera no le dice nada, y ocuparía sitio en la línea donde va la zona.
+
+**Filtrar por vendedor ya existía** —panel de filtros, y como dimensión de color en el mapa— y
+también solo aparece cuando hay más de uno. Lo que faltaba era verlo **sin** filtrar: con tres
+carteras mezcladas, saber de quién es cada tarjeta sin tener que abrirla.
+
+En la pantalla de una lista se muestra la zona pero no la lista, que ya se sabe cuál es. Una
+cuenta en varias listas muestra la primera y cuántas más: dos nombres no caben en esa línea.
+
+**Pendiente de verificar en pantalla:** el cambio es de maquetación y solo se ve con sesión
+iniciada.

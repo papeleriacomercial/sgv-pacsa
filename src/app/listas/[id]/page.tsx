@@ -192,7 +192,7 @@ export default async function DetalleLista({
                   nombre={m.cuentas.nombre}
                   tipoComercio={m.cuentas.tipo_comercio}
                   tipo={m.cuentas.tipo}
-                  potencial={null}
+                  zona={m.cuentas.poblado}
                   ultimaInteraccion={null}
                   esperaDias={diasDesde(m.agregada_en)}
                 />
@@ -215,7 +215,7 @@ export default async function DetalleLista({
                     nombre={m.cuentas.nombre}
                     tipoComercio={m.cuentas.tipo_comercio}
                     tipo={m.cuentas.tipo}
-                    potencial={null}
+                    zona={m.cuentas.poblado}
                     ultimaInteraccion={FECHA.format(
                       new Date(ultimaPorCuenta.get(m.cuenta_id)!),
                     )}

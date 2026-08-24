@@ -21,6 +21,8 @@ export type Cuenta = {
   tipo: TipoCuenta;
   tipo_comercio: string | null;
   poblado: string | null;
+  /** Nombres de las listas a las que pertenece. Las llena `cargarCartera`. */
+  listas?: string[];
   volumen: Volumen | null;
   productos_interes: LineaProducto[] | null;
   vendedor_id: string;

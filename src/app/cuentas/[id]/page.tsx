@@ -112,7 +112,7 @@ export default async function Expediente({
           nombre={prospecto.nombre}
           tipoComercio={prospecto.tipo_comercio}
           tipo={prospecto.tipo as TipoCuenta}
-          potencial={null}
+          zona={prospecto.poblado}
           ultimaInteraccion={ultima ? fecha(ultima.fecha) : null}
           enlazada={false}
         />

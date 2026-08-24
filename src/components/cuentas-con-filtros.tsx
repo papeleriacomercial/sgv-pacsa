@@ -76,6 +76,11 @@ export function CuentasConFiltros({
 
   const visibles = useMemo(() => aplicar(cuentas, filtros), [cuentas, filtros]);
 
+  const nombrePorVendedor = useMemo(
+    () => new Map(vendedores.map((v) => [v.id, v.nombre])),
+    [vendedores],
+  );
+
   // Las opciones salen de los datos, no de una lista fija: si nadie usó una
   // categoría, no tiene sentido ofrecerla como filtro.
   const categorias = useMemo(
@@ -216,7 +221,23 @@ export function CuentasConFiltros({
             nombre={c.nombre}
             tipoComercio={c.tipo_comercio}
             tipo={c.tipo}
-            potencial={null}
+            zona={c.poblado}
+            // Una cuenta puede estar en varias listas. Se muestra la primera
+            // y se dice cuántas más: caben mal dos nombres en esa línea.
+            lista={
+              c.listas?.length
+                ? c.listas.length > 1
+                  ? `${c.listas[0]} +${c.listas.length - 1}`
+                  : c.listas[0]
+                : null
+            }
+            // De quién es solo cuando hay más de uno a la vista: a un
+            // vendedor mirando su propia cartera no le dice nada.
+            vendedor={
+              vendedores.length > 1
+                ? (nombrePorVendedor.get(c.vendedor_id) ?? null)
+                : null
+            }
             ultimaInteraccion={
               c.dias_sin_contacto === null
                 ? null
