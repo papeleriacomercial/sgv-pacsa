@@ -172,7 +172,7 @@ La empresa no hace ferias ni exhibiciones: **los vendedores tienen que encontrar
 
 **Panamá Emprende (consulta pública de Avisos de Operación):**
 - **Alcance real:** el Aviso de Operación es obligatorio para toda actividad comercial o industrial en el país — no es un registro de comercios pequeños. Exceptuadas: actividades agropecuarias, artesanías de hasta 5 trabajadores, actividades sin fines de lucro, profesiones liberales y sedes de multinacionales. Además, establecimientos con licencia vigente antes de 2007 quedaron exentos, por lo que negocios muy antiguos pueden no aparecer.
-- **Lo que sí aporta:** confirmar formalidad, **capturar el RUC antes de la visita** (sin RUC no hay facturación) y **detectar aperturas nuevas** por provincia y actividad → potenciales frescos antes que la competencia.
+- **Lo que sí aporta:** confirmar formalidad, **capturar el RUC antes de la visita** (sin RUC no hay facturación) y **detectar aperturas nuevas** por provincia y actividad → leads frescos antes que la competencia.
 - **Lo que NO aporta:** tamaño, volumen ni capacidad de compra. **No es fuente de calificación de volumen.** Esa proviene exclusivamente de la facturación propia en Zoho (modelo de gemelos).
 
 **Captura rápida del vendedor en sitio** (30 segundos, alimenta el modelo):
