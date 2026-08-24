@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { ListChecks, Plus, Search } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { cargarCartera } from "@/lib/cartera";
 import { CuentasConFiltros } from "@/components/cuentas-con-filtros";
@@ -25,6 +25,14 @@ const ETIQUETA_ROL: Record<Rol, string> = {
  * Dejó de ser la pantalla de inicio: el día empieza en la Agenda, y esta pasa a
  * ser lo que en realidad es — la pantalla de consulta. Buscar un cliente,
  * corregir datos, revisar un expediente.
+ *
+ * **Los leads no se ven aquí.** Un lead es abundante y desechable; una cuenta
+ * es escasa y permanente, y mezclarlos hace que la segunda se pierda: veinte
+ * puntos de Aguadulce un día, veinte de Chitré al otro, y en un mes hay cien
+ * sin clasificar tapando las treinta que de verdad se trabajan.
+ *
+ * Escondidos no es lo mismo que ocultos: arriba se dice cuántos hay y dónde
+ * están, y el panel de filtros los trae con un interruptor.
  */
 export default async function Cuentas() {
   const supabase = await clienteServidor();
@@ -44,6 +52,10 @@ export default async function Cuentas() {
     .maybeSingle();
 
   const { cuentas, vendedores } = await cargarCartera();
+
+  // Se cuentan aquí y no en el cliente porque el aviso tiene que aparecer
+  // aunque el filtro los esté escondiendo — que es siempre.
+  const leads = cuentas.filter((c) => c.tipo === "sin_clasificar").length;
 
   return (
     <>
@@ -101,6 +113,20 @@ export default async function Cuentas() {
             Buscar
           </Link>
         </div>
+
+        {leads > 0 && (
+          <Link
+            href="/listas"
+            className="flex min-h-tactil items-center gap-3 rounded-lg border border-borde bg-superficie px-4 py-2 text-sm text-texto"
+          >
+            <ListChecks size={18} className="shrink-0 text-texto-atenuado" aria-hidden />
+            <span>
+              <strong className="font-mono">{leads}</strong>
+              {leads === 1 ? " lead sin clasificar" : " leads sin clasificar"}
+              {" — no se muestran aquí. Están en tus listas."}
+            </span>
+          </Link>
+        )}
 
         {cuentas.length === 0 ? (
           <Tarjeta>

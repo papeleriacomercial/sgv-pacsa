@@ -56,6 +56,19 @@ export type Filtros = {
    * viaje— pero tampoco estorban el trabajo del día. Se ven pidiéndolas.
    */
   incluirDescartadas: boolean;
+  /**
+   * Los leads tampoco se ven aquí por omisión.
+   *
+   * **Es la mitad que faltaba de las listas.** Separarlos en su pantalla no
+   * sirvió de nada mientras seguían cayendo en la cartera: veinte puntos
+   * escogidos un domingo, veinte más el martes en Chitré, y en un mes hay cien
+   * sin clasificar tapando las treinta cuentas reales que se trabajan.
+   *
+   * Un lead es abundante y desechable; una cuenta es escasa y permanente. La
+   * cartera es de las segundas. Los leads viven en sus listas hasta que
+   * alguien los toque — y ahí dejan de ser leads.
+   */
+  incluirSinClasificar: boolean;
 };
 
 export const FILTROS_VACIOS: Filtros = {
@@ -72,6 +85,7 @@ export const FILTROS_VACIOS: Filtros = {
   soloSinUbicacion: false,
   soloFueraDeCadencia: false,
   incluirDescartadas: false,
+  incluirSinClasificar: false,
 };
 
 export function contarActivos(f: Filtros): number {
@@ -88,7 +102,8 @@ export function contarActivos(f: Filtros): number {
     (f.soloSinCategoria ? 1 : 0) +
     (f.soloSinUbicacion ? 1 : 0) +
     (f.soloFueraDeCadencia ? 1 : 0) +
-    (f.incluirDescartadas ? 1 : 0)
+    (f.incluirDescartadas ? 1 : 0) +
+    (f.incluirSinClasificar ? 1 : 0)
   );
 }
 
@@ -102,6 +117,15 @@ export function aplicar(cuentas: Cuenta[], f: Filtros): Cuenta[] {
       c.tipo === "descartada" &&
       !f.incluirDescartadas &&
       !f.tipos.includes("descartada")
+    ) {
+      return false;
+    }
+
+    // Los leads, igual. La cartera es de cuentas que alguien ya trabajó.
+    if (
+      c.tipo === "sin_clasificar" &&
+      !f.incluirSinClasificar &&
+      !f.tipos.includes("sin_clasificar")
     ) {
       return false;
     }
@@ -356,6 +380,7 @@ const BANDERAS = [
   "soloSinUbicacion",
   "soloFueraDeCadencia",
   "incluirDescartadas",
+  "incluirSinClasificar",
 ] as const;
 
 export function desdeUrl(p: URLSearchParams): Filtros {
@@ -387,8 +412,21 @@ export function aUrl(
   f: Filtros,
   dimension: Dimension,
   vista: "lista" | "mapa",
+  /**
+   * Parámetros de la dirección que no son filtros y hay que conservar.
+   *
+   * "lista" y "cuenta" los pone la pantalla, no el panel. Sin esto, tocar un
+   * filtro en el mapa de una lista reescribía la dirección sin la lista y
+   * aparecía la cartera entera.
+   */
+  conservar?: URLSearchParams,
 ): string {
   const p = new URLSearchParams();
+
+  for (const clave of ["lista", "cuenta"]) {
+    const valor = conservar?.get(clave);
+    if (valor) p.set(clave, valor);
+  }
 
   if (f.texto.trim()) p.set("q", f.texto.trim());
   LISTAS.forEach((clave) => {

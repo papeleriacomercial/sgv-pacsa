@@ -354,6 +354,16 @@ export function PanelFiltros({
                 >
                   Mostrar descartadas
                 </Pastilla>
+                {/* Los leads viven en sus listas. Aquí se traen solo cuando
+                    hace falta buscar uno por nombre. */}
+                <Pastilla
+                  activo={filtros.incluirSinClasificar}
+                  onClick={() =>
+                    set({ incluirSinClasificar: !filtros.incluirSinClasificar })
+                  }
+                >
+                  Mostrar leads
+                </Pastilla>
               </Grupo>
 
               {activos > 0 && (

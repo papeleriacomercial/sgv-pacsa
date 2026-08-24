@@ -138,7 +138,7 @@ export default async function DetalleLista({
 
         {/* El mapa de la cartera, para ver dónde caen los que ya tiene. */}
         <Link
-          href={`/mapa?lista=${id}`}
+          href={`/mapa?lista=${id}&incluirSinClasificar=1`}
           className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
         >
           <MapPinned size={16} aria-hidden />

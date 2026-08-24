@@ -1548,3 +1548,35 @@ Las dos arregladas: las cuentas heredan el poblado de la lista al entrar, y el e
 `/mapa?lista=<id>`, que filtra por pertenencia a la lista en vez de por zona. La pantalla
 además dice cuántas hay y **cuántas llegaron sin coordenadas**, que es mejor que un mapa vacío
 sin explicación.
+
+---
+
+## Los leads salían en la cartera — 2026-08-23
+
+Segundo reporte del gerente armando Aguadulce, y el más de fondo: los leads levantados en tanda
+aparecían en `/cuentas`. Proyectó el desenlace antes de sufrirlo —cien leads sin atender tapando
+la cartera en un mes—.
+
+Era D-015 aplicado a medias: se creó la superficie aparte para los leads y **no se los sacó de
+la cartera**, así que caían en los dos lados.
+
+| Qué | Dónde |
+|---|---|
+| `sin_clasificar` escondido por omisión | [src/lib/filtros.ts](../src/lib/filtros.ts) |
+| Interruptor «Mostrar leads» | [src/components/panel-filtros.tsx](../src/components/panel-filtros.tsx) |
+| Aviso con el conteo y enlace a Listas | [src/app/cuentas/page.tsx](../src/app/cuentas/page.tsx) |
+| `lista` y `cuenta` sobreviven al panel | [src/lib/filtros.ts](../src/lib/filtros.ts), [src/components/cuentas-con-filtros.tsx](../src/components/cuentas-con-filtros.tsx) |
+| El mapa de una lista pide los leads | [src/app/listas/[id]/page.tsx](../src/app/listas/[id]/page.tsx) |
+
+Sin migración: es filtro de pantalla, no de esquema. Los leads siguen viviendo en `cuentas`
+—ver D-019 para por qué no van en tabla aparte—. **Escondido no es oculto:** la cartera dice
+cuántos hay y a dónde ir por ellos.
+
+De paso salió un error que nadie había visto: en `/mapa?lista=X`, tocar un filtro borraba
+`lista=X` de la dirección y aparecía la cartera entera (D-020). El arreglo del mapa vacío de
+ayer se habría roto el mismo día.
+
+**Pendiente de mirar con datos reales.** Si una lista de zona termina con muchos sin tocar, el
+problema no es la pantalla sino **el tamaño con que se levantan las listas**.
+`sin_tocar_hace_mucho` ya lo está midiendo; con un mes de uso se sabrá si hay que sugerir un
+tope al crearlas.

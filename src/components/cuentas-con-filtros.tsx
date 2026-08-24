@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { List, MapPin } from "lucide-react";
@@ -61,10 +61,15 @@ export function CuentasConFiltros({
     (parametros.get("color") as Dimension) ?? "tipo",
   );
 
+  // Los parámetros que no son filtros los pone la pantalla al entrar y ya no
+  // cambian. Se leen una sola vez: si el efecto dependiera del objeto de
+  // parámetros, cada `replace` lo volvería a disparar en ciclo.
+  const fijos = useRef(parametros);
+
   // `replace` y no `push`: cada toque de filtro no debe dejar una entrada en el
   // historial, o el botón de atrás tardaría veinte toques en salir.
   useEffect(() => {
-    const consulta = aUrl(filtros, dimension, vista);
+    const consulta = aUrl(filtros, dimension, vista, fijos.current);
     router.replace(`${ruta}?${consulta}`, { scroll: false });
   }, [filtros, dimension, vista, ruta, router]);
 

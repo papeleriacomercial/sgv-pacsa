@@ -446,3 +446,56 @@ porque decide el resto de la pantalla. Una llamada no tiene check-in ni foto del
 pedírselos enseña al vendedor a saltarse campos, que es el hábito que después vacía la base.
 El orden queda: intención → check-in (solo si es visita) → resultado → clasificación (solo si
 la cuenta estaba sin clasificar) → notas → proveedor y precio → evidencia → próximo paso.
+
+---
+
+## D-019 — La cartera no muestra leads
+
+**Fecha:** 2026-08-23
+
+**Decisión.** `/cuentas` esconde por omisión las cuentas con `tipo = 'sin_clasificar'`, igual
+que ya escondía las descartadas. Se traen con el interruptor **«Mostrar leads»** del panel de
+filtros, o eligiendo ese tipo. El mapa de una lista las pide expresamente
+(`incluirSinClasificar=1`), porque una lista **son** leads.
+
+**Por qué.** Armando la primera lista real —Aguadulce— los leads levantados en tanda cayeron a
+la cartera y la taparon. El gerente proyectó el problema antes de que ocurriera, con la
+aritmética exacta: *«si quedan 10 sin atender al día siguiente estoy en Chitré y alimento 20
+leads más a cuentas, en un mes tendré más de 100 leads no atendidos en cuentas»*.
+
+La causa es que D-015 resolvió esto a medias: creó las listas como superficie aparte para los
+leads pero **nunca los sacó de la cartera**, así que siguieron cayendo en los dos lados.
+
+**El criterio, que vale más que la regla.** Un lead es abundante y desechable; una cuenta es
+escasa y permanente. Mezclarlos no perjudica a los leads: perjudica a las cuentas. La cartera
+es la pantalla de consulta —buscar un cliente, revisar un expediente— y ese uso muere si hay
+que pasar por cien puntos que nadie ha visitado.
+
+**Alternativas consideradas.**
+
+- *No guardar los leads en `cuentas`, sino en una tabla de candidatos que «asciende» al
+  tocarlos.* Descartada: obliga a duplicar ficha, ubicación, cadencia y RLS, y a migrar de
+  tabla en el momento más frágil —el vendedor parado en la puerta, sin señal—. El identificador
+  cambiaría justo cuando el modo offline exige que no cambie (§16).
+- *Borrar los leads viejos.* Contra el borrado lógico de §16 y contra el sentido: saber que ese
+  punto ya se levantó evita volver a levantarlo.
+- *Mostrarlos al final de la lista.* No resuelve nada: siguen contando en los totales y
+  apareciendo en el filtro por poblado.
+
+**Lo que no se hizo, a propósito.** No se les pone caducidad. Un lead que nadie tocó en tres
+meses sigue siendo válido; lo que envejece es **la lista**, y eso ya se mide con
+`sin_tocar_hace_mucho`. Abandonar una zona es decisión del vendedor, no de un cron.
+
+---
+
+## D-020 — Los parámetros que no son filtros sobreviven al panel
+
+**Fecha:** 2026-08-23
+
+**Decisión.** `aUrl()` recibe los parámetros actuales de la dirección y conserva `lista` y
+`cuenta` al reescribirla.
+
+**Por qué.** El panel de filtros reconstruía la dirección desde cero (D-014). En
+`/mapa?lista=X`, tocar cualquier filtro borraba `lista=X` y aparecía la cartera entera. No se
+había visto porque hasta el día anterior el mapa no recibía `lista`. Es el riesgo de tener el
+estado en la dirección: quien la reescribe tiene que saber qué no es suyo.
