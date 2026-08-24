@@ -31,6 +31,17 @@ type Props = {
   /** De quién es. Solo cuando se está viendo la cartera de varios a la vez. */
   vendedor?: string | null;
   /**
+   * Color de la dimensión que se esté usando para agrupar —vendedor, tipo,
+   * zona—. Es el **mismo** que pinta el pin en el mapa: cambiar de vista no
+   * cambia de código de colores.
+   *
+   * Nunca va solo (§17). Lo que el color agrupa está escrito en la propia
+   * ficha —el vendedor en la línea de abajo, el tipo en la insignia— y la
+   * leyenda de arriba lo nombra. El punto solo hace que se vea de un golpe
+   * dónde termina una cartera y empieza la otra.
+   */
+  color?: string | null;
+  /**
    * Qué datos faltan por averiguar. Ocupa el lugar de la zona.
    *
    * Un objetivo del líder no tiene zona —no está en el mapa hasta que se
@@ -81,6 +92,7 @@ export function FichaPunto({
   lista = null,
   vendedor = null,
   falta = null,
+  color = null,
 }: Props) {
   // La espera solo se muestra cuando no hay interacción: si ya lo tocaron, lo
   // que importa es cuándo, no cuánto esperó.
@@ -96,7 +108,16 @@ export function FichaPunto({
   const contenido = (
     <div className="flex flex-col gap-2 rounded-lg border border-borde bg-superficie p-3">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-base font-semibold text-texto">{nombre}</p>
+        <p className="flex min-w-0 items-baseline gap-2 text-base font-semibold text-texto">
+          {color && (
+            <span
+              aria-hidden
+              className="inline-block h-2.5 w-2.5 shrink-0 self-center rounded-full"
+              style={{ backgroundColor: color }}
+            />
+          )}
+          <span className="truncate">{nombre}</span>
+        </p>
         <Insignia tono={TONO_TIPO[tipo]}>{TIPOS_CUENTA[tipo]}</Insignia>
       </div>
 

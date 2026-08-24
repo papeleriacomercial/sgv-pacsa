@@ -119,7 +119,7 @@ export function CuentasConFiltros({
         total={cuentas.length}
         dimension={dimension}
         onDimension={setDimension}
-        conColor={vista === "mapa"}
+        conColor
       />
 
       <div className="flex items-center justify-between gap-2">
@@ -156,8 +156,10 @@ export function CuentasConFiltros({
         </div>
       </div>
 
-      {/* Obligatoria: sin ella, el mapa incumple §17. Ver D-013. */}
-      {vista === "mapa" && (
+      {/* Obligatoria: sin ella se incumple §17. Vale para las dos vistas —el
+          mismo color agrupa los pines del mapa y los puntos de la lista— y
+          por eso la leyenda no depende de cuál se esté mirando. Ver D-013. */}
+      {leyenda.length > 1 && (
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-lg border border-borde bg-superficie px-3 py-2">
           <span className="text-xs font-medium text-texto">
             {DIMENSIONES[dimension]}:
@@ -221,6 +223,7 @@ export function CuentasConFiltros({
             nombre={c.nombre}
             tipoComercio={c.tipo_comercio}
             tipo={c.tipo}
+            color={color(c)}
             zona={c.poblado}
             // Una cuenta puede estar en varias listas. Se muestra la primera
             // y se dice cuántas más: caben mal dos nombres en esa línea.

@@ -1868,3 +1868,38 @@ La barra pasa de 32 a 62 px. Es el costo de que se lea, y gerencia lo pidió sab
 
 Verificado a 375 px con la marcación real: las cuatro líneas caben sin cortarse y la página no
 desborda a lo ancho. El título de pantalla y el nombre del dueño miden los mismos 18 px.
+
+---
+
+## El color también en la lista — 2026-08-24
+
+Pedido de gerencia: poder filtrar y colorear por vendedor en la pantalla de Cuentas.
+
+**Filtrar ya se podía**; **colorear no**, y ese era el hueco real: `conColor` estaba atado a
+`vista === "mapa"`, así que la lista no tenía color en ninguna dimensión. Un gerente que abre
+Cuentas con las tres carteras mezcladas veía treinta tarjetas iguales.
+
+| Qué | Dónde |
+|---|---|
+| El color se ofrece en las dos vistas | [cuentas-con-filtros.tsx](../src/components/cuentas-con-filtros.tsx) |
+| La ficha lleva el punto de color antes del nombre | [ficha-punto.tsx](../src/components/ficha-punto.tsx) |
+| La leyenda deja de depender de la vista | ídem |
+
+**Es el mismo color en las dos vistas.** Cambiar de lista a mapa no cambia el código de colores,
+que era la mitad del valor de D-013 y se estaba perdiendo.
+
+**El punto nunca va solo** (§17): lo que agrupa está escrito en la propia ficha —el vendedor en
+la línea de abajo, el tipo en la insignia— y la leyenda de arriba lo nombra. El color solo hace
+que se vea de un golpe dónde termina una cartera y empieza la otra.
+
+La leyenda aparece cuando hay más de un valor en pantalla: explicar un color único es explicar
+algo que no distingue nada.
+
+### Por qué no se ve todavía
+
+**En `sgv-pacsa-dev` hay un solo perfil.** El filtro por vendedor y la dimensión de color por
+vendedor están escritos para aparecer solo cuando hay más de una persona a la vista —a un
+vendedor filtrar por sí mismo no le dice nada—, así que hoy los dos están escondidos con razón.
+
+Aparecen solos en cuanto existan los otros dos usuarios. Crearlos exige contraseña y eso lo hace
+el usuario en el panel de Supabase; el perfil —nombre, rol y líder— se asigna después.
