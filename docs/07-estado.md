@@ -1489,3 +1489,62 @@ y perdería el sitio que estaba mirando.
 Sigue sin poder **tocar un comercio cualquiera en el mapa de búsqueda** para agregarlo — eso
 solo se puede en el mapa de la cartera. Con el barrido por zona el caso se cubre casi siempre,
 pero si aparece la necesidad, es media hora.
+
+---
+
+## Seis cosas que salieron usándolo — 2026-08-23
+
+Gerencia armó su primera lista de zona y encontró seis problemas. Uno era grave.
+
+### El grave: todas las cuentas daban 404
+
+`cuentas_resumen` se creó con `select c.*`, y **eso congela la lista de columnas al crear la
+vista**. `cuenta_madre_id` y `tipo_punto` se agregaron a `cuentas` después, en
+`20260823213716`, y la vista se quedó sin ellas.
+
+El expediente pedía esas columnas, PostgREST devolvía error, la pantalla lo leía como "no
+existe" y **404 en toda cuenta**. Ni `tsc` ni `eslint` ni el build lo delataban: el error solo
+aparece contra la base real.
+
+Arreglado en `20260823235831_arregla_vista_y_motivo`, y anotado como regla en
+`03-seguridad-rls.md`: **toda migración que agregue una columna a `cuentas` tiene que rehacer
+la vista** — y al rehacerla, `security_invoker` sigue sin ser opcional.
+
+### El motivo que faltaba
+
+`motivo_descarte` gana **`negocia_en_panama`** — "se negocia en Panamá, aquí no deciden".
+
+El local existe y vende, pero no decide: la compra se acuerda en la casa matriz. Descartarlo
+como "no le interesó" sería falso —sí interesa— pero no es la conversación del vendedor de
+ruta. Y es más que un descarte: **es un hallazgo**. Un punto marcado así es cuenta del líder, y
+agrupados dibujan qué cadenas hay que atacar por arriba en vez de local por local.
+
+### La búsqueda parecía dos búsquedas
+
+Categorías arriba, texto abajo, en tarjetas separadas. La pregunta *"¿a cuál le hace caso?"*
+era la respuesta correcta a un diseño malo.
+
+Ahora es una sola búsqueda en dos pasos: **1 · Qué buscas** (las categorías, que siempre
+mandan) y **2 · Dónde** (escribiendo el área, o cerca de mí). Llegando desde una lista arranca
+en "área", porque casi siempre es un pueblo al que todavía no ha ido.
+
+### Los radios confundían
+
+1, 3 y 5 km solo sirven estando en la zona. **Ahora solo aparecen dentro de "cerca de mí"**,
+que es donde significan algo.
+
+### El botón del mapa mentía
+
+*"Buscar en esta zona"* traía de todo cuando no había categorías escogidas, y parecía un
+control de Google. Ahora dice qué va a traer: **"Buscar farmacias aquí"** o **"Buscar de todo
+aquí"**.
+
+### El mapa de la lista abría vacío
+
+Dos causas encadenadas. El enlace filtraba por poblado, y **el alta en tanda no le ponía
+poblado a las cuentas** — así que el filtro no encontraba nada.
+
+Las dos arregladas: las cuentas heredan el poblado de la lista al entrar, y el enlace ahora es
+`/mapa?lista=<id>`, que filtra por pertenencia a la lista en vez de por zona. La pantalla
+además dice cuántas hay y **cuántas llegaron sin coordenadas**, que es mejor que un mapa vacío
+sin explicación.

@@ -219,6 +219,12 @@ Es el error más silencioso de todo este esquema: la vista funcionaría, devolve
 cada vendedor estaría viendo la cartera entera sin que nada avisara. Verificado en dev: otro
 usuario ve cero filas.
 
+**Y hay que rehacerla cada vez que `cuentas` gana una columna.** Un `select c.*` congela la
+lista de columnas al crear la vista: las que se agreguen después no aparecen. Pasó con
+`cuenta_madre_id` y `tipo_punto`, y el efecto fue feo y silencioso — el expediente pedía esas
+columnas, PostgREST devolvía error, la pantalla lo leía como "no existe" y **todas las cuentas
+daban 404**. Ni el tipado ni el build lo delataban.
+
 **Cada vez que se rehace, hay que volver a ponerle la marca.** Postgres no deja cambiar el
 tipo de una columna de la que cuelga una vista, así que toda migración que toque
 `cuentas.tipo` la tira y la vuelve a crear —pasó en `20260822134935_ciclo_de_vida_cuenta`—.

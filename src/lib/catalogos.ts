@@ -156,6 +156,10 @@ export const MOTIVOS_DESCARTE = {
   no_usa_productos: "No usa nuestros productos",
   sin_interes: "Escuchó y no le interesó",
   ya_atendido: "Ya lo atiende la casa",
+  // No es que no interese: es que aquí no se decide. El local existe y vende,
+  // pero la compra se negocia en la casa matriz. Para el vendedor de ruta no
+  // hay nada que hacer, y es un hallazgo: esa cuenta es del líder.
+  negocia_en_panama: "Se negocia en Panamá, aquí no deciden",
   otro: "Otro motivo",
 } as const;
 

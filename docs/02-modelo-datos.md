@@ -40,7 +40,7 @@ adelantado los tipos de comercio de un país, y la lista crece con cada zona que
 | `etapa_oportunidad` | nuevo · contactado · cotizado · negociacion · ganado · perdido |
 | `resultado_visita` | diez opciones, ver abajo. Incluye `compro` |
 | `motivo_perdida` | precio · espera_licitacion · no_cumple_especificaciones · sin_interes_real · no_contactar |
-| `motivo_descarte` | no_existe · muy_pequeno · no_usa_productos · sin_interes · ya_atendido · otro |
+| `motivo_descarte` | no_existe · muy_pequeno · no_usa_productos · sin_interes · ya_atendido · negocia_en_panama · otro |
 | `tipo_interaccion` | visita · reunion · llamada · whatsapp · correo · entrega_muestra |
 | `tipo_punto` | local · oficina |
 | `tipo_jornada` | viaje_mercancia · entrega · entrega_urgente · no_pudo_salir · administrativo · personal |

@@ -202,6 +202,12 @@ function Buscador() {
   // lo único que iba a escribir de todos modos.
   const [texto, setTexto] = useState(() => parametros.get("q") ?? "");
   const [nombreLista, setNombreLista] = useState<string | null>(null);
+  const [pobladoLista, setPobladoLista] = useState<string | null>(null);
+  // Armando una lista se arranca por área: casi siempre es un pueblo al que
+  // todavía no ha ido, y "cerca de mí" no sirve de nada desde la oficina.
+  const [donde, setDonde] = useState<"area" | "cerca">(
+    parametros.get("lista") || parametros.get("q") ? "area" : "cerca",
+  );
 
   const [resultados, setResultados] = useState<Candidato[] | null>(null);
   const [buscando, setBuscando] = useState(false);
@@ -232,10 +238,13 @@ function Buscador() {
     const supabase = clienteNavegador();
     supabase
       .from("listas")
-      .select("nombre")
+      .select("nombre, poblado")
       .eq("id", listaId)
       .maybeSingle()
-      .then(({ data }) => setNombreLista(data?.nombre ?? null));
+      .then(({ data }) => {
+        setNombreLista(data?.nombre ?? null);
+        setPobladoLista(data?.poblado ?? null);
+      });
   }, [listaId]);
 
   /** Consulta el semáforo contra la base propia (§7.4). */
@@ -386,6 +395,10 @@ function Buscador() {
         lng: c.lng,
         origen: "busqueda",
         vendedor_id: user.id,
+        // El poblado de la lista se hereda: si no, las cuentas nacen sin zona
+        // y los filtros de la cartera por poblado no encuentran nada — que es
+        // exactamente lo que pasaba al abrir el mapa desde una lista.
+        poblado: pobladoLista,
         // Sin `tipo`: entran sin clasificar. Agregarlas en tanda desde el
         // directorio no las convierte en prospectos, solo las pone en la cola
         // de lo que hay que ir a ver (D-015).
@@ -505,9 +518,13 @@ function Buscador() {
         </div>
       )}
 
+      {/* Una sola búsqueda con dos partes: **qué** y **dónde**. Antes eran dos
+          tarjetas separadas y parecían dos búsquedas distintas — la pregunta
+          "¿a cuál le hace caso?" era la respuesta correcta a un diseño malo.
+          Las categorías siempre mandan; lo que cambia es desde dónde se mira. */}
       <Tarjeta className="flex flex-col gap-4">
         <Opciones
-          etiqueta="Qué buscas"
+          etiqueta="1 · Qué buscas"
           opciones={ETIQUETAS_CATEGORIA}
           valor={categorias}
           multiple
@@ -516,62 +533,95 @@ function Buscador() {
               a.includes(c) ? a.filter((x) => x !== c) : [...a, c],
             )
           }
+          ayuda="Se aplica a las dos formas de buscar. Sin escoger nada, trae de todo."
         />
 
-        <div>
-          <p className="text-sm font-medium text-texto">A qué distancia</p>
-          <div className="mt-2 flex gap-2">
-            {RADIOS.map((r) => (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm font-medium text-texto">2 · Dónde</p>
+
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ["area", "Escribiendo el área"],
+                ["cerca", "Cerca de mí"],
+              ] as const
+            ).map(([m, etiqueta]) => (
               <button
-                key={r.metros}
+                key={m}
                 type="button"
-                aria-pressed={radio === r.metros}
-                onClick={() => setRadio(r.metros)}
-                className={`min-h-tactil flex-1 rounded-lg border text-sm ${
-                  radio === r.metros
+                aria-pressed={donde === m}
+                onClick={() => setDonde(m)}
+                className={`min-h-tactil rounded-lg border px-2 text-sm ${
+                  donde === m
                     ? "border-marca bg-marca text-white"
                     : "border-borde bg-superficie text-texto"
                 }`}
               >
-                {r.etiqueta}
+                {etiqueta}
               </button>
             ))}
           </div>
+
+          {donde === "area" ? (
+            <>
+              <Campo
+                etiqueta="El área o la marca"
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                ayuda={
+                  categorias.length > 0
+                    ? `Va a buscar "${categorias
+                        .map((c) => CATEGORIAS[c].etiqueta)
+                        .join(" y ")} en ${texto || "…"}"`
+                    : "Aguadulce · Calle 50 · Banco General"
+                }
+              />
+              <Boton
+                ancho
+                onClick={() => buscar("texto")}
+                disabled={buscando || !places || texto.trim().length < 3}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Search size={16} aria-hidden />
+                  Buscar
+                </span>
+              </Boton>
+            </>
+          ) : (
+            <>
+              {/* El radio solo sirve estando en la zona. Escondido cuando se
+                  arma la lista desde la oficina, que es cuando confunde. */}
+              <div>
+                <p className="text-sm font-medium text-texto">A qué distancia</p>
+                <div className="mt-2 flex gap-2">
+                  {RADIOS.map((r) => (
+                    <button
+                      key={r.metros}
+                      type="button"
+                      aria-pressed={radio === r.metros}
+                      onClick={() => setRadio(r.metros)}
+                      className={`min-h-tactil flex-1 rounded-lg border text-sm ${
+                        radio === r.metros
+                          ? "border-marca bg-marca text-white"
+                          : "border-borde bg-superficie text-texto"
+                      }`}
+                    >
+                      {r.etiqueta}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Boton
+                ancho
+                onClick={() => buscar("cerca")}
+                disabled={buscando || !places || !ubicacion}
+              >
+                {ubicacion ? "Buscar cerca de mí" : "Buscando ubicación"}
+              </Boton>
+            </>
+          )}
         </div>
-
-        <Boton
-          ancho
-          onClick={() => buscar("cerca")}
-          disabled={buscando || !places || !ubicacion}
-        >
-          {ubicacion ? "Buscar cerca de mí" : "Buscando ubicación"}
-        </Boton>
-      </Tarjeta>
-
-      <Tarjeta className="flex flex-col gap-3">
-        <Campo
-          etiqueta="O busca un área o una marca"
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          ayuda={
-            categorias.length > 0
-              ? `Escribe el área: se va a buscar "${categorias
-                  .map((c) => CATEGORIAS[c].etiqueta)
-                  .join(" y ")} en …"`
-              : "Aguadulce · Calle 50 · Banco General. Escoge arriba qué tipo de comercio para afinar."
-          }
-        />
-        <Boton
-          tono="secundario"
-          ancho
-          onClick={() => buscar("texto")}
-          disabled={buscando || !places || texto.trim().length < 3}
-        >
-          <span className="flex items-center justify-center gap-2">
-            <Search size={16} aria-hidden />
-            Buscar por texto
-          </span>
-        </Boton>
       </Tarjeta>
 
       {error && <MensajeError titulo={error} />}
@@ -671,6 +721,13 @@ function Buscador() {
                 }
                 onBuscarAqui={(centro) => buscar("cerca", centro)}
                 buscando={buscando}
+                queBusca={
+                  categorias.length > 0
+                    ? categorias
+                        .map((c) => CATEGORIAS[c].etiqueta.toLowerCase())
+                        .join(" y ")
+                    : null
+                }
               />
             </div>
           ) : (
@@ -760,9 +817,12 @@ function Centrar({ candidato }: { candidato: Candidato | null }) {
 function BuscarAqui({
   onBuscar,
   buscando,
+  queBusca,
 }: {
   onBuscar: (centro: { lat: number; lng: number }) => void;
   buscando: boolean;
+  /** Qué categorías están elegidas, para que el botón no mienta. */
+  queBusca: string | null;
 }) {
   const mapa = useMap();
 
@@ -776,7 +836,11 @@ function BuscarAqui({
       }}
       className="min-h-tactil absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-lg border border-borde bg-superficie px-4 text-sm font-medium text-texto shadow-md disabled:opacity-60"
     >
-      {buscando ? "Buscando" : "Buscar en esta zona"}
+      {buscando
+        ? "Buscando"
+        : queBusca
+          ? `Buscar ${queBusca} aquí`
+          : "Buscar de todo aquí"}
     </button>
   );
 }
@@ -792,6 +856,7 @@ function MapaCandidatos({
   onContarSucursales,
   onBuscarAqui,
   buscando,
+  queBusca,
 }: {
   candidatos: Candidato[];
   abierto: Candidato | null;
@@ -803,6 +868,7 @@ function MapaCandidatos({
   onContarSucursales: (c: Candidato) => void;
   onBuscarAqui: (centro: { lat: number; lng: number }) => void;
   buscando: boolean;
+  queBusca: string | null;
 }) {
   // `core` trae Size y Point, que usa el ícono del marcador. Sin esperarla, el
   // primer render los construye antes de que existan y revienta el mapa entero.
@@ -821,7 +887,11 @@ function MapaCandidatos({
       zoomControl
       style={{ height: "100%", width: "100%" }}
     >
-      <BuscarAqui onBuscar={onBuscarAqui} buscando={buscando} />
+      <BuscarAqui
+        onBuscar={onBuscarAqui}
+        buscando={buscando}
+        queBusca={queBusca}
+      />
       <Centrar candidato={abierto} />
 
       {core &&
