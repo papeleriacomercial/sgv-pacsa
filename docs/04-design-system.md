@@ -256,14 +256,19 @@ acuesta**:
 
 | Dónde | Qué se ve |
 |---|---|
-| Todas las pantallas con sesión | Una franja de 32 px: `Papelería Comercial` a la izquierda, `SGV · <rol>` a la derecha, sobre `--color-marca`, con filo ámbar de 2 px |
-| Pantalla de entrada | El bloque completo: dueño arriba, sistema debajo. Es la única pantalla con sitio de sobra y la primera que ve alguien que no conoce la aplicación |
+| Todas las pantallas con sesión | Franja de 62 px. **Izquierda:** `Papelería Comercial` (18 px, blanco) sobre `Sistema de Gestión de Ventas` (11 px). **Derecha:** quién está dentro, su rol y el botón de salir. Fondo `--color-marca`, filo ámbar de 2 px |
+| Pantalla de entrada | El mismo bloque, más grande. Es la única pantalla con sitio de sobra y la primera que ve alguien que no conoce la aplicación |
 | Pestaña del navegador | `SGV · Papelería Comercial` |
 | Instalada en el teléfono | `SGV` bajo el ícono; `SGV · Papelería Comercial` en la lista de aplicaciones |
 
-**Una línea y no dos.** La cabecera de cada pantalla ya ocupa unos 48 px; un bloque de marca de
-dos líneas encima dejaría casi cien de cromo antes del primer dato, en un teléfono y a pleno
-sol.
+**El nombre del dueño va al mismo tamaño que los títulos de pantalla** —18 px, igual que
+«Agenda» o «Cuentas»—. Si se lee más chico que el nombre de la pantalla no es identidad: es un
+pie de página. Se probó a 375 px y ninguna de las cuatro líneas se corta.
+
+**Salir vive al lado de quién está dentro.** Estaba como botón en la cabecera de Agenda y de
+Cuentas —dos pantallas de nueve— y en ninguna junto al nombre del que había entrado. Nadie lo
+busca ahí: se busca donde dice quién eres. De paso desaparece la tarjeta de perfil de Cuentas,
+que repetía nombre y rol tres centímetros más abajo.
 
 **El filo ámbar** es la regla del ámbar en su otro sentido: en el cromo significa **identidad**,
 no riesgo. Es el mismo gesto que el subrayado naranja del SGP, y es lo que hace que quien usa el

@@ -23,7 +23,6 @@ import { ReprogramarCompromiso } from "@/components/reprogramar-compromiso";
 import { CambiarElDia } from "@/components/cambiar-el-dia";
 import { RegistrarJornada } from "@/components/registrar-jornada";
 import { JornadasDeLaSemana } from "@/components/jornadas-de-la-semana";
-import { CerrarSesion } from "@/components/cerrar-sesion";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Vacio } from "@/components/ui/estados";
@@ -192,14 +191,10 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
     <>
       <AvisoSinConexion />
 
-      <header className="flex items-center justify-between border-b border-borde bg-superficie px-4 py-3">
-        <div>
-          <h1 className="text-lg font-semibold text-marca">Agenda</h1>
-          {perfil?.nombre && (
-            <p className="text-xs text-texto-atenuado">{perfil.nombre}</p>
-          )}
-        </div>
-        <CerrarSesion />
+      {/* Ni el nombre ni el botón de salir: los dos viven arriba, en la barra
+          de marca, y estaban repetidos aquí. */}
+      <header className="border-b border-borde bg-superficie px-4 py-3">
+        <h1 className="text-lg font-semibold text-marca">Agenda</h1>
       </header>
 
       {/* Dos vistas de lo mismo. La de todos los días va primero. */}

@@ -5,19 +5,8 @@ import { clienteServidor } from "@/lib/supabase/servidor";
 import { cargarCartera } from "@/lib/cartera";
 import { CuentasConFiltros } from "@/components/cuentas-con-filtros";
 import { Tarjeta } from "@/components/ui/tarjeta";
-import { Insignia } from "@/components/ui/insignia";
 import { MensajeError, Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
-import { CerrarSesion } from "@/components/cerrar-sesion";
-
-type Rol = "gerente" | "lider" | "vendedor" | "administracion";
-
-const ETIQUETA_ROL: Record<Rol, string> = {
-  gerente: "Gerente",
-  lider: "Líder de ventas",
-  vendedor: "Vendedor",
-  administracion: "Administración",
-};
 
 /**
  * La cartera.
@@ -61,9 +50,8 @@ export default async function Cuentas() {
     <>
       <AvisoSinConexion />
 
-      <header className="flex items-center justify-between border-b border-borde bg-superficie px-4 py-3">
+      <header className="border-b border-borde bg-superficie px-4 py-3">
         <h1 className="text-lg font-semibold text-marca">Cuentas</h1>
-        <CerrarSesion />
       </header>
 
       <main className="flex flex-1 flex-col gap-4 p-4">
@@ -81,21 +69,6 @@ export default async function Cuentas() {
           />
         )}
 
-        {perfil && (
-          <Tarjeta className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-base font-semibold text-texto">
-                {perfil.nombre}
-              </p>
-              <p className="font-mono text-xs text-texto-atenuado">
-                {user.email}
-              </p>
-            </div>
-            <Insignia tono="info">
-              {ETIQUETA_ROL[perfil.rol as Rol] ?? perfil.rol}
-            </Insignia>
-          </Tarjeta>
-        )}
 
         {(perfil?.rol === "gerente" || perfil?.rol === "lider") && (
           <Link

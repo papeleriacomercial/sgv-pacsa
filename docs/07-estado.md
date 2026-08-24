@@ -1848,3 +1848,23 @@ La cuenta quedó `potencial · origen objetivo · tipo_punto oficina · sin_ubic
 `cuentas_resumen` la devuelve correctamente unida a su lista.
 
 **Pendiente de verificar en pantalla**, como siempre con lo que exige sesión iniciada.
+
+---
+
+## La identidad, corregida — 2026-08-24
+
+Tres observaciones de gerencia sobre la primera versión de la barra de marca, y las tres eran
+del mismo tipo: **la identidad estaba, pero en tamaño de nota al pie.**
+
+| Qué estaba mal | Cómo quedó |
+|---|---|
+| «Papelería Comercial» a 12 px, más chico que el título de la pantalla | 18 px, **el mismo tamaño que «Agenda» o «Cuentas»** |
+| Decía «SGV» a secas | `Sistema de Gestión de Ventas`, debajo del nombre del dueño |
+| A la derecha el rol, que se leía como si fuera quién entró | A la derecha **quién entró**, su rol, y el botón de salir |
+| Salir era un botón suelto en Agenda y en Cuentas | Vive en la barra, al lado de quién está dentro |
+| Cuentas repetía nombre y rol en una tarjeta de perfil | Se quitó |
+
+La barra pasa de 32 a 62 px. Es el costo de que se lea, y gerencia lo pidió sabiéndolo.
+
+Verificado a 375 px con la marcación real: las cuatro líneas caben sin cortarse y la página no
+desborda a lo ancho. El título de pantalla y el nombre del dueño miden los mismos 18 px.

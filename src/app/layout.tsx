@@ -8,26 +8,29 @@ import { BarraMarca } from "@/components/barra-marca";
 type Rol = "gerente" | "lider" | "vendedor" | "administracion";
 
 /**
- * El rol para la barra de navegación.
+ * Quién está dentro, para la barra de marca y la de navegación.
  *
- * Se lee aquí y no en cada pantalla porque la barra vive en el layout. Si no
- * hay sesión —o la consulta falla— la barra ni se dibuja: la pantalla de
- * entrada no tiene a dónde navegar.
+ * Se lee aquí y no en cada pantalla porque las dos barras viven en el layout.
+ * Si no hay sesión no se dibuja ninguna: la pantalla de entrada no tiene a
+ * dónde navegar ni de quién decir el nombre.
  */
-async function rolDelUsuario(): Promise<Rol | undefined> {
+async function sesion(): Promise<{ nombre: string | null; rol: Rol } | null> {
   const supabase = await clienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return undefined;
+  if (!user) return null;
 
   const { data } = await supabase
     .from("perfiles")
-    .select("rol")
+    .select("nombre, rol")
     .eq("id", user.id)
     .maybeSingle();
 
-  return (data?.rol as Rol) ?? "vendedor";
+  return {
+    nombre: (data?.nombre as string | null) ?? null,
+    rol: (data?.rol as Rol) ?? "vendedor",
+  };
 }
 
 const geistSans = Geist({
@@ -58,7 +61,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const rol = await rolDelUsuario();
+  const quien = await sesion();
 
   return (
     <html
@@ -69,9 +72,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {/* La identidad va arriba de todo y en todas las pantallas. Sin
             sesión no se dibuja: la pantalla de entrada trae la suya, más
             grande, porque ahí sí hay sitio y es lo primero que se ve. */}
-        {rol && <BarraMarca rol={rol} />}
+        {quien && <BarraMarca nombre={quien.nombre} rol={quien.rol} />}
         {children}
-        <Navegacion rol={rol} />
+        <Navegacion rol={quien?.rol} />
       </body>
     </html>
   );
