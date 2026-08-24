@@ -119,15 +119,31 @@ console.log("\n  Conexión con Zoho Books: correcta.\n");
 
 // --- 1. Cuántos clientes hay ------------------------------------------------
 
-const lista = await pedir(token, "/contacts", {
-  per_page: "200",
+// Zoho pagina de 200 en 200 y `total` no siempre viene: hay que recorrer.
+// Traer una sola pagina mentia por mucho — el maestro tiene miles.
+async function todo(ruta, params, cota = 40) {
+  const filas = [];
+  let pagina = 1;
+  let hay = true;
+  while (hay && pagina <= cota) {
+    const d = await pedir(token, ruta, {
+      ...params,
+      per_page: "200",
+      page: String(pagina),
+    });
+    filas.push(...(d[ruta.slice(1)] ?? []));
+    hay = d.page_context?.has_more_page ?? false;
+    pagina += 1;
+  }
+  return { filas, truncado: hay };
+}
+
+const { filas: contactos } = await todo("/contacts", {
   contact_type: "customer",
 });
-const contactos = lista.contacts ?? [];
-const total = lista.page_context?.total ?? contactos.length;
 
 console.log(`  CLIENTES`);
-console.log(`  ${total} en total · ${contactos.length} traídos para revisar\n`);
+console.log(`  ${contactos.length} en total\n`);
 
 if (contactos.length === 0) {
   salir("No hay clientes que revisar.");
@@ -176,6 +192,17 @@ for (const c of contactos.slice(0, 5)) {
   }
 }
 
+/**
+ * Donde vive el RUC, deducido de las fichas abiertas.
+ *
+ * La clave hay que buscarla en **todos** los contactos y no en el primero: Zoho
+ * omite los campos personalizados vacios, y el RUC no esta puesto en todos.
+ */
+const etiquetaRuc = [...candidatos.keys()].find((k) => /ruc/i.test(k)) ?? null;
+const claveRuc = etiquetaRuc?.startsWith("custom_fields")
+  ? contactos.flatMap(Object.keys).find((k) => /^cf_[0-9]+$/.test(k))
+  : etiquetaRuc;
+
 if (candidatos.size === 0) {
   console.log("    Ningún campo parece un RUC. Habría que mirar una ficha a mano.\n");
 } else {
@@ -192,15 +219,49 @@ const desde = new Date();
 desde.setMonth(desde.getMonth() - 12);
 const fecha = desde.toISOString().slice(0, 10);
 
-const facturas = await pedir(token, "/invoices", {
-  per_page: "1",
+const { filas: facturas, truncado } = await todo("/invoices", {
   date_start: fecha,
 });
+const compraron = new Set(facturas.map((f) => f.customer_id));
 
-console.log(`  FACTURACIÓN`);
-console.log(
-  `  ${facturas.page_context?.total ?? "?"} facturas desde ${fecha}\n`,
-);
+console.log(`  FACTURACION DESDE ${fecha}`);
+console.log(`  ${facturas.length}${truncado ? "+" : ""} facturas`);
+console.log(`  ${compraron.size} clientes compraron algo\n`);
+
+// --- 5. El cruce que justifica la integracion ------------------------------
+//
+// Cuantos de los que Zoho llama "cliente" llevan un anio sin comprar. Es la
+// mitad de cuidado que el SGV no puede medir sin esto.
+
+const norma = (x) =>
+  String(x ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim() || "(sin tipo)";
+
+const cruce = new Map();
+for (const c of contactos) {
+  const t = norma(c.cf_tipo_de_cliente);
+  if (!cruce.has(t)) cruce.set(t, { total: 0, compro: 0, conRuc: 0 });
+  const f = cruce.get(t);
+  f.total += 1;
+  if (compraron.has(c.contact_id)) f.compro += 1;
+  if (claveRuc && String(c[claveRuc] ?? "").trim()) f.conRuc += 1;
+}
+
+console.log("  TIPO EN ZOHO           TOTAL   COMPRO   SIN COMPRAR   CON RUC");
+for (const [t, f] of [...cruce].sort((a, b) => b[1].total - a[1].total)) {
+  console.log(
+    "  " +
+      t.padEnd(22) +
+      String(f.total).padStart(5) +
+      String(f.compro).padStart(9) +
+      String(f.total - f.compro).padStart(14) +
+      `${Math.round((f.conRuc / f.total) * 100)}%`.padStart(10),
+  );
+}
+console.log("");
 
 console.log(
   "  Listo. Pégame esta salida entera: no lleva ningún dato de cliente.\n",

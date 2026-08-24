@@ -1,6 +1,6 @@
 # Conexión con Zoho Books
 
-**Estado:** en preparación · **Actualizado:** 2026-08-24
+**Estado:** conectado en lectura, diagnóstico hecho · **Actualizado:** 2026-08-24
 
 Qué se trae de Zoho, en qué orden y por qué. El alcance de fondo está en §7.6 de la visión
 —el modelo de gemelos— y en `docs/09-medicion-y-gestion.md`, que explica por qué la mitad de
@@ -147,3 +147,69 @@ Panamá» señala desde el otro lado.
 El esquema del SGV ya distingue madre de punto —`cuenta_madre_id`, `tipo_punto`— así que puede
 representar las dos formas. Lo que falta es saber cómo están montados los clientes en Books, y
 eso lo dice el diagnóstico.
+
+
+---
+
+## Lo que hay del otro lado — medido el 2026-08-24
+
+Primera conexión real. Todo lo de abajo salió de `scripts/zoho-diagnostico.mjs`.
+
+### El maestro de clientes
+
+| | |
+|---|---|
+| Clientes en Books | **2 368** |
+| Con RUC puesto | **1 520 · 64 %** |
+| Facturas de los últimos 12 meses | **3 627** |
+| Clientes que compraron algo en 12 meses | **496** |
+
+### El RUC existe y tiene formato propio
+
+Vive en un **campo personalizado llamado `RUC`** (`cf_331205000000044099`), y trae el
+dígito verificante pegado:
+
+    999999999-9-9999 DV 99      persona jurídica
+    9-999-999 DV 99             persona natural
+
+Hay que separar RUC de DV al normalizar, y comparar contra `cuentas.ruc` del SGV sin espacios
+ni guiones. **Es llave dura**, que es justo lo que hacía falta: por nombre nunca habría
+funcionado.
+
+### Zoho ya clasifica el ciclo de vida, y con nuestras mismas palabras
+
+Campo personalizado `cf_tipo_de_cliente`, puesto en el 99 % de los contactos:
+
+| Tipo en Zoho | Total | Compró en 12m | Sin comprar | Con RUC |
+|---|---|---|---|---|
+| Cliente | 850 | 436 | **414** | 95 % |
+| Cliente inactivo | 658 | 23 | 635 | 87 % |
+| Potencial descartado | 530 | 4 | 526 | 12 % |
+| Potencial | 321 | 33 | 288 | 23 % |
+| Prospecto | 3 | 0 | 3 | 0 % |
+
+**La escalera de Zoho es la del SGV.** Potencial → prospecto → cliente, más descartado e
+inactivo. El vocabulario que se eligió el 2026-08-24 para reemplazar «lead» (D-025) resultó ser
+el que la casa ya usaba: no hay que traducir nada.
+
+**Y trae la misma suciedad que el catálogo de tipos de comercio:** «Cliente » con espacio (17),
+«Cliente inactivo » (4), «Cliente Activo » (1). Al cruzar hay que pasar por
+`normalizar_texto()` — el mismo problema que D-022 resolvió del lado del SGV.
+
+### Los 414
+
+De los 850 marcados **Cliente**, **414 no han comprado en un año**. No es un dato de la
+integración: es el argumento de la integración. Hoy nadie puede decir cuáles de esos 414 se
+visitaron y cuáles nadie tocó, porque esa mitad vive en el SGV y la otra en Books.
+
+Ese número es el que hace que valga la pena, y ninguno de los dos sistemas puede calcularlo solo.
+
+### Consecuencias para el diseño
+
+- **Los 848 sin RUC no se pierden**, quedan fuera del cruce automático hasta que se les ponga.
+  El diagnóstico se puede volver a correr para ver si el número baja.
+- **La primera pasada solo necesita 496 clientes**, no 2 368: los que compraron. El resto se
+  trae cuando compre.
+- `is_linked_with_zohocrm` viene en **true** en el 100 %, y cada contacto trae
+  `zcrm_account_id`, `zcrm_contact_id` y `crm_owner_id`. **Books es el espejo de un CRM**,
+  y eso abre la pregunta de si el vendedor asignado debe leerse de ahí. Ver abajo.
