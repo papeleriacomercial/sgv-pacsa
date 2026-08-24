@@ -499,3 +499,83 @@ meses sigue siendo válido; lo que envejece es **la lista**, y eso ya se mide co
 `/mapa?lista=X`, tocar cualquier filtro borraba `lista=X` y aparecía la cartera entera. No se
 había visto porque hasta el día anterior el mapa no recibía `lista`. Es el riesgo de tener el
 estado en la dirección: quien la reescribe tiene que saber qué no es suyo.
+
+---
+
+## D-021 — Un solo reloj, y es el de Panamá
+
+**Fecha:** 2026-08-24
+
+**Decisión.** `public.hoy_panama()` es la única forma de preguntar qué día es. `current_date`
+no vuelve a aparecer en el esquema.
+
+**Por qué.** La base de Supabase corre en **UTC**. Las vistas mezclaban los dos relojes en la
+misma resta:
+
+```
+current_date - (ult.fecha at time zone 'America/Panama')::date
+^^^^^^^^^^^^ UTC        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Panamá
+```
+
+Desde las 7:00 p.m. de Panamá, para la base ya era el día siguiente. Una visita registrada esa
+misma tarde aparecía como **«Hace 1 día»**, `fuera_de_cadencia` se encendía un día antes de
+tiempo, y una oportunidad que cerraba hoy quedaba congelada por vencida.
+
+Todas las noches, **y justo a la hora en que el vendedor cierra su día**, que es cuando más
+mira la pantalla. Lo reportó gerencia a las 7:55 p.m.: *«acabo de crear en la tarde un
+registro, pero ahora parece que dice ayer»*.
+
+**Alternativa descartada.** Poner la base en `America/Panama`. Cambia el significado de todo
+`timestamptz` guardado, contradice §16 —fechas en UTC, presentadas en Panamá— y rompería el día
+que la empresa opere en otro huso.
+
+**La lección, que no es de zonas horarias.** El error no fue usar `current_date`, fue **mezclar
+dos fuentes de verdad en una sola expresión**. Se veía correcto: cada mitad citaba su zona.
+
+---
+
+## D-022 — El catálogo de categorías se defiende de sí mismo
+
+**Fecha:** 2026-08-24
+
+**Decisión.** Tres capas sobre el catálogo abierto de D-012:
+
+1. El índice único compara **sin acentos y sin mayúsculas** (`normalizar_texto`), así que
+   «Panadería» y «Panaderia» no pueden coexistir.
+2. Guardar una cuenta ya no inserta a ciegas: `asegurar_categoria()` devuelve **cómo se
+   escribe**, y la cuenta se queda con la grafía del catálogo.
+3. Pantalla de depuración en `/categorias` — corregir, unir y ocultar—, **para el líder y para
+   gerencia**.
+
+**Por qué.** D-012 prometió la depuración en su propio texto y nunca se construyó. Un catálogo
+abierto sin forma de limpiarlo solo puede crecer, y creció: dos panaderías y un «mimisuper» en
+la primera semana de uso real.
+
+La capa 2 es la que faltaba de verdad. Sin ella el catálogo quedaba limpio y **las cuentas
+sucias**, porque `tipo_comercio` es texto libre y nunca se comparaba contra el catálogo al
+guardar. Era el caso exacto: el catálogo decía «Panadería» y la cuenta decía «Panaderia».
+
+**Cambio respecto a D-012:** depurar era solo de gerencia; ahora también del líder. Él revisa
+el trabajo del equipo cada semana y ve el dedazo el viernes, no dentro de un mes.
+
+**Ninguna operación toca solo el catálogo.** Renombrar y fusionar **arrastran las cuentas**.
+Corregir «mimisuper» dejando las cuentas diciendo «mimisuper» sería peor que no corregir:
+daría por resuelto lo que sigue roto.
+
+---
+
+## D-023 — Las sugerencias de categoría no son un `datalist`
+
+**Fecha:** 2026-08-24
+
+**Decisión.** El campo de tipo de comercio muestra sus propias sugerencias, filtradas sin
+acentos ni mayúsculas, desde la primera letra.
+
+**Por qué.** El `datalist` del navegador compara letra por letra: escribiendo «panaderia» no
+ofrecía «Panadería». El vendedor concluía —razonablemente— que no existía, y escribía la suya.
+**El duplicado no lo creó un descuido: lo creó el campo.** Además el navegador decide solo
+cuándo mostrarlo y en el celular a veces no aparece.
+
+Se agrega un aviso explícito cuando lo escrito no está en el catálogo: *«"mimisuper" es nueva.
+Va a quedar en el catálogo para todo el equipo»*. Crear una categoría tiene que ser un acto
+consciente, no el resultado de no haber encontrado la que ya existía.

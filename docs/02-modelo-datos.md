@@ -401,3 +401,34 @@ Zoho) · `solicitudes_cotizacion` · `muestras` · `comentarios` (§7.8) ·
 - **`origen_prospecto` es propuesta**, no está fijado en la visión.
 - **Umbral de pedido mínimo, rango de ajuste del umbral de dormido y metas por vendedor**
   siguen sin definir (§12).
+
+
+---
+
+## Funciones de apoyo del esquema
+
+Actualizado 2026-08-24.
+
+| Función | Qué hace | Por qué existe |
+|---|---|---|
+| `hoy_panama()` | Qué día es en Panamá | La base corre en UTC. **`current_date` no debe usarse**: desde las 7 p.m. devuelve el día siguiente (D-021) |
+| `normalizar_texto(t)` | Minúsculas, sin acentos, sin espacios sobrantes | Comparar como compara una persona. `unaccent()` no es inmutable y no se puede indexar (D-022) |
+| `asegurar_categoria(nombre)` | Devuelve la grafía del catálogo, creándola si no existe | Que la cuenta no diga «Panaderia» mientras el catálogo dice «Panadería» |
+| `fusionar_categoria(origen, destino)` | Mueve las cuentas y borra la sobrante | Depuración del catálogo. Devuelve cuántas cuentas movió |
+| `renombrar_categoria(id, nombre)` | Corrige el nombre **y arrastra las cuentas** | Corregir solo el catálogo dejaría los datos mal |
+| `puede_depurar_catalogo()` | Líder o gerente | Guarda de las tres anteriores |
+
+### `categorias_comercio`
+
+El índice único `categorias_nombre_unico` va sobre `normalizar_texto(nombre)`, no sobre
+`lower(trim(nombre))`. Es lo que impide que «Panadería» y «Panaderia» sean dos filas.
+
+### Vistas
+
+| Vista | Contenido |
+|---|---|
+| `categorias_uso` | Catálogo con cuántas cuentas usa cada categoría. Alimenta `/categorias` |
+
+> **Recordatorio de `cuentas_resumen`:** el `select c.*` congela la lista de columnas al crear
+> la vista. Toda migración que agregue una columna a `cuentas` tiene que rehacerla, con
+> `security_invoker = true`.

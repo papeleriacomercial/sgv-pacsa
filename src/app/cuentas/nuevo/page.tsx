@@ -19,7 +19,7 @@ import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, MensajeError } from "@/components/ui/estados";
-import { CampoCategoria, registrarCategoria } from "@/components/campo-categoria";
+import { asegurarCategoria, CampoCategoria } from "@/components/campo-categoria";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { BotonVolver } from "@/components/boton-volver";
 
@@ -138,8 +138,12 @@ function Formulario() {
       return;
     }
 
-    // La categoría escrita se suma al catálogo compartido, si es nueva.
-    if (tipoComercio.trim()) await registrarCategoria(tipoComercio);
+    // La categoría escrita se suma al catálogo compartido, si es nueva, y
+    // la cuenta se queda con la grafía del catálogo: si allí dice
+    // «Panadería», no se guarda «panaderia» aunque se haya tecleado así.
+    const categoria = tipoComercio.trim()
+      ? await asegurarCategoria(tipoComercio)
+      : null;
 
     // El id se genera aquí, no en la base: el celular tiene que poder crear
     // registros sin conexión y sincronizarlos después sin renumerar nada.
@@ -149,7 +153,7 @@ function Formulario() {
       id,
       nombre: nombre.trim(),
       ruc: ruc.trim() || null,
-      tipo_comercio: tipoComercio.trim() || null,
+      tipo_comercio: categoria,
       productos_interes: productos,
       origen,
       contacto_nombre: contactoNombre.trim() || null,

@@ -93,6 +93,10 @@ llegaron después, obligando a una depuración completa. **No se repite.**
 - Tabla de auditoría para cambios sensibles: reasignaciones, precios, umbrales, ediciones
   de plan.
 - Fechas en **UTC**, presentadas en `America/Panama`. Moneda **USD**. Idioma `es-PA`.
+- **Nunca `current_date` en el esquema: la base corre en UTC.** Se usa `hoy_panama()`. Mezclar
+  `current_date` con una fecha convertida a Panamá adelanta un día desde las 7 p.m. (D-021).
+- **Toda comparación de texto escrito por el usuario va por `normalizar_texto()`**: sin acentos
+  y sin mayúsculas. «Panadería» y «Panaderia» son la misma palabra (D-022).
 - Las funciones que consultan `perfiles` desde una política van `security definer` con
   `set search_path = public`, para evitar recursión al evaluar RLS.
 - Storage: bucket de fotos con políticas propias, alineadas al mismo modelo de roles.

@@ -1646,3 +1646,80 @@ Sin migración: el dato ya estaba.
 De paso, `haceDias()` unifica el resto: la cartera y el mapa decían «Hace 97 días» del mismo
 punto que la lista habría llamado «Hace 3 meses». Una sola forma de decir los plazos, por la
 misma razón que hay un solo sistema de tokens.
+
+---
+
+## El reloj y el catálogo — 2026-08-24
+
+Dos reportes de gerencia en la misma sesión de uso real. Los dos venían de lo mismo: **una
+regla que se veía correcta al leerla.**
+
+### «Hoy» no era hoy después de las 7 de la tarde
+
+*«Acabo de crear en la tarde un registro, pero ahora parece que dice ayer.»* Eran las 7:55 p.m.
+en Panamá.
+
+La base corre en UTC y `current_date` ya decía 24. Las vistas restaban ese `current_date` de
+una fecha convertida a Panamá: dos relojes en la misma expresión.
+
+Comprobado contra `sgv-pacsa-dev` antes y después. El registro de las 7:16 p.m. pasó de
+`dias_sin_contacto = 1` a `0`.
+
+| Qué | Dónde |
+|---|---|
+| `hoy_panama()`, y `current_date` desterrado del esquema | [migración](../supabase/migrations/20260824012616_hoy_en_panama.sql) |
+| `cuentas_resumen` rehecha —días sin contacto, días hasta el compromiso, fuera de cadencia— | ídem |
+| La oportunidad vencida ya no se congela la noche de su propio vencimiento | ídem |
+
+**Afectaba todas las noches**, y justo a la hora en que el vendedor cierra su día.
+
+### El catálogo de tipos de comercio se llenaba de duplicados
+
+*«Ahora tengo dos categorías de panadería, una con tilde en la i y otra sin la tilde.»* Y un
+`mimisuper` que es un dedazo.
+
+Tres causas, no una:
+
+1. **El campo.** Era un `datalist`, que compara letra por letra: escribiendo «panaderia» no
+   ofrecía «Panadería». El duplicado no lo creó un descuido, lo creó el campo (D-023).
+2. **El índice único** comparaba `lower(trim(nombre))`, sin tocar los acentos.
+3. **La cuenta nunca se alineaba con el catálogo**: `tipo_comercio` es texto libre, así que el
+   catálogo decía «Panadería» y la cuenta decía «Panaderia».
+
+| Qué | Dónde |
+|---|---|
+| `normalizar_texto()` y el índice único sobre él | [migración](../supabase/migrations/20260824013500_catalogo_de_categorias.sql) |
+| `asegurar_categoria()` devuelve la grafía buena | ídem |
+| `fusionar_categoria()` y `renombrar_categoria()`, que arrastran las cuentas | ídem |
+| `puede_depurar_catalogo()` — líder **y** gerencia (D-022) | ídem |
+| Vista `categorias_uso` con el conteo por categoría | ídem |
+| Las categorías escritas en cuentas entran al catálogo | [migración](../supabase/migrations/20260824014500_categorias_de_las_cuentas.sql) |
+| Campo con sugerencias propias, sin acentos, desde la primera letra | [campo-categoria.tsx](../src/components/campo-categoria.tsx) |
+| Pantalla de depuración | [/categorias](../src/app/categorias/page.tsx), [depurar-categorias.tsx](../src/components/depurar-categorias.tsx) |
+| `normalizar`, `distancia` y `parecidos` | [src/lib/texto.ts](../src/lib/texto.ts) |
+
+La pantalla detecta parejas sospechosas por distancia de edición —«mimisuper» y «minisuper»
+están a un cambio— y propone unirlas conservando la más usada. Se llega desde Cuentas, solo
+si el rol es líder o gerente.
+
+**Segunda vez en dos migraciones que una guardia falla en silencio.** El alta al catálogo
+exigía un perfil con rol `gerente` para `created_by`, y en dev solo hay un vendedor de prueba:
+no insertó nada y no avisó. Se corrigió tomando el autor de la cuenta que usa la categoría.
+
+### Verificado contra `sgv-pacsa-dev`
+
+| Prueba | Esperado | Resultado |
+|---|---|---|
+| `asegurar_categoria('panaderia')` | Devuelve «Panadería» | Devuelve «Panadería» |
+| `asegurar_categoria('  PANADERÍA ')` | Devuelve «Panadería» | Devuelve «Panadería» |
+| `asegurar_categoria('Ferretería')` | La crea y la devuelve | «Ferretería» |
+| Un vendedor renombra una categoría | Rechazado | `42501: Depurar el catálogo es del líder o de gerencia` |
+| El líder corrige «mimisuper» → «Minisuper» | Arrastra la cuenta | La cuenta dice «Minisuper» |
+| El líder fusiona dos categorías | La sobrante desaparece | Desaparece |
+| Insertar «panaderia» existiendo «Panadería» | Rechazado | `23505: categorias_nombre_unico` |
+
+Todas dentro de transacciones revertidas: no dejaron rastro.
+
+**Pendiente de verificar en pantalla:** las dos pantallas nuevas solo se pueden ver entrando
+con usuario y contraseña. La comprobación de que `/categorias` redirige a `/entrar` sin sesión
+sí se hizo.

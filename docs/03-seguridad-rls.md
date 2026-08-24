@@ -295,3 +295,24 @@ Todas las tablas de este esquema pasaron esa prueba; los resultados están en `0
 - Si `perfiles` lleva `created_by`, que §16 exige en todas las tablas.
 - Qué ve exactamente `administracion` en `seguimientos` cuando llegue la bandeja de
   cotizaciones.
+
+---
+
+## `categorias_comercio` — actualizado 2026-08-24
+
+| Política | Quién | Qué puede |
+|---|---|---|
+| `categorias_lectura` | Cualquier autenticado | Leer. De nada sirve un catálogo que cada quien ve distinto |
+| `categorias_insertar` | Cualquier autenticado | Agregar. Es lo que mantiene el catálogo vivo sin administrarlo |
+| `categorias_depuracion` | `gerente` o `lider` | Todo: renombrar, fusionar, ocultar |
+
+Sustituye a `categorias_gerencia`, que era solo de gerencia. El líder entra porque revisa el
+trabajo del equipo cada semana y ve el dedazo el viernes (D-022).
+
+**Las tres funciones de depuración son `security definer` y comprueban el rol ellas mismas**,
+con `puede_depurar_catalogo()`. No basta con la política: `fusionar_categoria` y
+`renombrar_categoria` **escriben en `cuentas`**, y ahí el RLS del vendedor no dejaría tocar las
+de otro. La comprobación explícita es la que sustituye a la que se salta.
+
+`asegurar_categoria` también es `security definer`, pero por otra razón: solo lee el catálogo
+para responder cómo se escribe algo, y ese catálogo es global.

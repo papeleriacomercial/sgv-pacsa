@@ -17,7 +17,7 @@ import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError } from "@/components/ui/estados";
-import { CampoCategoria, registrarCategoria } from "@/components/campo-categoria";
+import { asegurarCategoria, CampoCategoria } from "@/components/campo-categoria";
 import { CampoCoordenadas } from "@/components/campo-coordenadas";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { BotonVolver } from "@/components/boton-volver";
@@ -112,8 +112,11 @@ export default function EditarProspecto() {
 
     setGuardando(true);
 
-    // La categoría escrita se suma al catálogo compartido, si es nueva.
-    if (tipoComercio.trim()) await registrarCategoria(tipoComercio);
+    // La categoría escrita se suma al catálogo compartido, si es nueva, y
+    // la cuenta se queda con la grafía del catálogo.
+    const categoria = tipoComercio.trim()
+      ? await asegurarCategoria(tipoComercio)
+      : null;
 
     const supabase = clienteNavegador();
     const { error: fallo } = await supabase
@@ -121,7 +124,7 @@ export default function EditarProspecto() {
       .update({
         nombre: nombre.trim(),
         ruc: ruc.trim() || null,
-        tipo_comercio: tipoComercio.trim() || null,
+        tipo_comercio: categoria,
         productos_interes: productos,
         contacto_nombre: contactoNombre.trim() || null,
         contacto_telefono: contactoTelefono.trim() || null,
