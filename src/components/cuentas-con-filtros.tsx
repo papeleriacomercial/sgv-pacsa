@@ -14,6 +14,7 @@ import {
   type Dimension,
   type Filtros,
 } from "@/lib/filtros";
+import { haceDias } from "@/lib/fechas";
 import { PanelFiltros } from "@/components/panel-filtros";
 import { FichaPunto } from "@/components/ficha-punto";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -219,7 +220,7 @@ export function CuentasConFiltros({
             ultimaInteraccion={
               c.dias_sin_contacto === null
                 ? null
-                : `Hace ${c.dias_sin_contacto} días`
+                : haceDias(c.dias_sin_contacto)
             }
           />
         ))}

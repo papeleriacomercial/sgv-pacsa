@@ -10,6 +10,7 @@ import {
   type TipoLista,
 } from "@/lib/catalogos";
 import { FichaPunto } from "@/components/ficha-punto";
+import { diasDesde } from "@/lib/fechas";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Vacio } from "@/components/ui/estados";
@@ -170,9 +171,19 @@ export default async function DetalleLista({
 
         {sinTocar.length > 0 && (
           <section className="flex flex-col gap-2">
-            <h2 className="text-sm font-medium text-texto">
-              Sin tocar · {sinTocar.length}
-            </h2>
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 className="text-sm font-medium text-texto">
+                Sin tocar · {sinTocar.length}
+              </h2>
+              {/* La misma cifra que cuenta `listas_resumen`, dicha donde se
+                  puede hacer algo con ella. Los más viejos salen primero
+                  porque la consulta ordena por fecha de entrada. */}
+              {lista.sin_tocar_hace_mucho > 0 && (
+                <span className="text-xs font-medium text-aviso">
+                  {lista.sin_tocar_hace_mucho} llevan más de dos meses
+                </span>
+              )}
+            </div>
             {sinTocar.map((m) =>
               m.cuentas ? (
                 <FichaPunto
@@ -183,6 +194,7 @@ export default async function DetalleLista({
                   tipo={m.cuentas.tipo}
                   potencial={null}
                   ultimaInteraccion={null}
+                  esperaDias={diasDesde(m.agregada_en)}
                 />
               ) : null,
             )}

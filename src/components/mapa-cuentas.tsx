@@ -14,6 +14,7 @@ import {
 } from "@vis.gl/react-google-maps";
 import { TIPOS_CUENTA, VOLUMENES } from "@/lib/catalogos";
 import { iconoPin } from "@/lib/marcadores";
+import { haceDias } from "@/lib/fechas";
 import type { Cuenta } from "@/lib/filtros";
 import { MensajeError } from "@/components/ui/estados";
 
@@ -156,7 +157,7 @@ function Contenido({
           <span className="block text-xs">
             {abierta.dias_sin_contacto === null
               ? "Nunca contactada"
-              : `Hace ${abierta.dias_sin_contacto} días sin contacto`}
+              : `${haceDias(abierta.dias_sin_contacto)} sin contacto`}
           </span>
           <Link
             href={`/cuentas/${abierta.id}`}

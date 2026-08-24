@@ -1614,3 +1614,35 @@ color del pin y el número no puedan discrepar.
 - **El gris es lo que hace justa la revisión.** Un descartado no es un hueco. Sin esa
   distinción el líder leería como pereza lo que fue trabajo hecho, y el vendedor aprendería a
   no descartar nada para no salir mal — el hábito que vacía la base.
+
+---
+
+## Los leads dicen desde cuándo esperan — 2026-08-23
+
+Pedido de gerencia: en las listas, saber si un lead se levantó anteayer o lleva medio año ahí.
+Sin fecha se ven exactamente igual.
+
+`listas_cuentas.agregada_en` ya se guardaba desde que se creó la tabla —*«la fecha de entrada
+mide la calidad de la planificación»*, dice su comentario— pero no se mostraba en ninguna parte.
+
+| Qué | Dónde |
+|---|---|
+| Cómo se dicen los plazos, en un solo lugar | [src/lib/fechas.ts](../src/lib/fechas.ts) |
+| La ficha muestra la espera donde un cliente muestra su última visita | [src/components/ficha-punto.tsx](../src/components/ficha-punto.tsx) |
+| La cabecera de «Sin tocar» dice cuántos llevan más de dos meses | [src/app/listas/[id]/page.tsx](../src/app/listas/[id]/page.tsx) |
+
+Sin migración: el dato ya estaba.
+
+**Tres cosas que no son obvias.**
+
+1. **Ocupa el hueco de la última interacción**, que en un lead sin tocar está vacío. La ficha no
+   crece ni cambia de alto — §17 exige que se pueda escanear de un vistazo.
+2. **A los 60 días se pone en ámbar**, que es el mismo umbral con que `listas_resumen` cuenta
+   los viejos. Si no coincidieran, la lista diría «3 llevan mucho» y ninguna ficha se vería
+   vieja.
+3. **Cambia de unidad**: días, semanas, meses. «Esperando 97 días» obliga a restar de cabeza
+   para saber si eso es mucho, y se lee al sol y con prisa.
+
+De paso, `haceDias()` unifica el resto: la cartera y el mapa decían «Hace 97 días» del mismo
+punto que la lista habría llamado «Hace 3 meses». Una sola forma de decir los plazos, por la
+misma razón que hay un solo sistema de tokens.
