@@ -1903,3 +1903,48 @@ vendedor filtrar por sí mismo no le dice nada—, así que hoy los dos están e
 
 Aparecen solos en cuanto existan los otros dos usuarios. Crearlos exige contraseña y eso lo hace
 el usuario en el panel de Supabase; el perfil —nombre, rol y líder— se asigna después.
+
+---
+
+## Los cuatro usuarios reales, y Zoho en preparación — 2026-08-24
+
+### El equipo entró al sistema
+
+Se crearon los tres usuarios que faltaban y se les asignó perfil. **Primera prueba del modelo de
+roles con gente de verdad**, y pasó limpia:
+
+| Entra como | Cuentas | Listas | Personas que ve | Depura catálogo |
+|---|---|---|---|---|
+| Gerencia | 18 | 2 | 4 | Sí |
+| Christopher Guerra · líder | 18 | 2 | 3 — él y sus dos, **no el gerente** | Sí |
+| Albert Batista · vendedor | 13 | 1 | 1 | No |
+| Javier Rodríguez · vendedor | 4 | 0 | 1 | No |
+
+Los usuarios se habían creado primero en `sgv-pacsa-prod` por confusión entre los dos proyectos.
+Se dejaron ahí —cuando se salga a producción ya estarán— y se rehicieron en `sgv-pacsa-dev`.
+
+**Las cuentas de prueba se repartieron.** Estaban todas en el perfil del gerente, así que los
+otros tres entraban a una aplicación vacía y el filtro por vendedor mostraba cuatro nombres con
+todo en uno. Albert —el del interior— se quedó con Aguadulce y su lista de zona; Javier con las
+sueltas de ciudad; Christopher con el objetivo «Banco General» y su lista. **Gerencia quedó en
+cero cuentas, que es lo correcto: el gerente no vende.**
+
+### Zoho: preparado, a la espera de credenciales
+
+Confirmado el centro de datos —`books.zoho.com`, EE. UU.— y la organización `630051923`.
+
+| Qué | Dónde |
+|---|---|
+| Alcance, orden de traída y paso a paso | [docs/15-zoho.md](15-zoho.md) |
+| Diagnóstico previo del maestro de clientes | [scripts/zoho-diagnostico.mjs](../scripts/zoho-diagnostico.mjs) |
+
+**El diagnóstico contesta la pregunta que decide el diseño:** dónde vive el RUC en los contactos
+de Zoho y en cuántos está puesto. No imprime datos de clientes —de cada valor muestra su forma,
+dígitos como 9 y letras como A— así que se ve el formato del RUC sin que salga ningún RUC.
+
+Eso además **le da vuelta a un bloqueo viejo**: la higiene del maestro de Zoho estaba anotada
+como bloqueante de §7.6 sin que nadie supiera qué tan sucio estaba. El diagnóstico lo convierte
+en un número.
+
+**Pendiente del usuario:** generar el `refresh_token` de solo lectura y ponerlo en `.env.local`.
+Las credenciales no pasan por aquí.

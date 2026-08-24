@@ -34,6 +34,7 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 | [docs/12-flujo-vendedor.html](docs/12-flujo-vendedor.html) | El ciclo del vendedor de ruta: sus cuatro pantallas, con bocetos y un lunes completo. | Vigente |
 | [docs/13-flujo-lider.html](docs/13-flujo-lider.html) | El ciclo del líder: ventas rápidas, ventas grandes y administración del equipo en la misma semana. | Vigente |
 | [docs/14-flujo-gerencia.html](docs/14-flujo-gerencia.html) | El ciclo de gerencia: el tablero del lunes, la media hora con el líder y el informe mensual. | Vigente |
+| [docs/15-zoho.md](docs/15-zoho.md) | Conexión con Zoho Books: qué se trae, en qué orden y por qué; el paso a paso de credenciales y el diagnóstico del RUC. | En preparación |
 
 `docs/sgv-preview.html` es una maqueta visual de referencia, no especificación.
 
