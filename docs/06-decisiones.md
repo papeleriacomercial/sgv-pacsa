@@ -650,3 +650,48 @@ cara de deshacer—.
 `docs/00-vision.md` **no se toca**: es el levantamiento original y ahí «lead» y «potencial»
 quedan como se dijeron en su momento. Esta entrada es el puente entre ese texto y el
 vocabulario actual.
+
+---
+
+## D-026 — Un objetivo se escribe, no se busca en el mapa
+
+**Fecha:** 2026-08-24
+
+**Decisión.** Una lista de tipo **objetivos** se llena con un formulario propio —nombre y,
+opcionalmente, dirección de la oficina, contacto, teléfono y correo—. No ofrece la búsqueda de
+Google ni el mapa. Las listas de **zona** siguen exactamente como estaban.
+
+La cuenta nace con `origen = 'objetivo'` —valor nuevo del enum— y `tipo_punto = 'oficina'`, sin
+coordenadas.
+
+**Por qué.** El líder armó una lista de bancos, escribió «Banco General» y la aplicación le
+devolvió las sucursales. Él no quiere una sucursal: quiere llegar a alguien en la oficina
+central. La sucursal ni decide ni compra — es el mismo hallazgo que el motivo de descarte
+«se negocia en Panamá» ya señalaba desde el otro lado.
+
+Son dos oficios distintos y les hacía falta herramienta distinta:
+
+| | Vendedor de ruta | Líder con un objetivo |
+|---|---|---|
+| Cómo lo encuentra | Está en la calle, se ve | Ya sabe el nombre; le falta con quién hablar |
+| Qué le falta al empezar | Nada: va y toca | Contacto, teléfono, correo, dirección |
+| Qué hace antes del primer contacto | Nada | **Investigar** |
+
+**Lo único obligatorio es el nombre**, y eso es el punto: el objetivo entra en cuanto se decide
+ir por él, aunque no se sepa nada más. Los otros cuatro campos casi siempre nacen vacíos y se
+llenan a medida que los averigua.
+
+**Los huecos son la tarea.** La tarjeta del objetivo, donde una cuenta de zona dice su poblado,
+dice qué falta: *«Solo tienes el nombre»*, *«Falta teléfono, correo»*. Al completarse, la línea
+desaparece sola — y esa desaparición es la señal de que ya se puede llamar. La lista de
+objetivos es, literalmente, la libreta de investigación del líder.
+
+**Alternativa descartada.** Un campo de búsqueda que consultara Google y dejara «crear a mano»
+como salida. Se descartó porque el camino equivocado seguiría siendo el primero que se ofrece, y
+porque para un objetivo el resultado de Google es ruido: devuelve sucursales cuando se pregunta
+por una casa matriz.
+
+**Lo que no cambia.** El objetivo sigue siendo un potencial y sale de serlo igual que cualquier
+otro: con el primer seguimiento. Como es una llamada o un correo y no una visita, cae en
+«Llamadas y correos» de la agenda, no en las paradas del día. Ahí se decide si pasa a prospecto
+—y nace la oportunidad con su fecha— o se descarta con motivo.

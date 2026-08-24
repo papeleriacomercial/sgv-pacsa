@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import { TIPOS_CUENTA, TONO_TIPO, type TipoCuenta } from "@/lib/catalogos";
 import { Insignia } from "@/components/ui/insignia";
 import { esperaEnLista, ESPERA_LARGA } from "@/lib/fechas";
@@ -30,6 +30,15 @@ type Props = {
   lista?: string | null;
   /** De quién es. Solo cuando se está viendo la cartera de varios a la vez. */
   vendedor?: string | null;
+  /**
+   * Qué datos faltan por averiguar. Ocupa el lugar de la zona.
+   *
+   * Un objetivo del líder no tiene zona —no está en el mapa hasta que se
+   * sepa a qué oficina ir— y en cambio sí tiene una tarea pendiente:
+   * conseguir el contacto, el teléfono, el correo. Eso es lo que hay que
+   * leer en su tarjeta.
+   */
+  falta?: string | null;
 };
 
 const FALTA = "text-texto-atenuado";
@@ -71,6 +80,7 @@ export function FichaPunto({
   zona = null,
   lista = null,
   vendedor = null,
+  falta = null,
 }: Props) {
   // La espera solo se muestra cuando no hay interacción: si ya lo tocaron, lo
   // que importa es cuándo, no cuánto esperó.
@@ -105,12 +115,18 @@ export function FichaPunto({
 
       <div className="flex items-center justify-between gap-2 text-xs">
         <span
-          className={`flex min-w-0 items-center gap-1 ${zona ? "text-texto-secundario" : FALTA}`}
+          className={`flex min-w-0 items-center gap-1 ${
+            falta || !zona ? FALTA : "text-texto-secundario"
+          }`}
         >
-          <MapPin size={12} className="shrink-0" aria-hidden />
+          {falta ? (
+            <Search size={12} className="shrink-0" aria-hidden />
+          ) : (
+            <MapPin size={12} className="shrink-0" aria-hidden />
+          )}
           <span className="truncate">
-            {zona ?? "Sin zona"}
-            {vendedor && ` · ${vendedor}`}
+            {falta ?? zona ?? "Sin zona"}
+            {!falta && vendedor && ` · ${vendedor}`}
           </span>
         </span>
 

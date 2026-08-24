@@ -1815,3 +1815,36 @@ una fila.
 renombró ese puntaje a «puntaje» antes de que exista, que es cuando sale barato.
 
 `docs/00-vision.md` queda sin tocar, por la regla de siempre: es el levantamiento original.
+
+---
+
+## Los objetivos se escriben — 2026-08-24
+
+El líder armó una lista de bancos, escribió «Banco General» y la aplicación le buscó las
+sucursales en el mapa. No es lo que quería: **quiere llegar a alguien en la oficina central.**
+
+Era un error de diseño, no un error de la búsqueda: le puse al líder la herramienta del
+vendedor de calle. Ver D-026.
+
+| Qué | Dónde |
+|---|---|
+| `origen = 'objetivo'` en el enum | [migración](../supabase/migrations/20260824030000_objetivos_sin_mapa.sql) |
+| Formulario para escribir el objetivo | [agregar-objetivo.tsx](../src/components/agregar-objetivo.tsx) |
+| La lista de objetivos no ofrece mapa ni búsqueda | [/listas/[id]](../src/app/listas/[id]/page.tsx) |
+| La tarjeta dice qué falta averiguar | [ficha-punto.tsx](../src/components/ficha-punto.tsx) |
+
+**El formulario se queda abierto al guardar.** Armar una lista de objetivos es escribir seis o
+siete seguidos —Banco General, Banco del Istmo, BAC…— y cerrarlo en cada uno serían seis toques
+de más.
+
+**Los huecos son la tarea.** Donde una cuenta de zona dice su poblado, un objetivo dice *«Solo
+tienes el nombre»* o *«Falta teléfono, correo»*. Cuando se completan, la línea desaparece sola:
+esa es la señal de que ya se puede llamar.
+
+### Verificado contra `sgv-pacsa-dev`
+
+Creación completa como líder, en transacción revertida: lista de objetivos + cuenta + membresía.
+La cuenta quedó `potencial · origen objetivo · tipo_punto oficina · sin_ubicacion true`, y
+`cuentas_resumen` la devuelve correctamente unida a su lista.
+
+**Pendiente de verificar en pantalla**, como siempre con lo que exige sesión iniciada.

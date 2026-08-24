@@ -9,6 +9,7 @@ import {
   type TipoCuenta,
   type TipoLista,
 } from "@/lib/catalogos";
+import { AgregarObjetivo } from "@/components/agregar-objetivo";
 import { FichaPunto } from "@/components/ficha-punto";
 import { diasDesde } from "@/lib/fechas";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -31,8 +32,32 @@ type Miembro = {
     tipo: TipoCuenta;
     tipo_comercio: string | null;
     poblado: string | null;
+    direccion: string | null;
+    contacto_nombre: string | null;
+    contacto_telefono: string | null;
+    contacto_correo: string | null;
   } | null;
 };
+
+/**
+ * Qué le falta averiguar a un objetivo antes de poder ir por él.
+ *
+ * Se escribe en la tarjeta en vez de la zona: un objetivo no tiene zona
+ * —no está en el mapa— y en cambio sí tiene deberes. Al llenarse todos, la
+ * línea desaparece sola y eso es la señal de que ya se puede llamar.
+ */
+function queFalta(c: NonNullable<Miembro["cuentas"]>): string | null {
+  const huecos = [
+    !c.contacto_nombre && "contacto",
+    !c.contacto_telefono && "teléfono",
+    !c.contacto_correo && "correo",
+    !c.direccion && "dirección",
+  ].filter(Boolean) as string[];
+
+  if (huecos.length === 0) return null;
+  if (huecos.length === 4) return "Solo tienes el nombre";
+  return `Falta ${huecos.join(", ")}`;
+}
 
 type Ultima = { cuenta_id: string; fecha: string };
 
@@ -65,7 +90,9 @@ export default async function DetalleLista({
 
   const { data: filas } = await supabase
     .from("listas_cuentas")
-    .select("cuenta_id, agregada_en, cuentas(id, nombre, tipo, tipo_comercio, poblado)")
+    .select(
+      "cuenta_id, agregada_en, cuentas(id, nombre, tipo, tipo_comercio, poblado, direccion, contacto_nombre, contacto_telefono, contacto_correo)",
+    )
     .eq("lista_id", id)
     .order("agregada_en", { ascending: true });
 
@@ -92,6 +119,13 @@ export default async function DetalleLista({
 
   const sinTocar = miembros.filter((m) => !ultimaPorCuenta.has(m.cuenta_id));
   const trabajadas = miembros.filter((m) => ultimaPorCuenta.has(m.cuenta_id));
+
+  // **Dos oficios, dos herramientas.** Una lista de zona se llena buscando en
+  // el mapa: el vendedor no sabe qué hay en Aguadulce hasta que mira. Una de
+  // objetivos se llena escribiendo: el líder ya sabe que va por Banco General,
+  // lo que no sabe es con quién hablar. Ofrecerle la búsqueda le devolvía
+  // sucursales, que es justo lo que no quiere.
+  const esObjetivo = lista.tipo === "objetivo";
 
   // A Buscar y no al mapa de la cartera: el mapa muestra lo que ya es suyo, y
   // aquí lo que hace falta es encontrar puntos que todavía no lo son.
@@ -126,25 +160,39 @@ export default async function DetalleLista({
           )}
         </Tarjeta>
 
-        {/* Agregar puntos abre el mapa con la lista preseleccionada, centrado
-            en su poblado. El semáforo de la búsqueda evita reescoger lo que ya
-            es suyo, lo que descartó o lo que es de un compañero. */}
-        <Link
-          href={destinoBusqueda}
-          className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-3 text-base font-medium text-white"
-        >
-          <Search size={18} aria-hidden />
-          Buscar puntos para esta lista
-        </Link>
+        {esObjetivo ? (
+          <AgregarObjetivo
+            listaId={id}
+            ejemplo={
+              lista.clase === "grande"
+                ? "Banco General"
+                : "Do It Center"
+            }
+          />
+        ) : (
+          <>
+            {/* Agregar puntos abre el mapa con la lista preseleccionada,
+                centrado en su poblado. El semáforo de la búsqueda evita
+                reescoger lo que ya es suyo, lo que descartó o lo que es de
+                un compañero. */}
+            <Link
+              href={destinoBusqueda}
+              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-3 text-base font-medium text-white"
+            >
+              <Search size={18} aria-hidden />
+              Buscar puntos para esta lista
+            </Link>
 
-        {/* El mapa de la cartera, para ver dónde caen los que ya tiene. */}
-        <Link
-          href={`/mapa?lista=${id}&incluirPotenciales=1`}
-          className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
-        >
-          <MapPinned size={16} aria-hidden />
-          Ver esta lista en el mapa
-        </Link>
+            {/* El mapa de la cartera, para ver dónde caen los que ya tiene. */}
+            <Link
+              href={`/mapa?lista=${id}&incluirPotenciales=1`}
+              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
+            >
+              <MapPinned size={16} aria-hidden />
+              Ver esta lista en el mapa
+            </Link>
+          </>
+        )}
 
         {lista.sin_tocar_hace_mucho > 0 && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
@@ -163,8 +211,9 @@ export default async function DetalleLista({
         {miembros.length === 0 && (
           <Tarjeta>
             <Vacio titulo="La lista está vacía">
-              Agrégale puntos desde el mapa o desde la búsqueda. Los que escojas
-              quedan aquí hasta que los trabajes.
+              {esObjetivo
+                ? "Escribe el primero con el botón de arriba. Basta el nombre: lo demás lo vas averiguando."
+                : "Agrégale puntos desde el mapa o desde la búsqueda. Los que escojas quedan aquí hasta que los trabajes."}
             </Vacio>
           </Tarjeta>
         )}
@@ -193,6 +242,7 @@ export default async function DetalleLista({
                   tipoComercio={m.cuentas.tipo_comercio}
                   tipo={m.cuentas.tipo}
                   zona={m.cuentas.poblado}
+                  falta={esObjetivo ? queFalta(m.cuentas) : null}
                   ultimaInteraccion={null}
                   esperaDias={diasDesde(m.agregada_en)}
                 />
