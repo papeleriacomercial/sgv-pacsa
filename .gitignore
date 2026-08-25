@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Datos reales de clientes: nunca al repositorio (ver datos/LEEME.md)
+datos/*
+!datos/LEEME.md
