@@ -21,6 +21,7 @@ import { ClasificarCuenta } from "@/components/clasificar-cuenta";
 import { AgregarALista } from "@/components/agregar-a-lista";
 import { CadenaCuenta } from "@/components/cadena-cuenta";
 import { Tarjeta } from "@/components/ui/tarjeta";
+import { QueCompra } from "@/components/que-compra";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
 import { Vacio } from "@/components/ui/estados";
@@ -59,7 +60,7 @@ export default async function Expediente({
   const { data: prospecto } = await supabase
     .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion",
+      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -68,6 +69,15 @@ export default async function Expediente({
   // Si el RLS no deja verlo, para este usuario no existe. Es la respuesta
   // correcta: decir "existe pero no puedes verlo" ya es filtrar información.
   if (!prospecto) notFound();
+
+  // Qué le vende, ordenado por lo que más pesa. Ocho alcanzan: el resto es
+  // cola larga que nadie mira parado frente al mostrador.
+  const { data: lineas } = await supabase
+    .from("lineas_por_cuenta")
+    .select("producto, veces, total, ultima_vez, dias_sin_pedirlo")
+    .eq("cuenta_id", id)
+    .order("total", { ascending: false })
+    .limit(8);
 
   const { data: visitas } = await supabase
     .from("seguimientos")
@@ -300,7 +310,7 @@ export default async function Expediente({
               </dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt className="text-texto-secundario">Poblado</dt>
+              <dt className="text-texto-secundario">Poblado o zona</dt>
               <dd className={prospecto.poblado ? "" : "text-texto-atenuado"}>
                 {prospecto.poblado ?? "Sin registrar"}
               </dd>
@@ -327,6 +337,23 @@ export default async function Expediente({
             <p className="text-sm text-texto-secundario">{prospecto.notas}</p>
           )}
         </Tarjeta>
+
+        <QueCompra
+          cuentaId={prospecto.id}
+          ultimaCompra={prospecto.ultima_compra}
+          diasSinComprar={prospecto.dias_sin_comprar}
+          compras12m={prospecto.compras_12m}
+          total12m={prospecto.total_12m === null ? null : Number(prospecto.total_12m)}
+          cadenciaObservada={prospecto.cadencia_observada}
+          cadenciaPuesta={prospecto.dias_cadencia}
+          dejoDeComprar={prospecto.dejo_de_comprar}
+          lineas={(lineas ?? []).map((l) => ({
+            ...l,
+            veces: Number(l.veces),
+            total: Number(l.total),
+            dias_sin_pedirlo: Number(l.dias_sin_pedirlo),
+          }))}
+        />
 
         <section className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">

@@ -243,7 +243,7 @@ export function PanelFiltros({
               {/* El poblado se muestra siempre, aunque esté vacío. Esconderlo
               cuando ninguna cuenta lo tiene hace que el filtro parezca no
               existir, y el vendedor no descubre que puede llenarlo. */}
-              <Grupo titulo="Poblado">
+              <Grupo titulo="Poblado o zona">
                 {poblados.length > 0 ? (
                   poblados.map((p) => (
                     <Pastilla

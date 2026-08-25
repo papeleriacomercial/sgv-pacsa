@@ -1948,3 +1948,43 @@ en un número.
 
 **Pendiente del usuario:** generar el `refresh_token` de solo lectura y ponerlo en `.env.local`.
 Las credenciales no pasan por aquí.
+
+---
+
+## Lo que Books sabe, en la pantalla — 2026-08-25
+
+Gerencia entró con el perfil de Albert y no vio la cadencia por ninguna parte. **Estaba
+calculada y guardada, pero ninguna pantalla la mostraba.** El dato existía y no se veía.
+
+| Qué | Dónde |
+|---|---|
+| Bloque «Qué compra» en el expediente | [que-compra.tsx](../src/components/que-compra.tsx) |
+| Adoptar la cadencia calculada, de un toque | [adoptar-cadencia.tsx](../src/components/adoptar-cadencia.tsx) |
+| El expediente pide los datos de Books y las líneas | [/cuentas/[id]](../src/app/cuentas/[id]/page.tsx) |
+
+**Se propone, no se impone.** El sistema calcula la mediana de los días entre compras y la
+ofrece con un botón; el vendedor decide. Si se escribiera sola sobre lo que él puso, dejaría de
+ponerla — y lo que él sabe del cliente («este pide más seguido en temporada escolar») no está en
+ninguna factura. El botón desaparece cuando las dos coinciden.
+
+**«Dejó de comprar» no es «fuera de cadencia».** Uno mide si el vendedor lo visitó; el otro, si
+el cliente compró. Se puede estar al día en visitas y estar perdiendo la cuenta, y hasta hoy
+nada lo delataba.
+
+**El umbral de una línea abandonada es relativo al cliente**, no un número plano: dos veces su
+propia cadencia. Sin ese contraste «60 días» no dice nada — es normal en quien compra cada dos
+meses y alarmante en quien compra cada semana.
+
+Ejemplo real de la cartera de Albert, ya cargado:
+
+| Cuenta | Producto | Sin pedirlo |
+|---|---|---|
+| Supermarket Mi Pueblo | Caja Rollos Térmicos 80×70 | **307 días** |
+| El Punto Poderoso | Caja Rollos Térmicos 80×70 | **274 días** |
+| Supermarket Mi Pueblo | FC-Kraft Natural No. 03 | 139 días |
+
+Los dos primeros siguen comprando otras líneas: dejaron de pedir **esa**. Eso es una
+conversación de venta con nombre y fecha.
+
+De paso, el campo «Poblado o distrito» pasa a llamarse **«Poblado o zona»**: el vendedor de
+Panamá trabaja por zonas, no por poblados.

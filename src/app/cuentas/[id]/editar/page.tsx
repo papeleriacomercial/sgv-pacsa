@@ -225,7 +225,7 @@ export default function EditarProspecto() {
                 ayuda="Cómo se llega. Las coordenadas sirven al mapa, esto a la gente."
               />
               <Campo
-                etiqueta="Poblado o distrito"
+                etiqueta="Poblado o zona"
                 value={poblado}
                 onChange={(e) => setPoblado(e.target.value)}
                 ayuda="Aguadulce, La Chorrera, David. Permite agrupar la cartera por zona."
