@@ -39,12 +39,15 @@ export function CuentasConFiltros({
   vendedores,
   vistaInicial = "lista",
   cuentaDestacada,
+  yo,
 }: {
   cuentas: Cuenta[];
   vendedores: { id: string; nombre: string }[];
   vistaInicial?: "lista" | "mapa";
   /** Se abre centrada y con su ventana desplegada. Llega desde el expediente. */
   cuentaDestacada?: string;
+  /** Quién está mirando. Su cartera es la que sale por omisión. */
+  yo?: string;
 }) {
   const router = useRouter();
   const ruta = usePathname();
@@ -53,7 +56,21 @@ export function CuentasConFiltros({
   // El estado nace de la dirección, no de valores vacíos. Volver atrás desde
   // una cuenta devuelve exactamente la vista que se estaba mirando: sin esto,
   // corregir diez potenciales obliga a rearmar el filtro diez veces.
-  const [filtros, setFiltros] = useState<Filtros>(() => desdeUrl(parametros));
+  // **Arranca en lo mío.** Con tres carteras mezcladas, entrar a Cuentas y
+  // ver 525 fichas de todo el mundo no le sirve a nadie: lo primero que se
+  // busca es lo propio.
+  //
+  // Solo cuando la dirección viene limpia. Si trae cualquier parámetro es
+  // que alguien ya tocó los filtros —o quitó este a propósito— y volver a
+  // ponerlo sería pelearse con el usuario.
+  const [filtros, setFiltros] = useState<Filtros>(() => {
+    const desde = desdeUrl(parametros);
+    const limpia = parametros.toString() === "";
+    if (limpia && yo && vendedores.length > 1) {
+      return { ...desde, vendedores: [yo] };
+    }
+    return desde;
+  });
   const [abierto, setAbierto] = useState(false);
   const [vista, setVista] = useState<"lista" | "mapa">(
     (parametros.get("vista") as "lista" | "mapa") ?? vistaInicial,

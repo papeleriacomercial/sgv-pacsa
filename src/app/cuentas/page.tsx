@@ -118,7 +118,11 @@ export default async function Cuentas() {
             </Vacio>
           </Tarjeta>
         ) : (
-          <CuentasConFiltros cuentas={cuentas} vendedores={vendedores} />
+          <CuentasConFiltros
+            cuentas={cuentas}
+            vendedores={vendedores}
+            yo={user.id}
+          />
         )}
       </main>
     </>

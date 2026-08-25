@@ -170,12 +170,6 @@ export function PanelFiltros({
 
           {!enColor && (
             <>
-              <Campo
-                etiqueta="Buscar por nombre"
-                value={filtros.texto}
-                onChange={(e) => set({ texto: e.target.value })}
-              />
-
               {/* **De quién es va primero.** Para el líder y para gerencia,
               que ven tres carteras mezcladas, la primera pregunta no es qué
               clase de cuenta es: es de quién. Estaba en séptimo lugar, más
@@ -370,6 +364,21 @@ export function PanelFiltros({
                   Mostrar potenciales
                 </Pastilla>
               </Grupo>
+
+              {/* **Buscar por nombre va al final, y es por dónde queda la
+              lista.** Estaba arriba del todo: se escribía, y para ver qué
+              había salido tocaba desplazarse por los nueve grupos de
+              filtros hasta llegar a los resultados. Aquí abajo, lo que se
+              escribe y lo que aparece están a un dedo de distancia.
+
+              Los filtros de arriba se tocan una vez y se dejan puestos;
+              este se escribe y se borra veinte veces seguidas. */}
+              <Campo
+                etiqueta="Buscar por nombre"
+                value={filtros.texto}
+                onChange={(e) => set({ texto: e.target.value })}
+                placeholder="Parte del nombre del negocio"
+              />
 
               {activos > 0 && (
                 <button

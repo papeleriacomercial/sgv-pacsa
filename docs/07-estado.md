@@ -2094,3 +2094,25 @@ cualquier cuenta que se guarde con un tipo que el catálogo no tenga lo agrega, 
 pantalla, de una carga o de una consulta a mano.
 
 Y ahí está el caso de manual esperando: **«Mini Super» con 34 cuentas y «Minisuper» con 28.**
+
+---
+
+## La cartera arranca en lo propio, y buscar va al final — 2026-08-25
+
+Dos ajustes a Cuentas y a Mapa, que comparten el mismo panel.
+
+**Arrancan en lo mío.** Con tres carteras mezcladas, entrar y ver 525 fichas de todo el mundo no
+le sirve a nadie: lo primero que se busca es lo propio. El filtro de vendedor viene puesto con
+uno mismo.
+
+Solo cuando la dirección viene limpia. **Si trae cualquier parámetro es que alguien ya tocó los
+filtros —o quitó este a propósito— y volver a ponerlo sería pelearse con el usuario.** Por eso
+el mapa de una lista no se filtra: llega con `?lista=`.
+
+**Buscar por nombre pasa al final del panel.** Estaba arriba del todo: se escribía, y para ver
+qué había salido tocaba desplazarse por los nueve grupos de filtros hasta llegar a los
+resultados. Abajo, lo que se escribe y lo que aparece quedan a un dedo de distancia.
+
+La razón de fondo: los filtros de arriba **se tocan una vez y se dejan puestos**; este **se
+escribe y se borra veinte veces seguidas**. El orden del panel debería seguir esa frecuencia, no
+la importancia aparente.

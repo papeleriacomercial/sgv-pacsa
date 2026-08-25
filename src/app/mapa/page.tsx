@@ -71,6 +71,7 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
             cuentas={visibles}
             vendedores={vendedores}
             vistaInicial="mapa"
+            yo={user.id}
             cuentaDestacada={typeof cuenta === "string" ? cuenta : undefined}
           />
         )}
