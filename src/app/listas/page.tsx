@@ -15,7 +15,8 @@ import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
  * Es la pantalla de planificación, no la del día: aquí arma los grupos y ve
  * cuánto le falta de cada uno. Lo que hace hoy vive en la agenda.
  */
-export default async function Listas() {
+export default async function Listas({ searchParams }: PageProps<"/listas">) {
+  const { equipo } = await searchParams;
   const supabase = await clienteServidor();
 
   const {
@@ -23,7 +24,25 @@ export default async function Listas() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
 
-  const listas = await cargarListas();
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("rol")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Quien ve a más de uno puede mirar las del equipo, pero **lo suyo va por
+  // omisión**: esta es su pantalla de planificación, no un tablero.
+  const puedeVerEquipo = perfil?.rol === "lider" || perfil?.rol === "gerente";
+  const verEquipo = puedeVerEquipo && equipo === "1";
+
+  const listas = await cargarListas(verEquipo ? undefined : user.id);
+  const nombres = verEquipo
+    ? new Map(
+        (
+          (await supabase.from("perfiles").select("id, nombre")).data ?? []
+        ).map((p) => [p.id as string, p.nombre as string]),
+      )
+    : new Map<string, string>();
 
   const porTipo = (tipo: TipoLista) => listas.filter((l) => l.tipo === tipo);
 
@@ -32,7 +51,9 @@ export default async function Listas() {
       <AvisoSinConexion />
 
       <header className="flex items-center justify-between border-b border-borde bg-superficie px-4 py-3">
-        <h1 className="text-lg font-semibold text-marca">Listas</h1>
+        <h1 className="text-lg font-semibold text-marca">
+          {verEquipo ? "Listas del equipo" : "Listas"}
+        </h1>
         <Link
           href="/listas/nueva"
           className="min-h-tactil flex items-center gap-1.5 text-sm text-texto-secundario"
@@ -43,6 +64,32 @@ export default async function Listas() {
       </header>
 
       <main className="flex flex-col gap-4 p-4">
+        {/* Solo para quien ve a más de una persona. A un vendedor,
+            «las mías» y «las del equipo» son lo mismo. */}
+        {puedeVerEquipo && (
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ["", "Las mías"],
+                ["1", "Las del equipo"],
+              ] as const
+            ).map(([valor, etiqueta]) => (
+              <Link
+                key={etiqueta}
+                href={valor ? "/listas?equipo=1" : "/listas"}
+                aria-current={(equipo === "1") === Boolean(valor) ? "page" : undefined}
+                className={`min-h-tactil flex items-center justify-center rounded-lg border text-sm ${
+                  (equipo === "1") === Boolean(valor)
+                    ? "border-marca bg-marca text-white"
+                    : "border-borde bg-superficie text-texto"
+                }`}
+              >
+                {etiqueta}
+              </Link>
+            ))}
+          </div>
+        )}
+
         {listas.length === 0 && (
           <Tarjeta>
             <Vacio titulo="Todavía no tienes listas">
@@ -66,6 +113,11 @@ export default async function Listas() {
               {grupo.map((l) => (
                 <Link key={l.id} href={`/listas/${l.id}`} className="block">
                   <Tarjeta className="flex flex-col gap-1.5">
+                    {verEquipo && l.vendedor_id && (
+                      <p className="text-xs text-texto-atenuado">
+                        {nombres.get(l.vendedor_id) ?? "Otro vendedor"}
+                      </p>
+                    )}
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-base font-semibold text-texto">
                         {l.nombre}

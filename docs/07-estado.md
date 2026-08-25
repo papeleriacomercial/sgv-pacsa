@@ -2051,3 +2051,46 @@ Se evaluó bajar el umbral al 66 % para resolver 43 dudosos de un golpe. **Habr�
 desastre:** ahí están «MINI SUPER ECONÓMICA» contra «Mini Super Amy», «Selina» y «Milenio», o
 «CASA MAYORISTA JK» contra «Casa Mayorista Isabel». Son negocios distintos que comparten el
 genérico — emparejar por «Mini Super» en Panamá es como emparejar por «Farmacia».
+
+---
+
+## Poder ver no es que sea tuyo — 2026-08-25
+
+El líder entró y encontró su agenda con las paradas de otros, y su pantalla de listas con las
+rutas de Aguadulce y Chitré que había armado otro vendedor.
+
+**No era un fallo del RLS: el RLS estaba bien.** Un líder debe poder ver el trabajo de su
+equipo. El fallo era de las pantallas, que confundieron dos cosas distintas:
+
+> El RLS decide **qué puedes ver**. La pantalla decide **qué es tuyo**.
+
+La agenda y las listas son superficies de trabajo personal — qué me toca hoy, qué estoy
+armando— y ahora filtran por `vendedor_id = auth.uid()`. «Cómo va el equipo» es otra pregunta y
+no es esa pantalla.
+
+| Qué | Dónde |
+|---|---|
+| La agenda pide solo los compromisos propios | [src/app/page.tsx](../src/app/page.tsx) |
+| `cargarListas(vendedorId)` filtra por dueño | [src/lib/listas.ts](../src/lib/listas.ts) |
+| Interruptor «Las mías / Las del equipo» | [/listas](../src/app/listas/page.tsx) |
+
+En la vista de equipo cada lista dice de quién es. Y el interruptor solo aparece para líder y
+gerencia: a un vendedor, «las mías» y «las del equipo» son lo mismo.
+
+### El filtro de vendedor pasa a ser el primero
+
+Estaba en séptimo lugar, más abajo de lo que llega el pulgar sin desplazar. Para quien ve tres
+carteras mezcladas **la primera pregunta no es qué clase de cuenta es: es de quién**. A un
+vendedor no le aparece.
+
+### El catálogo de tipos de comercio no se enteró de las cargas
+
+38 tipos escritos en las cuentas, 3 en el catálogo. Las cargas de Zoho y Badger escriben directo
+en `cuentas` sin pasar por `asegurar_categoria()`, así que **lo que había que corregir era justo
+lo que la pantalla de depuración no podía tocar**.
+
+Se pusieron al día —35 categorías— y se agregó un disparador para que no vuelva a pasar:
+cualquier cuenta que se guarde con un tipo que el catálogo no tenga lo agrega, venga de la
+pantalla, de una carga o de una consulta a mano.
+
+Y ahí está el caso de manual esperando: **«Mini Super» con 34 cuentas y «Minisuper» con 28.**

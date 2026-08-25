@@ -108,6 +108,12 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
         .select(
           "id, cuenta_id, descripcion, fecha_compromiso, tipo_accion, veces_movido, cuentas(nombre), oportunidades(nombre)",
         )
+        // **Lo mío, no lo que puedo ver.** El RLS deja al líder ver el
+        // trabajo de su equipo, y sin este filtro su agenda se llenaba de
+        // las paradas de Albert y de Javier. Son dos preguntas distintas:
+        // qué me toca hoy, y cómo va el equipo. La segunda no es esta
+        // pantalla.
+        .eq("vendedor_id", user.id)
         .is("deleted_at", null)
         .is("cumplido_en", null)
         .lte("fecha_compromiso", hoy)
@@ -134,7 +140,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
         .limit(1)
         .maybeSingle(),
       cargarSemana(user.id),
-      cargarListas(),
+      cargarListas(user.id),
     ]);
 
   const compromisos = (comps ?? []) as unknown as Compromiso[];

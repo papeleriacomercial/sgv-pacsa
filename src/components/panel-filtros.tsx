@@ -176,9 +176,31 @@ export function PanelFiltros({
                 onChange={(e) => set({ texto: e.target.value })}
               />
 
+              {/* **De quién es va primero.** Para el líder y para gerencia,
+              que ven tres carteras mezcladas, la primera pregunta no es qué
+              clase de cuenta es: es de quién. Estaba en séptimo lugar, más
+              abajo de lo que llega el pulgar sin desplazar.
+
+              A un vendedor no le aparece: filtrar por sí mismo no le dice
+              nada. */}
+              {vendedores.length > 1 && (
+                <Grupo titulo="Vendedor">
+                  {vendedores.map((v) => (
+                    <Pastilla
+                      key={v.id}
+                      activo={filtros.vendedores.includes(v.id)}
+                      onClick={() =>
+                        set({ vendedores: alternar(filtros.vendedores, v.id) })
+                      }
+                    >
+                      {v.nombre}
+                    </Pastilla>
+                  ))}
+                </Grupo>
+              )}
+
               {/* "Potencial" es la cola de trabajo: cuentas puestas en el
-              mapa desde la oficina que nadie ha ido a ver todavía. Aparece
-              primero porque es lo que hay que vaciar. */}
+              mapa desde la oficina que nadie ha ido a ver todavía. */}
               <Grupo titulo="Tipo de cuenta">
                 {(Object.keys(TIPOS_CUENTA) as TipoCuenta[]).map((t) => (
                   <Pastilla
@@ -264,23 +286,6 @@ export function PanelFiltros({
                 )}
               </Grupo>
 
-              {/* Solo aparece para quien ve a más de una persona: líder y gerencia.
-              A un vendedor filtrar por sí mismo no le dice nada. */}
-              {vendedores.length > 1 && (
-                <Grupo titulo="Vendedor">
-                  {vendedores.map((v) => (
-                    <Pastilla
-                      key={v.id}
-                      activo={filtros.vendedores.includes(v.id)}
-                      onClick={() =>
-                        set({ vendedores: alternar(filtros.vendedores, v.id) })
-                      }
-                    >
-                      {v.nombre}
-                    </Pastilla>
-                  ))}
-                </Grupo>
-              )}
 
               <Grupo titulo="Sin contacto hace más de">
                 {[15, 30, 60, 90].map((d) => (
