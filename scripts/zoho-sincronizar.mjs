@@ -329,7 +329,7 @@ for (const [v, n] of [...porVendedor].sort((a, b) => b[1] - a[1])) {
 // ---------------------------------------------------------------------------
 
 const cuentas = await sb(
-  "/cuentas?select=id,nombre,ruc,zoho_contacto_id&deleted_at=is.null",
+  "/cuentas?select=id,nombre,ruc,zoho_contacto_id,vendedor_id&deleted_at=is.null",
 );
 
 const porContacto = new Map();
@@ -361,6 +361,32 @@ for (const c of cuentas) {
 let enlazadas = 0;
 let porCrear = 0;
 let ambiguos = 0;
+let porRevisar = 0;
+
+/** Cuánto se parecen dos nombres, ignorando la paja societaria. */
+const VACIAS = new Set([
+  "sa", "s", "a", "srl", "corp", "inc", "cia", "y", "de", "del", "la",
+  "el", "los", "las", "e", "en", "panama",
+]);
+
+function parecidoNombre(a, b) {
+  const limpiar = (t) =>
+    new Set(
+      String(t ?? "")
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((p) => p && !VACIAS.has(p)),
+    );
+  const A = limpiar(a);
+  const B = limpiar(b);
+  if (A.size === 0 || B.size === 0) return 0;
+  let comunes = 0;
+  for (const p of A) if (B.has(p)) comunes += 1;
+  return comunes / Math.max(A.size, B.size);
+}
 
 for (const e of espejo) {
   // El enlace explícito manda sobre el RUC: sobrevive a que alguien lo corrija.
@@ -386,6 +412,30 @@ for (const e of espejo) {
   }
 
   if (r && !unico) ambiguos += 1;
+
+  // **Antes de crear, mirar si ya está con otro nombre.**
+  //
+  // El vendedor conoce el comercio por el rótulo —«Minisuper La
+  // Esquina»— y la oficina lo factura por su razón social —«Comercial
+  // Rodríguez y Asociados, S.A.»—. Si el RUC no llegó a tiempo a la
+  // cuenta, crear a ciegas parte el cliente en dos: la facturación queda
+  // en una ficha y las visitas en la otra, y nadie se entera.
+  //
+  // Se busca entre las cuentas **del mismo vendedor**, que es donde puede
+  // estar. Si aparece un parecido razonable, no se crea: se deja anotado
+  // para que alguien conteste «¿es esta?».
+  const sospecha = cuentas
+    .filter((c) => c.vendedor_id === e.perfil_id && !c.zoho_contacto_id)
+    .map((c) => ({ c, punto: parecidoNombre(e.nombre, c.nombre) }))
+    .filter((x) => x.punto >= 0.5)
+    .sort((a, b2) => b2.punto - a.punto)[0];
+
+  if (sospecha) {
+    e.revisar = sospecha.c;
+    porRevisar += 1;
+    continue;
+  }
+
   e.crear = true;
   porCrear += 1;
 }
@@ -393,6 +443,11 @@ for (const e of espejo) {
 console.log(`\n  CRUCE CON EL SGV`);
 console.log(`  ${enlazadas} enganchan con cuentas que ya existen`);
 console.log(`  ${porCrear} son clientes que el SGV no conocía`);
+if (porRevisar) {
+  console.log(
+    `  ${porRevisar} se parecen a una cuenta del mismo vendedor: no se crean`,
+  );
+}
 if (ambiguos) {
   console.log(
     `  ${ambiguos} con RUC compartido: entran como cuenta propia, sin agrupar`,

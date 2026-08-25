@@ -24,6 +24,7 @@ export type Solicitud = {
   id: string;
   cuentaId: string;
   cuenta: string;
+  ruc: string | null;
   esMia: boolean;
   tipo: TipoSolicitud;
   resuelve: ResuelveSolicitud;
@@ -129,6 +130,11 @@ export function ListaSolicitudes({
         <div className="flex items-start justify-between gap-2">
           <Link href={`/cuentas/${s.cuentaId}`} className="block">
             <p className="text-base font-semibold text-texto">{s.cuenta}</p>
+            {s.ruc && (
+              <p className="font-mono text-xs text-texto-secundario">
+                RUC {s.ruc}
+              </p>
+            )}
           </Link>
           <Insignia tono={TONO_SOLICITUD[s.estado]}>
             {ESTADOS_SOLICITUD[s.estado]}

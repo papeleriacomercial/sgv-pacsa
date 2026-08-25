@@ -14,6 +14,7 @@ import {
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
+import { CampoRuc } from "@/components/campo-ruc";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
@@ -53,6 +54,10 @@ function Formulario() {
   const [monto, setMonto] = useState("");
   const [paraCuando, setParaCuando] = useState("");
 
+  const [rucCuenta, setRucCuenta] = useState<string | null>(null);
+  const [ruc, setRuc] = useState("");
+  const [sinRuc, setSinRuc] = useState(false);
+
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,12 +65,15 @@ function Formulario() {
     const supabase = clienteNavegador();
     supabase
       .from("cuentas")
-      .select("nombre")
+      .select("nombre, ruc")
       .eq("id", cuentaId)
       .is("deleted_at", null)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setNombreCuenta(data.nombre ?? "");
+        if (data) {
+          setNombreCuenta(data.nombre ?? "");
+          setRucCuenta((data.ruc as string | null) ?? null);
+        }
         setCargando(false);
       });
   }, [cuentaId]);
@@ -92,6 +100,14 @@ function Formulario() {
     }
 
     const destino: ResuelveSolicitud = esDecisionDeArriba ? "oficina" : resuelve;
+
+    // El RUC se queda en la cuenta, no en la solicitud: es del comercio y
+    // sirve para siempre. Es también lo que va a permitir reconocer la
+    // factura cuando vuelva de Zoho con la razón social en lugar del nombre
+    // del rótulo.
+    if (!rucCuenta && ruc.trim()) {
+      await supabase.from("cuentas").update({ ruc: ruc.trim() }).eq("id", cuentaId);
+    }
 
     const { error: fallo } = await insertar(
       "solicitudes",
@@ -223,6 +239,21 @@ function Formulario() {
                 </Tarjeta>
               </>
             )}
+
+            {/* Solo cuando lo resuelve la oficina: es quien va a facturar,
+                y sin RUC la factura vuelve de Zoho sin poder engancharse a
+                esta cuenta. */}
+            {(esDecisionDeArriba || resuelve === "oficina") &&
+              !rucCuenta &&
+              (tipo === "pedido" || tipo === "cotizacion") && (
+                <CampoRuc
+                  valor={ruc}
+                  onCambio={setRuc}
+                  sinRuc={sinRuc}
+                  onSinRuc={setSinRuc}
+                  motivo="La oficina lo va a necesitar para facturar. Mandarlo ahora le ahorra la llamada."
+                />
+              )}
 
             {error && <MensajeError titulo="No se pudo guardar" detalle={error} />}
 

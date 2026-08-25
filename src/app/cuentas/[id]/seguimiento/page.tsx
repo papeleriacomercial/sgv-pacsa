@@ -39,6 +39,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Cargando, MensajeError } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { BotonVolver } from "@/components/boton-volver";
+import { CampoRuc } from "@/components/campo-ruc";
 
 function hoyEnPanama() {
   return new Date().toLocaleDateString("en-CA", {
@@ -92,6 +93,11 @@ function Formulario() {
   const oportunidadId = parametros.get("oportunidad");
 
   const [nombreCuenta, setNombreCuenta] = useState("");
+
+  // El RUC de la cuenta, si ya lo tiene. Si no, se pide al facturar.
+  const [rucCuenta, setRucCuenta] = useState<string | null>(null);
+  const [ruc, setRuc] = useState("");
+  const [sinRuc, setSinRuc] = useState(false);
   const [tipoCuenta, setTipoCuenta] = useState<TipoCuenta | null>(null);
   const [lineaDeLaCuenta, setLineaDeLaCuenta] = useState<LineaProducto>("otros");
   const [cargando, setCargando] = useState(true);
@@ -136,13 +142,14 @@ function Formulario() {
     const supabase = clienteNavegador();
     supabase
       .from("cuentas")
-      .select("nombre, tipo, productos_interes")
+      .select("nombre, tipo, productos_interes, ruc")
       .eq("id", cuentaId)
       .is("deleted_at", null)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setNombreCuenta(data.nombre ?? "");
+          setRucCuenta((data.ruc as string | null) ?? null);
           setTipoCuenta(data.tipo as TipoCuenta);
           // La venta hereda la línea que la cuenta ya declaró. Dejar todo en
           // "otros" volvería inútil el reporte por línea de producto (§7.7).
@@ -331,6 +338,18 @@ function Formulario() {
       }
 
       ventaId = nuevaVenta;
+    }
+
+    // El RUC va a la cuenta, no a la solicitud: es un dato del comercio y
+    // sirve para siempre, no solo para este pedido. Y es lo que va a
+    // permitir reconocer la factura cuando vuelva de Zoho con la razón
+    // social en vez del nombre del rótulo.
+    if (huboVenta && !rucCuenta && ruc.trim()) {
+      const supabase = clienteNavegador();
+      await supabase
+        .from("cuentas")
+        .update({ ruc: ruc.trim() })
+        .eq("id", cuentaId);
     }
 
     // El pedido. Nace como solicitud porque es exactamente eso: si lo factura
@@ -602,6 +621,19 @@ function Formulario() {
                     />
                     Se la dejé ahora
                   </label>
+                )}
+
+                {/* Solo si la factura la oficina y la cuenta no lo tiene:
+                    es el único momento en que el RUC hace falta y el
+                    cliente lo tiene a la mano. */}
+                {pedidoFactura === "oficina" && !rucCuenta && (
+                  <CampoRuc
+                    valor={ruc}
+                    onCambio={setRuc}
+                    sinRuc={sinRuc}
+                    onSinRuc={setSinRuc}
+                    motivo="La oficina lo necesita para facturar, y sin él la factura no vuelve enganchada a esta cuenta."
+                  />
                 )}
               </Tarjeta>
             )}

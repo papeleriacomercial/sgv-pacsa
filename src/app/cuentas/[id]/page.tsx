@@ -70,6 +70,15 @@ export default async function Expediente({
   // correcta: decir "existe pero no puedes verlo" ya es filtrar información.
   if (!prospecto) notFound();
 
+  // Cómo se llama esta cuenta en la contabilidad. Casi nunca es igual: el
+  // vendedor conoce el rótulo y la factura lleva la razón social.
+  const { data: enBooks } = await supabase
+    .from("clientes_zoho")
+    .select("nombre")
+    .eq("cuenta_id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
   // Qué le vende, ordenado por lo que más pesa. Ocho alcanzan: el resto es
   // cola larga que nadie mira parado frente al mostrador.
   const { data: lineas } = await supabase
@@ -340,6 +349,8 @@ export default async function Expediente({
 
         <QueCompra
           cuentaId={prospecto.id}
+          nombreCuenta={prospecto.nombre}
+          nombreFacturacion={enBooks?.nombre ?? null}
           ultimaCompra={prospecto.ultima_compra}
           diasSinComprar={prospecto.dias_sin_comprar}
           compras12m={prospecto.compras_12m}

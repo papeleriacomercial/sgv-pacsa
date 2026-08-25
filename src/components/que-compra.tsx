@@ -13,6 +13,9 @@ export type Linea = {
 
 type Props = {
   cuentaId: string;
+  /** Cómo se llama en Books, si no es como lo conoce el vendedor. */
+  nombreFacturacion?: string | null;
+  nombreCuenta?: string;
   ultimaCompra: string | null;
   diasSinComprar: number | null;
   compras12m: number | null;
@@ -43,6 +46,8 @@ const DINERO = new Intl.NumberFormat("es-PA", {
  */
 export function QueCompra({
   cuentaId,
+  nombreFacturacion = null,
+  nombreCuenta = "",
   ultimaCompra,
   diasSinComprar,
   compras12m,
@@ -98,6 +103,19 @@ export function QueCompra({
             <p className="text-xs text-texto-atenuado">12 meses</p>
           </div>
         </div>
+
+        {/* **Los dos nombres conviven.** El vendedor conoce el del rótulo;
+            la factura sale con la razón social. Obligarlo a aprenderse la
+            segunda sería ponerle la contabilidad encima al que está en la
+            calle — pero necesita reconocerla cuando la vea. */}
+        {nombreFacturacion &&
+          nombreFacturacion.trim().toLowerCase() !==
+            nombreCuenta.trim().toLowerCase() && (
+            <p className="text-xs text-texto-secundario">
+              Se factura como{" "}
+              <span className="text-texto">{nombreFacturacion}</span>
+            </p>
+          )}
 
         {/* No es lo mismo que «fuera de cadencia»: aquel mide si el vendedor lo
             visitó, este si el cliente compró. Se puede estar al día en visitas

@@ -4,6 +4,8 @@ import type { EstadoSolicitud, ResuelveSolicitud, TipoSolicitud } from "@/lib/ca
 import { ListaSolicitudes, type Solicitud } from "@/components/lista-solicitudes";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
+type Cuenta = { nombre: string; ruc: string | null };
+
 type Fila = {
   id: string;
   cuenta_id: string;
@@ -18,12 +20,12 @@ type Fila = {
   horas: number;
   vencida: boolean;
   created_at: string;
-  cuentas: { nombre: string } | { nombre: string }[] | null;
+  cuentas: Cuenta | Cuenta[] | null;
 };
 
-function nombreDe(cuentas: Fila["cuentas"]) {
-  if (!cuentas) return "Cuenta";
-  return Array.isArray(cuentas) ? (cuentas[0]?.nombre ?? "Cuenta") : cuentas.nombre;
+function unaCuenta(cuentas: Fila["cuentas"]): Cuenta | null {
+  if (!cuentas) return null;
+  return Array.isArray(cuentas) ? (cuentas[0] ?? null) : cuentas;
 }
 
 /**
@@ -52,7 +54,7 @@ export default async function Solicitudes() {
   const { data } = await supabase
     .from("solicitudes_resumen")
     .select(
-      "id, cuenta_id, vendedor_id, tipo, resuelve, detalle, monto_estimado, para_cuando, estado, respuesta, horas, vencida, created_at, cuentas(nombre)",
+      "id, cuenta_id, vendedor_id, tipo, resuelve, detalle, monto_estimado, para_cuando, estado, respuesta, horas, vencida, created_at, cuentas(nombre, ruc)",
     )
     .order("estado")
     .order("created_at", { ascending: true });
@@ -61,7 +63,11 @@ export default async function Solicitudes() {
     (s) => ({
       id: s.id,
       cuentaId: s.cuenta_id,
-      cuenta: nombreDe(s.cuentas),
+      cuenta: unaCuenta(s.cuentas)?.nombre ?? "Cuenta",
+      // Para quien va a facturar, el RUC es lo primero que va a buscar.
+      // Que viaje con el pedido le ahorra la llamada al vendedor — y es lo
+      // que hace que la factura vuelva enganchada a esta cuenta.
+      ruc: unaCuenta(s.cuentas)?.ruc ?? null,
       esMia: s.vendedor_id === user.id,
       tipo: s.tipo,
       resuelve: s.resuelve,
