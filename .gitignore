@@ -43,3 +43,6 @@ next-env.d.ts
 # Datos reales de clientes: nunca al repositorio (ver datos/LEEME.md)
 datos/*
 !datos/LEEME.md
+
+# Prueba de generación de PDF
+.pdf-prueba/
