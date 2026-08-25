@@ -2116,3 +2116,25 @@ resultados. Abajo, lo que se escribe y lo que aparece quedan a un dedo de distan
 La razón de fondo: los filtros de arriba **se tocan una vez y se dejan puestos**; este **se
 escribe y se borra veinte veces seguidas**. El orden del panel debería seguir esa frecuencia, no
 la importancia aparente.
+
+---
+
+## Limpiar filtros dejaba al líder mirando a todos — 2026-08-25
+
+Dos cosas que reportó el líder desde el mapa, y las dos eran mías.
+
+**«Quitar todos los filtros» quitaba también el suyo.** Terminaba viendo las tres carteras sin
+haberlo pedido, y tenía que volver a seleccionarse a sí mismo.
+
+El error era de lectura: **cuando alguien dice «quita mis filtros» se refiere a los que fue
+poniendo, no a la vista con la que entró.** Limpiar ahora vuelve al punto de partida —su
+cartera, color por tipo de cuenta— y el botón lo dice: *«Limpiar y volver a lo mío»*.
+
+**La leyenda del mapa se quedaba anunciando la dimensión anterior.** Elegía colorear por
+producto de interés, luego cambiaba de filtro, y la leyenda seguía diciendo «Producto de
+interés» — la única forma de recuperarla era salir de la pantalla y volver.
+
+Técnicamente no estaba mal: el color es un control aparte del filtro y no tiene por qué
+cambiar con él. **Pero se leía como un filtro pegado**, y eso es un fallo igual. Dos arreglos:
+limpiar devuelve el color a «tipo de cuenta», y la leyenda ahora dice **«Color: …»** para que no
+se confunda con lo que filtra.

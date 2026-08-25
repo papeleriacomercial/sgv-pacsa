@@ -85,6 +85,7 @@ export function PanelFiltros({
   total,
   dimension,
   onDimension,
+  yo,
   conColor,
 }: {
   filtros: Filtros;
@@ -99,6 +100,8 @@ export function PanelFiltros({
   total: number;
   dimension: Dimension;
   onDimension: (d: Dimension) => void;
+  /** Quién mira. Limpiar vuelve a su cartera, no a la de todos. */
+  yo?: string;
   /** La colorización solo existe en el mapa. */
   conColor: boolean;
 }) {
@@ -380,14 +383,35 @@ export function PanelFiltros({
                 placeholder="Parte del nombre del negocio"
               />
 
+              {/* **Limpiar vuelve al punto de partida, no al vacío.**
+
+                  Quitar «todos» los filtros quitaba también el del propio
+                  vendedor, así que el líder terminaba mirando las tres
+                  carteras sin haberlo pedido — y tenía que volver a
+                  seleccionarse a sí mismo. Cuando alguien dice «quita mis
+                  filtros» se refiere a los que fue poniendo, no a la vista
+                  con la que entró.
+
+                  Y devuelve también el color a «tipo de cuenta»: la leyenda
+                  se quedaba anunciando la dimensión anterior, y la única
+                  forma de recuperarla era salir de la pantalla y volver. */}
               {activos > 0 && (
                 <button
                   type="button"
-                  onClick={() => onCambio(FILTROS_VACIOS)}
+                  onClick={() => {
+                    onCambio(
+                      yo && vendedores.length > 1
+                        ? { ...FILTROS_VACIOS, vendedores: [yo] }
+                        : FILTROS_VACIOS,
+                    );
+                    onDimension("tipo");
+                  }}
                   className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde text-sm text-texto-secundario"
                 >
                   <X size={16} aria-hidden />
-                  Quitar todos los filtros
+                  {yo && vendedores.length > 1
+                    ? "Limpiar y volver a lo mío"
+                    : "Quitar todos los filtros"}
                 </button>
               )}
             </>

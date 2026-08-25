@@ -136,6 +136,7 @@ export function CuentasConFiltros({
         total={cuentas.length}
         dimension={dimension}
         onDimension={setDimension}
+        yo={yo}
         conColor
       />
 
@@ -178,8 +179,12 @@ export function CuentasConFiltros({
           por eso la leyenda no depende de cuál se esté mirando. Ver D-013. */}
       {leyenda.length > 1 && (
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-lg border border-borde bg-superficie px-3 py-2">
+          {/* Dice «Color» y no solo el nombre de la dimensión: se confundía
+              con un filtro. Al cambiar los filtros la leyenda seguía
+              anunciando la dimensión anterior —correctamente, porque el
+              color es otra cosa— pero parecía que se había quedado pegada. */}
           <span className="text-xs font-medium text-texto">
-            {DIMENSIONES[dimension]}:
+            Color: {DIMENSIONES[dimension]}
           </span>
           {leyenda.map(({ color: c, texto }) => (
             <span
