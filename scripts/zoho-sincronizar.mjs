@@ -231,7 +231,7 @@ function cadencia(fechas) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. El RUC, que es la llave
+// 5. El RUC, que NO es la llave — ver el cruce mas abajo
 // ---------------------------------------------------------------------------
 
 const contactos = await zohoTodo("/contacts", { contact_type: "customer" });
@@ -311,15 +311,34 @@ const cuentas = await sb(
 );
 
 const porContacto = new Map();
+
+// **El RUC no es llave, es dato.** En Books hay 70 RUC repartidos entre 196
+// contactos: sucursales de una cadena que comparten identificacion fiscal, y
+// duplicados del maestro. Si el RUC enganchara, los cuatro locales de una
+// cadena caerian en una sola cuenta y tres desaparecerian del mapa.
+//
+// La equivalencia que manda es **un contacto de Zoho, una cuenta del SGV**. El
+// RUC solo sirve para reconocer una cuenta que el vendedor ya habia creado a
+// mano, y unicamente cuando no hay ambiguedad en ninguno de los dos lados.
+const rucsZoho = new Map();
+for (const e of espejo) {
+  const r = rucComparable(e.ruc);
+  if (r) rucsZoho.set(r, (rucsZoho.get(r) ?? 0) + 1);
+}
+
 const porRuc = new Map();
+const rucAmbiguo = new Set();
 for (const c of cuentas) {
   if (c.zoho_contacto_id) porContacto.set(c.zoho_contacto_id, c.id);
   const r = rucComparable(c.ruc);
-  if (r && !porRuc.has(r)) porRuc.set(r, c.id);
+  if (!r) continue;
+  if (porRuc.has(r)) rucAmbiguo.add(r);
+  porRuc.set(r, c.id);
 }
 
 let enlazadas = 0;
 let porCrear = 0;
+let ambiguos = 0;
 
 for (const e of espejo) {
   // El enlace explícito manda sobre el RUC: sobrevive a que alguien lo corrija.
@@ -330,8 +349,13 @@ for (const e of espejo) {
     continue;
   }
 
+  // Solo cuando el RUC identifica a uno y a uno solo de cada lado. Si se
+  // repite, se crea cuenta nueva: duplicar es reversible, colapsar dos
+  // sucursales en una no.
   const r = rucComparable(e.ruc);
-  const porLlave = r ? porRuc.get(r) : null;
+  const unico = r && (rucsZoho.get(r) ?? 0) === 1 && !rucAmbiguo.has(r);
+  const porLlave = unico ? porRuc.get(r) : null;
+
   if (porLlave) {
     e.cuenta_id = porLlave;
     e.enlazar = porLlave;
@@ -339,13 +363,20 @@ for (const e of espejo) {
     continue;
   }
 
+  if (r && !unico) ambiguos += 1;
   e.crear = true;
   porCrear += 1;
 }
 
 console.log(`\n  CRUCE CON EL SGV`);
 console.log(`  ${enlazadas} enganchan con cuentas que ya existen`);
-console.log(`  ${porCrear} son clientes que el SGV no conocía\n`);
+console.log(`  ${porCrear} son clientes que el SGV no conocía`);
+if (ambiguos) {
+  console.log(
+    `  ${ambiguos} con RUC compartido: entran como cuenta propia, sin agrupar`,
+  );
+}
+console.log("");
 
 if (!APLICAR) {
   console.log("  Nada se escribió. Para hacerlo:\n");
