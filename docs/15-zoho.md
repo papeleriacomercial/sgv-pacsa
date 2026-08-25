@@ -213,3 +213,51 @@ Ese número es el que hace que valga la pena, y ninguno de los dos sistemas pued
 - `is_linked_with_zohocrm` viene en **true** en el 100 %, y cada contacto trae
   `zcrm_account_id`, `zcrm_contact_id` y `crm_owner_id`. **Books es el espejo de un CRM**,
   y eso abre la pregunta de si el vendedor asignado debe leerse de ahí. Ver abajo.
+
+---
+
+## El catálogo de productos — 2026-08-25
+
+Contesta las dos preguntas que hoy obligan a llamar a la oficina con el cliente delante:
+**¿lo tienen?** y **¿a cómo?**
+
+| | |
+|---|---|
+| Productos en Books | **1 834** |
+| Activos y vendibles | 1 771 |
+| Con precio de lista | 1 281 |
+| **Sin precio** | **490** |
+| Con existencia | 672 |
+
+**Es la pasada más barata de todas:** los productos vienen en el listado, no hay que abrir uno
+por uno. Nueve consultas para el catálogo entero.
+
+### Dos cosas del catálogo real que cambian el diseño
+
+**El precio cero no es cero.** En Books, 490 productos vienen en `rate = 0`, y eso significa que
+el precio se acuerda con el cliente. Se guarda **nulo** y la pantalla dice «Precio a consultar».
+Mostrar «$0» sería mentir en el peor momento posible — frente al mostrador.
+
+**Los nombres traen prefijo de cliente**: «# AB», «# Nata». Son productos hechos para un
+comercio concreto. Se guardan tal cual: el vendedor los reconoce, y limpiarlos borraría justo lo
+que los distingue.
+
+### Buscar como busca una persona
+
+`buscar_productos()` acepta palabras sueltas, sin acentos y en cualquier orden: **«rollo termico
+80» encuentra «Rollos Térmicos 80mm x 70mm»**. Un `ilike` con comodines no sirve porque exige el
+orden exacto.
+
+**Lo que hay en existencia sale primero**, porque es lo que se puede prometer hoy.
+
+### Lo que ya no está en Books
+
+Se marca como ido, no se borra. Puede estar nombrado en una transacción vieja, y perderlo
+dejaría el historial de compra cojo.
+
+### Lo que esto todavía no es
+
+**Es de solo consulta.** Cotizar desde el SGV es la etapa siguiente y una decisión aparte:
+implica **escribir en la contabilidad**, que hasta hoy nunca se ha tocado. El paso intermedio
+natural es que el pedido a la oficina lleve productos del catálogo en vez de texto libre — así
+Verónica deja de interpretar «2 cajas de rollos».

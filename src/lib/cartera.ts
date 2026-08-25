@@ -57,9 +57,14 @@ export async function cargarCartera(): Promise<{
   // Los perfiles se traen aparte porque una vista no tiene llaves foráneas y
   // PostgREST no puede deducir la relación para incrustarlos. El RLS de
   // `perfiles` hace el resto: el vendedor se ve solo a sí mismo.
+  // **Solo quien puede tener cartera.** Gerencia y administración no venden,
+  // así que ofrecerlas en el filtro de vendedor es ofrecer una opción que
+  // siempre devuelve cero — y ensucia la primera pregunta que se hace quien
+  // ve varias carteras: de quién es esto.
   const { data: perfiles } = await supabase
     .from("perfiles")
     .select("id, nombre")
+    .in("rol", ["vendedor", "lider"])
     .is("deleted_at", null)
     .order("nombre");
 

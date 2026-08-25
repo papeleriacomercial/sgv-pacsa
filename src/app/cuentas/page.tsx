@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ListChecks, Plus, Search, Tags } from "lucide-react";
+import { ListChecks, PackageSearch, Plus, Search, Tags } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { cargarCartera } from "@/lib/cartera";
 import { CuentasConFiltros } from "@/components/cuentas-con-filtros";
@@ -79,6 +79,16 @@ export default async function Cuentas() {
             <span>Depurar los tipos de comercio</span>
           </Link>
         )}
+
+        {/* La consulta de precio y existencia es de todos los días y de
+            cualquier rol: se llega desde aquí y desde el expediente. */}
+        <Link
+          href="/productos"
+          className="flex min-h-tactil items-center gap-3 rounded-lg border border-borde bg-superficie px-4 py-2 text-sm text-texto"
+        >
+          <PackageSearch size={18} className="shrink-0 text-texto-atenuado" aria-hidden />
+          <span>Consultar precios y existencia</span>
+        </Link>
 
         <div className="grid grid-cols-2 gap-2">
           <Link
