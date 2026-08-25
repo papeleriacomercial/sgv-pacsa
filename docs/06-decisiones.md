@@ -695,3 +695,138 @@ por una casa matriz.
 otro: con el primer seguimiento. Como es una llamada o un correo y no una visita, cae en
 «Llamadas y correos» de la agenda, no en las paradas del día. Ahí se decide si pasa a prospecto
 —y nace la oportunidad con su fecha— o se descarta con motivo.
+
+---
+
+## D-027 — Una compra no es una factura
+
+**Fecha:** 2026-08-25
+
+**Decisión.** Lo que un cliente compró son **las facturas más las órdenes de venta anuladas**.
+Las órdenes abiertas no cuentan.
+
+**Por qué.** Lo confirmó la oficina: para sacar mercancía se levanta una orden de venta, que en
+Zoho **retiene el inventario** como pendiente. Al entregar y cobrar **se anula**, y esa
+anulación es lo que libera la retención y marca el despacho. **Anular no es cancelar.**
+
+Medir por facturas dejaba a Albert en $43 000 cuando vendió cerca de $85 000, y le escondía 16
+clientes enteros. No habría sido medir mal: **habría sido peor que no medir**, porque produce un
+número con apariencia de verdad y castiga justo al vendedor cuya venta menos se factura.
+
+**Trampa evitada.** Una orden puede convertirse en factura después. Se filtra por estado de
+facturación, no por fecha; se comprobó que ninguna de las 563 anuladas del año tenía factura.
+
+**Consecuencia menos obvia.** La cadencia también salía mal: un cliente que compra cada quince
+días por entrega anulada, contado solo por facturas, parece que no compra nunca — y el aviso de
+«dejó de comprar» habría saltado sobre clientes que están comprando.
+
+---
+
+## D-028 — El RUC no es llave de cuenta, es dato del contribuyente
+
+**Fecha:** 2026-08-25
+
+**Decisión.** Se elimina `cuentas_ruc_unico`. Dos cuentas pueden compartir RUC, y **un contacto
+de Zoho es una cuenta del SGV**, sin agrupar.
+
+**Por qué.** El índice descansaba en una suposición falsa: que un RUC identifica un local. En el
+maestro de Books hay **70 RUC repartidos entre 196 contactos** — cadenas que facturan sus
+sucursales bajo el mismo. Cada sucursal es un local distinto, con su cadencia y su visita.
+
+Cruzar por RUC habría colapsado los cuatro locales de una cadena en una cuenta: la facturación
+sumada en uno y tres locales desaparecidos del mapa, **sin que nadie lo notara**.
+
+**La jerarquía la arma el vendedor**, no el importador: él encuentra la oficina de negociación y
+asocia las sucursales. Deducirla del RUC produce árboles falsos — dos negocios del mismo dueño
+no son una cadena.
+
+**La protección contra duplicados cambia de lugar y de tono.** `buscar_duplicados()` avisa y
+deja decidir. **La base no puede distinguir un dedazo de una cadena; el vendedor sí.**
+
+---
+
+## D-029 — Poder ver no es que sea tuyo
+
+**Fecha:** 2026-08-25
+
+**Decisión.** La agenda y las listas filtran por `vendedor_id = auth.uid()`. La cartera y el
+mapa **arrancan** con el filtro de vendedor puesto en uno mismo, pero solo si la dirección viene
+limpia.
+
+**Por qué.** El líder entró y encontró su agenda con las paradas de otros y su pantalla de
+listas con rutas que armó otro vendedor. **No era un fallo del RLS: el RLS estaba bien.**
+
+> El RLS decide **qué puedes ver**. La pantalla decide **qué es tuyo**.
+
+Son dos preguntas distintas —qué me toca hoy, y cómo va el equipo— y la segunda no es esa
+pantalla. Listas gana un interruptor «Las mías / Las del equipo» para cuando sí lo sea.
+
+**El matiz del arranque.** El filtro por omisión solo se aplica con la dirección limpia: si trae
+cualquier parámetro es que alguien ya tocó los filtros —o quitó ese a propósito— y volver a
+ponerlo sería pelearse con el usuario. Por eso el mapa de una lista no se filtra.
+
+---
+
+## D-030 — El RUC se pide donde hace falta, con salida honesta
+
+**Fecha:** 2026-08-25
+
+**Decisión.** El RUC no se pide al crear la cuenta. Se pide cuando el vendedor registra que le
+compró o pide cotización **y la factura la hace la oficina**, con la opción explícita de «no me
+lo dieron». Se guarda en la cuenta, no en la solicitud.
+
+**Por qué.** El vendedor conoce el comercio por el rótulo; la oficina lo factura por su razón
+social. Cuando la factura vuelve de Zoho, el RUC es lo único que permite reconocerlas como la
+misma — por nombre no se puede, y es justo lo que costó tanto en la migración.
+
+En el alta el RUC estorba: el vendedor está frente al mostrador, con una mano, y el dato no le
+sirve todavía. **En el momento de facturar sí lo tiene a la mano el cliente.**
+
+**Por qué la salida honesta.** Obligarlo sin escape no consigue el RUC: consigue números
+inventados. **Un RUC falso engancha con la cuenta equivocada, que es peor que no tener ninguno.**
+
+**Y los dos nombres conviven.** La cuenta se llama como el vendedor la conoce; el expediente
+añade «Se factura como …» cuando difieren. Obligarlo a aprenderse la razón social sería ponerle
+la contabilidad encima al que está en la calle.
+
+---
+
+## D-031 — Badger aporta terreno, no identidad
+
+**Fecha:** 2026-08-25
+
+**Decisión.** Del archivo de Badger se cargan **los prospectos con sus coordenadas** y se
+completan datos que falten en cuentas que enganchen con certeza. **No se emparejan clientes por
+nombre para decidir identidad**, y lo dudoso se revisa a mano.
+
+**Por qué.** Zoho tiene la llave dura —el RUC— y dice quién compró. Badger no tiene RUC, pero
+tiene **lo único que no existe en ningún otro lado**: dónde queda cada local, y los prospectos
+que todavía no compran y por eso no aparecen en ninguna factura.
+
+**El riesgo es asimétrico y por eso el criterio también.** Un emparejamiento malo para poner
+coordenadas deja un punto donde no va: se ve y se corrige. Uno malo para decidir identidad parte
+un cliente en dos o funde dos en uno, y eso no se nota.
+
+**Cuatro condiciones para dar una pareja por segura:** nombre igual o teléfono igual, más de una
+palabra distintiva en común, **mismo vendedor**, y sin otro candidato pisándole los talones.
+
+**No se automatizó más, a propósito.** Bajar el umbral al 66 % resolvía 43 dudosos y emparejaba
+«MINI SUPER ECONÓMICA» con «Mini Super Amy», «Selina» y «Milenio». En Panamá, emparejar por
+«Mini Super» es como emparejar por «Farmacia».
+
+---
+
+## D-032 — El poblado, solo donde significa algo
+
+**Fecha:** 2026-08-25
+
+**Decisión.** El poblado se deduce de la dirección **solo para el vendedor del interior**. Los de
+ciudad lo dejan vacío y lo ponen ellos mirando el mapa. El campo pasa a llamarse
+**«Poblado o zona»**.
+
+**Por qué.** Las direcciones del interior traen el pueblo de verdad —Santiago, Aguadulce, Las
+Tablas—. Las de ciudad dicen **«Panamá» 98 veces y «San Miguelito» 60**, que no es una zona de
+trabajo: es la ciudad entera.
+
+Ponérselo habría llenado el campo de una palabra inútil y, peor, **habría hecho creer que ya
+estaba resuelto** — el filtro por zona seguiría sin servir y nadie sabría por qué.

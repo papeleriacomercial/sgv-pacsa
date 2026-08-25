@@ -316,3 +316,32 @@ de otro. La comprobación explícita es la que sustituye a la que se salta.
 
 `asegurar_categoria` también es `security definer`, pero por otra razón: solo lee el catálogo
 para responder cómo se escribe algo, y ese catálogo es global.
+
+---
+
+## El espejo de Zoho — agregado 2026-08-25
+
+Mismo modelo de siempre: el vendedor lo suyo, el líder su equipo, gerencia todo.
+
+| Tabla | Lectura | Escritura |
+|---|---|---|
+| `vendedores_zoho` | Cualquier autenticado | `es_gerente()` |
+| `clientes_zoho` | `es_gerente()` · `perfil_id = auth.uid()` · `es_mi_equipo(perfil_id)` | `es_gerente()` |
+| `transacciones_zoho` | Igual | — |
+| `renglones_zoho` | Igual | — |
+| `sincronizaciones` | `es_gerente()` | — |
+
+**Nadie escribe estas tablas desde la aplicación.** Las llena la pasada de noche, que entra con
+el rol de servicio y se salta el RLS por diseño — no hay sesión de usuario a las dos de la
+mañana, y tiene que escribir cuentas de los tres vendedores a la vez.
+
+`vendedores_zoho` la lee todo el equipo porque sin ella no se entiende de quién es una cuenta.
+
+**La clave de servicio nunca sale del servidor.** No va al navegador, no entra al repositorio
+—`.gitignore` cubre `.env*`— y si se filtra se regenera desde el panel.
+
+## Un cambio en `cuentas`
+
+Se eliminó el índice único `cuentas_ruc_unico`. **No es una relajación de seguridad**: era una
+regla de negocio equivocada —que un RUC identifica un local— y las cadenas la desmienten.
+Ver D-028.

@@ -432,3 +432,74 @@ El índice único `categorias_nombre_unico` va sobre `normalizar_texto(nombre)`,
 > **Recordatorio de `cuentas_resumen`:** el `select c.*` congela la lista de columnas al crear
 > la vista. Toda migración que agregue una columna a `cuentas` tiene que rehacerla, con
 > `security_invoker = true`.
+---
+
+## El espejo de Zoho Books — agregado 2026-08-25
+
+Lo que la contabilidad sabe, del lado del SGV. **Books manda:** estas tablas se rehacen en cada
+pasada y no se editan desde la aplicación. Lo que el vendedor escribe vive en `cuentas`.
+
+Ver [docs/05-modulos/7.6-clientes-y-facturacion.md](05-modulos/7.6-clientes-y-facturacion.md).
+
+| Tabla | Qué guarda | Llave |
+|---|---|---|
+| `vendedores_zoho` | El nombre del vendedor en Books contra su perfil del SGV | `nombre_zoho` |
+| `clientes_zoho` | Un cliente de calle: RUC, vendedor, compras y total del año, primera y última compra, cadencia observada, y a qué cuenta quedó enlazado | `contacto_id` |
+| `transacciones_zoho` | Cada compra: factura o entrega, fecha, monto, saldo | `(documento_id, tipo)` |
+| `renglones_zoho` | Qué se vendió en cada transacción: producto, cantidad, precio | `id` |
+| `sincronizaciones` | Hasta dónde llegó la última pasada de cada fuente | `fuente` |
+
+**`vendedores_zoho` se escribe a mano**, tres filas. En Books los vendedores están escritos con
+el celular pegado al nombre —`Javier Rodríguez  ______ Cel. 6635-8728`— y emparejar por texto
+funcionaría hoy y se rompería el día que alguien cambie de celular.
+
+**`clientes_zoho.contacto_id` lleva restricción única completa, no parcial.** Este espejo se
+rehace entero: no hay borrado lógico que respetar, y PostgREST no puede reemplazar filas contra
+un índice parcial. Es la diferencia entre «único entre los vivos» y «único, punto».
+
+**`renglones_zoho` repite `cuenta_id`, `perfil_id` y `fecha`** aunque estén en la transacción. Es
+la única desnormalización del esquema, y se paga sola: sin ella, «qué líneas compra esta cuenta»
+obliga a unir dos tablas grandes en cada consulta y a evaluar el RLS a través de la unión.
+
+**`sincronizaciones.hasta` solo avanza cuando la pasada termina completa.** Si falla a la mitad
+o se corta por cuota, la siguiente vuelve a pedir desde donde estaba en vez de dejar un hueco
+permanente. El momento se toma **antes** de pedir nada: tomarlo al final dejaría fuera para
+siempre lo que cambiara mientras la pasada corre.
+
+### En `cuentas`
+
+| Columna | Para qué |
+|---|---|
+| `zoho_contacto_id` | El enlace explícito con Books, para que sobreviva a que alguien corrija el RUC |
+
+**`cuentas.ruc` NO es único** (D-028): una cadena factura sus sucursales bajo el mismo. El aviso
+de posible duplicado lo da `buscar_duplicados()`, que avisa en vez de prohibir.
+
+**`cuentas.created_by` admite nulo**: las cargas de noche no son una persona.
+
+### Vistas
+
+| Vista | Contenido |
+|---|---|
+| `lineas_por_cuenta` | Qué productos compra cada cuenta, cuántas veces y **cuánto lleva sin pedir cada uno** |
+| `categorias_uso` | El catálogo de tipos de comercio con cuántas cuentas usa cada uno |
+
+`cuentas_resumen` gana además `ultima_compra`, `dias_sin_comprar`, `compras_12m`, `total_12m`,
+`cadencia_observada` y `dejo_de_comprar`.
+
+> **`dejo_de_comprar` no es `fuera_de_cadencia`.** Uno mide si el cliente compró; el otro, si el
+> vendedor lo visitó. Se puede estar al día en visitas y estar perdiendo la cuenta.
+
+### Funciones que se agregaron
+
+| Función | Qué hace |
+|---|---|
+| `normalizar_ruc(t)` | RUC comparable: sin sufijo `DV`, sin guiones ni espacios. El DV se deriva del RUC, no forma parte de él |
+| `cuenta_registra_su_categoria()` | Disparador: toda categoría escrita en una cuenta llega al catálogo, venga de la pantalla o de una carga |
+
+### Valores nuevos de enum
+
+| Enum | Valores agregados | Cuándo |
+|---|---|---|
+| `origen_prospecto` | `objetivo`, `facturacion`, `badger` | La escribió el líder · llegó de Books porque ya compraba · venía de la aplicación de campo anterior |
+| `tipo_transaccion` | `factura`, `entrega` | Para el vendedor las dos son «el cliente compró» |
