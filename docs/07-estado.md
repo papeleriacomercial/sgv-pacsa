@@ -1988,3 +1988,66 @@ conversación de venta con nombre y fecha.
 
 De paso, el campo «Poblado o distrito» pasa a llamarse **«Poblado o zona»**: el vendedor de
 Panamá trabaja por zonas, no por poblados.
+
+---
+
+## Badger: los prospectos y las coordenadas — 2026-08-25
+
+Zoho trajo quién compra. **Badger trae dónde queda y a quién se visita sin que haya comprado
+todavía** — que por definición no está en ninguna factura.
+
+| Qué | Dónde |
+|---|---|
+| Leer una hoja `.ods` sin dependencias | [scripts/leer-ods.mjs](../scripts/leer-ods.mjs) |
+| Las reglas del cruce, compartidas | [scripts/badger-cruce.mjs](../scripts/badger-cruce.mjs) |
+| El informe | [scripts/badger-analizar.mjs](../scripts/badger-analizar.mjs) |
+| La carga | [scripts/badger-cargar.mjs](../scripts/badger-cargar.mjs) |
+
+### Cómo quedó la cartera
+
+| Vendedor | Cuentas | De Zoho | De Badger | Con ubicación | Con poblado |
+|---|---|---|---|---|---|
+| Albert | 217 | 55 | 114 | 178 | **174** |
+| Javier | 211 | 144 | 63 | 101 | 0 |
+| Christopher | 97 | 33 | 62 | 70 | 0 |
+
+Poblados reales del interior: Chitré 37, Aguadulce 32, Santiago 13, Las Tablas 13, Penonomé 12.
+
+### Poblado solo para el vendedor del interior
+
+Fue decisión de gerencia y los datos la confirmaron. Las direcciones de Albert traen el pueblo
+—Santiago, Aguadulce, Las Tablas—; las de Javier dicen **«Panamá» 98 veces y «San Miguelito»
+60**, que no es una zona de trabajo sino la ciudad entera.
+
+Ponérselo habría llenado el campo de una palabra inútil y, peor, **habría hecho creer que ya
+estaba resuelto**. Javier y Christopher las ponen mirando el mapa, que es donde saben si eso es
+Calle 50 o Vía España.
+
+### Qué se dejó fuera, y por qué
+
+- **6 cuentas técnicas** de Badger — `ZZZ NO BORRAR`, `ZZZ DATA ACCOUNT` — con coordenadas en
+  Argentina y en el Ártico. Cargadas sin filtro, tres vendedores tendrían pines en Buenos Aires.
+- **78 parejas dudosas**, para revisar a mano.
+- **120 marcados «cliente» que no engancharon.** Un prospecto que no está en el SGV es un
+  prospecto nuevo y punto. Un *cliente* que no engancha es sospechoso: o su nombre en Badger
+  difiere mucho del de Zoho —y crearlo duplicaría una cuenta con su facturación encima— o es
+  cartera de la casa que dejamos fuera a propósito.
+
+### Dos errores del emparejador que valió la pena cazar
+
+**El primero, falsos positivos.** La primera versión medía el parecido contra el nombre **más
+corto**, así que un nombre breve encajaba con cualquiera que lo contuviera: «ABC STORE PLUS» con
+«ABC STORE», «Pollo Asaito» con «Asaito». Midiendo contra el más largo, **lo que sobra cuenta en
+contra** — y eso que sobra suele ser justo lo que distingue una sucursal de otra.
+
+**El segundo, falsos negativos.** Comparaba las cadenas enteras, así que «RAPOPAN» contra
+«RapoPan, S.A.» no coincidía: el sufijo societario mandaba a revisión manual una pareja
+evidente. Ahora se comparan solo las palabras que distinguen, y se admite un dedazo en nombres
+largos — «Mini Super Valle Centro» contra «Mni Super Valle Centro» está a una letra.
+
+### Lo que NO se automatizó, a propósito
+
+Se evaluó bajar el umbral al 66 % para resolver 43 dudosos de un golpe. **Habría sido un
+desastre:** ahí están «MINI SUPER ECONÓMICA» contra «Mini Super Amy», «Selina» y «Milenio», o
+«CASA MAYORISTA JK» contra «Casa Mayorista Isabel». Son negocios distintos que comparten el
+genérico — emparejar por «Mini Super» en Panamá es como emparejar por «Farmacia».
