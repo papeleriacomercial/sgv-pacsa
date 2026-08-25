@@ -26,7 +26,24 @@ export type Cotizacion = {
   renglones: Renglon[];
   conItbms: boolean;
   itbmsPorcentaje: number;
+  condicionPago: CondicionPago;
   notas: string | null;
+};
+
+export type CondicionPago = "contado" | "abono_50" | "credito_30";
+
+/**
+ * Cómo se paga, en las palabras de la casa.
+ *
+ * Al leer la plantilla di por hecho que los términos eran un párrafo igual
+ * para todos. No lo son: son tres opciones, y cada cotización lleva la que
+ * se acordó. Ponerlas las tres en el pie dejaría al cliente eligiendo la que
+ * más le convenga.
+ */
+export const CONDICIONES: Record<CondicionPago, string> = {
+  contado: "Contado",
+  abono_50: "Contado. 50% Abono, 50% Contra Entrega",
+  credito_30: "Crédito 30 días",
 };
 
 // Medidas en milímetros sobre carta, tomadas de la plantilla de la oficina.
@@ -38,6 +55,13 @@ const DERECHA = ANCHO - MARGEN;
 const COL_CANT = 132;
 const COL_TARIFA = 158;
 const COL_TOTAL = DERECHA;
+
+// Alto de cada línea dentro de una descripción, y el aire a cada lado de la
+// raya que separa filas. Explícitos porque de ellos depende que la raya caiga
+// en el hueco y no encima del texto.
+const INTERLINEA = 4;
+const AIRE_ABAJO = 2.5;
+const AIRE_ARRIBA = 4;
 
 const TINTA = [60, 61, 58] as const;
 const SUAVE = [120, 122, 118] as const;
@@ -257,7 +281,7 @@ export async function generarCotizacion(
     const lineas = doc.splitTextToSize(r.nombre, 112) as string[];
 
     // Si el renglón no cabe, hoja nueva con su encabezado de tabla.
-    if (y + lineas.length * 4 > 250) {
+    if (y + lineas.length * INTERLINEA > 250) {
       doc.addPage();
       y = MARGEN + 8;
       doc.setFillColor(...FONDO);
@@ -271,15 +295,24 @@ export async function generarCotizacion(
     }
 
     doc.setTextColor(...TINTA);
-    lineas.forEach((linea, i) => doc.text(linea, MARGEN + 2, y + i * 4));
+    lineas.forEach((linea, i) => doc.text(linea, MARGEN + 2, y + i * INTERLINEA));
     doc.text(String(r.cantidad), COL_CANT, y, { align: "right" });
     doc.text(DINERO.format(r.precio), COL_TARIFA, y, { align: "right" });
     doc.text(DINERO.format(total), COL_TOTAL - 2, y, { align: "right" });
 
-    y += Math.max(lineas.length * 4, 4) + 2;
+    // **La raya va en el hueco entre filas, y hay que ponerla ahí a mano.**
+    // Antes se avanzaba la `y` a la fila siguiente y se dibujaba restando 1,5:
+    // eso la dejaba 1,5 mm por encima de esa línea base, o sea atravesando las
+    // mayúsculas del renglón de abajo. Lo delataba la geometría del PDF, no la
+    // vista: en pantalla parecía un subrayado.
+    y += (lineas.length - 1) * INTERLINEA; // línea base de la última línea
+    y += AIRE_ABAJO;
+
     doc.setDrawColor(...LINEA);
     doc.setLineWidth(0.1);
-    doc.line(MARGEN, y - 1.5, DERECHA, y - 1.5);
+    doc.line(MARGEN, y, DERECHA, y);
+
+    y += AIRE_ARRIBA; // línea base de la fila siguiente
   }
 
   // --- Totales -------------------------------------------------------------
@@ -334,7 +367,15 @@ export async function generarCotizacion(
   };
 
   pie("Notas", c.notas ?? empresa.nota_pie);
-  pie("Términos y condiciones", empresa.terminos);
+
+  // La condición acordada va primero y en su propia línea: es lo que el
+  // cliente busca cuando recibe el papel.
+  pie(
+    "Términos y condiciones",
+    [CONDICIONES[c.condicionPago], empresa.terminos]
+      .filter(Boolean)
+      .join("\n"),
+  );
 
   // Que quede claro qué es esto y qué no es. Sin esta línea, un documento con
   // el logo de la casa y un total se puede confundir con una factura.
