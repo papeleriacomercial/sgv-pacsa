@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   APIProvider,
   InfoWindow,
@@ -28,9 +28,41 @@ function Encuadrar({
   destacada?: string;
 }) {
   const mapa = useMap();
+  const ruta = usePathname();
+
+  // **Dónde quedó el mapa se guarda aparte de la dirección, a propósito.**
+  //
+  // Los filtros sí viven en la dirección (D-014) y el panel la reescribe
+  // cada vez que se toca uno. Si el encuadre viviera ahí también, los dos
+  // se pisarían: mover el mapa borraría un filtro o al revés. Y una
+  // dirección que cambia cada vez que el dedo roza el mapa no sirve para
+  // compartir nada.
+  //
+  // Se guarda por pantalla y dura lo que dure la pestaña, que es
+  // exactamente lo que hace falta: volver de una cuenta al sitio donde se
+  // estaba mirando.
+  const clave = `sgv:mapa:${ruta}`;
+  const guardado =
+    typeof window === "undefined" ? null : sessionStorage.getItem(clave);
+  const yaEncuadro = useRef(false);
 
   useEffect(() => {
-    if (!mapa) return;
+    if (!mapa || yaEncuadro.current) return;
+    yaEncuadro.current = true;
+
+    // **Volver tiene que devolver al mismo sitio.** Sin esto, abrir un pin
+    // y regresar reencuadraba toda la cartera: quien estaba sondeando San
+    // Francisco terminaba viendo Panamá y Puerto Rico otra vez, y perdía
+    // el punto donde iba. Es el mismo principio que los filtros: lo que
+    // el usuario ajustó vive en la dirección, y el historial lo devuelve.
+    if (guardado) {
+      const [lat, lng, z] = guardado.split(",").map(Number);
+      if ([lat, lng, z].every(Number.isFinite)) {
+        mapa.setCenter({ lat, lng });
+        mapa.setZoom(z);
+        return;
+      }
+    }
 
     // Si se llega desde una cuenta concreta, el mapa se centra en ella en vez
     // de encuadrar toda la cartera.
@@ -42,12 +74,42 @@ function Encuadrar({
     }
 
     if (cuentas.length === 0) return;
+
+    // **Se encuadra el grueso, no los extremos.** Un solo cliente en Puerto
+    // Rico obligaba a abrir el mapa a escala de medio Caribe, con las 200
+    // cuentas de Panamá apretadas en un punto. Se recortan los extremos por
+    // percentil: el que queda fuera sigue ahí, solo hay que alejarse.
+    const lats = cuentas.map((c) => c.lat!).sort((a, b) => a - b);
+    const lngs = cuentas.map((c) => c.lng!).sort((a, b) => a - b);
+    const corte = (v: number[], p: number) =>
+      v[Math.min(v.length - 1, Math.max(0, Math.floor(v.length * p)))];
+
     const limites = new google.maps.LatLngBounds();
-    cuentas.forEach((c) => limites.extend({ lat: c.lat!, lng: c.lng! }));
+    limites.extend({ lat: corte(lats, 0.05), lng: corte(lngs, 0.05) });
+    limites.extend({ lat: corte(lats, 0.95), lng: corte(lngs, 0.95) });
+
     mapa.fitBounds(limites, 48);
     const zoom = mapa.getZoom();
     if (zoom !== undefined && zoom > 17) mapa.setZoom(17);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapa, cuentas, destacada]);
+
+  // Se anota cuando el mapa se queda quieto, no mientras se arrastra.
+  useEffect(() => {
+    if (!mapa) return;
+
+    const oyente = mapa.addListener("idle", () => {
+      const centro = mapa.getCenter();
+      const z = mapa.getZoom();
+      if (!centro || z === undefined) return;
+      sessionStorage.setItem(
+        clave,
+        `${centro.lat().toFixed(5)},${centro.lng().toFixed(5)},${z}`,
+      );
+    });
+
+    return () => oyente.remove();
+  }, [mapa, clave]);
 
   return null;
 }

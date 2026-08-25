@@ -2138,3 +2138,30 @@ Técnicamente no estaba mal: el color es un control aparte del filtro y no tiene
 cambiar con él. **Pero se leía como un filtro pegado**, y eso es un fallo igual. Dos arreglos:
 limpiar devuelve el color a «tipo de cuenta», y la leyenda ahora dice **«Color: …»** para que no
 se confunda con lo que filtra.
+
+---
+
+## El mapa se acordaba de nada — 2026-08-26
+
+El líder filtró en el mapa, se acercó a San Francisco, tocó un pin, entró a la cuenta y volvió.
+**El mapa se había reencuadrado a escala de Panamá y Puerto Rico**, y había perdido dónde iba.
+Sondear un área así es imposible.
+
+Eran dos problemas encadenados.
+
+**Uno: el mapa no recordaba nada.** Cada vez que se montaba, encuadraba la cartera entera desde
+cero. Ahora anota dónde quedó —centro y acercamiento— cuando se queda quieto, y al volver
+regresa ahí.
+
+Se guarda **fuera de la dirección**, y eso es una decisión, no un descuido. Los filtros sí viven
+en la dirección (D-014) y el panel la reescribe cada vez que se toca uno: si el encuadre viviera
+ahí también, **los dos se pisarían** — mover el mapa borraría un filtro o al revés. Y una
+dirección que cambia cada vez que el dedo roza el mapa no sirve para compartir nada.
+
+**Dos: un solo punto lejano arruinaba el encuadre inicial.** Hay un cliente real en Puerto Rico,
+así que encuadrar «todo» abría el mapa a escala de medio Caribe con las 200 cuentas de Panamá
+apretadas en un pixel.
+
+Ahora se encuadra **el grueso y no los extremos**: se recortan los percentiles 5 y 95. El punto
+de Puerto Rico sigue ahí; solo hay que alejarse para verlo. Es lo correcto — la vista inicial
+debe servir para el trabajo de todos los días, no para el caso raro.
