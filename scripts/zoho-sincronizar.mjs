@@ -154,21 +154,43 @@ desde.setMonth(desde.getMonth() - MESES);
 const fechaDesde = desde.toISOString().slice(0, 10);
 
 const facturas = await zohoTodo("/invoices", { date_start: fechaDesde });
-console.log(`  ${facturas.length} facturas desde ${fechaDesde}.`);
+const ordenes = await zohoTodo("/salesorders", { date_start: fechaDesde });
+
+// **Una orden anulada es una venta entregada y cobrada.** Para sacar mercancía
+// se levanta la orden, que en Zoho retiene el inventario como pendiente; al
+// entregar y cobrar se anula, y esa anulación es lo que libera la retención.
+//
+// Contar solo facturas dejaba a Albert en $43 000 cuando vendió cerca de
+// $85 000: la mitad de su trabajo era invisible, y justo en la pantalla donde
+// se le evalúa. Se comprobó que ninguna anulada tiene factura, así que no hay
+// doble conteo.
+//
+// Las **abiertas** no cuentan: son mercancía reservada que todavía no salió.
+const entregadas = ordenes.filter(
+  (o) => o.status === "void" && o.invoiced_status !== "invoiced",
+);
+
+console.log(
+  `  ${facturas.length} facturas y ${entregadas.length} entregas sin factura desde ${fechaDesde}.`,
+);
 
 const porCliente = new Map();
-for (const f of facturas) {
-  if (!porCliente.has(f.customer_id)) {
-    porCliente.set(f.customer_id, {
-      vendedores: new Set(),
-      fechas: [],
-      total: 0,
-    });
+
+function anotarCompra(cliente, vendedor, fecha, total) {
+  if (!porCliente.has(cliente)) {
+    porCliente.set(cliente, { vendedores: new Set(), fechas: [], total: 0 });
   }
-  const x = porCliente.get(f.customer_id);
-  x.vendedores.add((f.salesperson_name ?? "").trim());
-  x.fechas.push(f.date);
-  x.total += Number(f.total ?? 0);
+  const x = porCliente.get(cliente);
+  x.vendedores.add((vendedor ?? "").trim());
+  x.fechas.push(fecha);
+  x.total += Number(total ?? 0);
+}
+
+for (const f of facturas) {
+  anotarCompra(f.customer_id, f.salesperson_name, f.date, f.total);
+}
+for (const o of entregadas) {
+  anotarCompra(o.customer_id, o.salesperson_name, o.date, o.total);
 }
 
 // ---------------------------------------------------------------------------
@@ -278,7 +300,7 @@ for (const [id, x] of deCalle) {
     ruc: ruc ? String(ruc).trim() : null,
     vendedor_zoho: x.nombre,
     perfil_id: x.perfil,
-    facturas_12m: x.fechas.length,
+    compras_12m: x.fechas.length,
     total_12m: Math.round(x.total * 100) / 100,
     primera_compra: fechas[0],
     ultima_compra: fechas[fechas.length - 1],
@@ -437,7 +459,7 @@ const filas = espejo.map((e) => ({
   ruc: e.ruc,
   vendedor_zoho: e.vendedor_zoho,
   perfil_id: e.perfil_id,
-  facturas_12m: e.facturas_12m,
+  compras_12m: e.compras_12m,
   total_12m: e.total_12m,
   primera_compra: e.primera_compra,
   ultima_compra: e.ultima_compra,
