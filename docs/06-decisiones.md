@@ -1140,3 +1140,34 @@ esta cuenta— es dato de un cliente y no puede cruzar nunca.
 
 **Partidas, no hace falta comprobar nada**: si quien pregunta no puede ver la cuenta, no hay filas
 y la función devuelve vacío. El RLS ya sabía la respuesta.
+
+---
+
+## D-046 — La venta cruzada entra a la lista de la zona
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Los clientes a los que les falta una línea se agregan **a la misma lista de la zona**
+donde ya viven los potenciales, desde `/listas/[id]/cruzada`. No hay lista aparte ni sección
+aparte.
+
+**Por qué.** El vendedor camina Aguadulce una sola vez. Dos listas para el mismo pueblo son dos
+rutas que en la realidad son una, y obligan a cruzarlas de cabeza el martes por la mañana. Que uno
+sea cliente y otro potencial ya lo dice la insignia de su ficha.
+
+**Lo que sí se separa son los contadores.** Cazar y cuidar son oficios distintos y el cierre de la
+semana ya apuesta por separado —`cierres` tiene `apuesta_potenciales` y `apuesta_clientes`—. La
+lista dice ahora «16 por abrir · 4 por cruzar».
+
+**Y una corrección que este cambio obligó a hacer:** «trabajada» pasa a significar **trabajada
+desde que entró a la lista**. Antes bastaba con tener un seguimiento cualquiera, de cuando fuera.
+Con potenciales daba igual —no tienen pasado—, pero un cliente entra con años de visitas encima y
+habría quedado marcado como hecho antes de que nadie lo visitara. El compromiso de la semana se
+arma con esos números: un contador que miente ahí es un vendedor prometiendo doce visitas que el
+sistema ya da por hechas.
+
+Se corrigió en los dos sitios que lo calculan —la vista `listas_resumen` y la pantalla de la
+lista— porque si dicen cosas distintas, la lista y el plan se contradicen.
+
+**El informe de cartera se queda** en `/venta-cruzada`, pero cambia de dueño: es la pantalla de
+«cómo está la cartera» para líder y gerencia. El camino del vendedor es la lista.

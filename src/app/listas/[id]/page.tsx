@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { MapPinned, Search } from "lucide-react";
+import { Layers, MapPinned, Search } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import {
   CLASES_VENTA,
@@ -81,7 +81,7 @@ export default async function DetalleLista({
 
   const { data: lista } = await supabase
     .from("listas_resumen")
-    .select("id, nombre, tipo, clase, poblado, total, sin_tocar, trabajadas, sin_tocar_hace_mucho")
+    .select("id, nombre, tipo, clase, poblado, total, sin_tocar, trabajadas, sin_tocar_hace_mucho, sin_tocar_potenciales, sin_tocar_clientes")
     .eq("id", id)
     .maybeSingle();
 
@@ -117,8 +117,28 @@ export default async function DetalleLista({
     }
   }
 
-  const sinTocar = miembros.filter((m) => !ultimaPorCuenta.has(m.cuenta_id));
-  const trabajadas = miembros.filter((m) => ultimaPorCuenta.has(m.cuenta_id));
+  /**
+   * **Trabajada desde que entró a la lista**, no desde siempre.
+   *
+   * Con potenciales daba igual —no tienen pasado—, pero desde que la lista
+   * también lleva clientes por venta cruzada sí importa: un cliente entra
+   * con años de visitas encima y quedaría marcado como hecho antes de que
+   * nadie lo visite. Es la misma regla que cuenta `listas_resumen`, y las
+   * dos tienen que decir lo mismo o la lista y el plan se contradicen.
+   */
+  function trabajadaYa(m: Miembro): boolean {
+    const ultima = ultimaPorCuenta.get(m.cuenta_id);
+    if (!ultima) return false;
+    // En hora de Panamá, no en UTC: una cuenta agregada a las ocho de la
+    // noche y visitada al día siguiente tiene que contar (D-021).
+    const entro = new Date(m.agregada_en).toLocaleDateString("en-CA", {
+      timeZone: "America/Panama",
+    });
+    return ultima >= entro;
+  }
+
+  const sinTocar = miembros.filter((m) => !trabajadaYa(m));
+  const trabajadas = miembros.filter(trabajadaYa);
 
   // **Dos oficios, dos herramientas.** Una lista de zona se llena buscando en
   // el mapa: el vendedor no sabe qué hay en Aguadulce hasta que mira. Una de
@@ -183,6 +203,18 @@ export default async function DetalleLista({
               Buscar puntos para esta lista
             </Link>
 
+            {/* **La otra mitad de la ruta.** Buscar puntos trae lo que
+                todavía no es suyo; esto trae lo que ya lo es y le falta
+                comprar algo. El vendedor camina Aguadulce una sola vez y
+                en el camino hace las dos cosas. */}
+            <Link
+              href={`/listas/${id}/cruzada`}
+              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
+            >
+              <Layers size={16} aria-hidden />
+              Agregar clientes por cruzar
+            </Link>
+
             {/* El mapa de la cartera, para ver dónde caen los que ya tiene. */}
             <Link
               href={`/mapa?lista=${id}&incluirPotenciales=1`}
@@ -223,6 +255,15 @@ export default async function DetalleLista({
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="text-sm font-medium text-texto">
                 Sin tocar · {sinTocar.length}
+                {/* Cazar y cuidar se cuentan aparte: el compromiso de la
+                    semana apuesta por separado, y un solo número dejaría al
+                    vendedor sin saber de qué está prometiendo. */}
+                {lista.sin_tocar_clientes > 0 && (
+                  <span className="ml-1.5 font-normal text-texto-atenuado">
+                    ({lista.sin_tocar_potenciales} por abrir ·{" "}
+                    {lista.sin_tocar_clientes} por cruzar)
+                  </span>
+                )}
               </h2>
               {/* La misma cifra que cuenta `listas_resumen`, dicha donde se
                   puede hacer algo con ella. Los más viejos salen primero

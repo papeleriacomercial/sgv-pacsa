@@ -2897,3 +2897,41 @@ contar los pares de toda la empresa— y eso hacía que **la parte de la cuenta 
 encima del RLS**: un vendedor podía pasarle el identificador de una cuenta ajena y ver qué compra.
 
 Partida en dos: el agregado cruza, el dato del cliente no. Ver [D-045](06-decisiones.md).
+
+---
+
+## La venta cruzada pasa a las listas — 2026-08-26
+
+> «Para mí sería en la pantalla de listas… él lo selecciona y lo agrega a la lista de Aguadulce.»
+
+Tenía razón: lo que construí ayer era un informe —contesta *qué podría vender*— y lo que produce
+trabajo es *a quién visito el martes*. Ver [D-046](06-decisiones.md).
+
+**En la lista de zona**, un botón nuevo: «Agregar clientes por cruzar». Abre los clientes de ese
+poblado a los que les falta una línea que sí compra la mitad o más de sus iguales, con lo que hay
+que ofrecerle a cada uno y qué tan fuerte es el argumento. Se marcan varios y entran de un golpe.
+
+`listas_cuentas` ya apuntaba a `cuentas` sin mirar el tipo, así que no hizo falta esquema nuevo
+para el contenido. Lo que no aguantaba eran los contadores:
+
+- **«Trabajada» pasa a ser «trabajada desde que entró a la lista».** Un cliente entra con años de
+  visitas encima; con la regla vieja habría quedado marcado como hecho antes de que nadie lo
+  visitara, y el compromiso de la semana se arma con ese número.
+- **Los conteos se parten**: «16 por abrir · 4 por cruzar». El cierre ya apostaba por separado.
+
+Migración `20260827020000_listas_con_clientes.sql`, y la misma corrección en la pantalla de la
+lista — que lo calculaba por su cuenta y ahora habría discrepado de la vista.
+
+### Lo que rinde hoy
+
+Poco, y por la misma razón de siempre: **177 de los 233 clientes que compran no tienen tipo de
+comercio**, y Albert tiene una sola cuenta clasificada por poblado. El mecanismo está bien; el
+combustible falta.
+
+| Lista | Clientes en zona | Por cruzar |
+|---|---:|---:|
+| Bancos (Christopher) | 7 | 1 — Anti Burger, le faltan rollos (7 de 10) |
+| Aguadulce (Albert) | 1 | 0 |
+| Chitré (Albert) | 1 | 0 |
+
+Clasificar clientes es lo que enciende esto, y es un toque por cuenta.
