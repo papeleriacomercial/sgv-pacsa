@@ -5,6 +5,7 @@ import {
   ClipboardCheck,
   Clock,
   MapPin,
+  PackageOpen,
   Phone,
   Radar,
   Users,
@@ -74,6 +75,14 @@ function nombreDe(x: { nombre: string } | { nombre: string }[] | null) {
  * llama** — y por eso las llamadas están aquí aunque sean de otro pueblo. Una
  * llamada no tiene pueblo.
  */
+type PorReponer = {
+  id: string;
+  nombre: string;
+  dias_para_reponer: number;
+  cadencia_observada: number;
+  poblado: string | null;
+};
+
 export default async function Agenda({ searchParams }: PageProps<"/">) {
   const { vista } = await searchParams;
   const enSemana = vista === "semana";
@@ -97,6 +106,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
     { data: anterior },
     semana,
     listas,
+    { data: reponer },
   ] = await Promise.all([
       supabase
         .from("perfiles")
@@ -141,6 +151,22 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
         .maybeSingle(),
       cargarSemana(user.id),
       cargarListas(user.id),
+      // **El aviso que llega antes** (§7.7). No es «dejó de comprar»,
+      // que es el diagnóstico tardío: cuando ese aviso salta, el cliente
+      // ya se quedó sin producto — y quien se queda sin producto ya le
+      // compró a otro.
+      //
+      // Solo mira hacia adelante, de cero a siete días. Los que ya se
+      // quedaron sin nada no son trabajo de hoy: son recuperación, y se
+      // trabajan desde Cuentas con su filtro.
+      supabase
+        .from("cuentas_resumen")
+        .select("id, nombre, dias_para_reponer, cadencia_observada, poblado")
+        .eq("vendedor_id", user.id)
+        .eq("tipo", "cliente")
+        .gte("dias_para_reponer", 0)
+        .lte("dias_para_reponer", 7)
+        .order("dias_para_reponer", { ascending: true }),
     ]);
 
   const compromisos = (comps ?? []) as unknown as Compromiso[];
@@ -150,6 +176,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
   );
   const esperando = (pend ?? []) as unknown as Pendiente[];
   const conPotenciales = listas.filter((l) => l.sin_tocar > 0);
+  const porReponer = (reponer ?? []) as PorReponer[];
 
   function Renglon({ c }: { c: Compromiso }) {
     const vencido = c.fecha_compromiso < hoy;
@@ -307,7 +334,9 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
           </>
         ) : (
           <>
-            {compromisos.length === 0 && esperando.length === 0 && (
+            {compromisos.length === 0 &&
+              esperando.length === 0 &&
+              porReponer.length === 0 && (
               <Tarjeta>
                 <Vacio titulo="Nada pendiente para hoy">
                   Lo que prometas al registrar un seguimiento aparece aquí con su
@@ -384,6 +413,58 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
                     </Tarjeta>
                   </Link>
                 ))}
+              </section>
+            )}
+
+            {porReponer.length > 0 && (
+              <section className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <PackageOpen size={16} className="text-marca" aria-hidden />
+                  <h2 className="text-sm font-medium text-texto">
+                    Se les acaba el producto
+                  </h2>
+                  <Insignia tono="neutro">{String(porReponer.length)}</Insignia>
+                </div>
+                <p className="text-xs text-texto-atenuado">
+                  Según su propio ritmo de compra. Todavía se llega antes que
+                  el de al lado.
+                </p>
+
+                {porReponer.map((c) => (
+                  <Link key={c.id} href={`/cuentas/${c.id}`}>
+                    <Tarjeta className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-semibold text-texto">
+                          {c.nombre}
+                        </p>
+                        <p className="text-xs text-texto-secundario">
+                          Compra cada {c.cadencia_observada} días
+                          {c.poblado && ` · ${c.poblado}`}
+                        </p>
+                      </div>
+                      {/* Ámbar y no rojo: todavía no pasó nada malo. El rojo
+                          de esta pantalla está reservado para lo vencido. */}
+                      <Insignia tono={c.dias_para_reponer <= 2 ? "aviso" : "neutro"}>
+                        {c.dias_para_reponer === 0
+                          ? "Hoy"
+                          : c.dias_para_reponer === 1
+                            ? "Mañana"
+                            : `En ${c.dias_para_reponer} días`}
+                      </Insignia>
+                    </Tarjeta>
+                  </Link>
+                ))}
+
+                {/* Los que ya se quedaron sin nada son otro trabajo —
+                    recuperar, no reponer— y por eso están apuntados y no
+                    metidos aquí: llenarían la agenda de gente que se fue
+                    hace medio año. */}
+                <Link
+                  href="/cuentas?reponer=0"
+                  className="min-h-tactil flex items-center text-sm text-texto-secundario"
+                >
+                  Ver a los que ya se quedaron sin producto
+                </Link>
               </section>
             )}
 

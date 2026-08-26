@@ -2551,3 +2551,48 @@ Ventas. Si se quiere limpiar de verdad, se borra desde el expediente.
 
 Con eso el embudo del equipo queda en cero oportunidades, que es la verdad: las tres que había
 eran de prueba.
+
+---
+
+## Avisar antes, no después — §7.7 — 2026-08-26
+
+El módulo de reposición tenía todo calculado y le faltaba una resta.
+
+`cuentas_resumen` gana **`dias_para_reponer`** = cadencia observada − días desde la última compra.
+Positivo, los días de producto que le quedan; negativo, que ya se le acabó. Migración
+`20260826220000_toca_reponer.sql` — la vista se rehace entera, cuarta vez, por la regla del
+`select c.*`.
+
+De las 196 cuentas con historia, **118 tienen ritmo medible**: 59 pasadas de su ciclo y 59 al día.
+
+### En la Agenda, solo lo que viene
+
+Sección **«Se les acaba el producto»**, de 0 a 7 días, ordenada por quién se queda sin nada
+antes. Lo que ve cada uno hoy:
+
+| Vendedor | Se les acaba esta semana | Ya sin producto |
+|---|---:|---:|
+| Javier Rodríguez | 5 | 38 |
+| Albert Batista | 2 | 11 |
+| Christopher Guerra | 1 | 10 |
+
+El tamaño es el correcto: una sección de una a cinco tarjetas no tapa el trabajo del día. Los que
+ya se quedaron sin nada van por un enlace al pie —son recuperación, no reposición— y meterlos en
+la agenda la llenaría de gente que se fue hace medio año. Ver [D-038](06-decisiones.md).
+
+### En Cuentas y Mapa, para armar la ruta
+
+Filtro **«Se le acaba el producto dentro de»** con 0 / 7 / 15 / 30 días, donde 0 quiere decir
+exactamente «ya se le acabó». Y una dimensión de color nueva, **«Cuánto producto le queda»**, con
+tramos fijos y no gama relativa: «ya se le acabó» y «le quedan treinta días» son estados
+distintos, no dos puntos de una escala. Una gama relativa pintaría de rojo al menos bueno de una
+cartera toda al día — que es la alarma falsa que hace que la gente deje de mirar los colores.
+
+**El orden de la lista se me fue al revés y lo corregí:** ponía de primero al que llevaba 200 días
+sin comprar, que es el peor candidato de todos. Ver [D-039](06-decisiones.md).
+
+### Lo que queda de este módulo
+
+- **El umbral es absoluto y debería ser relativo.** Cinco días de atraso en quien compra cada 4 es
+  grave; en quien compra cada 90, no es nada.
+- **Trazabilidad de muestras.** Sigue sin empezar.

@@ -318,6 +318,27 @@ export function PanelFiltros({
                 ))}
               </Grupo>
 
+              {/* **Es el filtro que arma la ruta de la semana.** No pregunta
+                  cuándo se visitó, sino cuánto producto le queda al cliente
+                  según su propio ritmo de compra — que es la única de las dos
+                  preguntas que le importa a quien compra. */}
+              <Grupo titulo="Se le acaba el producto dentro de">
+                {[0, 7, 15, 30].map((d) => (
+                  <Pastilla
+                    key={d}
+                    activo={filtros.porReponerEnDias === d}
+                    onClick={() =>
+                      set({
+                        porReponerEnDias:
+                          filtros.porReponerEnDias === d ? null : d,
+                      })
+                    }
+                  >
+                    {d === 0 ? "Ya se le acabó" : `${d} días`}
+                  </Pastilla>
+                ))}
+              </Grupo>
+
               <Grupo titulo="Atajos">
                 <Pastilla
                   activo={filtros.soloFueraDeCadencia}

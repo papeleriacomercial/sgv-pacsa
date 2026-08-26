@@ -20,7 +20,7 @@ export async function cargarCartera(): Promise<{
   const { data } = await supabase
     .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo, tipo_comercio, poblado, volumen, productos_interes, vendedor_id, lat, lng, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, oportunidades_abiertas",
+      "id, nombre, tipo, tipo_comercio, poblado, volumen, productos_interes, vendedor_id, lat, lng, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, dias_para_reponer, sin_ubicacion, oportunidades_abiertas",
     )
     .order("nombre");
 

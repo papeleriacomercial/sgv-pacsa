@@ -946,3 +946,52 @@ número propio del líder.
 **Y cada vendedor aparece aunque haya vendido cero.** `comision_del_equipo` devuelve una fila por
 cada perfil que se le pida. Si el que no vendió desapareciera de la lista, el líder leería «no lo
 estamos midiendo» donde dice «no vendió» — y esas dos cosas piden reacciones opuestas.
+
+---
+
+## D-038 — El aviso de reposición mira hacia adelante
+
+**Fecha:** 2026-08-26
+
+**Decisión.** La vista `cuentas_resumen` gana `dias_para_reponer` = cadencia observada − días
+desde la última compra. Positivo son los días de producto que le quedan al cliente; negativo, que
+ya se le acabó. Con eso: una sección en la Agenda, un filtro en Cuentas y Mapa, y una dimensión
+de color.
+
+**Por qué.** `dejo_de_comprar` ya existía y es un **diagnóstico tardío**: cuando salta, el cliente
+ya se quedó sin producto — y quien se queda sin producto ya le compró a otro. §7.7 pide lo
+contrario, avisar unos días antes del ciclo estimado. Todo lo necesario estaba calculado; faltaba
+una resta.
+
+**La Agenda solo mira hacia adelante: de 0 a 7 días.** Los que ya se quedaron sin nada no son
+trabajo de hoy sino recuperación, y meterlos ahí llenaría la agenda de gente que se fue hace medio
+año. Se llega a ellos por un enlace, no por una alarma.
+
+**Se calcula, no se guarda.** Cambia solo con el paso del tiempo: una columna guardada estaría mal
+al minuto siguiente de escribirla.
+
+**Sin ritmo medible, la cuenta queda fuera del filtro** — no se cuela como «le queda mucho».
+Prometer que se sabe cuándo vuelve a comprar quien solo compró una vez es peor que callar.
+
+---
+
+## D-039 — La lista de reposición se ordena por lo recuperable, no por lo perdido
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Con el filtro de reposición activo, la cartera se ordena así: primero los que ya se
+quedaron sin producto, **y de esos el más reciente primero**; después los que todavía tienen, del
+que se queda sin nada antes al que aguanta más.
+
+**Por qué al revés de lo que parece.** El primer orden que escribí ponía de primero al más
+atrasado —el que lleva 200 días sin comprar—. Es exactamente el peor candidato: ese ya tiene otro
+proveedor. **El que se quedó sin producto ayer todavía no le compró a nadie.** Ordenar por quién
+está más perdido es ordenar la ruta por dónde no ir.
+
+Con los datos reales de Javier, el filtro «se le acaba en 7 días» devuelve 43 cuentas. Ordenadas
+por nombre son una lista; así son una ruta, y arranca en Steven Jiménez —compra cada 7 días, lleva
+1 sin producto—.
+
+**Un pendiente conocido:** «ya se le acabó» es absoluto y debería ser relativo. Cinco días de
+atraso en un cliente que compra cada 4 es grave; en uno que compra cada 90, no es nada. Hoy los
+dos entran igual. Se arregla cuando haya con quién validar el umbral.

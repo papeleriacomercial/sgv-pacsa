@@ -91,7 +91,36 @@ export function CuentasConFiltros({
     router.replace(`${ruta}?${consulta}`, { scroll: false });
   }, [filtros, dimension, vista, ruta, router]);
 
-  const visibles = useMemo(() => aplicar(cuentas, filtros), [cuentas, filtros]);
+  const visibles = useMemo(() => {
+    const lista = aplicar(cuentas, filtros);
+
+    // **Filtrar por reposición y ordenar por nombre no sirve de nada.** La
+    // pregunta que se está haciendo es a quién ir a ver primero. Ordenadas
+    // por nombre, treinta y ocho cuentas son una lista; ordenadas por
+    // urgencia, son una ruta.
+    //
+    // Primero los que ya se quedaron sin producto, **y de esos el más
+    // reciente primero**. Es al revés de lo que parece: el que se quedó sin
+    // nada ayer todavía no le compró a otro, y el que lleva medio año ya
+    // tiene proveedor. Poner de primero al más atrasado es ordenar la ruta
+    // por quién está más perdido.
+    //
+    // Después los que todavía tienen, del que se queda sin nada antes al
+    // que aguanta más.
+    if (filtros.porReponerEnDias !== null) {
+      const orden = (c: Cuenta) => {
+        const d = c.dias_para_reponer ?? 0;
+        return d < 0 ? [0, -d] : [1, d];
+      };
+      return [...lista].sort((a, b) => {
+        const [ga, da] = orden(a);
+        const [gb, dbb] = orden(b);
+        return ga - gb || da - dbb;
+      });
+    }
+
+    return lista;
+  }, [cuentas, filtros]);
 
   const nombrePorVendedor = useMemo(
     () => new Map(vendedores.map((v) => [v.id, v.nombre])),

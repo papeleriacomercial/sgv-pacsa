@@ -31,6 +31,14 @@ export type Cuenta = {
   dias_sin_contacto: number | null;
   dias_hasta_compromiso: number | null;
   fuera_de_cadencia: boolean | null;
+  /**
+   * Días de producto que le quedan según su propio ritmo de compra.
+   *
+   * Negativo quiere decir que ya se le acabó. Nulo, que no hay ritmo
+   * medible todavía — hacen falta tres compras para que dos intervalos
+   * sean un ritmo.
+   */
+  dias_para_reponer: number | null;
   sin_ubicacion: boolean;
   oportunidades_abiertas: number;
 };
@@ -47,6 +55,16 @@ export type Filtros = {
   sinContactoDesde: number | null;
   /** Cuentas con compromiso dentro de los próximos N días, vencidos incluidos. */
   compromisoEnDias: number | null;
+  /**
+   * Cuentas a las que se les acaba el producto dentro de N días.
+   *
+   * **Incluye a las que ya se les acabó**, y no por descuido: si se va a
+   * armar la ruta de la semana, el que se quedó sin nada hace un mes va en
+   * la misma lista que el que se queda sin nada el jueves — y va primero.
+   *
+   * Con 0 el filtro dice exactamente «ya se le acabó».
+   */
+  porReponerEnDias: number | null;
   /** Cuentas a las que nadie les puso tipo de comercio. */
   soloSinCategoria: boolean;
   soloSinUbicacion: boolean;
@@ -83,6 +101,7 @@ export const FILTROS_VACIOS: Filtros = {
   vendedores: [],
   sinContactoDesde: null,
   compromisoEnDias: null,
+  porReponerEnDias: null,
   soloSinCategoria: false,
   soloSinUbicacion: false,
   soloFueraDeCadencia: false,
@@ -101,6 +120,7 @@ export function contarActivos(f: Filtros): number {
     f.vendedores.length +
     (f.sinContactoDesde !== null ? 1 : 0) +
     (f.compromisoEnDias !== null ? 1 : 0) +
+    (f.porReponerEnDias !== null ? 1 : 0) +
     (f.soloSinCategoria ? 1 : 0) +
     (f.soloSinUbicacion ? 1 : 0) +
     (f.soloFueraDeCadencia ? 1 : 0) +
@@ -163,6 +183,14 @@ export function aplicar(cuentas: Cuenta[], f: Filtros): Cuenta[] {
       if (c.dias_hasta_compromiso > f.compromisoEnDias) return false;
     }
 
+    // Sin ritmo medible no se puede decir nada, así que queda fuera del
+    // filtro en vez de colarse como «le queda mucho». Prometer que se sabe
+    // cuándo vuelve a comprar quien solo compró una vez es peor que callar.
+    if (f.porReponerEnDias !== null) {
+      if (c.dias_para_reponer === null) return false;
+      if (c.dias_para_reponer > f.porReponerEnDias) return false;
+    }
+
     if (f.soloSinCategoria && c.tipo_comercio) return false;
     if (f.soloSinUbicacion && !c.sin_ubicacion) return false;
     if (f.soloFueraDeCadencia && c.fuera_de_cadencia !== true) return false;
@@ -190,6 +218,7 @@ export type Dimension =
   | "categoria"
   | "poblado"
   | "sin_contacto"
+  | "reponer"
   | "vendedor";
 
 export const DIMENSIONES: Record<Dimension, string> = {
@@ -199,6 +228,7 @@ export const DIMENSIONES: Record<Dimension, string> = {
   categoria: "Tipo de comercio",
   poblado: "Poblado",
   sin_contacto: "Días sin contacto",
+  reponer: "Cuánto producto le queda",
   vendedor: "Vendedor",
 };
 
@@ -332,6 +362,44 @@ export function colorizar(
     };
   }
 
+  // Cuánto producto le queda: **tramos fijos, no gama relativa.**
+  //
+  // Aquí la diferencia es absoluta y no comparativa: «ya se le acabó» y «le
+  // quedan treinta días» son estados distintos, no dos puntos de una escala.
+  // Una gama relativa haría que en una cartera toda al día el menos bueno se
+  // pintara de rojo, que es exactamente la alarma falsa que hace que la gente
+  // deje de mirar los colores.
+  //
+  // Es de las pocas veces que el color del mapa coincide con el semáforo de
+  // §17, y está bien: aquí el color **es** el estado.
+  if (dimension === "reponer") {
+    const tramo = (d: number | null) => {
+      if (d === null) return 3;
+      if (d < 0) return 0;
+      if (d <= 7) return 1;
+      if (d <= 30) return 2;
+      return 4;
+    };
+
+    const tonos = [COLOR.error, COLOR.aviso, COLOR.info, COLOR.atenuado, COLOR.ok];
+    const textos = [
+      "Ya se le acabó",
+      "Se le acaba esta semana",
+      "Le queda el mes",
+      "Sin ritmo medible",
+      "Le queda de sobra",
+    ];
+
+    const presentes = [
+      ...new Set(cuentas.map((c) => tramo(c.dias_para_reponer))),
+    ].sort((a, b) => a - b);
+
+    return {
+      color: (c) => tonos[tramo(c.dias_para_reponer)],
+      leyenda: presentes.map((i) => ({ color: tonos[i], texto: textos[i] })),
+    };
+  }
+
   // Días sin contacto: gama de claro a oscuro sobre el rango real de lo que se
   // está viendo. Una escala fija haría que en una cartera fresca todo se viera
   // igual de claro y no se distinguiera nada.
@@ -406,6 +474,9 @@ export function desdeUrl(p: URLSearchParams): Filtros {
   const comp = p.get("compromiso");
   if (comp !== null) filtros.compromisoEnDias = Number(comp);
 
+  const rep = p.get("reponer");
+  if (rep !== null) filtros.porReponerEnDias = Number(rep);
+
   return filtros;
 }
 
@@ -440,6 +511,7 @@ export function aUrl(
   });
   if (f.sinContactoDesde !== null) p.set("sinContacto", String(f.sinContactoDesde));
   if (f.compromisoEnDias !== null) p.set("compromiso", String(f.compromisoEnDias));
+  if (f.porReponerEnDias !== null) p.set("reponer", String(f.porReponerEnDias));
 
   if (dimension !== "tipo") p.set("color", dimension);
   p.set("vista", vista);
