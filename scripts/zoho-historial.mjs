@@ -189,7 +189,7 @@ const filtro = desdeGuardado
 console.log(
   desdeGuardado
     ? `  Trayendo lo modificado desde ${desdeGuardado.slice(0, 16).replace("T", " ")}.\n`
-    : `  Primera pasada: doce meses desde ${fechaDesde}.\n`,
+    : `  Primera pasada: desde ${fechaDesde}.\n`,
 );
 
 // El momento se toma **antes** de pedir nada. Si se tomara al final, lo que

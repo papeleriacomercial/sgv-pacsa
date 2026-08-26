@@ -76,6 +76,12 @@ export function entorno(requeridas = []) {
     process.exit(1);
   }
 
+  // **Se dice a dónde va a escribir, siempre.** En el registro de la tarea de
+  // la noche es lo primero que uno quiere ver cuando algo salió raro, y el
+  // código del proyecto no es un secreto: viaja en cada petición del navegador.
+  const ref = url.replace(/^https:\/\//, "").replace(/\.supabase\.co.*$/, "");
+  if (ref) console.log(`  Escribiendo en el proyecto ${ref}.`);
+
   return { ...vars, ZOHO_DOMINIO: vars.ZOHO_DOMINIO || "zoho.com" };
 }
 
