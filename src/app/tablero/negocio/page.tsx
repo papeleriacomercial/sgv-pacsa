@@ -21,6 +21,7 @@ const MES = new Intl.DateTimeFormat("es-PA", {
 });
 
 type PorMes = {
+  anio: number;
   mes: string;
   canal: "calle" | "casa";
   vendedor_zoho: string | null;
@@ -42,7 +43,6 @@ type PorCliente = {
 };
 
 type PorLinea = {
-  mes: string;
   linea: string;
   clientes: number;
   total: string | number;
@@ -75,7 +75,11 @@ function nombreMes(iso: string) {
  * un vendedor, saber que la casa factura el doble que él no le dice qué hacer
  * el martes.
  */
-export default async function Negocio() {
+export default async function Negocio({
+  searchParams,
+}: PageProps<"/tablero/negocio">) {
+  const params = await searchParams;
+  const pedido = Array.isArray(params.anio) ? params.anio[0] : params.anio;
   const supabase = await clienteServidor();
 
   const {
@@ -94,22 +98,36 @@ export default async function Negocio() {
   // no va a poder leer.
   if (perfil?.rol !== "gerente") notFound();
 
-  const [{ data: crudoMes }, { data: crudoCli }, { data: crudoLin }, { data: crudoNue }] =
+  const { data: crudoMes } = await supabase.from("venta_por_mes").select("*");
+  const todosLosMeses = (crudoMes ?? []) as PorMes[];
+
+  // **Se lee por año calendario, no por doce meses móviles.** Es como el
+  // negocio cierra sus números, y comparar «los últimos doce meses» contra
+  // un ejercicio no compara nada.
+  const anios = [...new Set(todosLosMeses.map((m) => m.anio))].sort(
+    (a, b) => b - a,
+  );
+  const anio =
+    pedido && anios.includes(Number(pedido)) ? Number(pedido) : (anios[0] ?? 0);
+
+  const desde = `${anio}-01-01`;
+  const hasta = `${anio}-12-31`;
+
+  const [{ data: crudoCli }, { data: crudoLin }, { data: crudoNue }] =
     await Promise.all([
-      supabase.from("venta_por_mes").select("*"),
-      supabase
-        .from("venta_por_cliente")
-        .select("*")
-        .order("total", { ascending: false })
-        .limit(12),
-      supabase.from("venta_por_linea").select("*"),
+      supabase.rpc("ranking_de_clientes", { p_desde: desde, p_hasta: hasta }),
+      supabase.rpc("venta_por_linea", { p_desde: desde, p_hasta: hasta }),
       supabase.from("clientes_por_mes").select("*"),
     ]);
 
-  const porMes = (crudoMes ?? []) as PorMes[];
-  const clientes = (crudoCli ?? []) as PorCliente[];
+  const porMes = todosLosMeses.filter((m) => m.anio === anio);
+  const todosLosClientes = (crudoCli ?? []) as PorCliente[];
+  const clientes = todosLosClientes.slice(0, 12);
+  const clientesTotales = todosLosClientes.length;
   const porLinea = (crudoLin ?? []) as PorLinea[];
-  const nuevos = (crudoNue ?? []) as Nuevos[];
+  const nuevos = ((crudoNue ?? []) as Nuevos[]).filter((n) =>
+    n.mes.startsWith(String(anio)),
+  );
 
   if (porMes.length === 0) {
     return (
@@ -143,9 +161,11 @@ export default async function Negocio() {
     p[m.canal] += Number(m.total);
     meses.set(m.mes, p);
   }
+  // **Todos los meses del año, no los últimos seis.** Cortar a seis dejaba
+  // fuera enero y febrero, y un ejercicio al que le faltan dos meses no se
+  // puede comparar con el anterior ni cuadrar con el total de arriba.
   const ordenMeses = [...meses.entries()].sort(([a], [b]) => a.localeCompare(b));
-  const ultimos = ordenMeses.slice(-6);
-  const techo = Math.max(...ultimos.map(([, v]) => v.calle + v.casa), 1);
+  const techo = Math.max(...ordenMeses.map(([, v]) => v.calle + v.casa), 1);
 
   // **El mes en curso va aparte.** Comparar un mes de 26 días contra uno de 31
   // hace ver una caída que no existe, y es el error de lectura más fácil de
@@ -168,6 +188,7 @@ export default async function Negocio() {
 
   // --- Concentración -------------------------------------------------------
   const top10 = clientes.slice(0, 10).reduce((s, c) => s + Number(c.total), 0);
+
 
   // --- Líneas de producto --------------------------------------------------
   const lineas = new Map<string, number>();
@@ -198,10 +219,34 @@ export default async function Negocio() {
         <div className="flex-1">
           <h1 className="text-lg font-semibold text-marca">El negocio</h1>
           <p className="text-xs text-texto-atenuado">
-            Doce meses de facturación, de Zoho
+            Facturación de Zoho, año {anio}
+            {enCurso && " — todavía abierto"}
           </p>
         </div>
       </header>
+
+      {/* **Un ejercicio a la vez.** Mezclar dos años en la misma cifra no
+          contesta ninguna pregunta: ni cómo cerró el anterior, ni cómo va
+          este. Y el año en curso se rotula como abierto para que nadie lo
+          compare de igual a igual contra uno cerrado. */}
+      {anios.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto border-b border-borde bg-superficie px-4 py-2">
+          {anios.map((a) => (
+            <Link
+              key={a}
+              href={a === anios[0] ? "/tablero/negocio" : `/tablero/negocio?anio=${a}`}
+              aria-current={a === anio ? "true" : undefined}
+              className={`min-h-tactil flex shrink-0 items-center rounded-lg border px-4 font-mono text-sm ${
+                a === anio
+                  ? "border-marca bg-marca text-white"
+                  : "border-borde text-texto"
+              }`}
+            >
+              {a}
+            </Link>
+          ))}
+        </div>
+      )}
 
       <main className="flex flex-1 flex-col gap-6 p-4">
         {/* --- 1. Cuánto vende la empresa, y por qué canal --- */}
@@ -231,7 +276,7 @@ export default async function Negocio() {
         <section className="flex flex-col gap-2">
           <h2 className="text-sm font-medium text-texto">Mes a mes</h2>
           <Tarjeta className="flex flex-col gap-2">
-            {ultimos.map(([mes, v]) => {
+            {ordenMeses.map(([mes, v]) => {
               const suma = v.calle + v.casa;
               const parcial = enCurso && mes === mesActual;
               return (
@@ -260,6 +305,11 @@ export default async function Negocio() {
                 </div>
               );
             })}
+
+            <div className="flex items-baseline justify-between gap-2 border-t border-borde pt-2 text-sm">
+              <span className="text-texto-secundario">Total {anio}</span>
+              <span className="font-mono text-texto">{DINERO.format(total)}</span>
+            </div>
 
             {/* Sin esto, un mes de 26 días al lado de uno de 31 se lee como
                 una caída. Es el error de lectura más fácil de cometer aquí. */}
@@ -300,6 +350,14 @@ export default async function Negocio() {
               </div>
             ))}
 
+            {/* **Cada sección cierra con su total.** Sin eso, los porcentajes
+                no se pueden cuadrar contra la cifra grande de arriba, y una
+                cifra que no se puede cuadrar no se cree. */}
+            <div className="flex items-baseline justify-between gap-2 border-t border-borde pt-2 text-sm">
+              <span className="text-texto-secundario">Total</span>
+              <span className="font-mono text-texto">{DINERO.format(total)}</span>
+            </div>
+
             {sinFirma > 0 && (
               <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
                 <strong>
@@ -327,6 +385,18 @@ export default async function Negocio() {
             <p className="text-xs text-texto-atenuado">
               Es la cifra que dice qué pasa si uno se va.
             </p>
+            <div className="flex items-baseline justify-between gap-2 border-t border-borde pt-2 text-sm">
+              <span className="text-texto-secundario">
+                Los diez primeros suman
+              </span>
+              <span className="font-mono text-texto">{DINERO.format(top10)}</span>
+            </div>
+            <div className="flex items-baseline justify-between gap-2 text-sm">
+              <span className="text-texto-secundario">
+                Los {clientesTotales} clientes del año
+              </span>
+              <span className="font-mono text-texto">{DINERO.format(total)}</span>
+            </div>
           </Tarjeta>
 
           {clientes.slice(0, 10).map((c) => {
@@ -414,11 +484,19 @@ export default async function Negocio() {
               </div>
             ))}
 
-            {/* Decirlo importa: sin esto se leería como la venta de toda la
-                empresa, y es un tercio. */}
+            <div className="flex items-baseline justify-between gap-2 border-t border-borde pt-2 text-sm">
+              <span className="text-texto-secundario">Total con detalle</span>
+              <span className="font-mono text-texto">
+                {DINERO.format(totalLineas)}
+              </span>
+            </div>
+
+            {/* **Decir por qué no cuadra es la mitad del trabajo.** Sin esta
+                línea, la primera reacción es que la pantalla suma mal. */}
             <p className="text-xs text-texto-atenuado">
-              Solo la venta de los vendedores. De la venta de la casa se guarda
-              la factura, no lo que llevaba dentro.
+              No cuadra con {DINERO.format(total)} porque aquí solo entra la
+              venta de los vendedores: de la venta de la casa se guarda la
+              factura, no lo que llevaba dentro.
             </p>
           </Tarjeta>
         </section>

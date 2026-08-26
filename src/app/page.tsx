@@ -14,6 +14,7 @@ import { clienteServidor } from "@/lib/supabase/servidor";
 import { cargarSemana, hoyEnPanama, lunesDeEstaSemana } from "@/lib/semana";
 import { cargarListas } from "@/lib/listas";
 import {
+  INICIO_POR_ROL,
   TIPOS_INTERACCION,
   TIPOS_SOLICITUD,
   type TipoInteraccion,
@@ -93,6 +94,20 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
+
+  // **A cada quien su pantalla.** La raíz es la Agenda y la Agenda es del
+  // que sale a la calle. Gerencia y administración entraban aquí porque el
+  // login manda a «/» sin mirar el rol, y tenían que tocar su pestaña cada
+  // vez. Se resuelve aquí y no en el login para que también funcione al
+  // escribir la dirección a mano o al volver desde un marcador.
+  const { data: quien } = await supabase
+    .from("perfiles")
+    .select("rol")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const suyo = INICIO_POR_ROL[quien?.rol ?? ""];
+  if (suyo) redirect(suyo);
 
   const hoy = hoyEnPanama();
 

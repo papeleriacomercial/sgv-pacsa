@@ -14,6 +14,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { FiltroVendedor, type Vendedor } from "@/components/filtro-vendedor";
+import { CarteraEnCifras } from "@/components/cartera-en-cifras";
 import {
   MiMes,
   VentasEquipo,
@@ -66,6 +67,7 @@ const ORDEN: Etapa[] = [
  */
 const PESTANAS = [
   { clave: "facturado", etiqueta: "Facturado" },
+  { clave: "cartera", etiqueta: "Mi cartera" },
   { clave: "cotizaciones", etiqueta: "Cotizaciones" },
   { clave: "oportunidades", etiqueta: "Oportunidades" },
 ] as const;
@@ -92,6 +94,22 @@ type CotizacionFila = {
   cuenta_id: string;
   vendedor_id: string;
   cuentas: { nombre: string } | { nombre: string }[] | null;
+};
+
+type FilaRanking = {
+  contacto_id: string;
+  nombre: string | null;
+  cuenta_id: string | null;
+  documentos: number;
+  total: string | number;
+  por_cobrar: string | number;
+  ultima_compra: string;
+};
+
+type FilaLinea = {
+  linea: string;
+  clientes: number;
+  total: string | number;
 };
 
 type Comision = {
@@ -232,6 +250,31 @@ export default async function Ventas({
     ]);
 
   const oportunidades = (crudas ?? []) as unknown as Oportunidad[];
+
+  // **Doce meses móviles, no año calendario.** Al vendedor el ejercicio
+  // fiscal le da igual: lo que quiere saber es cómo viene su último año de
+  // trabajo, hoy. Gerencia sí lee por año, y por eso pide otro rango a la
+  // misma función.
+  const haceUnAnio = new Date();
+  haceUnAnio.setFullYear(haceUnAnio.getFullYear() - 1);
+
+  // Solo cuando la pestaña lo pide: son dos consultas que agregan miles de
+  // filas, y cargarlas para enseñar el embudo sería pagarlas por nada.
+  const [{ data: ranking }, { data: lineas }] =
+    pestana === "cartera"
+      ? await Promise.all([
+          supabase.rpc("ranking_de_clientes", {
+            p_desde: haceUnAnio.toISOString().slice(0, 10),
+            p_hasta: hoyEnPanama(),
+            p_perfil: todos ? null : elegido,
+          }),
+          supabase.rpc("venta_por_linea", {
+            p_desde: haceUnAnio.toISOString().slice(0, 10),
+            p_hasta: hoyEnPanama(),
+            p_perfil: todos ? null : elegido,
+          }),
+        ])
+      : [{ data: null }, { data: null }];
   const cotiza = (cotizaciones ?? []) as unknown as CotizacionFila[];
   const dinero = (comisiones ?? []) as Comision[];
 
@@ -330,7 +373,9 @@ export default async function Ventas({
               key={clave}
               href={enlace({ t: clave })}
               aria-current={activa ? "page" : undefined}
-              className={`min-h-tactil flex items-center justify-center gap-1.5 border-b-2 px-1 text-sm ${
+              // Con cuatro pestañas quedan 93 px cada una en un teléfono
+              // angosto, y «Oportunidades» a 14 px no entra.
+              className={`min-h-tactil flex items-center justify-center gap-1 border-b-2 px-0.5 text-xs ${
                 activa
                   ? "border-b-marca font-medium text-marca"
                   : "border-b-transparent text-texto-atenuado"
@@ -395,6 +440,37 @@ export default async function Ventas({
             </span>
             <ChevronRight size={16} aria-hidden />
           </Link>
+        )}
+
+        {pestana === "cartera" && (
+          <CarteraEnCifras
+            clientes={((ranking ?? []) as FilaRanking[]).map((c) => ({
+              contactoId: c.contacto_id,
+              nombre: c.nombre ?? "Sin nombre",
+              cuentaId: c.cuenta_id,
+              total: Number(c.total),
+              porCobrar: Number(c.por_cobrar),
+              documentos: c.documentos,
+              ultimaCompra: c.ultima_compra,
+            }))}
+            lineas={((lineas ?? []) as FilaLinea[]).map((l) => ({
+              linea: l.linea,
+              total: Number(l.total),
+              clientes: l.clientes,
+            }))}
+            deQuien={
+              todos
+                ? "todo el equipo"
+                : elegido === user.id
+                  ? null
+                  : (nombreVendedor.get(elegido) ?? null)
+            }
+            hrefCruzada={
+              elegido === propio || todos
+                ? "/venta-cruzada"
+                : `/venta-cruzada?v=${elegido}`
+            }
+          />
         )}
 
         {pestana === "cotizaciones" && (

@@ -459,3 +459,19 @@ export const CADENCIAS = [
 /** Lo que acepta la base: `cuentas_cadencia_valida` (1 a 365 días). */
 export const CADENCIA_MINIMA = 1;
 export const CADENCIA_MAXIMA = 365;
+
+/**
+ * Dónde aterriza cada rol al entrar.
+ *
+ * **La raíz es la Agenda, y la Agenda no es de todos.** Gerencia entraba a una
+ * pantalla de paradas y compromisos que nunca va a tener, y tenía que tocar
+ * «Tablero» cada vez. Administración, igual con las solicitudes.
+ *
+ * Tiene que coincidir con la primera casilla de la barra de cada rol en
+ * `navegacion.tsx`: si el sistema te lleva a un sitio y la barra marca otro,
+ * la primera impresión es que algo falló.
+ */
+export const INICIO_POR_ROL: Record<string, string> = {
+  gerente: "/tablero",
+  administracion: "/solicitudes",
+};

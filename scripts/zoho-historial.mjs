@@ -15,7 +15,28 @@ import { randomUUID } from "node:crypto";
 import { entorno, DE_ZOHO } from "./entorno.mjs";
 
 const APLICAR = process.argv.includes("--aplicar");
-const MESES = 12;
+
+/**
+ * Desde cuándo se trae, en la primera pasada.
+ *
+ * **Desde el 1 de enero del año anterior**, no doce meses hacia atrás. Gerencia
+ * lee por año calendario —2025 completo contra lo que va de 2026— y con una
+ * ventana móvil de doce meses le faltarían enero y febrero del año en curso, y
+ * medio año del anterior.
+ *
+ * Hoy son veinte meses. En diciembre serán veinticuatro y en enero volverán a
+ * ser trece. El costo lo paga la primera pasada; las de todas las noches piden
+ * solo lo modificado.
+ *
+ * Ojo: `zoho-sincronizar.mjs` **sigue con doce meses justos**. Esa pasada
+ * calcula la cadencia de compra y el consumo típico por tipo de comercio, y
+ * esos dos números significan «al mes» — estirar su ventana los desfiguraría.
+ */
+function desdeCuando() {
+  const enero = new Date();
+  enero.setFullYear(enero.getFullYear() - 1, 0, 1);
+  return enero.toISOString().slice(0, 10);
+}
 
 /** Por debajo de esto la pasada se detiene y sigue mañana. */
 const CUOTA_MINIMA = 400;
@@ -140,9 +161,7 @@ const deCalle = new Set(
 const marcas = await sb("/sincronizaciones?fuente=eq.historial&select=hasta");
 const desdeGuardado = marcas[0]?.hasta ?? null;
 
-const doceMeses = new Date();
-doceMeses.setMonth(doceMeses.getMonth() - MESES);
-const fechaDesde = doceMeses.toISOString().slice(0, 10);
+const fechaDesde = desdeCuando();
 
 /**
  * La marca de agua, en el formato que Zoho acepta.
@@ -332,6 +351,40 @@ for (let i = 0; i < paraAbrir.length; i += EN_PARALELO) {
   }
 }
 
+// **Zoho puede devolver el mismo documento dos veces.** Pagina por número de
+// página, así que si algo cambia entre la página 3 y la 4 —y con seis mil
+// documentos algo cambia— una fila aparece en las dos. El `upsert` entonces
+// rechaza el lote entero: «ON CONFLICT DO UPDATE cannot affect row a second
+// time», y se pierde la pasada completa.
+//
+// Se queda la primera. Son el mismo documento: la segunda no trae nada nuevo.
+const vistas = new Set();
+const unicas = [];
+let repetidos = 0;
+for (const t of transacciones) {
+  const k = `${t.documento_id}|${t.tipo}`;
+  if (vistas.has(k)) {
+    repetidos += 1;
+    continue;
+  }
+  vistas.add(k);
+  unicas.push(t);
+}
+
+// Los renglones que colgaban de la copia descartada se van con ella: son los
+// mismos del documento que sí quedó.
+const idsVivos = new Set(unicas.map((t) => t.id));
+const renglonesVivos = renglones.filter((l) => idsVivos.has(l.transaccion_id));
+
+transacciones.length = 0;
+transacciones.push(...unicas);
+renglones.length = 0;
+renglones.push(...renglonesVivos);
+
+if (repetidos > 0) {
+  console.log(`\n  ${repetidos} documentos venían repetidos de Zoho. Se ignoraron.`);
+}
+
 console.log(
   `\n  ${transacciones.length} transacciones · ${renglones.length} renglones.`,
 );
@@ -340,21 +393,17 @@ console.log(
 // 4. Escribir
 // ---------------------------------------------------------------------------
 
-// Los renglones se borran y se vuelven a poner: un documento editado en Zoho
-// puede tener hoy menos líneas que ayer, y actualizarlos uno a uno dejaría
-// las viejas colgando.
+// **Las transacciones primero, y los renglones después.** El orden importa y
+// costó caro: antes se borraban los renglones al principio y se reponían al
+// final, y una pasada que reventó en el medio —Zoho devolvió documentos
+// repetidos y el `upsert` rechazó el lote— dejó la base con 743 renglones de
+// los 2 151 que tenía. Borrar algo que todavía no se puede reponer es apostar
+// a que nada falle entre las dos operaciones.
+//
+// Ahora se borra justo antes de insertar, y solo de los documentos que de
+// verdad se abrieron.
+
 const idsDoc = transacciones.map((t) => t.documento_id);
-for (let i = 0; i < idsDoc.length; i += 100) {
-  const lote = idsDoc.slice(i, i + 100);
-  const viejas = await sb(
-    `/transacciones_zoho?select=id&documento_id=in.(${lote.join(",")})`,
-  );
-  if (viejas.length === 0) continue;
-  await sb(
-    `/renglones_zoho?transaccion_id=in.(${viejas.map((v) => v.id).join(",")})`,
-    { method: "DELETE", prefer: "return=minimal" },
-  );
-}
 
 for (let i = 0; i < transacciones.length; i += 200) {
   await sb("/transacciones_zoho?on_conflict=documento_id,tipo", {
@@ -384,6 +433,18 @@ const listos = renglones
     transaccion_id: guardadas.get(porDocumento.get(l.transaccion_id)) ?? null,
   }))
   .filter((l) => l.transaccion_id);
+
+// Se borran ahora, con el reemplazo ya en la mano, y **solo de los documentos
+// que se abrieron**. Un documento del que solo se guardó la cabecera nunca tuvo
+// renglones que borrar, y uno que la pasada no alcanzó a abrir conserva los
+// que ya tenía.
+const aReemplazar = [...new Set(listos.map((l) => l.transaccion_id))];
+for (let i = 0; i < aReemplazar.length; i += 100) {
+  await sb(
+    `/renglones_zoho?transaccion_id=in.(${aReemplazar.slice(i, i + 100).join(",")})`,
+    { method: "DELETE", prefer: "return=minimal" },
+  );
+}
 
 for (let i = 0; i < listos.length; i += 400) {
   await sb("/renglones_zoho", {

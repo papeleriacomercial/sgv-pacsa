@@ -66,6 +66,144 @@ function reloj(horas: number): string {
 }
 
 /**
+ * Un encargo de la bandeja.
+ *
+ * **Vive fuera de `ListaSolicitudes` y eso no es estilo: es corrección.**
+ * Definida dentro, React creaba una función nueva en cada render, la trataba
+ * como otro componente y desmontaba la tarjeta entera — con el campo de
+ * respuesta adentro. En el teléfono se veía así: se abre el teclado, se escribe
+ * la primera letra, y el teclado se cierra. Cada tecla remontaba el input y le
+ * quitaba el foco.
+ *
+ * Por eso recibe por propiedades lo que antes tomaba del cierre. Son ocho, y
+ * son el precio de que el campo se pueda escribir.
+ */
+function Fila({
+s,
+puedeResolver,
+respondiendo,
+setRespondiendo,
+texto,
+setTexto,
+guardando,
+error,
+cerrar,
+}: {
+s: Solicitud;
+puedeResolver: boolean;
+respondiendo: string | null;
+setRespondiendo: (id: string | null) => void;
+texto: string;
+setTexto: (t: string) => void;
+guardando: boolean;
+error: string | null;
+cerrar: (id: string, estado: "resuelta" | "rechazada") => void;
+}) {
+const puedeCerrar = s.estado === "pendiente" && (puedeResolver || s.esMia);
+
+  return (
+    <Tarjeta
+      className={`flex flex-col gap-2 ${s.vencida ? "border-red-200 bg-red-50" : ""}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <Link href={`/cuentas/${s.cuentaId}`} className="block">
+          <p className="text-base font-semibold text-texto">{s.cuenta}</p>
+          {s.ruc && (
+            <p className="font-mono text-xs text-texto-secundario">
+              RUC {s.ruc}
+            </p>
+          )}
+        </Link>
+        <Insignia tono={TONO_SOLICITUD[s.estado]}>
+          {ESTADOS_SOLICITUD[s.estado]}
+        </Insignia>
+      </div>
+
+      <p className="text-sm text-texto-secundario">{s.detalle}</p>
+
+      {/* **El documento es lo que hace atendible la bandeja.** Sin él,
+          «cotización COT-260827-A3F1» es un número y hay que ir a
+          buscarlo; con él, Verónica lo abre, lo imprime y lo levanta en
+          Zoho sin salir de aquí. */}
+      {s.documento && (
+        <VerDocumento documento={s.documento} cuenta={s.cuenta} />
+      )}
+
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <Insignia tono="neutro">{TIPOS_SOLICITUD[s.tipo]}</Insignia>
+        {/* Quien atiende necesita saber a quién le contesta; a quien la
+            pidió, su propio nombre no le dice nada. */}
+        {!s.esMia && (
+          <span className="text-texto-secundario">{s.vendedor}</span>
+        )}
+        {s.resuelve === "yo" && (
+          <span className="text-texto-atenuado">{RESUELVE.yo}</span>
+        )}
+        {s.monto !== null && (
+          <span className="font-mono text-texto">{MONTO.format(s.monto)}</span>
+        )}
+        {s.paraCuando && (
+          <span className="font-mono text-texto-secundario">
+            para el {FECHA.format(new Date(`${s.paraCuando}T12:00:00`))}
+          </span>
+        )}
+        <span
+          className={`flex items-center gap-1 font-mono ${
+            s.vencida ? "text-error" : "text-texto-atenuado"
+          }`}
+        >
+          <Clock size={12} aria-hidden />
+          {reloj(s.horas)}
+        </span>
+      </div>
+
+      {s.respuesta && (
+        <p className="rounded-lg bg-fondo p-2 text-sm text-texto">
+          {s.respuesta}
+        </p>
+      )}
+
+      {puedeCerrar && respondiendo !== s.id && (
+        <Boton tono="secundario" onClick={() => setRespondiendo(s.id)}>
+          Responder
+        </Boton>
+      )}
+
+      {respondiendo === s.id && (
+        <div className="flex flex-col gap-2">
+          <Campo
+            etiqueta="Respuesta"
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            ayuda="Un no en cuatro horas se puede trabajar. El silencio de tres días, no."
+          />
+          {error && (
+            <MensajeError titulo="No se pudo guardar" detalle={error} />
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <Boton
+              tono="secundario"
+              ancho
+              disabled={guardando}
+              onClick={() => cerrar(s.id, "rechazada")}
+            >
+              No se puede
+            </Boton>
+            <Boton
+              ancho
+              disabled={guardando}
+              onClick={() => cerrar(s.id, "resuelta")}
+            >
+              {guardando ? "Guardando" : "Resuelta"}
+            </Boton>
+          </div>
+        </div>
+      )}
+    </Tarjeta>
+  );
+}
+
+/**
  * La bandeja, con su reloj.
  *
  * Lo pendiente arriba y lo vencido en rojo. No es un detalle de orden: es lo
@@ -130,110 +268,6 @@ export function ListaSolicitudes({
     router.refresh();
   }
 
-  function Fila({ s }: { s: Solicitud }) {
-    const puedeCerrar = s.estado === "pendiente" && (puedeResolver || s.esMia);
-
-    return (
-      <Tarjeta
-        className={`flex flex-col gap-2 ${s.vencida ? "border-red-200 bg-red-50" : ""}`}
-      >
-        <div className="flex items-start justify-between gap-2">
-          <Link href={`/cuentas/${s.cuentaId}`} className="block">
-            <p className="text-base font-semibold text-texto">{s.cuenta}</p>
-            {s.ruc && (
-              <p className="font-mono text-xs text-texto-secundario">
-                RUC {s.ruc}
-              </p>
-            )}
-          </Link>
-          <Insignia tono={TONO_SOLICITUD[s.estado]}>
-            {ESTADOS_SOLICITUD[s.estado]}
-          </Insignia>
-        </div>
-
-        <p className="text-sm text-texto-secundario">{s.detalle}</p>
-
-        {/* **El documento es lo que hace atendible la bandeja.** Sin él,
-            «cotización COT-260827-A3F1» es un número y hay que ir a
-            buscarlo; con él, Verónica lo abre, lo imprime y lo levanta en
-            Zoho sin salir de aquí. */}
-        {s.documento && (
-          <VerDocumento documento={s.documento} cuenta={s.cuenta} />
-        )}
-
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <Insignia tono="neutro">{TIPOS_SOLICITUD[s.tipo]}</Insignia>
-          {/* Quien atiende necesita saber a quién le contesta; a quien la
-              pidió, su propio nombre no le dice nada. */}
-          {!s.esMia && (
-            <span className="text-texto-secundario">{s.vendedor}</span>
-          )}
-          {s.resuelve === "yo" && (
-            <span className="text-texto-atenuado">{RESUELVE.yo}</span>
-          )}
-          {s.monto !== null && (
-            <span className="font-mono text-texto">{MONTO.format(s.monto)}</span>
-          )}
-          {s.paraCuando && (
-            <span className="font-mono text-texto-secundario">
-              para el {FECHA.format(new Date(`${s.paraCuando}T12:00:00`))}
-            </span>
-          )}
-          <span
-            className={`flex items-center gap-1 font-mono ${
-              s.vencida ? "text-error" : "text-texto-atenuado"
-            }`}
-          >
-            <Clock size={12} aria-hidden />
-            {reloj(s.horas)}
-          </span>
-        </div>
-
-        {s.respuesta && (
-          <p className="rounded-lg bg-fondo p-2 text-sm text-texto">
-            {s.respuesta}
-          </p>
-        )}
-
-        {puedeCerrar && respondiendo !== s.id && (
-          <Boton tono="secundario" onClick={() => setRespondiendo(s.id)}>
-            Responder
-          </Boton>
-        )}
-
-        {respondiendo === s.id && (
-          <div className="flex flex-col gap-2">
-            <Campo
-              etiqueta="Respuesta"
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              ayuda="Un no en cuatro horas se puede trabajar. El silencio de tres días, no."
-            />
-            {error && (
-              <MensajeError titulo="No se pudo guardar" detalle={error} />
-            )}
-            <div className="grid grid-cols-2 gap-2">
-              <Boton
-                tono="secundario"
-                ancho
-                disabled={guardando}
-                onClick={() => cerrar(s.id, "rechazada")}
-              >
-                No se puede
-              </Boton>
-              <Boton
-                ancho
-                disabled={guardando}
-                onClick={() => cerrar(s.id, "resuelta")}
-              >
-                {guardando ? "Guardando" : "Resuelta"}
-              </Boton>
-            </div>
-          </div>
-        )}
-      </Tarjeta>
-    );
-  }
 
   if (solicitudes.length === 0) {
     return (
@@ -258,7 +292,18 @@ export function ListaSolicitudes({
             <Insignia tono="error">{String(vencidas.length)}</Insignia>
           </div>
           {vencidas.map((s) => (
-            <Fila key={s.id} s={s} />
+            <Fila
+              key={s.id}
+              s={s}
+              puedeResolver={puedeResolver}
+              respondiendo={respondiendo}
+              setRespondiendo={setRespondiendo}
+              texto={texto}
+              setTexto={setTexto}
+              guardando={guardando}
+              error={error}
+              cerrar={cerrar}
+            />
           ))}
         </section>
       )}
@@ -270,7 +315,18 @@ export function ListaSolicitudes({
             <Insignia tono="aviso">{String(aTiempo.length)}</Insignia>
           </div>
           {aTiempo.map((s) => (
-            <Fila key={s.id} s={s} />
+            <Fila
+              key={s.id}
+              s={s}
+              puedeResolver={puedeResolver}
+              respondiendo={respondiendo}
+              setRespondiendo={setRespondiendo}
+              texto={texto}
+              setTexto={setTexto}
+              guardando={guardando}
+              error={error}
+              cerrar={cerrar}
+            />
           ))}
         </section>
       )}
@@ -285,7 +341,18 @@ export function ListaSolicitudes({
           </div>
           <div className="flex flex-col gap-2 opacity-70">
             {cerradas.slice(0, 10).map((s) => (
-              <Fila key={s.id} s={s} />
+              <Fila
+              key={s.id}
+              s={s}
+              puedeResolver={puedeResolver}
+              respondiendo={respondiendo}
+              setRespondiendo={setRespondiendo}
+              texto={texto}
+              setTexto={setTexto}
+              guardando={guardando}
+              error={error}
+              cerrar={cerrar}
+            />
             ))}
           </div>
         </section>

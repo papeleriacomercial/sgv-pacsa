@@ -1288,3 +1288,48 @@ con Verónica. En doce meses eso son $128 202 que los vendedores facturaron y no
 **No se cambió la comisión.** Que un vendedor cobre más o menos no es una decisión de esquema, y
 las dos columnas dejan el hecho a la vista para cuando el negocio quiera decidirlo. Esconderlo
 detrás de una sola columna es lo que hace que después nadie sepa cuál número creer.
+
+---
+
+## D-053 — Gerencia lee por año calendario; el vendedor, por doce meses móviles
+
+**Fecha:** 2026-08-26
+
+**Decisión.** El tablero de gerencia se lee por **ejercicio**: 2025 completo, 2026 hasta hoy, con
+un selector. La pantalla del vendedor usa **los últimos doce meses** y no ofrece selector.
+
+**Por qué distinto.** El negocio cierra sus números por año, y comparar «los últimos doce meses»
+contra un ejercicio no compara nada. Al vendedor el año fiscal le da igual: lo que quiere saber es
+cómo viene su último año de trabajo, hoy.
+
+Eso obligó a estirar la carga del historial **desde el 1 de enero del año anterior** —veinte meses
+hoy— porque con doce móviles faltaban enero y febrero de 2026 y medio 2025.
+
+**Y obligó a que las vistas declaren su ventana.** `compra_por_linea` sumaba todo lo que hubiera y
+dividía entre doce: funcionaba por casualidad, porque la carga traía doce meses justos. Con veinte
+habría dicho un 67 % de más en la pantalla que le informa al vendedor cuánto compra un cliente.
+**Una vista que depende de cuántos datos se cargaron no es una vista, es una coincidencia.**
+
+**Cada sección cierra con su total.** Los porcentajes sin total no se pueden cuadrar contra la
+cifra grande, y una cifra que no se puede cuadrar no se cree. Donde no cuadra —la venta por línea,
+que solo cubre la calle— se dice por qué.
+
+---
+
+## D-054 — Borrar solo cuando el reemplazo ya está en la mano
+
+**Fecha:** 2026-08-26
+
+**Decisión.** `zoho-historial.mjs` escribe las transacciones primero y borra los renglones viejos
+**justo antes** de insertar los nuevos, solo de los documentos que de verdad abrió.
+
+**Por qué.** Antes borraba todos los renglones al principio y los reponía al final. Una pasada
+reventó en el medio —Zoho devolvió documentos repetidos al paginar y el `upsert` rechazó el lote
+entero— y la base quedó con **743 renglones de los 2 151** que tenía. La venta cruzada y el modelo
+de gemelos se quedaron ciegos hasta la siguiente pasada.
+
+**Borrar algo que todavía no se puede reponer es apostar a que nada falle entre las dos
+operaciones.** Y algo falla.
+
+De paso, la causa del reventón también se arregló: Zoho pagina por número de página, así que con
+seis mil documentos una fila aparece en dos páginas. Se descartan los repetidos antes de escribir.

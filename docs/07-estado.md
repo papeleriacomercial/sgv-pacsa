@@ -3084,3 +3084,65 @@ transacciones duplicadas** entre las 4 193.
 - **Contra meta** (§7.3): sigue sin haber metas en el esquema.
 - **Tasa de cierre y tiempo de ciclo** (§7.3): ahora son posibles —hay cotizaciones con fecha—
   pero todavía hay dos cotizaciones en la base, así que medir no diría nada.
+
+---
+
+## El tablero por ejercicio, la cartera del vendedor, y un borrado que costó caro — 2026-08-26
+
+### Lo que se arregló de lo que probaste
+
+| Lo que reportaste | Qué pasaba |
+|---|---|
+| Gerencia entra a Agenda | El login manda a `/` sin mirar el rol. Ahora gerencia aterriza en el Tablero y administración en Solicitudes |
+| No puedo escribir la respuesta: se cierra el teclado | **`Fila` estaba definida dentro de `ListaSolicitudes`.** React creaba una función nueva en cada render y desmontaba la tarjeta entera —con el campo adentro—. Cada tecla remontaba el input. Extraída a nivel de módulo |
+| Faltan enero y febrero | La pantalla cortaba a seis meses. Ahora muestra el año completo |
+| ¿De qué período son estas cifras? | Selector de año: 2025 completo, 2026 hasta hoy. Y el año en curso se rotula «todavía abierto» |
+| No puedo cuadrar contra el total | Cada sección cierra con su total. Donde no cuadra —la venta por línea— se dice por qué |
+
+Ver [D-053](06-decisiones.md).
+
+Con el año calendario, los números cambian de cara:
+
+| | 2025 | 2026 (8 meses) |
+|---|---:|---:|
+| Facturado | $1 750 982 | $1 261 442 |
+| La casa | 84 % | 64 % |
+| Los vendedores | 16 % | **36 %** |
+| Top 10 clientes | 60 % | 48 % |
+
+**La fuerza de ventas pasó del 16 % al 36 % del negocio en un año**, y la concentración bajó de
+60 % a 48 %. Eso no se veía con la ventana móvil.
+
+### La pantalla del vendedor: «Mi cartera»
+
+Cuarta pestaña en Ventas, con el mismo filtro de vendedor que ya tenía. Doce meses móviles.
+
+- **De quién depende su cartera**, con aviso cuando un solo cliente pasa del 30 %.
+- **Quién le compra más**, con barras y el peso de cada uno.
+- **Qué le vende**, por línea — y **qué línea no ha vendido en todo el año**, que es lo que más
+  dice: un vendedor que mueve rollos y bolsas y nunca tubos no tiene mala suerte, no los ofrece.
+
+Lo que sale hoy:
+
+| Vendedor | Clientes | 12 meses | Su mayor cliente | Mezcla |
+|---|---:|---:|---|---|
+| Christopher | 33 | $250 295 | Farmacias Arrocha, **40 %** | rollos 71 % |
+| Javier | 145 | $213 832 | Supermercados Xtra, 21 % | rollos 49 % · bolsas 48 % |
+| Albert | 55 | $83 085 | Supermarket Mi Pueblo, **38 %** | rollos 63 % · bolsas 36 % |
+
+**Albert no ha vendido ni tubos ni antigrasa en todo el año.**
+
+### Lo que quedó roto y hay que reponer
+
+Una pasada del historial reventó a mitad y **se llevó los renglones**: quedan 743 de 2 151. Ver
+[D-054](06-decisiones.md). Mientras tanto, estas tres cosas están ciegas:
+
+- La venta cruzada del expediente y de las listas.
+- «Qué le vende» de Mi cartera.
+- «Qué se vende» del tablero, para 2025.
+
+**La cuota de Zoho está agotada** (337 de los 400 que pide la pasada), así que se repone cuando
+reinicie. Son 18 minutos de pasada completa. El resto del tablero —canal, quién firma,
+concentración, clientes nuevos— **no depende de renglones y está bien**.
+
+El orden de escritura ya está corregido, así que esto no vuelve a pasar.
