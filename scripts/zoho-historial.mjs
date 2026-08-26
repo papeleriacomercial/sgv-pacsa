@@ -11,8 +11,8 @@
 // Corre después de `zoho-sincronizar.mjs`, que es el que crea las cuentas.
 // Ver docs/05-modulos/7.6-clientes-y-facturacion.md.
 
-import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
+import { entorno, DE_ZOHO } from "./entorno.mjs";
 
 const APLICAR = process.argv.includes("--aplicar");
 const MESES = 12;
@@ -25,29 +25,7 @@ const EN_PARALELO = 6;
 
 // ---------------------------------------------------------------------------
 
-function entorno() {
-  const texto = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
-  const vars = {};
-  for (const linea of texto.split(/\r?\n/)) {
-    const m = linea.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m) vars[m[1]] = m[2].replace(/^["']|["']$/g, "");
-  }
-  const faltan = [
-    "ZOHO_ORG_ID",
-    "ZOHO_CLIENT_ID",
-    "ZOHO_CLIENT_SECRET",
-    "ZOHO_REFRESH_TOKEN",
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
-  ].filter((k) => !vars[k]);
-  if (faltan.length) {
-    console.error(`\n  Faltan en .env.local: ${faltan.join(", ")}\n`);
-    process.exit(1);
-  }
-  return vars;
-}
-
-const env = entorno();
+const env = entorno(DE_ZOHO);
 
 // --- Zoho ------------------------------------------------------------------
 
@@ -75,6 +53,14 @@ async function zoho(ruta, params = {}) {
   u.searchParams.set("organization_id", env.ZOHO_ORG_ID);
   for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
 
+  // Con DEPURAR=1 imprime la dirección exacta. Es lo que destapó que la marca
+  // de agua iba en un formato que Zoho rechaza: el mensaje de error nombraba el
+  // parámetro pero no decía con qué valor le estaba llegando.
+  if (process.env.DEPURAR) {
+    console.error(
+      "    -> " + u.toString().replace(/organization_id=\d+/, "organization_id=***"),
+    );
+  }
   const r = await fetch(u, {
     headers: { Authorization: `Zoho-oauthtoken ${token}` },
   });
@@ -148,10 +134,27 @@ const doceMeses = new Date();
 doceMeses.setMonth(doceMeses.getMonth() - MESES);
 const fechaDesde = doceMeses.toISOString().slice(0, 10);
 
+/**
+ * La marca de agua, en el formato que Zoho acepta.
+ *
+ * **Books quiere `yyyy-MM-ddTHH:mm:ss±HHmm` y nada más**: sin milésimas y
+ * con el desfase pegado, sin los dos puntos. Postgres devuelve
+ * `2026-08-25T14:23:29.127+00:00`, que trae las dos cosas que sobran, y
+ * Zoho contesta «Invalid value passed for last_modified_time».
+ *
+ * Por eso la pasada incremental nunca llegó a correr: la primera funcionó
+ * —no había marca todavía, así que filtró por fecha— y todas las siguientes
+ * murieron en la primera consulta. Se comprobaron los seis formatos contra
+ * la API; solo pasan los dos que cumplen esa forma exacta.
+ */
+function paraZoho(iso) {
+  return new Date(iso).toISOString().replace(/\.\d+Z$/, "+0000");
+}
+
 // El filtro por modificación es lo que hace barata la pasada de todas las
 // noches: sin él habría que volver a abrir los 2 100 documentos cada vez.
 const filtro = desdeGuardado
-  ? { last_modified_time: desdeGuardado }
+  ? { last_modified_time: paraZoho(desdeGuardado) }
   : { date_start: fechaDesde };
 
 console.log(

@@ -9,47 +9,15 @@
 // **Books manda.** El espejo `clientes_zoho` se rehace entero; lo que el
 // vendedor escribe vive en `cuentas` y no se toca — salvo el enlace.
 
-import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
+import { entorno, DE_ZOHO } from "./entorno.mjs";
 
 const APLICAR = process.argv.includes("--aplicar");
 const MESES = 12;
 
 // ---------------------------------------------------------------------------
 
-function entorno() {
-  const texto = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
-  const vars = {};
-  for (const linea of texto.split(/\r?\n/)) {
-    const m = linea.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m) vars[m[1]] = m[2].replace(/^["']|["']$/g, "");
-  }
-
-  const faltan = [
-    "ZOHO_ORG_ID",
-    "ZOHO_CLIENT_ID",
-    "ZOHO_CLIENT_SECRET",
-    "ZOHO_REFRESH_TOKEN",
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
-  ].filter((k) => !vars[k]);
-
-  if (faltan.length) {
-    console.error(`\n  Faltan en .env.local: ${faltan.join(", ")}\n`);
-    if (faltan.includes("SUPABASE_SERVICE_ROLE_KEY")) {
-      console.error(
-        "  La clave de servicio está en el panel de Supabase, en\n" +
-          "  Project Settings → API → service_role. Es la única que puede\n" +
-          "  escribir sin sesión de usuario, que es lo que hace esta pasada.\n",
-      );
-    }
-    process.exit(1);
-  }
-
-  return { ...vars, ZOHO_DOMINIO: vars.ZOHO_DOMINIO || "zoho.com" };
-}
-
-const env = entorno();
+const env = entorno(DE_ZOHO);
 
 // --- Zoho ------------------------------------------------------------------
 

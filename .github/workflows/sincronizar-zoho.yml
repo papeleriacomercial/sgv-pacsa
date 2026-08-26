@@ -1,0 +1,68 @@
+# Trae de Zoho Books lo que pasó durante el día.
+#
+# **Por qué aquí y no en Vercel.** Las dos pasadas son Node pelado —no importan
+# una sola dependencia— y la primera vez que corren contra una base vacía tardan
+# trece minutos abriendo dos mil documentos. Una función de Vercel se corta a
+# los sesenta segundos; aquí no hay prisa. Y el registro de cada noche queda
+# guardado y a la vista, que es lo que permite darse cuenta de que algo dejó de
+# correr.
+#
+# Antes de que sirva hay que poner los secretos del repositorio, en
+# Settings → Secrets and variables → Actions:
+#
+#   ZOHO_ORG_ID · ZOHO_CLIENT_ID · ZOHO_CLIENT_SECRET · ZOHO_REFRESH_TOKEN
+#   NEXT_PUBLIC_SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY
+#
+# Son los mismos valores del `.env.local`. El paso a paso de los de Zoho está en
+# docs/15-zoho.md.
+#
+# **Y una variable, no secreta:** `SUPABASE_REF_ESPERADO`, con el identificador
+# del proyecto al que debe escribir. Si algún día un secreto queda mal pegado,
+# la pasada se detiene en vez de escribir en la base equivocada — que no da
+# error y se descubre semanas después.
+
+name: Sincronizar con Zoho
+
+on:
+  schedule:
+    # 07:00 UTC son las 2:00 de la madrugada en Panamá. La oficina ya cerró y
+    # nadie está facturando, así que la foto que se toma es la del día completo.
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+# Dos pasadas a la vez se pisarían la marca de agua. Si una sigue corriendo
+# cuando arranca la siguiente, la segunda espera.
+concurrency:
+  group: zoho
+  cancel-in-progress: false
+
+jobs:
+  sincronizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      ZOHO_ORG_ID: ${{ secrets.ZOHO_ORG_ID }}
+      ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+      ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+      ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_REF_ESPERADO: ${{ vars.SUPABASE_REF_ESPERADO }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # Primero la cartera: es la que crea las cuentas nuevas y decide de quién
+      # es cada cliente. El historial cuelga de eso.
+      - name: Cartera y facturación
+        run: node scripts/zoho-sincronizar.mjs --aplicar
+
+      # Después el detalle de cada compra. Incremental: pide solo lo modificado
+      # desde la pasada anterior, que son diez o veinte consultas.
+      - name: Renglones de cada compra
+        run: node scripts/zoho-historial.mjs --aplicar

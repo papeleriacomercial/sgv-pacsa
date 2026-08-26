@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "zoho": "node scripts/zoho-sincronizar.mjs --aplicar && node scripts/zoho-historial.mjs --aplicar",
+    "zoho:seco": "node scripts/zoho-sincronizar.mjs && node scripts/zoho-historial.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

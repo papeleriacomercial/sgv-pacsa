@@ -995,3 +995,30 @@ por nombre son una lista; así son una ruta, y arranca en Steven Jiménez —com
 **Un pendiente conocido:** «ya se le acabó» es absoluto y debería ser relativo. Cinco días de
 atraso en un cliente que compra cada 4 es grave; en uno que compra cada 90, no es nada. Hoy los
 dos entran igual. Se arregla cuando haya con quién validar el umbral.
+
+---
+
+## D-040 — La sincronización corre en GitHub Actions, no en Vercel
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Las dos pasadas de Zoho corren de madrugada como una tarea programada de GitHub
+Actions —`.github/workflows/sincronizar-zoho.yml`—, a las 2:00 de Panamá.
+
+**Por qué no en Vercel.** Era la opción obvia porque ahí vive la aplicación, pero:
+
+- **Las funciones de Vercel se cortan.** La primera pasada del historial contra una base vacía
+  tarda trece minutos abriendo dos mil documentos. Ese caso vuelve cada vez que se estrena un
+  entorno — producción, por ejemplo. En Actions no hay prisa.
+- **Los scripts no importan una sola dependencia.** Corren sobre Node pelado, así que la tarea es
+  un `checkout` y dos `node`. Meterlos en una ruta de la aplicación obligaba a refactorizar
+  novecientas líneas que hoy funcionan.
+- **El registro queda guardado y a la vista.** Es lo que permite darse cuenta de que algo dejó de
+  correr — que es exactamente cómo se descubren estas cosas: tarde.
+
+**El costo:** los secretos viven en dos lugares, GitHub y Vercel. Se acepta.
+
+**Y un seguro contra la base equivocada.** La variable `SUPABASE_REF_ESPERADO` hace que la pasada
+se detenga si la dirección de Supabase no apunta al proyecto que se esperaba. Un secreto mal
+pegado no da error: escribe, y escribe bien, en el proyecto que no era. Se descubre semanas
+después, cuando los números no cuadran.

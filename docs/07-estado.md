@@ -2596,3 +2596,62 @@ sin comprar, que es el peor candidato de todos. Ver [D-039](06-decisiones.md).
 - **El umbral es absoluto y debería ser relativo.** Cinco días de atraso en quien compra cada 4 es
   grave; en quien compra cada 90, no es nada.
 - **Trazabilidad de muestras.** Sigue sin empezar.
+
+---
+
+## La sincronización de noche, y el filtro incremental que nunca corrió — 2026-08-26
+
+### La tarea programada
+
+`.github/workflows/sincronizar-zoho.yml`. Corre a las 2:00 de la madrugada de Panamá —07:00 UTC—,
+primero la cartera y después los renglones, con un candado que impide que dos pasadas se pisen.
+En GitHub Actions y no en Vercel; el porqué está en [D-040](06-decisiones.md).
+
+**Falta que alguien ponga los secretos** en Settings → Secrets and variables → Actions. Son los
+seis del `.env.local`: `ZOHO_ORG_ID`, `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`,
+`ZOHO_REFRESH_TOKEN`, `NEXT_PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`. Hasta entonces la
+tarea existe y falla.
+
+Y conviene poner la variable **`SUPABASE_REF_ESPERADO`** —no secreta— con el identificador del
+proyecto al que debe escribir. Es un seguro contra el día que se cambien los secretos a producción
+y uno quede mal pegado.
+
+De paso, `scripts/entorno.mjs`: las credenciales salen del entorno primero y del `.env.local`
+después. **El orden importa** — si ganara el archivo, correr la pasada de producción desde esta
+máquina escribiría en desarrollo.
+
+### El filtro incremental estaba roto desde el día uno
+
+Al probar la pasada apareció esto:
+
+```
+Zoho respondió 2: Invalid value passed for last_modified_time
+```
+
+**La pasada incremental del historial nunca llegó a correr.** La primera funcionó porque no había
+marca de agua todavía y filtró por fecha; todas las siguientes murieron en la primera consulta. Es
+decir: desde el 25 de agosto los renglones de venta no se estaban actualizando, y nadie lo sabía
+porque nada corría solo.
+
+Books quiere `yyyy-MM-ddTHH:mm:ss±HHmm` exacto. Postgres devuelve
+`2026-08-25T14:23:29.127+00:00`, con las milésimas y los dos puntos del desfase — las dos cosas
+que sobran. Se probaron los seis formatos contra la API y solo pasan los dos que cumplen esa
+forma.
+
+El mensaje de error nombraba el parámetro pero no decía con qué valor le estaba llegando, así que
+se agregó `DEPURAR=1` para imprimir la dirección exacta. Fue lo que lo destapó.
+
+Ya corregido y corrido:
+
+```
+Trayendo lo modificado desde 2026-08-25 14:23.
+9 facturas y 0 entregas por abrir.
+9 transacciones · 10 renglones escritos.
+```
+
+Nueve facturas en **dos consultas** en vez de dos mil cien. Y la siguiente pasada, segundos
+después: «Nada nuevo. Listo.»
+
+### De paso
+
+`npm run zoho` corre las dos de un tirón; `npm run zoho:seco` las ensaya sin escribir.
