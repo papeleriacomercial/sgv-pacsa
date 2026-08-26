@@ -1,5 +1,11 @@
 # Paso a producción
 
+> **Este documento describe el camino que NO se tomó.** El 26 de agosto de 2026 se salió a
+> producción intercambiando los dos proyectos de Supabase en vez de cargar uno nuevo desde cero
+> —ver [D-055](06-decisiones.md) y el cierre de `07-estado.md`—. Se deja porque sigue siendo el
+> procedimiento correcto para levantar un entorno vacío, que es justo lo que hay que hacerle ahora
+> al nuevo proyecto de desarrollo.
+
 Qué hay que hacer, en qué orden y qué se puede romper. Es una lista para seguir con el proyecto
 abierto delante, no una explicación.
 

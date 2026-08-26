@@ -3146,3 +3146,46 @@ reinicie. Son 18 minutos de pasada completa. El resto del tablero —canal, qui�
 concentración, clientes nuevos— **no depende de renglones y está bien**.
 
 El orden de escritura ya está corregido, así que esto no vuelve a pasar.
+
+---
+
+## Salida a producción — 2026-08-26
+
+Se salió, y **no por el camino que decía el plan**. Ver [D-055](06-decisiones.md).
+
+En vez de crear producción de cero, **se intercambiaron los dos proyectos de Supabase**: el de
+desarrollo —que ya tenía todos los datos reales— pasó a ser producción, y el que estaba vacío pasó
+a ser el nuevo desarrollo. Ahorró las 57 migraciones, las 2 300 llamadas a Zoho, los perfiles,
+Badger y el catálogo.
+
+### Lo que se hizo
+
+| Paso | Quién | Estado |
+|---|---|---|
+| Renombrar los dos proyectos en Supabase | Guido | Hecho |
+| `Site URL` y `Redirect URLs` de producción | Guido | Hecho |
+| Variables de Production en Vercel → la base de siempre | Guido | Hecho |
+| Fusionar `dev` en `main` y desplegar | Claude | Hecho — 102 commits, 57 migraciones |
+| Retirar las cinco cuentas de prueba y lo que colgaba | Claude | Hecho — borrado lógico |
+
+La base al salir:
+
+```
+521 cuentas · 233 clientes de Zoho · 5 736 transacciones · 1 834 productos
+6 seguimientos · 2 compromisos · 2 cotizaciones
+Aguadulce 17 puntos · Chitré 30 · Bancos 2
+```
+
+Los perfiles ya estaban correctos —Gerencia gerente, Christopher líder, Albert y Javier con su
+líder— porque son los mismos de siempre. Ese paso del plan viejo se ahorró entero.
+
+### Lo que falta
+
+| | |
+|---|---|
+| **Secretos de GitHub** | Sin ellos la sincronización de la noche no corre. Son los seis del `.env.local`, sin cambiar nada, más la variable `SUPABASE_REF_ESPERADO` |
+| **Usuario de Verónica** | La oficina no puede entrar hasta que exista |
+| **Cuotas y alerta de gasto en Google Cloud** | Lo único de la lista que no es opcional: en producción la búsqueda de prospectos se usa de verdad |
+| **Migraciones en el nuevo desarrollo** | Hasta entonces no hay dónde probar una migración riesgosa |
+| **Renglones incompletos** | 743 de 2 151, por la pasada que reventó. Programada la reposición a las 00:30 |
+| **Caminar el flujo del vendedor** | Nadie lo ha visto. Las pantallas de gerencia dieron cuatro fallos el primer día que alguien las miró |

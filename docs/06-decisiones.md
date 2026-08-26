@@ -1333,3 +1333,33 @@ operaciones.** Y algo falla.
 
 De paso, la causa del reventón también se arregló: Zoho pagina por número de página, así que con
 seis mil documentos una fila aparece en dos páginas. Se descartan los repetidos antes de escribir.
+
+---
+
+## D-055 — Producción no se carga de cero: se intercambian los dos proyectos
+
+**Fecha:** 2026-08-26
+
+**Decisión.** El proyecto de Supabase que se llamaba `sgv-pacsa-dev` **pasa a ser producción** y se
+renombra `sgv-pacsa`. El que se llamaba `sgv-pacsa-prod` —vacío salvo los cuatro usuarios— pasa a
+ser el nuevo desarrollo. Vercel apunta producción a la base de siempre.
+
+**Por qué.** El plan original —crear producción desde cero, aplicar las 57 migraciones, recargar
+Zoho, rehacer perfiles, reimportar Badger— tenía sentido cuando la base de desarrollo era una
+maqueta. Hoy no lo es: tiene 521 cuentas, 233 clientes de Zoho con su facturación real, 5 736
+transacciones, 1 834 productos, las coordenadas de Badger y el catálogo depurado. De prueba había
+**cinco cuentas y once registros**, que se retiraron con borrado lógico.
+
+Recargarla habría costado 2 300 llamadas a Zoho —cuota que ese día no había— para reponer lo que
+ya estaba bien.
+
+**La regla que justificaba dos entornos se cumplió igual.** Lo que se quería evitar era que el
+esquema creciera a mano en un panel; las 57 migraciones están versionadas y reconstruyen todo
+desde cero. Eso es cierto con una base o con dos.
+
+**El costo, dicho claro:** hasta que se apliquen las migraciones al nuevo proyecto de desarrollo,
+no hay dónde probar una migración riesgosa. Es reversible en diez minutos —`supabase db push`
+contra el proyecto vacío— pero mientras tanto es un riesgo real.
+
+Los nombres del panel son etiqueta: la dirección de cada proyecto es un código al azar y no dice
+«dev» ni «prod», así que renombrar no rompió nada.
