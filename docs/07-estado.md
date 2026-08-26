@@ -3243,3 +3243,27 @@ El proyecto de Google está en la **cuenta personal de Guido**, no en la de Pape
 se pudo entrar a la de la empresa ese día. Funciona igual, pero si se pierde acceso a ese correo,
 los mapas dejan de andar y nadie más puede arreglarlo. La solución no es migrar nada: es agregar
 la cuenta de la empresa como **propietaria** del proyecto.
+
+---
+
+## La oficina ya puede entrar — 2026-08-26
+
+Creado el quinto usuario. Los cinco del sistema:
+
+| Perfil | Rol | Aterriza en |
+|---|---|---|
+| Gerencia | `gerente` | Tablero |
+| Christopher Guerra | `lider` | Agenda |
+| Albert Batista | `vendedor` | Agenda |
+| Javier Rodríguez | `vendedor` | Agenda |
+| **Operaciones** | `administracion` | Solicitudes |
+
+**Se llama «Operaciones» y no Verónica** porque son dos personas que hacen ese trabajo
+indistintamente: el perfil es del puesto. La consecuencia es que el acuse de una solicitud guarda
+«Operaciones» y no cuál de las dos la atendió. Si hace falta distinguirlas, son dos usuarios en
+vez de uno — el esquema no lo impide.
+
+El correo venía con un dedazo de una letra —`papeleriacomerial` en vez de `papeleriacomercial`— y
+se corrigió dejándolo confirmado, para que pueda entrar sin esperar ningún correo de verificación.
+Importaba: ese correo es el de acceso y el de restablecer contraseña, y el equivocado no llegaba a
+ningún buzón.
