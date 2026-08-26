@@ -2732,3 +2732,27 @@ Corregido — ver [D-042](06-decisiones.md). Ahora propone 5 uniones y las 5 son
 
 Hay cuentas mal clasificadas: «Minisuper La esquina 2» y «Refresquería Las Abejas» aparecen como
 **Panadería**. No lo toqué — corregirlo es trabajo de quien conoce el local.
+
+---
+
+## El plan de salida a producción — 2026-08-26
+
+Escrito [docs/16-paso-a-produccion.md](16-paso-a-produccion.md): los nueve pasos en orden, qué se
+copia y qué no, y el corte con Badger.
+
+Lo que se comprobó al escribirlo, y que quita trabajo manual del día de la salida:
+
+- **Las 48 migraciones bastan.** Crean el esquema, el RLS, las funciones, las vistas y **también
+  los dos buckets de Storage** con sus políticas. No hay nada que tocar en el panel de Supabase.
+- **Los datos de arranque también son migración**: los datos de la empresa para el encabezado de
+  las cotizaciones, el catálogo inicial de tipos de comercio, y los cinco parámetros —comisión,
+  base de la comisión, tope de cotización, ITBMS y piso de gemelos—. Producción los recibe solos.
+- **Los cuatro usuarios ya existen en `sgv-pacsa-prod`**, de cuando se crearon ahí por error. Solo
+  hay que ponerles rol y líder — **sin `lider_id` Christopher no ve a su equipo**.
+
+Lo único que no viene de migración son los datos reales, y para cada uno hay un script: productos,
+clientes y facturación, historial, y Badger. En ese orden, porque cada uno cuelga del anterior.
+
+**La decisión que falta no es técnica:** si el piloto arranca con los tres vendedores o con uno.
+Con uno se aprende barato pero el líder trabaja con dos sistemas; con los tres se corta de una vez
+y el riesgo es que un problema los pare a todos.

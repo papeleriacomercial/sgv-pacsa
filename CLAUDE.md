@@ -35,6 +35,7 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 | [docs/13-flujo-lider.html](docs/13-flujo-lider.html) | El ciclo del líder: ventas rápidas, ventas grandes y administración del equipo en la misma semana. | Vigente |
 | [docs/14-flujo-gerencia.html](docs/14-flujo-gerencia.html) | El ciclo de gerencia: el tablero del lunes, la media hora con el líder y el informe mensual. | Vigente |
 | [docs/15-zoho.md](docs/15-zoho.md) | Conexión con Zoho Books: qué se trae, en qué orden y por qué; el paso a paso de credenciales y el diagnóstico del RUC. | En preparación |
+| [docs/16-paso-a-produccion.md](docs/16-paso-a-produccion.md) | La corrida de salida al piloto: qué se aplica, en qué orden, y cómo se corta con Badger. | Vigente |
 
 `docs/sgv-preview.html` es una maqueta visual de referencia, no especificación.
 
