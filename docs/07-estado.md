@@ -2241,3 +2241,98 @@ el botón lo dice: si no ha abierto el PDF, se lee **«Enviar sin verlo»**.
 
 De paso, el botón de confirmar dejó de prometer lo que no hacía: decía «Generar y enviar» y
 ahora dice «Generar la cotización».
+
+---
+
+## Qué falta, contra el diseño original — auditado 2026-08-26
+
+Repaso módulo por módulo de §7 de la visión, contra lo que hay construido.
+
+### §7.1 · App móvil del vendedor — **casi completo**
+
+| | |
+|---|---|
+| Mapa con filtros | Hecho |
+| Alta con GPS, foto y aviso de duplicados | Hecho |
+| Agenda con vencidos primero | Hecho |
+| Bitácora con fotos | Hecho |
+| Oportunidades | Hecho |
+| Lista de precios consultable | Hecho — `/productos` |
+| **Filtrar por «dormidos» / última compra** | **Falta.** El dato existe —`dias_sin_comprar`, `dejo_de_comprar`— y se ve en el expediente, pero **no hay filtro**. Es de lo más barato que queda y de lo más útil |
+
+### §7.2 · Oficina y administración — **el más atrasado**
+
+| | |
+|---|---|
+| Bandeja de solicitudes | Hecho |
+| Enlazar el número de cotización de Zoho a la solicitud | Falta |
+| Bandeja de prospectos ganados pendientes de alta como cliente | Falta |
+| Atribución manual de facturas sin vendedor | Falta |
+| Estado de pedidos y fecha de entrega desde el SGP | Falta — el SGP no está conectado |
+
+**Y el ciclo de administración nunca se diseñó.** Es el único rol sin su documento de flujo, y
+ahora tiene nombre: Verónica. Sigue siendo lo primero a escribir antes de programar nada aquí.
+
+### §7.3 · Gerencia — **parcial**
+
+| | |
+|---|---|
+| Franja de «requiere tu atención» | Hecho — Excepciones |
+| El cierre del líder, completo | Hecho |
+| Aprobación de precios especiales | Falta |
+| Ventas en vivo por vendedor **contra meta** | Falta — y **no hay metas en el esquema** |
+| Tasa de cierre por vendedor, zona y producto | Falta |
+| Tiempo del ciclo: creación → cotización → cierre | Falta. Ahora es posible: hay cotizaciones con fecha |
+| Mapa de cobertura con zonas en desarrollo | Falta — bloqueado por la lista de categorías que cuentan como mercado |
+
+### §7.4 · Búsqueda de prospectos — **completo**
+
+### §7.5 · Calificación de prospectos — **falta lo principal**
+
+El **modelo de gemelos** —«las panaderías de tu cartera compran en promedio X al mes»— no está.
+**Pero ya se puede construir:** están los renglones de venta y el tipo de comercio de cada
+cuenta. Es cruzar dos cosas que ya viven en la base.
+
+Lo que sí hay: conteo de reseñas para ordenar la búsqueda, y conteo de sucursales por nombre.
+Lo que no: el puntaje 1–5 sobre cada prospecto.
+
+### §7.6 · Inteligencia comercial — **los datos sí, el tablero no**
+
+Están las 1 536 transacciones y sus renglones. Falta la pantalla que conteste las preguntas de
+gerencia: venta por canal —casa contra vendedores—, por geografía, por línea de producto.
+
+El mix por cliente sí está, en el expediente.
+
+### §7.7 · Reposición, muestras y competencia — **parcial**
+
+| | |
+|---|---|
+| Inteligencia de competencia | Hecho — `/mercado` |
+| Cadencia calculada del ritmo real | Hecho |
+| **Avisar *antes* de que se quede sin producto** | **Falta, y es el corazón del módulo.** Hoy el aviso llega *después*: «dejó de comprar». La visión pide lo contrario — avisar unos días antes del ciclo estimado. Todo lo necesario ya está calculado |
+| Trazabilidad de muestras | Falta. Existe el tipo de interacción, no el seguimiento de qué se entregó y en qué terminó |
+
+### §7.8 · Colaboración y consultas internas — **no empezado**
+
+Hilos de comentarios anclados al registro. No hay tabla ni pantalla.
+
+### §7.9 · Cuentas de grupo desde fuentes públicas — **no empezado**
+
+---
+
+### Lo que no es de módulo pero bloquea
+
+| | |
+|---|---|
+| **Tarea programada** para las sincronizaciones | Hoy nada corre solo. Sin esto, el sistema deja de estar al día en la primera semana |
+| **Migración a producción** | El piloto no debe correr en dev |
+| Pantalla de revisión de Badger | 78 parejas dudosas y 120 clientes sin enganchar |
+| Depurar «Mini Super» contra «Minisuper» | Ya se puede, desde `/categorias` |
+| Cuotas y alerta de gasto en Google Cloud | Sigue pendiente desde el principio |
+| La cuenta de la empresa como dueña del proyecto de Google | Ídem |
+
+### Decisiones que siguen abiertas
+
+Los tres catálogos provisionales por validar con los vendedores, las metas por vendedor, los
+umbrales de dormido, y la higiene del maestro de Zoho —que dejó de ser un bloqueo abstracto: es
+**848 clientes sin RUC**—.
