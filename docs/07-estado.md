@@ -2246,6 +2246,10 @@ ahora dice «Generar la cotización».
 
 ## Qué falta, contra el diseño original — auditado 2026-08-26
 
+> **Este repaso quedó desfasado la misma noche.** Lo que cambió está al final del documento, en
+> «Dónde quedó el repaso de §7». Se deja tal cual porque es la foto de la que salió el trabajo
+> que vino después.
+
 Repaso módulo por módulo de §7 de la visión, contra lo que hay construido.
 
 ### §7.1 · App móvil del vendedor — **casi completo**
@@ -2756,3 +2760,54 @@ clientes y facturación, historial, y Badger. En ese orden, porque cada uno cuel
 **La decisión que falta no es técnica:** si el piloto arranca con los tres vendedores o con uno.
 Con uno se aprende barato pero el líder trabaja con dos sistemas; con los tres se corta de una vez
 y el riesgo es que un problema los pare a todos.
+
+---
+
+## Dónde quedó el repaso de §7 — cierre del 2026-08-26
+
+Lo que cambió respecto al repaso de la mañana, después de la noche de trabajo.
+
+| Módulo | Estaba | Quedó |
+|---|---|---|
+| §7.1 · Filtrar por dormidos | Falta | **Hecho**, y mejor de lo pedido: filtra por cuánto producto le queda, no por cuánto lleva sin comprar |
+| §7.5 · Modelo de gemelos | Falta lo principal | **Hecho.** Falta el puntaje 1–5, que necesita los pesos del negocio |
+| §7.7 · Avisar antes de que se quede sin producto | «Falta, y es el corazón del módulo» | **Hecho.** En la Agenda, de 0 a 7 días |
+| Tarea programada | «Hoy nada corre solo» | **Hecha** — falta que alguien pegue los secretos en GitHub |
+| Migración a producción | Sin plan | **Plan escrito**: [docs/16-paso-a-produccion.md](16-paso-a-produccion.md) |
+| §7.3 · Ventas por vendedor contra meta | Falta | La mitad hecha: se ve por vendedor y del equipo. **Contra meta sigue sin poder hacerse: no hay metas en el esquema** |
+
+Y dos fallos que aparecieron al construir:
+
+- **El filtro incremental del historial de Zoho nunca corrió.** Desde el 25 de agosto los
+  renglones de venta no se actualizaban, y nadie lo sabía porque nada corría solo. Corregido.
+- **La pantalla de depurar tipos de comercio proponía una unión que borraba información.**
+  Corregido.
+
+### Lo que sigue pendiente, por orden de lo que bloquea
+
+**Necesita una decisión del negocio:**
+
+1. **Metas por vendedor.** Sin ellas, Ventas dice cuánto lleva cada uno pero no contra qué. Es lo
+   que le falta a §7.3 para cerrar.
+2. **Depurar cinco tipos de comercio** en `/categorias`. La pantalla ya propone las uniones y las
+   cinco son correctas; cuál nombre sobrevive es vocabulario de la casa. Mientras no se haga, el
+   modelo de gemelos cuenta la misma categoría dos veces.
+3. **Confirmar los cuatro prefijos de producto** —`TE…`, `FP-Kraft`/`FC-Kraft`, `FP-Antigrasa`,
+   `Tubos…`—. Desbloquea la mezcla por tipo de comercio y la venta por línea de §7.6.
+4. **El umbral mínimo de pedido** y **el puntaje 1–5** de §7.5.
+5. **Si el piloto arranca con los tres vendedores o con uno.**
+
+**No necesita decisión, se puede construir:**
+
+6. **Pantalla de revisión de Badger** — 83 parejas dudosas y 114 clientes sin enganchar. Pide
+   tabla nueva: hoy el cruce se recalcula desde el archivo cada vez.
+7. **§7.6 · El tablero de inteligencia comercial.** Los datos están —1 541 transacciones, 2 160
+   renglones—; falta la pantalla.
+8. **§7.8 · Hilos de comentarios.** Sin tabla ni pantalla.
+9. **Trazabilidad de muestras** (§7.7).
+10. **Cuotas y alerta de gasto en Google Cloud**, y pasar el proyecto a la cuenta de la empresa.
+
+**Bloqueado por documentación:**
+
+11. **§7.2 · El módulo de oficina.** Es el más atrasado y sigue siendo el único rol sin documento
+    de flujo. Nada se programa ahí hasta escribir el ciclo de Verónica.
