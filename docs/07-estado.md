@@ -2366,3 +2366,77 @@ Ahora **el dueño es obligatorio**. Ver lo del equipo hay que pedirlo por su nom
 
 Es la lección que se repite: **cuando un fallo aparece tres veces, el error no está en las tres
 pantallas — está en lo que las tres llaman.**
+
+---
+
+## Lo que lleva vendido, y lo que le queda del mes — 2026-08-26
+
+> «Al final no hay posibilidad de mostrar al vendedor cuánto lleva vendido en el mes y cuánto
+> lleva de comisión, que es lo que realmente lo incentiva.»
+
+Sí la había: las facturas y entregas de Zoho ya estaban en la base desde el 25. Solo faltaba
+la regla y la pantalla.
+
+### La regla
+
+**1,5 % de lo facturado en el mes, sin el ITBMS**, contando facturas y entregas. Los dos valores
+—el porcentaje y si va sobre el neto— viven en `parametros`, no en el código: un cambio de
+comisión no puede ser un despliegue, y cada cambio queda en `auditoria` porque afecta lo que la
+gente cobra.
+
+El neto **sale de los renglones**, no de restarle 7 % al total. Hay documentos exentos y otros
+con líneas exentas; restar a ojo daría un número que no cuadra con ninguna factura. Ver
+[D-033](06-decisiones.md).
+
+Migración `20260826200000_comision.sql`: la vista `ventas_del_mes` (hereda el RLS de
+`transacciones_zoho`) y la función `comision_del_mes(perfil, mes)`. **La comisión se calcula al
+leer, no se guarda** — así siempre dice la verdad de hoy con la regla de hoy.
+
+Agosto, medido contra la base real:
+
+| Vendedor | Vendido | Base sin ITBMS | Comisión | Documentos | Por cobrar |
+|---|---:|---:|---:|---:|---:|
+| Christopher Guerra | $18 284.57 | $17 088.35 | **$256.33** | 26 | $16 847.78 |
+| Javier Rodríguez | $8 963.09 | $8 380.30 | **$125.70** | 47 | $4 951.46 |
+| Albert Batista | $2 945.77 | $2 783.60 | **$41.75** | 11 | $1 600.19 |
+
+### La pantalla
+
+`/oportunidades` deja de ser solo el embudo y pasa a llamarse **Ventas** a secas. Queda partida
+en dos, porque contesta dos preguntas distintas:
+
+- **Arriba, el mes.** Lo vendido, la comisión ganada, y un botón que abre el detalle factura por
+  factura en `/oportunidades/cerradas`. **Un total que no se puede abrir no se discute, y por eso
+  no se cree**: la primera vez que no le cuadre con lo que él recuerda, deja de mirarlo.
+- **Debajo, lo que todavía puede entrar.** Sus cotizaciones vivas y las ventas con cierre
+  estimado dentro del mes, cada una con lo que le dejaría a él. Marca las que cree que entran y
+  el total se mueve. **Nada de eso se guarda** — ver [D-034](06-decisiones.md).
+- **Abajo, el embudo de siempre**, con sus dos vistas por etapa y por mes.
+
+En la vista de equipo el bloque del mes no aparece: la comisión es de una persona, no de un grupo.
+
+### Un aviso que va con el número
+
+La pantalla dice que el total es lo que dice Zoho hasta la última sincronización, y que no
+incluye devoluciones ni notas de crédito. Sin eso, el primer mes que la planilla no cuadre con la
+pantalla se pierde la confianza en todo lo demás.
+
+### Ventas entra a la barra del vendedor
+
+Se había sacado porque el vendedor de ruta casi no negocia. Eso sigue siendo cierto; lo que
+cambió es que la pantalla ya no es solo el embudo. Ver [D-035](06-decisiones.md). La barra del
+vendedor pasa a seis casillas y la letra baja a 10 px cuando hay más de cinco — el ícono y el
+alto táctil no cambian.
+
+Actualizados `docs/12-flujo-vendedor.html` (cinco pantallas → seis, y la sección de Oportunidades
+reescrita como «Ventas: el mes arriba, el embudo abajo») y `docs/13-flujo-lider.html` (los
+bocetos decían «Oportunidades» en la barra cuando la aplicación dice «Ventas» desde hace
+semanas).
+
+### Lo que falta de esto
+
+- **Verificación visual pendiente.** El navegador de la vista previa no tiene sesión iniciada, así
+  que lo construido se comprobó contra la base real y con `tsc`, `eslint` y `next build`, pero
+  nadie ha visto la pantalla todavía.
+- **Metas por vendedor.** Sin ellas la pantalla dice cuánto lleva, pero no *contra qué*. Sigue
+  siendo una decisión abierta de §12 de la visión.

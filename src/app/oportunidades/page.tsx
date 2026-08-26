@@ -13,6 +13,7 @@ import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+import { MiMes, type Pendiente } from "@/components/mi-mes";
 
 function hoyEnPanama() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "America/Panama" });
@@ -56,6 +57,12 @@ function nombreDe(cuentas: Oportunidad["cuentas"]) {
     : cuentas.nombre;
 }
 
+const DIA = new Intl.DateTimeFormat("es-PA", {
+  day: "2-digit",
+  month: "short",
+  timeZone: "America/Panama",
+});
+
 const MES = new Intl.DateTimeFormat("es-PA", {
   month: "long",
   year: "numeric",
@@ -85,6 +92,35 @@ function esGrande(fecha: string | null): boolean {
  * grupos apilados con su total, y la etapa se cambia entrando a la
  * oportunidad. Cambia la densidad, no los datos (§17).
  */
+type MiComision = {
+  vendido: string;
+  base: string;
+  comision: string;
+  porcentaje: string;
+  sobre_neto: boolean;
+  documentos: number;
+  por_cobrar: string;
+};
+
+type CotizacionFila = {
+  id: string;
+  codigo: string;
+  total: string | number;
+  emitida_en: string | null;
+  cuentas: { nombre: string } | { nombre: string }[] | null;
+};
+
+/** Las que se estima cerrar antes de fin de mes. */
+function abiertasDelMes(todas: Oportunidad[], hasta: string) {
+  return todas.filter(
+    (o) =>
+      o.etapa !== "ganado" &&
+      o.etapa !== "perdido" &&
+      o.fecha_cierre_estimada !== null &&
+      o.fecha_cierre_estimada <= hasta,
+  );
+}
+
 export default async function Ventas({
   searchParams,
 }: PageProps<"/oportunidades">) {
@@ -124,6 +160,56 @@ export default async function Ventas({
 
   const oportunidades = (data ?? []) as Oportunidad[];
 
+  // --- Su mes: lo cerrado, la comisión, y lo que podría entrar ---------
+  //
+  // Solo cuando mira lo suyo. En la vista de equipo esto no significa nada:
+  // la comisión es de una persona, no de un grupo.
+  const { data: comision } = verEquipo
+    ? { data: null }
+    : await supabase.rpc("comision_del_mes", { p_perfil: user.id });
+
+  const mio = (comision as MiComision[] | null)?.[0] ?? null;
+
+  // Lo que puede entrar antes de fin de mes: cotizaciones vivas y ventas
+  // con cierre estimado dentro del mes. Las dos son promesas de distinto
+  // peso, y por eso se marcan a mano en vez de sumarse solas.
+  // Fin de mes en Panamá, no en el reloj del servidor: si se usara UTC, el
+  // último día del mes las ventas del 31 se caerían de la lista de noche.
+  const [anio, mes] = hoyEnPanama().split("-").map(Number);
+  const hastaFin = new Date(Date.UTC(anio, mes, 0)).toISOString().slice(0, 10);
+
+  const { data: cotizaciones } = verEquipo
+    ? { data: [] }
+    : await supabase
+        .from("cotizaciones")
+        .select("id, codigo, total, emitida_en, cuentas(nombre)")
+        .eq("vendedor_id", user.id)
+        .eq("estado", "emitida")
+        .is("deleted_at", null)
+        .order("emitida_en", { ascending: false })
+        .limit(20);
+
+  const pendientes: Pendiente[] = [
+    ...((cotizaciones ?? []) as unknown as CotizacionFila[]).map((c) => ({
+      id: `cot-${c.id}`,
+      clase: "cotizacion" as const,
+      titulo: `Cotización ${c.codigo}`,
+      cuenta: nombreDe(c.cuentas),
+      monto: Number(c.total),
+      cuando: c.emitida_en ? `emitida ${DIA.format(new Date(c.emitida_en))}` : null,
+    })),
+    ...abiertasDelMes(oportunidades, hastaFin).map((o) => ({
+      id: `op-${o.id}`,
+      clase: "oportunidad" as const,
+      titulo: o.nombre,
+      cuenta: nombreDe(o.cuentas),
+      monto: Number(o.monto_estimado ?? 0),
+      cuando: o.fecha_cierre_estimada
+        ? `cierra ${DIA.format(new Date(`${o.fecha_cierre_estimada}T12:00:00Z`))}`
+        : null,
+    })),
+  ].filter((x) => x.monto > 0);
+
   const abiertas = oportunidades.filter(
     (o) => o.etapa !== "ganado" && o.etapa !== "perdido",
   );
@@ -137,10 +223,11 @@ export default async function Ventas({
       <AvisoSinConexion />
 
       {/* Se llamaba "Pipeline". Quedó del principio y no es la palabra del
-          negocio: en el sistema esto son las ventas en marcha. */}
+          negocio: en el sistema esto son, sencillamente, las ventas — las
+          ya hechas del mes arriba y las que están en marcha abajo. */}
       <header className="flex items-center justify-between gap-2 border-b border-borde bg-superficie px-4 py-3">
         <h1 className="text-lg font-semibold text-marca">
-          {verEquipo ? "Ventas del equipo" : "Ventas en marcha"}
+          {verEquipo ? "Ventas del equipo" : "Ventas"}
         </h1>
         {/* Solo para quien ve a más de uno. A un vendedor, «las mías» y
             «las del equipo» son lo mismo. */}
@@ -157,6 +244,28 @@ export default async function Ventas({
           </Link>
         )}
       </header>
+
+      {/* Primero el mes: es lo que el vendedor viene a ver. El embudo va
+          debajo porque contesta la otra pregunta —qué falta por cerrar— y
+          sus pestañas no gobiernan este bloque. */}
+      {mio && (
+        <div className="border-b border-borde p-4">
+          <MiMes
+            vendido={Number(mio.vendido)}
+            comision={Number(mio.comision)}
+            porcentaje={Number(mio.porcentaje)}
+            sobreNeto={mio.sobre_neto}
+            documentos={Number(mio.documentos)}
+            porCobrar={Number(mio.por_cobrar)}
+            pendientes={pendientes}
+            detalleHref="/oportunidades/cerradas"
+          />
+        </div>
+      )}
+
+      <h2 className="px-4 pt-4 text-sm font-medium text-texto">
+        Ventas en marcha
+      </h2>
 
       {/* Dos vistas de lo mismo, y cada una contesta una pregunta distinta:
           por etapa, en qué momento está cada venta; por mes, cuánto va a

@@ -23,10 +23,11 @@ type Ruta = { href: string; etiqueta: string; Icono: typeof Store };
 /**
  * La barra cambia según el rol, porque los tres oficios no son el mismo.
  *
- * El vendedor de ruta casi nunca abre Oportunidades —vende en una o dos
- * visitas, y eso es un pedido, no una negociación— así que no se gana un lugar
- * permanente en su barra. Al líder sí: las ventas que tardan meses son su
- * trabajo principal.
+ * Ventas está en las cuatro barras. Se había sacado de la del vendedor de
+ * ruta con el argumento de que él casi nunca negocia —vende en una o dos
+ * visitas, y eso es un pedido— pero esa pantalla dejó de ser solo el embudo:
+ * ahí ve lo vendido del mes y su comisión. **Eso lo mira todo vendedor, y el
+ * de ruta más que nadie.**
  *
  * Administración solo atiende su bandeja y el maestro de clientes.
  */
@@ -34,6 +35,7 @@ const POR_ROL: Record<Rol, Ruta[]> = {
   vendedor: [
     { href: "/", etiqueta: "Agenda", Icono: CalendarDays },
     { href: "/listas", etiqueta: "Listas", Icono: List },
+    { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
     { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
     { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
     { href: "/mapa", etiqueta: "Mapa", Icono: Map },
@@ -81,6 +83,10 @@ export function Navegacion({ rol }: { rol?: Rol }) {
 
   const rutas = POR_ROL[rol ?? "vendedor"];
 
+  // Con seis casillas quedan 62 px por casilla en un teléfono angosto, y
+  // "Solicitudes" a 12 px no entra. Se achica la letra solo cuando hace falta.
+  const apretado = rutas.length > 5;
+
   return (
     <nav
       className="sticky bottom-0 mt-auto grid border-t border-borde bg-superficie"
@@ -97,14 +103,15 @@ export function Navegacion({ rol }: { rol?: Rol }) {
             href={href}
             aria-current={activo ? "page" : undefined}
             className={[
-              "min-h-tactil flex flex-col items-center justify-center gap-0.5 border-t-2 py-2 text-xs",
+              "min-h-tactil flex flex-col items-center justify-center gap-0.5 border-t-2 px-0.5 py-2",
+              apretado ? "text-[10px]" : "text-xs",
               activo
                 ? "border-t-aviso text-marca font-medium"
                 : "border-t-transparent text-texto-atenuado",
             ].join(" ")}
           >
             <Icono size={18} aria-hidden />
-            {etiqueta}
+            <span className="max-w-full truncate">{etiqueta}</span>
           </Link>
         );
       })}

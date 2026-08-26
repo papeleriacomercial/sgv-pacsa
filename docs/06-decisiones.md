@@ -830,3 +830,68 @@ trabajo: es la ciudad entera.
 
 Ponérselo habría llenado el campo de una palabra inútil y, peor, **habría hecho creer que ya
 estaba resuelto** — el filtro por zona seguiría sin servir y nadie sabría por qué.
+
+---
+
+## D-033 — La comisión se calcula sobre el neto, y no se guarda
+
+**Fecha:** 2026-08-26
+
+**Decisión.** El vendedor ve en la pantalla de Ventas cuánto lleva vendido en el mes y cuánta
+comisión lleva ganada: **1,5 % de lo facturado, sin el ITBMS**, contando facturas y entregas —las
+órdenes de venta anuladas, que en esta casa significan mercancía despachada y cobrada—. Los dos
+valores viven en `parametros` (`comision_porcentaje`, `comision_sobre_neto`), no en el código.
+
+**Por qué sobre el neto.** El ITBMS no es venta: se cobra para el Estado y se entrega. Comisionar
+sobre él sería pagar por recaudar. La diferencia no es simbólica —en agosto, $274 contra $256 en
+el mes de Christopher— así que queda explícita y cambiable sin desplegar.
+
+**Y el neto sale de los renglones, no de restarle 7 % al total.** Hay documentos exentos y otros
+con líneas exentas; restar a ojo daría un número que no cuadra con ninguna factura, y un número
+que el vendedor no puede cuadrar con su papel es un número que deja de mirar.
+
+**Por qué no se guarda.** Guardar la comisión obligaría a recalcularla cada vez que entra una
+factura, y a decidir qué hacer con las ya guardadas cuando cambie el porcentaje. Calculada al
+leer, siempre dice la verdad de hoy con la regla de hoy.
+
+**Alternativas consideradas.** Ponerla en la Agenda, donde el vendedor entra todos los días. Se
+descartó: un número de comisión delante todo el día motiva cuando el mes va bien y desmoraliza
+cuando va mal. Va en Ventas, que se abre cuando se quiere abrir.
+
+---
+
+## D-034 — Lo que el vendedor proyecta no se guarda
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Debajo del mes cerrado, la pantalla de Ventas lista las cotizaciones vivas y las
+oportunidades con cierre estimado dentro del mes, cada una con lo que esa venta le dejaría de
+comisión. El vendedor marca las que cree que entran y el total se mueve. **Lo marcado no se
+guarda en ningún lado**: vive mientras la pantalla esté abierta.
+
+**Por qué.** Es la cuenta que todo vendedor ya hace con papel y lápiz. Guardarla la convertiría
+en un pronóstico —y un pronóstico guardado es un pronóstico que alguien le va a reclamar. En el
+momento en que marcar tiene consecuencias, el vendedor deja de marcar con honestidad, y la
+herramienta que servía para pensar pasa a servir para cubrirse.
+
+**Alternativa considerada.** Sumarlo todo automáticamente. Se descartó: una cotización enviada y
+una oportunidad en negociación no pesan igual, y solo el vendedor sabe cuál de las dos va a
+entrar. Sumarlas solas daría un número que nadie cree.
+
+---
+
+## D-035 — Ventas vuelve a la barra del vendedor de ruta
+
+**Fecha:** 2026-08-26
+
+**Decisión.** La pantalla de Ventas entra a la barra de los cuatro roles. La barra del vendedor
+pasa de cinco casillas a seis.
+
+**Por qué cambió.** Se había sacado con un argumento que sigue siendo cierto —el vendedor de ruta
+casi no negocia: vende en una o dos visitas, y eso es un pedido, no una oportunidad—. Lo que
+cambió es la pantalla: **dejó de ser solo el embudo**. Hoy arriba muestra el mes y la comisión, y
+eso lo mira todo vendedor, el de ruta más que nadie.
+
+**El costo.** Seis casillas dejan 62 px por casilla en un teléfono de 375 px, y «Solicitudes» a
+12 px no entra. La letra de la barra baja a 10 px solo cuando hay más de cinco. Se acepta porque
+el ícono sigue siendo el que se toca y el alto táctil no cambia.

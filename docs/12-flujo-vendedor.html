@@ -368,7 +368,7 @@
   <div class="marca-rail"></div>
   <p class="eyebrow">SGV · Flujo del vendedor</p>
   <h1>El ciclo del vendedor</h1>
-  <p class="bajada">Cómo trabaja el vendedor de campo, de viernes a viernes: sus cinco pantallas, qué hace en cada una y en qué momento. Versión limpia, con todo lo acordado incorporado.</p>
+  <p class="bajada">Cómo trabaja el vendedor de campo, de viernes a viernes: sus seis pantallas, qué hace en cada una y en qué momento. Versión limpia, con todo lo acordado incorporado.</p>
   <div class="sello">
     <span>2026-08-22</span>
     <span>Continúa a docs/11-diseno-operativo</span>
@@ -377,7 +377,7 @@
 </header>
 
 <section>
-  <h2>Las cinco pantallas</h2>
+  <h2>Las seis pantallas</h2>
 
   <div class="tabla-envoltura">
     <table>
@@ -385,6 +385,7 @@
       <tbody>
         <tr><td>Agenda</td><td><strong>Todo el día</strong></td><td>Dos pestañas: <em>Hoy</em> y <em>Mi semana</em>. Es donde trabaja y donde planifica</td></tr>
         <tr><td>Listas</td><td>Al armar paquetes y ver cuánto le falta</td><td>Los paquetes de potenciales por zona</td></tr>
+        <tr><td>Ventas</td><td>Cuando quiere saber cómo va el mes</td><td>Lo vendido, la comisión ganada, y lo que todavía puede cerrar</td></tr>
         <tr><td>Cuentas</td><td>Cuando busca a alguien concreto</td><td>Consulta y corrección del expediente</td></tr>
         <tr><td>Solicitudes</td><td>Cuando pide algo y cuando espera respuesta</td><td>Pedidos, cotizaciones, muestras y precios, con su reloj</td></tr>
         <tr><td>Mapa</td><td>Al explorar o armar paquete</td><td>Ver dónde está todo y escoger puntos nuevos. Buscar vive adentro</td></tr>
@@ -395,7 +396,7 @@
   <p><strong>Listas y Cuentas no se mezclan, y es a propósito.</strong> Los potenciales viven en sus listas; en Cuentas <em>no aparecen</em>. Un potencial es abundante y desechable —cincuenta puntos escogidos en un rato— mientras que una cuenta es escasa y permanente. Si se mezclaran, las treinta cuentas que de verdad trabaja quedarían enterradas bajo cien puntos que nadie visitó todavía: en un mes de levantar zonas, Cuentas dejaría de servir para lo único que sirve, que es encontrar a alguien.</p>
 
   <p>Escondidos no es lo mismo que ocultos: Cuentas dice arriba <em>“18 potenciales — no se muestran aquí. Están en tus listas”</em>, y con un toque se van a verlos. Y un potencial deja de serlo solo de una manera: cuando alguien lo toca y registra qué pasó. Ahí se clasifica y entra a la cartera por la puerta.</p>
-  <p><strong>Oportunidades no está</strong>, y más abajo está el porqué: sigue existiendo y se llega desde el expediente cuando hace falta, pero no se gana un lugar permanente en alguien que casi no la usa. Solicitudes sí, porque es donde ve si la oficina ya le contestó.</p>
+  <p><strong>Ventas volvió a la barra, y por otra razón de la que salió.</strong> Se había sacado porque el vendedor de ruta casi no negocia —eso sigue siendo cierto y más abajo está el detalle— pero esa pantalla dejó de ser solo el embudo: arriba muestra lo vendido del mes y la comisión ganada. Eso lo mira todo vendedor, y el de ruta más que nadie. Solicitudes se queda, porque es donde ve si la oficina ya le contestó.</p>
 
   <p>Respecto a lo construido hoy: <strong>Cuentas deja de ser la pantalla de inicio</strong> —el día empieza en Agenda y Cuentas pasa a ser lo que en realidad es, la pantalla de consulta—; <strong>Buscar se mete dentro del Mapa</strong>; y <strong>Seguimientos desaparece</strong>, su contenido se mudó a Agenda.</p>
 
@@ -509,7 +510,7 @@
       </div>
       <div class="b-boton suave">Registrar jornada</div>
     </div>
-    <div class="b-nav"><span class="on">Agenda</span><span>Listas</span><span>Cuentas</span><span>Mapa</span></div>
+    <div class="b-nav"><span class="on">Agenda</span><span>Listas</span><span>Ventas</span><span>Cuentas</span><span>Mapa</span></div>
   </div>
   <p class="pie-boceto">La visita a Chitré queda fuera de ruta y la reprograma antes de salir. Las llamadas se quedan: las hará desde Aguadulce.</p>
 
@@ -540,7 +541,7 @@
       <p class="b-seccion">Ya trabajados hoy · 0</p>
       <div class="b-boton suave">Agregar puntos desde el mapa</div>
     </div>
-    <div class="b-nav"><span>Agenda</span><span class="on">Listas</span><span>Cuentas</span><span>Mapa</span></div>
+    <div class="b-nav"><span>Agenda</span><span class="on">Listas</span><span>Ventas</span><span>Cuentas</span><span>Mapa</span></div>
   </div>
   <p class="pie-boceto">La misma parada del carro, dos conversaciones distintas: a uno lo conoce y al otro no.</p>
 
@@ -1074,9 +1075,21 @@
 </section>
 
 <section>
-  <h2>Oportunidades: el vendedor de ruta casi no entra</h2>
+  <h2>Ventas: el mes arriba, el embudo abajo</h2>
 
-  <p>Preguntaste en qué momento entra a Oportunidades si ya tiene su registro de seguimiento. La respuesta honesta es <strong>casi nunca</strong>, y por eso sacamos la pantalla de su barra.</p>
+  <p>La pantalla contesta dos preguntas distintas y por eso está partida en dos.</p>
+
+  <p><strong>Arriba, el mes.</strong> Cuánto lleva vendido y cuánta comisión lleva ganada — el 1,5&nbsp;% de lo facturado, sin el ITBMS, contando facturas y entregas. Ese número no lo escribe nadie: sale de Zoho cada noche. Debajo, un botón abre el detalle factura por factura, porque <em>un total que no se puede abrir no se discute, y por eso no se cree</em>; la primera vez que no le cuadre con lo que él recuerda, deja de mirarlo.</p>
+
+  <p><strong>Y después, la cuenta que todo vendedor hace con papel.</strong> Debajo del mes cerrado aparece lo que todavía puede entrar: sus cotizaciones vivas y las ventas con cierre estimado dentro del mes, cada una con lo que esa venta le dejaría a él. Marca las que cree que entran y el total de abajo se mueve. <strong>Nada de lo que marque se guarda.</strong> Si se guardara se volvería un pronóstico que alguien le va a reclamar, y entonces dejaría de marcar con honestidad.</p>
+
+  <div class="principio">
+    <p>La comisión vive en Ventas y no en la Agenda. Un número de comisión delante todo el día motiva cuando el mes va bien y desmoraliza cuando va mal. Aquí se mira cuando se quiere mirar.</p>
+  </div>
+
+  <h3>Abajo, el embudo — donde el vendedor de ruta casi no entra</h3>
+
+  <p>Preguntaste en qué momento entra a Oportunidades si ya tiene su registro de seguimiento. La respuesta honesta es <strong>casi nunca</strong>.</p>
 
   <div class="principio">
     <p>Si vas a tener que volver más de una vez por la misma venta, es una oportunidad. Si se resuelve en la visita, es un pedido.</p>
@@ -1090,7 +1103,7 @@
     <table>
       <thead><tr><th></th><th>Vendedor de ruta</th><th>Líder</th></tr></thead>
       <tbody>
-        <tr><td>Dónde vive</td><td>Pedidos</td><td>Oportunidades</td></tr>
+        <tr><td>Dónde vive</td><td>Pedidos</td><td>El embudo de Ventas</td></tr>
         <tr><td>Ciclo típico</td><td>Una o dos visitas</td><td>Meses</td></tr>
         <tr><td>Cuántas al mes</td><td>Una o ninguna</td><td>Es su trabajo</td></tr>
       </tbody>
