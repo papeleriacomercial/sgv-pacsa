@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Send, Trash2 } from "lucide-react";
+import { FileText, Plus, Send, Trash2 } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import {
   CONDICIONES,
@@ -105,7 +105,15 @@ export function ArmarCotizacion({
 
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [listo, setListo] = useState<{ url: string; codigo: string } | null>(null);
+  const [listo, setListo] = useState<{
+    url: string;
+    codigo: string;
+    archivo: File;
+  } | null>(null);
+
+  // Si ya lo abrió. No impide mandar —bloquearlo sería tratarlo como a un
+  // niño— pero el botón lo dice: «Enviar sin verlo».
+  const [visto, setVisto] = useState(false);
 
   // --- Buscar en el catálogo ------------------------------------------------
 
@@ -298,24 +306,18 @@ export function ArmarCotizacion({
         .eq("id", id);
       if (falloEmitir) throw falloEmitir;
 
-      const archivo = new File([pdf], `${codigo}.pdf`, {
-        type: "application/pdf",
+      // **No se manda solo.** Antes se abría la hoja de compartir en cuanto
+      // terminaba de generarse, y el vendedor acababa mandando por WhatsApp un
+      // documento que no había visto. Una cotización es una promesa de precio:
+      // un dígito mal puesto lo cobra el cliente, y ya salió de la casa.
+      //
+      // Se genera, se guarda, y se enseña. Mandar es un segundo gesto, después
+      // de mirarlo.
+      setListo({
+        url: URL.createObjectURL(pdf),
+        codigo,
+        archivo: new File([pdf], `${codigo}.pdf`, { type: "application/pdf" }),
       });
-
-      // La hoja de compartir de Android: correo, WhatsApp, lo que tenga.
-      if (navigator.canShare?.({ files: [archivo] })) {
-        try {
-          await navigator.share({
-            files: [archivo],
-            title: `Cotización ${codigo}`,
-            text: `Cotización para ${cuenta.nombre}`,
-          });
-        } catch {
-          // Cancelar el envío no es un error: el documento ya está guardado.
-        }
-      }
-
-      setListo({ url: URL.createObjectURL(pdf), codigo });
       router.refresh();
     } catch (e) {
       const m = e as { message?: string };
@@ -323,6 +325,28 @@ export function ArmarCotizacion({
     } finally {
       setGuardando(false);
     }
+  }
+
+  /** Mandar por donde el vendedor quiera: correo, WhatsApp, lo que tenga. */
+  async function enviar() {
+    if (!listo) return;
+
+    if (navigator.canShare?.({ files: [listo.archivo] })) {
+      try {
+        await navigator.share({
+          files: [listo.archivo],
+          title: `Cotización ${listo.codigo}`,
+          text: `Cotización para ${cuenta.nombre}`,
+        });
+      } catch {
+        // Cancelar no es un error: el documento ya está guardado y se puede
+        // reenviar desde el expediente cuando quiera.
+      }
+      return;
+    }
+
+    // Sin hoja de compartir —un escritorio— se abre y desde ahí se guarda.
+    window.open(listo.url, "_blank");
   }
 
   // --- Pantalla -------------------------------------------------------------
@@ -334,18 +358,38 @@ export function ArmarCotizacion({
           Cotización {listo.codigo}
         </p>
         <p className="text-sm text-texto-secundario">
-          Guardada en el expediente de {cuenta.nombre}. Puedes volver a
-          mandarla cuando quieras.
+          Guardada en el expediente de {cuenta.nombre}.
         </p>
+
+        {/* Ver va primero, y con el peso visual: es el paso que hay que dar
+            antes de mandar nada. */}
         <a
           href={listo.url}
           target="_blank"
           rel="noopener"
-          className="min-h-tactil flex items-center justify-center rounded-lg bg-marca px-3 text-base font-medium text-white"
+          onClick={() => setVisto(true)}
+          className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-3 text-base font-medium text-white"
         >
+          <FileText size={18} aria-hidden />
           Ver el PDF
         </a>
-        <Boton tono="secundario" onClick={() => router.push(`/cuentas/${cuenta.id}`)}>
+
+        <p className="text-xs text-texto-secundario">
+          Míralo antes de mandarlo: los precios que salgan ahí son una promesa,
+          y una vez enviada la cotización sale de la casa.
+        </p>
+
+        <Boton tono="secundario" onClick={enviar}>
+          <span className="flex items-center justify-center gap-2">
+            <Send size={16} aria-hidden />
+            {visto ? "Enviar" : "Enviar sin verlo"}
+          </span>
+        </Boton>
+
+        <Boton
+          tono="secundario"
+          onClick={() => router.push(`/cuentas/${cuenta.id}`)}
+        >
           Volver al cliente
         </Boton>
       </Tarjeta>
@@ -544,7 +588,7 @@ export function ArmarCotizacion({
         >
           <span className="flex items-center justify-center gap-2">
             <Send size={16} aria-hidden />
-            {guardando ? "Generando" : "Generar y enviar"}
+            {guardando ? "Generando" : "Generar la cotización"}
           </span>
         </Boton>
 

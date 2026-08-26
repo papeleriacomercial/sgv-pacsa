@@ -2218,3 +2218,26 @@ Las emitidas salen en el expediente con su código, su total y dos botones: **ve
 
 **El PDF se descarga, no se rehace.** Si se regenerara con los precios de hoy, el papel que tiene
 el cliente y el que ve la oficina dejarían de coincidir.
+
+---
+
+## Mandaba la cotización sin que nadie la hubiera visto — 2026-08-26
+
+Al confirmar, la aplicación abría **de inmediato** la hoja de compartir. El vendedor acababa
+mandando por WhatsApp un documento que **no había abierto nunca**.
+
+**Una cotización es una promesa de precio.** Un dígito mal puesto lo cobra el cliente, y para
+cuando se nota ya salió de la casa. Automatizar el envío ahorraba un toque y quitaba el único
+momento en que alguien podía revisar.
+
+Ahora son dos gestos:
+
+1. **Generar la cotización** — se guarda y se sube, pero no se manda
+2. **Ver el PDF** — primero y con el peso visual, porque es el paso que hay que dar
+3. **Enviar** — después, y a propósito
+
+**No se bloquea el envío sin haber mirado**, que sería tratar al vendedor como a un niño. Pero
+el botón lo dice: si no ha abierto el PDF, se lee **«Enviar sin verlo»**.
+
+De paso, el botón de confirmar dejó de prometer lo que no hacía: decía «Generar y enviar» y
+ahora dice «Generar la cotización».
