@@ -13,6 +13,10 @@
 #   ZOHO_ORG_ID · ZOHO_CLIENT_ID · ZOHO_CLIENT_SECRET · ZOHO_REFRESH_TOKEN
 #   NEXT_PUBLIC_SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY
 #
+# Las dos últimas dan igual en Secrets o en Variables: la dirección no es un
+# secreto y la clave de servicio sí, pero el flujo las busca en los dos sitios
+# para que no haya forma de equivocarse de pestaña.
+#
 # Son los mismos valores del `.env.local`. El paso a paso de los de Zoho está en
 # docs/15-zoho.md.
 #
@@ -46,9 +50,13 @@ jobs:
       ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
       ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
       ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      # La dirección de Supabase **no es un secreto** —viaja en cada petición
+      # del navegador— así que se acepta puesta como secreto o como variable.
+      # Pedirla en un solo sitio costó una ejecución fallida: el nombre empieza
+      # con NEXT_PUBLIC_ y es natural ponerla del lado público.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      SUPABASE_REF_ESPERADO: ${{ vars.SUPABASE_REF_ESPERADO }}
+      SUPABASE_REF_ESPERADO: ${{ vars.SUPABASE_REF_ESPERADO || secrets.SUPABASE_REF_ESPERADO }}
 
     steps:
       - uses: actions/checkout@v5
