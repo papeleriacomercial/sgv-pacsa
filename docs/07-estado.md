@@ -2440,3 +2440,73 @@ semanas).
   nadie ha visto la pantalla todavía.
 - **Metas por vendedor.** Sin ellas la pantalla dice cuánto lleva, pero no *contra qué*. Sigue
   siendo una decisión abierta de §12 de la visión.
+
+---
+
+## Ventas, partida en tres y con dueño — 2026-08-26
+
+> «Esta ventana de ventas, para el líder cuando está en la vista del equipo muestra solo las
+> oportunidades, pero no dice de qué vendedor.»
+
+Era el mismo hueco de siempre, otra vez: **el líder mirando una mezcla sin saber de quién es
+cada cosa.** Y de paso salió que la pantalla estaba haciendo tres trabajos apretados en uno.
+
+### Tres pestañas, en orden de dureza
+
+| Pestaña | Qué contesta | Qué tan firme es |
+|---|---|---|
+| **Facturado** | Cuánto se vendió y cuánta comisión salió | Ya ocurrió. No se discute |
+| **Cotizaciones** | Qué precio se prometió por escrito y hace cuántos días | Promesa firmada |
+| **Oportunidades** | Qué se está negociando, por etapa o por mes de cierre | Intención |
+
+Arranca en Facturado. **Quien abre Ventas ve primero el número que es verdad.** Ver
+[D-036](06-decisiones.md).
+
+Cotizaciones no tenía pantalla propia: vivían escondidas dentro del expediente de cada cuenta.
+Ahora se ven juntas, con los días que llevan enviadas y una insignia ámbar cuando pasaron los
+quince de validez — **una cotización de la que nadie se acordó es la forma más cara de perder una
+venta**: el trabajo ya se hizo, el precio ya se dio, y solo faltó volver a llamar.
+
+La proyección se queda en Facturado aunque sus renglones salgan de las otras dos pestañas. No es
+duplicación: en Cotizaciones una cotización es trabajo pendiente; en Facturado es un sumando.
+
+### El filtro de vendedor, arriba de todo
+
+*Mis ventas · Albert · Javier · Todo el equipo*. Cambia las tres pestañas a la vez, así que el
+líder ve el mes, la comisión, las cotizaciones y el embudo de cualquiera de los suyos — o de
+todos juntos. Ver [D-037](06-decisiones.md).
+
+Sustituye al interruptor «Ver el equipo», que solo tenía dos estados para una pregunta que tiene
+tantos estados como vendedores. Y cada oportunidad y cada cotización dice de quién es **cuando se
+mira a más de uno**, y solo entonces: al vendedor que mira lo suyo, su propio nombre en cada
+tarjeta es ruido.
+
+Con **Todo el equipo**, Facturado muestra el total, las comisiones en plural, y una tarjeta por
+vendedor con su barra comparativa. Cada tarjeta lleva a la vista de esa persona, que es la
+pregunta siguiente natural: *«¿de dónde salieron esos $8 963 de Javier?»*.
+
+Agosto, todo el equipo:
+
+| | Vendido | Comisión | Documentos |
+|---|---:|---:|---:|
+| Christopher Guerra | $18 284.57 | $256.33 | 26 |
+| Javier Rodríguez | $8 963.09 | $125.70 | 47 |
+| Albert Batista | $2 945.77 | $41.75 | 11 |
+| **Equipo** | **$30 193.43** | **$423.78** | **84** |
+
+### Migración
+
+`20260826210000_comision_del_equipo.sql` — `comision_del_equipo(perfiles[], mes)`. Una fila por
+perfil pedido, **en cero si no vendió**. Reemplaza al patrón de llamar `comision_del_mes` una vez
+por vendedor, que con tres funciona y con quince no.
+
+No filtra por visibilidad: la vista `ventas_del_mes` es `security_invoker`, así que un vendedor
+que no se puede ver sale en cero. Filtrar aquí sería una segunda regla de visibilidad, y las
+segundas reglas se desincronizan.
+
+### Lo que sigue faltando
+
+- **Verificación visual.** Otra vez sin sesión en el navegador de la vista previa. Comprobado
+  contra la base real con `tsc`, `eslint` y `next build` limpios.
+- **Metas por vendedor.** La comparación de la vista de equipo es entre ellos; falta la
+  comparación que importa, que es contra lo que cada uno debía vender.

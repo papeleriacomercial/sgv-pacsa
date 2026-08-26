@@ -895,3 +895,54 @@ eso lo mira todo vendedor, el de ruta más que nadie.
 **El costo.** Seis casillas dejan 62 px por casilla en un teléfono de 375 px, y «Solicitudes» a
 12 px no entra. La letra de la barra baja a 10 px solo cuando hay más de cinco. Se acepta porque
 el ícono sigue siendo el que se toca y el alto táctil no cambia.
+
+---
+
+## D-036 — Ventas se parte en tres, en orden de dureza
+
+**Fecha:** 2026-08-26
+
+**Decisión.** La pantalla de Ventas queda con tres pestañas: **Facturado**, **Cotizaciones** y
+**Oportunidades**. Facturado es la de arranque.
+
+**Por qué en ese orden.** Es orden de **dureza del compromiso**: primero lo que ya ocurrió y
+nadie discute, después la promesa escrita y firmada, y al final la intención. Quien abre Ventas
+ve primero el número que es verdad, y los otros dos en el lugar que les corresponde.
+
+Antes las tres cosas convivían en una sola vista: el embudo con un bloque de mes encima, y las
+cotizaciones sin ninguna pantalla propia. **La cotización sin pantalla es la forma más cara de
+perder una venta** — el trabajo ya se hizo, el precio ya se dio, y solo faltó volver a llamar.
+
+**La proyección se queda en Facturado**, aunque sus renglones salgan de las otras dos pestañas.
+No es duplicación: en Cotizaciones una cotización es trabajo pendiente, y en Facturado es un
+sumando. La misma cosa, dos preguntas.
+
+---
+
+## D-037 — El filtro de vendedor es el primer control de Ventas
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Ventas abre con una fila de opciones —*Mis ventas · Albert · Javier · Todo el
+equipo*— arriba de las pestañas. El líder y gerencia ven el mes, la comisión, las cotizaciones y
+el embudo de cualquiera de los suyos, o de todos juntos. Cada oportunidad y cada cotización dice
+de quién es **cuando se mira a más de uno**, y solo entonces.
+
+**Por qué.** Es la misma lección que ya se aplicó en Cuentas y en Mapa: *de quién es esto* es la
+primera pregunta de quien ve más de una cartera. El líder que abría Ventas del equipo veía
+cuarenta oportunidades sin dueño — eso no es mirar datos, es mirar una mezcla.
+
+**Sustituye al interruptor «Ver el equipo».** Un interruptor solo tiene dos estados y la pregunta
+tiene tantos estados como vendedores. Y a futuro entran más.
+
+**Arranca en lo propio, menos para gerencia.** Poder ver lo del equipo no lo hace suyo. Gerencia
+es la excepción y no por descuido: no vende, así que su cartera propia es cero, y arrancarla en
+cero sería mostrarle la única cifra de la pantalla que no significa nada.
+
+**El total del equipo se rotula en plural — «Comisiones del mes».** No es la comisión de nadie:
+es la suma de tres comisiones que cobran tres personas distintas. En singular se leería como un
+número propio del líder.
+
+**Y cada vendedor aparece aunque haya vendido cero.** `comision_del_equipo` devuelve una fila por
+cada perfil que se le pida. Si el que no vendió desapareciera de la lista, el líder leería «no lo
+estamos midiendo» donde dice «no vendió» — y esas dos cosas piden reacciones opuestas.

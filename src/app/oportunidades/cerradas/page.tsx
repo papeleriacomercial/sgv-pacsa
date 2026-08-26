@@ -43,13 +43,31 @@ const DIA = new Intl.DateTimeFormat("es-PA", {
  *
  * Aquí está factura por factura, con su fecha, su cliente y si está cobrada.
  */
-export default async function Cerradas() {
+export default async function Cerradas({
+  searchParams,
+}: PageProps<"/oportunidades/cerradas">) {
+  const { v } = await searchParams;
   const supabase = await clienteServidor();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
+
+  // El líder llega aquí desde la tarjeta de uno de los suyos. Si pide a
+  // alguien que no puede ver, el RLS de `transacciones_zoho` devuelve la
+  // lista vacía — no hace falta una segunda regla de visibilidad aquí, y
+  // tenerla sería una que se puede desincronizar de la de la base.
+  const dueno = typeof v === "string" && v.length > 0 ? v : user.id;
+
+  const { data: quien } =
+    dueno === user.id
+      ? { data: null }
+      : await supabase
+          .from("perfiles")
+          .select("nombre")
+          .eq("id", dueno)
+          .maybeSingle();
 
   const primero = new Date();
   primero.setDate(1);
@@ -58,7 +76,7 @@ export default async function Cerradas() {
   const { data } = await supabase
     .from("transacciones_zoho")
     .select("id, numero, tipo, fecha, total, saldo, cuenta_id, cuentas(nombre)")
-    .eq("perfil_id", user.id)
+    .eq("perfil_id", dueno)
     .gte("fecha", desde)
     .is("deleted_at", null)
     .order("fecha", { ascending: false });
@@ -71,9 +89,13 @@ export default async function Cerradas() {
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <BotonVolver alterno="/oportunidades" />
+        <BotonVolver
+          alterno={dueno === user.id ? "/oportunidades" : `/oportunidades?v=${dueno}`}
+        />
         <div className="flex-1">
-          <h1 className="text-lg font-semibold text-marca">Ventas del mes</h1>
+          <h1 className="text-lg font-semibold text-marca">
+            {quien?.nombre ? `Ventas de ${quien.nombre}` : "Ventas del mes"}
+          </h1>
           <p className="text-xs text-texto-atenuado">
             {filas.length} {filas.length === 1 ? "documento" : "documentos"} ·{" "}
             {DINERO.format(total)}
@@ -84,7 +106,13 @@ export default async function Cerradas() {
       <main className="flex flex-1 flex-col gap-2 p-4">
         {filas.length === 0 && (
           <Tarjeta>
-            <Vacio titulo="Todavía no hay ventas este mes">
+            <Vacio
+              titulo={
+                quien?.nombre
+                  ? `${quien.nombre} no tiene ventas este mes`
+                  : "Todavía no hay ventas este mes"
+              }
+            >
               Aparecen solas cuando la oficina factura o despacha. No hay que
               registrarlas.
             </Vacio>
