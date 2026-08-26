@@ -2811,3 +2811,89 @@ Y dos fallos que aparecieron al construir:
 
 11. **§7.2 · El módulo de oficina.** Es el más atrasado y sigue siendo el único rol sin documento
     de flujo. Nada se programa ahí hasta escribir el ciclo de Verónica.
+
+---
+
+## Venta cruzada — 2026-08-26
+
+> «Creo que más valor tiene que puedas darme un mecanismo de venta cruzada: saber qué panaderías
+> me compran bolsas pero no me compran rollos.»
+
+Sustituye a la tarjeta de consumo típico, que era cierta y no servía para nada — decía el tamaño
+del cliente, no qué hacer el martes por la mañana. Ver [D-043](06-decisiones.md).
+
+### Lo que hizo falta primero
+
+`lineas_por_cuenta`, a pesar del nombre, agrupa por **producto**: con 141 nombres distintos no
+podía contestar «¿compra bolsas?». Faltaba el escalón de línea, y para eso el mapeo de nombre a
+línea que quedó confirmado con la casa:
+
+| Nombre en Books | Línea |
+|---|---|
+| `TE…`, «Rollos Térmicos» | Rollos fiscales |
+| «Antigrasa» | Papel antigrasa |
+| «Kraft», «Bolsa» | Bolsas de papel |
+| «Tubos» | Tubos de cartón |
+
+**Clasifica 2 151 de los 2 160 renglones vendidos** — 99,6 %. Ver [D-044](06-decisiones.md).
+
+### En el expediente
+
+```
+Lo que no te compra
+  Rollos fiscales                    ~$7/mes
+  ████████░░  8 de cada 10 lo compran y gastan eso al mes.
+
+  Papel antigrasa                   ~$45/mes
+  ██░░░░░░░░  2 de cada 10 lo compran.        ← apagado
+
+Ya te compra
+  Bolsas de papel                   $19/mes
+  Bolsas de papel: no lo pide desde hace 4 meses.
+```
+
+La proporción es lo que separa una oportunidad de un capricho. Que una panadería no compre tubos
+no dice nada si ninguna panadería los compra; que no compre rollos cuando ocho de cada diez sí, es
+una visita.
+
+En una cuenta sin compras la misma tarjeta contesta la otra pregunta —qué compra la gente de ese
+rubro—, que es con lo que se prepara la primera visita.
+
+### En la cartera
+
+`/venta-cruzada`, enlazada desde Ventas · Facturado. Agrupada **por línea y no por cliente**:
+«esta semana salgo a ofrecer rollos» es una ruta; «a este le falta rollos y a este otro bolsas» es
+una lista que no se puede caminar.
+
+Lo que sale hoy:
+
+| Vendedor | Clientes comparables | Huecos |
+|---|---:|---:|
+| Javier Rodríguez | 34 | 7 — todos de rollos fiscales |
+| Christopher Guerra | 7 | 1 |
+| Albert Batista | 16 | 0 |
+
+Ejemplos reales: *Mini Super 1* y *Mini Super Amy* compran bolsas y no rollos, cuando 8 de cada 10
+minisúper compran rollos. *Sazón Único* igual. Tres distribuidoras sin rollos, y las que sí los
+compran gastan ~$102 al mes.
+
+### El techo, y es uno solo
+
+**De los 233 clientes que compran algo, 177 llegaron de Zoho sin tipo de comercio.** Sin tipo no
+hay con quién compararlos. Descontando además los 16 cuyo tipo no llega a cinco compradores,
+quedan **40 clientes comparables de 233**.
+
+No es que no haya huecos: es que tres de cada cuatro clientes están a oscuras. Por eso la pantalla
+lo dice en su primera tarjeta, con enlace al filtro de cuentas sin clasificar. **Un límite que se
+calla se lee como «tu cartera está completa».**
+
+Clasificar un cliente es un toque en su expediente, y cada uno que se clasifique mejora el
+denominador para todos.
+
+### Un fallo de seguridad, detectado antes de producción
+
+La primera versión de `venta_cruzada` era una sola función `security definer` —lo necesitaba para
+contar los pares de toda la empresa— y eso hacía que **la parte de la cuenta también leyera por
+encima del RLS**: un vendedor podía pasarle el identificador de una cuenta ajena y ver qué compra.
+
+Partida en dos: el agregado cruza, el dato del cliente no. Ver [D-045](06-decisiones.md).

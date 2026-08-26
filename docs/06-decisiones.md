@@ -1069,3 +1069,74 @@ agropecuaria»—. Cuatro palabras de diferencia no es la misma categoría escri
 otra categoría.
 
 Con el arreglo, la pantalla propone 5 uniones en vez de 7, y las 5 son correctas.
+
+---
+
+## D-043 — La venta cruzada sustituye al consumo típico
+
+**Fecha:** 2026-08-26
+
+**Decisión.** La tarjeta del expediente deja de decir cuánto gasta al mes un comercio parecido y
+pasa a decir **qué líneas no le compras y cuántos de sus iguales sí las compran**. Se agrega una
+pantalla de cartera, `/venta-cruzada`, agrupada por línea.
+
+**Por qué.** El consumo típico era cierto y no servía para nada: decía el tamaño del cliente, no
+qué hacer el martes por la mañana. *«Esta panadería te compra bolsas pero no rollos, y ocho de
+cada diez restaurantes compran rollos»* es una conversación de venta concreta con un cliente que
+ya te conoce, ya te compra y ya te paga.
+
+El cálculo del consumo se queda —de ahí salen los denominadores— pero deja de enseñarse.
+
+**La proporción es lo que separa una oportunidad de un capricho.** Que una panadería no compre
+tubos de cartón no dice nada si ninguna panadería los compra. El umbral para ofrecer una línea es
+que la compre **la mitad o más** de los comercios del mismo tipo; por debajo se muestra apagada en
+el expediente y no aparece en la pantalla de cartera. Apagada y no escondida, porque el vendedor
+puede saber algo que la estadística no.
+
+**Se agrupa por línea y no por cliente.** «Esta semana salgo a ofrecer rollos» es una ruta; «a
+este cliente le falta rollos y a este otro bolsas» es una lista que no se puede caminar.
+
+**Dentro de cada línea manda lo que ya te compra**, no la proporción. El cliente que más te compra
+hoy es el que más probablemente te compre otra cosa: ya tiene la puerta abierta.
+
+---
+
+## D-044 — De 141 nombres de producto a cuatro líneas, leyendo el nombre
+
+**Fecha:** 2026-08-26
+
+**Decisión.** `linea_de_producto(nombre)` clasifica los productos de Books por su nombre:
+`TE…`/«Rollos Térmicos» son rollos fiscales, «Antigrasa» es papel antigrasa, «Kraft»/«Bolsa» son
+bolsas de papel, «Tubos» son tubos de cartón.
+
+**Por qué por el nombre y no por una columna.** `productos_zoho` no trae línea, y agregarla
+obligaría a clasificar 1 834 productos a mano y a repetirlo con cada alta. La convención de
+nombres de la casa ya lleva esa información y la confirmó el negocio.
+
+**Clasifica 2 151 de los 2 160 renglones vendidos** — 99,6 %. Los nueve que quedan fuera son un
+servicio de confección y dos códigos sueltos.
+
+**El orden de las comprobaciones importa:** «FP-Antigrasa» lleva las dos palabras y es antigrasa,
+no bolsa. Antigrasa se pregunta antes que Kraft.
+
+---
+
+## D-045 — El agregado cruza el RLS; el dato del cliente, nunca
+
+**Fecha:** 2026-08-26
+
+**Decisión.** La venta cruzada se parte en dos funciones: `proporcion_por_tipo()` es
+`security definer` y devuelve solo agregados con piso mínimo; `venta_cruzada(cuenta)` **no** lo es
+y lee la cuenta con los permisos de quien pregunta.
+
+**Por qué.** La primera versión era una sola función `security definer`, y eso hacía que la parte
+de la cuenta también leyera por encima del RLS: **un vendedor podía pasarle el identificador de
+una cuenta de otro y enterarse de qué le compra.** Lo detecté al releer la migración, antes de
+que llegara a producción.
+
+El error fue mezclar dos cosas que necesitan permisos distintos. El denominador —cuántos comercios
+del mismo tipo compran cada línea— es un agregado y tiene que cruzar. El numerador —qué compra
+esta cuenta— es dato de un cliente y no puede cruzar nunca.
+
+**Partidas, no hace falta comprobar nada**: si quien pregunta no puede ver la cuenta, no hay filas
+y la función devuelve vacío. El RLS ya sabía la respuesta.

@@ -22,11 +22,7 @@ import { AgregarALista } from "@/components/agregar-a-lista";
 import { CadenaCuenta } from "@/components/cadena-cuenta";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { QueCompra } from "@/components/que-compra";
-import {
-  LoQueCompranLosIguales,
-  type Gemelos,
-} from "@/components/lo-que-compran-los-iguales";
-import { normalizar } from "@/lib/texto";
+import { VentaCruzada, type Cruce } from "@/components/venta-cruzada";
 import { DescargarCotizacion } from "@/components/descargar-cotizacion";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
@@ -52,14 +48,14 @@ function hoyEnPanama() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "America/Panama" });
 }
 
-type FilaConsumo = {
-  tipo: string;
-  cuentas: number;
-  clientes: number;
-  mensual_bajo: number | null;
-  mensual_tipico: number | null;
-  mensual_alto: number | null;
-  cadencia_tipica: number | null;
+type FilaCruce = {
+  linea: string;
+  la_compra: boolean;
+  gasto_mensual: string | number;
+  dias_sin_pedirla: number | null;
+  pares_compran: number;
+  pares_totales: number;
+  gasto_tipico: string | number | null;
   suficiente: boolean;
 };
 
@@ -87,35 +83,24 @@ export default async function Expediente({
   // correcta: decir "existe pero no puedes verlo" ya es filtrar información.
   if (!prospecto) notFound();
 
-  // **El modelo de gemelos** (§7.5): cuánto compra un comercio de este
-  // tipo. Se traen los treinta y tantos tipos y se escoge aquí — son pocos,
-  // y una función con parámetro obligaría a repetir en dos sitios la regla
-  // de cuándo dos categorías son la misma.
-  const { data: consumo } = prospecto.tipo_comercio
-    ? await supabase.rpc("consumo_por_tipo")
+  // **Venta cruzada**: qué líneas compra y cuáles no, contra lo que compran
+  // los comercios de su mismo tipo. Es la conversación de venta más barata
+  // que hay — un cliente que ya te compra y ya te paga, al que le estás
+  // vendiendo una sola de las cuatro cosas que fabricas.
+  const { data: crudo } = prospecto.tipo_comercio
+    ? await supabase.rpc("venta_cruzada", { p_cuenta: id })
     : { data: null };
 
-  // `suficiente` ya garantiza que la mediana viene, pero se comprueba otra
-  // vez al pasarla: el día que el piso cambie de sitio, esto sigue sin
-  // enseñar un importe nulo formateado como «$0».
-  const fila = ((consumo ?? []) as FilaConsumo[]).find(
-    (x) =>
-      x.suficiente &&
-      x.mensual_bajo !== null &&
-      x.mensual_alto !== null &&
-      normalizar(x.tipo) === normalizar(prospecto.tipo_comercio ?? ""),
-  );
-
-  const gemelos: Gemelos | null = fila
-    ? {
-        tipo: fila.tipo,
-        clientes: fila.clientes,
-        mensualBajo: Number(fila.mensual_bajo),
-        mensualTipico: Number(fila.mensual_tipico),
-        mensualAlto: Number(fila.mensual_alto),
-        cadenciaTipica: fila.cadencia_tipica,
-      }
-    : null;
+  const cruce: Cruce[] = ((crudo ?? []) as FilaCruce[]).map((x) => ({
+    linea: x.linea,
+    laCompra: x.la_compra,
+    gastoMensual: Number(x.gasto_mensual),
+    diasSinPedirla: x.dias_sin_pedirla,
+    paresCompran: x.pares_compran,
+    paresTotales: x.pares_totales,
+    gastoTipico: x.gasto_tipico === null ? null : Number(x.gasto_tipico),
+    suficiente: x.suficiente,
+  }));
 
   // Las cotizaciones que se le han emitido. Van a la bitácora junto con los
   // seguimientos: una cotización entregada es un hecho, tan hecho como una
@@ -418,14 +403,7 @@ export default async function Expediente({
           )}
         </Tarjeta>
 
-        <LoQueCompranLosIguales
-          gemelos={gemelos}
-          mensualPropio={
-            prospecto.total_12m === null || Number(prospecto.total_12m) === 0
-              ? null
-              : Number(prospecto.total_12m) / 12
-          }
-        />
+        <VentaCruzada cruce={cruce} />
 
         <QueCompra
           cuentaId={prospecto.id}
