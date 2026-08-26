@@ -3189,3 +3189,57 @@ líder— porque son los mismos de siempre. Ese paso del plan viejo se ahorró e
 | **Migraciones en el nuevo desarrollo** | Hasta entonces no hay dónde probar una migración riesgosa |
 | **Renglones incompletos** | 743 de 2 151, por la pasada que reventó. Programada la reposición a las 00:30 |
 | **Caminar el flujo del vendedor** | Nadie lo ha visto. Las pantallas de gerencia dieron cuatro fallos el primer día que alguien las miró |
+
+---
+
+## Google Cloud: el freno y la alarma — 2026-08-26
+
+Quedó puesto lo que faltaba desde el principio del proyecto.
+
+### La cuota diaria, que es el freno
+
+En **Places API (New) → Cuotas**, tres renglones a **1 000 por día**:
+
+| Renglón | Para qué lo usa la aplicación |
+|---|---|
+| `SearchNearbyRequest per day` | Buscar prospectos «cerca de mí» |
+| `SearchTextRequest per day` | Buscar prospectos por texto |
+| `GetPlaceRequest per day` | Ubicar una cuenta tocando un punto del mapa |
+
+**Esos tres son los únicos que la aplicación toca.** La API ofrece una docena más —fotos,
+autocompletar, reseñas— y todos siguen en su valor de fábrica porque nunca se llaman.
+
+Los `per minute` se dejaron como estaban: protegen contra ráfagas, y el que controla el gasto del
+mes es el diario.
+
+**Por qué 1 000 y no 300.** El primer número que propuse protegía el mes pero rompía un día
+fuerte: cuatro personas levantando dos zonas hacen 300 o 400 búsquedas en un día, y toparse
+justo el día que más se usa la herramienta es la peor forma de estrenarla. Con 1 000 nadie se topa
+trabajando, y un error en bucle sigue cortado —sin freno, una madrugada puede hacer cien mil
+llamadas—.
+
+### La alarma de gasto
+
+Presupuesto de facturación en **$5**. **No corta: avisa.** Es la que vigila el mes, porque la
+cuota diaria no sabe nada de meses.
+
+Los dos frenos hacen cosas distintas y ninguno solo alcanza:
+
+| | Contra qué protege |
+|---|---|
+| Cuota diaria | Un error en bucle. Corta de verdad |
+| Alarma de $5 | Salirse de las 10 000 llamadas gratis del mes. Solo avisa |
+
+### Lo que hay que medir
+
+Una búsqueda del vendedor = **una llamada**, y devuelve hasta 20 resultados. La estimación es de
+150 a 300 llamadas al día —unas 5 000 al mes, debajo de las 10 000 gratis— pero **es una
+estimación mía, no un dato**. La primera semana con los vendedores trabajando da el número real:
+está en la columna «Porcentaje de uso actual» de esa misma pantalla.
+
+### Un pendiente que no es de hoy
+
+El proyecto de Google está en la **cuenta personal de Guido**, no en la de Papelería Comercial. No
+se pudo entrar a la de la empresa ese día. Funciona igual, pero si se pierde acceso a ese correo,
+los mapas dejan de andar y nadie más puede arreglarlo. La solución no es migrar nada: es agregar
+la cuenta de la empresa como **propietaria** del proyecto.
