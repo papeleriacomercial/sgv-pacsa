@@ -2510,3 +2510,44 @@ segundas reglas se desincronizan.
   contra la base real con `tsc`, `eslint` y `next build` limpios.
 - **Metas por vendedor.** La comparación de la vista de equipo es entre ellos; falta la
   comparación que importa, que es contra lo que cada uno debía vender.
+
+---
+
+## Tres correcciones de la pantalla de Ventas — 2026-08-26
+
+### «Todo el equipo» no cargaba
+
+`VentasEquipo` recibía `hrefDe` — una **función** — desde la pantalla de servidor. Una función no
+cruza esa frontera: Next.js no la puede serializar y aborta el render entero. De ahí el «no se
+pudo cargar la página», y solo en esa vista, porque es la única que usaba ese componente.
+
+Ahora cada fila trae su `href` ya armado como texto.
+
+**Ni `tsc` ni `next build` lo iban a atrapar**: el tipo es válido y la pantalla es dinámica, así
+que no se renderiza al compilar. Se revisaron los otros nueve componentes de cliente con props de
+función y todos viven dentro de otros componentes de cliente — este era el único cruce.
+
+### «En negociación» era la etiqueta equivocada
+
+El total de arriba del embudo decía **En negociación** y sumaba las oportunidades de las cuatro
+etapas abiertas. Pero *Negociación* **es una de esas etapas**, así que la pantalla parecía estar
+sumando mal cuando lo que estaba mal era la palabra.
+
+Ahora dice **«Por cerrar, en todas las etapas»**. Es la misma cuenta con el nombre correcto.
+
+Es la regla de §14 aplicada al revés: si una palabra ya nombra algo concreto en el sistema, no
+puede nombrar además el conjunto que la contiene.
+
+### Gerencia dejó de ser vendedor
+
+El perfil «Gerencia» tenía `rol = vendedor` desde las pruebas de rol de la semana pasada, y por
+eso aparecía como una cuarta opción del filtro que siempre iba a dar cero. Queda en `gerente`,
+sin líder.
+
+Lo que le colgaba era todo de prueba —3 oportunidades, 3 compromisos y 4 seguimientos del 21 y 22
+de agosto, en Restaurante Waikiki y Minisuper la Esquina— y **cero cuentas, cero cotizaciones y
+cero facturas**. No se borró nada: al dejar de ser vendedor simplemente sale de las pantallas de
+Ventas. Si se quiere limpiar de verdad, se borra desde el expediente.
+
+Con eso el embudo del equipo queda en cero oportunidades, que es la verdad: las tres que había
+eran de prueba.

@@ -287,6 +287,7 @@ export default async function Ventas({
         comision: Number(d?.comision ?? 0),
         documentos: Number(d?.documentos ?? 0),
         esMio: x.id === user.id,
+        href: enlace({ v: x.id }),
       };
     })
     .sort((a, b) => b.vendido - a.vendido);
@@ -354,7 +355,6 @@ export default async function Ventas({
               porcentaje={porcentaje}
               sobreNeto={regla?.sobre_neto ?? true}
               pendientes={pendientes}
-              hrefDe={(id) => enlace({ v: id })}
             />
           ) : (
             <MiMes
@@ -422,7 +422,14 @@ export default async function Ventas({
               </Tarjeta>
             ) : (
               <Tarjeta>
-                <p className="text-sm text-texto-secundario">En negociación</p>
+                {/* **No dice «en negociación».** Negociación es una de las
+                    seis etapas, y usar la misma palabra para el total de
+                    todas hacía leer que ahí solo iba lo que está en esa
+                    etapa — cuando en realidad suma también lo nuevo, lo
+                    contactado y lo cotizado. */}
+                <p className="text-sm text-texto-secundario">
+                  Por cerrar, en todas las etapas
+                </p>
                 <p className="mt-1 font-mono text-3xl text-marca">
                   {MONTO.format(totalAbierto)}
                 </p>

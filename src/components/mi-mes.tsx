@@ -24,6 +24,15 @@ export type FilaVendedor = {
   comision: number;
   documentos: number;
   esMio: boolean;
+  /**
+   * A dónde lleva la tarjeta, ya armado.
+   *
+   * **Viene hecho y no como función.** Esto es un componente de cliente, y
+   * una función no cruza esa frontera: Next.js no la puede serializar y la
+   * pantalla entera falla al cargar. Costó un «no se pudo cargar la
+   * página» en la vista de todo el equipo.
+   */
+  href: string;
 };
 
 const DINERO = new Intl.NumberFormat("es-PA", {
@@ -133,13 +142,11 @@ export function VentasEquipo({
   porcentaje,
   sobreNeto,
   pendientes,
-  hrefDe,
 }: {
   filas: FilaVendedor[];
   porcentaje: number;
   sobreNeto: boolean;
   pendientes: Pendiente[];
-  hrefDe: (id: string) => string;
 }) {
   const vendido = filas.reduce((s, f) => s + f.vendido, 0);
   const comision = filas.reduce((s, f) => s + f.comision, 0);
@@ -171,7 +178,7 @@ export function VentasEquipo({
 
       <div className="flex flex-col gap-2">
         {filas.map((f) => (
-          <Link key={f.id} href={hrefDe(f.id)} className="block">
+          <Link key={f.id} href={f.href} className="block">
             <Tarjeta className="flex flex-col gap-2">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="min-w-0 flex-1 truncate text-sm text-texto">
