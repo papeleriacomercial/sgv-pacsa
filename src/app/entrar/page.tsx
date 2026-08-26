@@ -29,9 +29,24 @@ export default function Entrar() {
     });
 
     if (fallo) {
-      // Supabase no distingue correo inexistente de contraseña incorrecta, y
-      // está bien: decirlo revelaría qué correos están registrados.
-      setError("Correo o contraseña incorrectos.");
+      // **Un fallo de credenciales y un fallo de configuración no son lo
+      // mismo, y decir lo mismo de los dos cuesta caro.** Con la llave pública
+      // apuntando al proyecto equivocado, esta pantalla decía «correo o
+      // contraseña incorrectos» a las cinco cuentas del sistema, y se
+      // buscó el problema en las contraseñas durante un buen rato.
+      //
+      // De las credenciales sigue sin decirse nada —correo inexistente y
+      // contraseña mala dan el mismo mensaje, porque distinguirlos revelaría
+      // qué correos están registrados—. Lo que se separa es todo lo demás.
+      const credenciales =
+        fallo.status === 400 &&
+        /invalid login credentials/i.test(fallo.message);
+
+      setError(
+        credenciales
+          ? "Correo o contraseña incorrectos."
+          : `No se pudo entrar: ${fallo.message}. No es tu contraseña — avisa a quien administra el sistema.`,
+      );
       setEntrando(false);
       return;
     }

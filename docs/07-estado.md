@@ -3297,3 +3297,33 @@ Authentication → SMTP, y son diez minutos.
 
 **Todavía nadie ha probado el circuito completo** —pedir el enlace, recibirlo, tocarlo, poner la
 contraseña—. Es lo primero que conviene hacer en producción.
+
+---
+
+## La llave que no se cambió — 2026-08-26
+
+Nadie podía entrar en producción con ninguna de las cinco contraseñas. La causa:
+
+```
+La dirección apuntaba a:  xoesriakyqhpzwxzmkcu   ← correcta
+La llave pública era de:  gqwyflnjewqfhsfdgmjw   ← el proyecto viejo
+```
+
+**Son dos variables distintas y solo se cambió una.** La llave pública está firmada por su
+proyecto, así que una llave del proyecto A contra la base del proyecto B se rechaza siempre, con
+cualquier contraseña.
+
+Se diagnosticó leyendo el paquete que sirve la aplicación: la dirección y la llave viajan al
+navegador, y la llave es un testigo firmado que dice de qué proyecto es. **Es una comprobación que
+conviene recordar**, porque contesta en un minuto una pregunta que de otro modo se persigue por
+horas.
+
+### Y el mensaje de error que lo escondió
+
+La pantalla de login decía «Correo o contraseña incorrectos» **pasara lo que pasara**. Estaba así
+para no revelar qué correos existen —lo cual es correcto— pero metía en el mismo saco un fallo de
+configuración, y por eso se buscó el problema en las contraseñas.
+
+Ahora se separan: de las credenciales sigue sin decirse nada; **cualquier otro fallo se muestra
+tal cual, con «no es tu contraseña — avisa a quien administra el sistema»**. Un vendedor en la
+calle necesita saber si el problema es suyo o del sistema.
