@@ -9,6 +9,7 @@ export type Empresa = {
   web: string | null;
   terminos: string | null;
   nota_pie: string | null;
+  validez_dias?: number | null;
 };
 
 export type Renglon = {

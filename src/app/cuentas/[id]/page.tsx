@@ -22,6 +22,7 @@ import { AgregarALista } from "@/components/agregar-a-lista";
 import { CadenaCuenta } from "@/components/cadena-cuenta";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { QueCompra } from "@/components/que-compra";
+import { DescargarCotizacion } from "@/components/descargar-cotizacion";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
 import { Vacio } from "@/components/ui/estados";
@@ -60,7 +61,7 @@ export default async function Expediente({
   const { data: prospecto } = await supabase
     .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
+      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, vendedor_id, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -69,6 +70,20 @@ export default async function Expediente({
   // Si el RLS no deja verlo, para este usuario no existe. Es la respuesta
   // correcta: decir "existe pero no puedes verlo" ya es filtrar información.
   if (!prospecto) notFound();
+
+  // Las cotizaciones que se le han emitido. Van a la bitácora junto con los
+  // seguimientos: una cotización entregada es un hecho, tan hecho como una
+  // visita — y verlas en la misma línea contesta sola la pregunta de si se
+  // cotizó y no compró.
+  const { data: cotizaciones } = await supabase
+    .from("cotizaciones")
+    .select("id, codigo, total, emitida_en, pdf_path, con_itbms")
+    .eq("cuenta_id", id)
+    .eq("estado", "emitida")
+    .is("deleted_at", null)
+    .order("emitida_en", { ascending: false });
+
+  const esMia = prospecto.vendedor_id === user.id;
 
   // Cómo se llama esta cuenta en la contabilidad. Casi nunca es igual: el
   // vendedor conoce el rótulo y la factura lleva la razón social.
@@ -177,6 +192,16 @@ export default async function Expediente({
                 Programar seguimiento
               </Boton>
             </Link>
+            {/* Cotizar en el acto, hasta el tope. Solo el dueño de la
+                cuenta: la venta tiene que quedar a nombre de quien la
+                trabajó. */}
+            {esMia && (
+              <Link href={`/cuentas/${id}/cotizar`} className="block">
+                <Boton tono="secundario" ancho>
+                  Cotizar
+                </Boton>
+              </Link>
+            )}
             {/* Lo que el cliente pide y resuelve otro. No es un seguimiento:
                 es un encargo con destinatario y con reloj. */}
             <Link href={`/cuentas/${id}/solicitud`} className="block">
@@ -417,6 +442,22 @@ export default async function Expediente({
             </Link>
           ))}
         </section>
+
+        {(cotizaciones ?? []).length > 0 && (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-sm font-medium text-texto">Cotizaciones</h2>
+            {(cotizaciones ?? []).map((c) => (
+              <DescargarCotizacion
+                key={c.id}
+                codigo={c.codigo}
+                total={Number(c.total)}
+                conItbms={c.con_itbms}
+                emitidaEn={c.emitida_en}
+                ruta={c.pdf_path}
+              />
+            ))}
+          </section>
+        )}
 
         <section className="flex flex-col gap-2">
           <h2 className="text-sm font-medium text-texto">Bitácora</h2>

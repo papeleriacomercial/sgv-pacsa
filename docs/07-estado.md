@@ -2165,3 +2165,56 @@ apretadas en un pixel.
 Ahora se encuadra **el grueso y no los extremos**: se recortan los percentiles 5 y 95. El punto
 de Puerto Rico sigue ahí; solo hay que alejarse para verlo. Es lo correcto — la vista inicial
 debe servir para el trabajo de todos los días, no para el caso raro.
+
+---
+
+## Ya se puede cotizar — 2026-08-26
+
+Estaba construida la base —tablas, tope, generador del PDF— pero **no había pantalla que lo
+usara**. Lo señaló gerencia: «¿y dónde cotizo?». Ya está.
+
+**Se llega desde el expediente**, con el botón *Cotizar*, y **solo si la cuenta es tuya**: la
+venta tiene que quedar a nombre de quien la trabajó. El líder puede ver la cuenta, pero cotizar
+por otro embarraría a quién se le mide.
+
+| Qué | Dónde |
+|---|---|
+| La pantalla de armado | [/cuentas/[id]/cotizar](../src/app/cuentas/[id]/cotizar/page.tsx) |
+| El armador | [armar-cotizacion.tsx](../src/components/armar-cotizacion.tsx) |
+| Ver y reenviar una emitida | [descargar-cotizacion.tsx](../src/components/descargar-cotizacion.tsx) |
+
+### Cómo se arma
+
+Busca el producto en el catálogo, lo toca, y **el precio sale solo si ese cliente ya lo
+compró** — con la fecha: *«Es el precio que le hiciste en mar 2026. Cámbialo si subió.»* Si nunca
+se lo vendió, el campo queda vacío y avisa: *«el precio lo pones tú»*.
+
+Eso es lo que convierte armar una cotización en cosa de un minuto. Un precio de lista no
+serviría: el mismo rollo se vende a $21.25 y a $29.50 según a quién.
+
+### El tope se explica antes de chocar
+
+El total se compara con el tope **mientras se escribe**, y al pasarse aparece qué hacer: quitar
+renglones, o pedírsela a la oficina. El botón se desactiva.
+
+La regla vive igualmente en la base —el disparador la aplica al emitir— pero **rebotar sin
+explicación no enseña nada**. La pantalla es donde se entiende; la base es donde no se puede
+saltar.
+
+### El orden de las operaciones importa
+
+Primero se guardan la cotización y sus renglones como borrador; después se genera el PDF, se
+sube, y **solo al final se marca como emitida**. Ese último paso es el que dispara la
+comprobación del tope.
+
+Así, **si algo falla no se pierde lo escrito**: queda como borrador y se puede reintentar. Al
+revés —emitir primero— un fallo al subir el PDF dejaría una cotización emitida sin documento.
+
+### La bitácora
+
+Las emitidas salen en el expediente con su código, su total y dos botones: **ver** y
+**reenviar**. Reenviar usa la hoja de compartir del teléfono, porque el cliente que pide
+«mándamela otra vez» casi nunca la pide por donde llegó la primera.
+
+**El PDF se descarga, no se rehace.** Si se regenerara con los precios de hoy, el papel que tiene
+el cliente y el que ve la oficina dejarían de coincidir.
