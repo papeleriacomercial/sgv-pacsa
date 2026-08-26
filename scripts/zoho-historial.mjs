@@ -127,6 +127,16 @@ if (clientes.length === 0) {
 const cuentaDe = new Map(clientes.map((c) => [c.contacto_id, c]));
 console.log(`\n  ${cuentaDe.size} clientes de calle en el espejo.`);
 
+// **El canal se decide por documento, no por cliente.** La regla de pertenencia
+// de `clientes_zoho` es de cliente —si tiene más de un vendedor, no es de
+// nadie— y sirve para decidir de quién es la cartera. Para medir venta es
+// equivocada: si en la factura dice Javier, la vendió Javier.
+const deCalle = new Set(
+  (await sb("/vendedores_zoho?select=nombre_zoho&deleted_at=is.null")).map(
+    (v) => v.nombre_zoho,
+  ),
+);
+
 const marcas = await sb("/sincronizaciones?fuente=eq.historial&select=hasta");
 const desdeGuardado = marcas[0]?.hasta ?? null;
 
@@ -171,14 +181,13 @@ const momento = new Date().toISOString();
 // 2. Qué documentos hay que abrir
 // ---------------------------------------------------------------------------
 
-const facturas = (await zohoTodo("/invoices", filtro)).filter((f) =>
-  cuentaDe.has(f.customer_id),
-);
+// **Todo lo que facturó la empresa, no solo lo de calle.** El espejo veía
+// el 28 % de la venta ($545 881 de $1 929 369) y con eso no se puede
+// contestar la primera pregunta de §7.6: cuánto vende la casa y cuánto
+// genera cada vendedor.
+const facturas = await zohoTodo("/invoices", filtro);
 const entregas = (await zohoTodo("/salesorders", filtro)).filter(
-  (o) =>
-    cuentaDe.has(o.customer_id) &&
-    o.status === "void" &&
-    o.invoiced_status !== "invoiced",
+  (o) => o.status === "void" && o.invoiced_status !== "invoiced",
 );
 
 const pendientes = [
@@ -189,6 +198,8 @@ const pendientes = [
     id: f.invoice_id,
     numero: f.invoice_number,
     contacto: f.customer_id,
+    contactoNombre: f.customer_name ?? null,
+    vendedorZoho: f.salesperson_name || null,
     fecha: f.date,
     total: Number(f.total ?? 0),
     saldo: Number(f.balance ?? 0),
@@ -201,6 +212,8 @@ const pendientes = [
     id: o.salesorder_id,
     numero: o.salesorder_number,
     contacto: o.customer_id,
+    contactoNombre: o.customer_name ?? null,
+    vendedorZoho: o.salesperson_name || null,
     fecha: o.date,
     total: Number(o.total ?? 0),
     saldo: 0,
@@ -208,8 +221,19 @@ const pendientes = [
   })),
 ];
 
+// **Solo se abren las de los clientes de calle.** El renglón —qué producto se
+// vendió— alimenta el expediente y la venta cruzada, y eso es de la cartera del
+// vendedor. De la venta de la casa alcanza con la cabecera, que ya viene en el
+// listado y no cuesta una consulta más.
+//
+// Sin esta distinción la pasada pasaría de 1 500 documentos abiertos a 4 200, y
+// de trece minutos a treinta y cinco, para traer renglones que nadie mira.
+const paraAbrir = pendientes.filter((p) => cuentaDe.has(p.contacto));
+const soloCabecera = pendientes.filter((p) => !cuentaDe.has(p.contacto));
+
 console.log(
-  `  ${facturas.length} facturas y ${entregas.length} entregas por abrir.`,
+  `  ${pendientes.length} documentos: ${paraAbrir.length} de calle para abrir,` +
+    ` ${soloCabecera.length} de la casa solo de cabecera.`,
 );
 console.log(`  Cuota disponible en Zoho: ${cuota}\n`);
 
@@ -219,7 +243,7 @@ if (pendientes.length === 0) {
 }
 
 if (!APLICAR) {
-  const minutos = Math.round((pendientes.length * 0.49) / 60);
+  const minutos = Math.round((paraAbrir.length * 0.49) / 60);
   console.log(`  Abrirlas tardaría unos ${minutos || 1} minutos.`);
   console.log("\n  Nada se escribió. Para hacerlo:\n");
   console.log("    node scripts/zoho-historial.mjs --aplicar\n");
@@ -235,7 +259,36 @@ const renglones = [];
 let abiertas = 0;
 let cortado = false;
 
-for (let i = 0; i < pendientes.length; i += EN_PARALELO) {
+/** La fila de `transacciones_zoho`, con o sin renglones. */
+function cabecera(p, idTx) {
+  const dueno = cuentaDe.get(p.contacto);
+  return {
+    id: idTx,
+    documento_id: p.id,
+    tipo: p.tipo,
+    numero: p.numero ?? null,
+    contacto_id: p.contacto,
+    contacto_nombre: p.contactoNombre,
+    cuenta_id: dueno?.cuenta_id ?? null,
+    // Sigue siendo de quién es el **cliente**, no quién firmó el documento.
+    // La comisión se calcula con esto y no se mueve.
+    perfil_id: dueno?.perfil_id ?? null,
+    vendedor_zoho: p.vendedorZoho,
+    canal: p.vendedorZoho && deCalle.has(p.vendedorZoho) ? "calle" : "casa",
+    fecha: p.fecha,
+    total: p.total,
+    saldo: p.saldo,
+    estado: p.estado ?? null,
+    sincronizado_en: momento,
+  };
+}
+
+// La venta de la casa entra sin abrir nada: su cabecera ya vino en el listado.
+for (const p of soloCabecera) {
+  transacciones.push(cabecera(p, randomUUID()));
+}
+
+for (let i = 0; i < paraAbrir.length; i += EN_PARALELO) {
   if (cuota < CUOTA_MINIMA) {
     cortado = true;
     console.log(
@@ -244,7 +297,7 @@ for (let i = 0; i < pendientes.length; i += EN_PARALELO) {
     break;
   }
 
-  const lote = pendientes.slice(i, i + EN_PARALELO);
+  const lote = paraAbrir.slice(i, i + EN_PARALELO);
   const detalles = await Promise.all(
     lote.map(async (p) => ({ p, d: await zoho(p.ruta) })),
   );
@@ -254,20 +307,7 @@ for (let i = 0; i < pendientes.length; i += EN_PARALELO) {
     const dueno = cuentaDe.get(p.contacto);
     const idTx = randomUUID();
 
-    transacciones.push({
-      id: idTx,
-      documento_id: p.id,
-      tipo: p.tipo,
-      numero: p.numero ?? null,
-      contacto_id: p.contacto,
-      cuenta_id: dueno?.cuenta_id ?? null,
-      perfil_id: dueno?.perfil_id ?? null,
-      fecha: p.fecha,
-      total: p.total,
-      saldo: p.saldo,
-      estado: p.estado ?? null,
-      sincronizado_en: momento,
-    });
+    transacciones.push(cabecera(p, idTx));
 
     for (const l of doc.line_items ?? []) {
       renglones.push({
@@ -288,7 +328,7 @@ for (let i = 0; i < pendientes.length; i += EN_PARALELO) {
 
   abiertas += lote.length;
   if (abiertas % 200 < EN_PARALELO) {
-    console.log(`  ${abiertas} de ${pendientes.length}… (cuota ${cuota})`);
+    console.log(`  ${abiertas} de ${paraAbrir.length}… (cuota ${cuota})`);
   }
 }
 

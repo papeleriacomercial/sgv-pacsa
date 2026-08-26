@@ -1246,3 +1246,45 @@ tabla lo explica para quien la lea dentro de seis meses.
 
 **Y el código lleva el prefijo del tipo:** `COT-260827-A3F1` contra `ORD-260827-B7C2`. En una
 bandeja con los dos mezclados, el prefijo es lo que se lee primero.
+
+---
+
+## D-051 — El espejo pasa a cubrir toda la venta, no solo la de calle
+
+**Fecha:** 2026-08-26
+
+**Decisión.** `transacciones_zoho` guarda ahora **todas** las facturas y entregas de la empresa,
+con una columna `canal` (`calle` | `casa`). De los clientes de la cartera se siguen abriendo los
+documentos para traer sus renglones; de la venta de la casa se guarda solo la cabecera.
+
+**Por qué.** El espejo veía **$545 881 de $1 930 281** — el 28 % del negocio. Para la cartera eso
+estaba bien: lo que no es de un vendedor no va en su cartera. Pero la primera pregunta de §7.6 es
+*«¿cuánto vende la casa y cuánto genera cada vendedor?»*, y con el 28 % no se contesta.
+
+Resultó que **la casa es el 65 % de la venta**. El sistema estaba mirando el tercio pequeño y
+llamándolo el negocio.
+
+**Por qué solo la cabecera de la casa.** Los renglones se traen abriendo documento por documento.
+Abrir los 2 650 de la casa costaría media hora de pasada cada noche para contestar una pregunta
+que hoy nadie hace. Cuando se haga, es cambiar un filtro.
+
+---
+
+## D-052 — El canal se decide por documento; la cartera, por cliente
+
+**Fecha:** 2026-08-26
+
+**Decisión.** `canal` y `vendedor_zoho` salen de **quién firma cada documento**. `perfil_id` sigue
+saliendo de la regla de pertenencia de cliente, y la comisión se sigue calculando con él.
+
+**Por qué las dos y no una.** La regla de cliente —«si tiene más de un vendedor, no es de nadie»—
+es correcta para decidir de quién es la cartera y equivocada para medir venta: **si en la factura
+dice Javier, la vendió Javier**.
+
+Medido: 23 clientes tienen a un vendedor de calle mezclado con la oficina, doce de ellos Javier
+con Verónica. En doce meses eso son $128 202 que los vendedores facturaron y no se les cuenta;
+**en agosto, $1 358 de Javier y $39 de Albert**.
+
+**No se cambió la comisión.** Que un vendedor cobre más o menos no es una decisión de esquema, y
+las dos columnas dejan el hecho a la vista para cuando el negocio quiera decidirlo. Esconderlo
+detrás de una sola columna es lo que hace que después nadie sepa cuál número creer.

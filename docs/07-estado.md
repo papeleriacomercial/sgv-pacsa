@@ -3011,3 +3011,76 @@ perdió.
 
 Por ahora la bandeja **muestra si la cuenta tiene RUC o no**, así que Verónica lo ve antes de
 facturar. Falta volver a pedirlo en el camino del documento, que es donde estaba bien pedido.
+
+---
+
+## El tablero de gerencia — §7.6 — 2026-08-26
+
+`/tablero/negocio`, enlazado desde el tablero. **Solo gerencia** — no por secreto, sino porque a
+un vendedor saber que la casa factura el doble que él no le dice qué hacer el martes.
+
+### Lo primero que hizo falta: ver el negocio completo
+
+El espejo guardaba solo los clientes de calle: **$545 881 de $1 930 281, el 28 %**. Con eso no se
+puede contestar la primera pregunta de la visión. Ahora `transacciones_zoho` cubre las 4 193
+transacciones de la empresa, con `canal` por documento. Ver [D-051](06-decisiones.md).
+
+**El hallazgo es que la casa es el 65 % de la venta.** El sistema estaba mirando el tercio pequeño
+y llamándolo el negocio.
+
+| | 12 meses | |
+|---|---:|---:|
+| La casa | $1 256 198 | 65 % |
+| Los vendedores | $674 083 | 35 % |
+| **Total** | **$1 930 281** | |
+
+### Lo que contesta la pantalla
+
+| Pregunta de §7.6 | Respuesta hoy |
+|---|---|
+| ¿Cuánto vende la casa y cuánto cada vendedor? | Casa 65 %, calle 35 %. Mes a mes, con barras |
+| ¿Quién firma la venta? | Javier 17 %, Christopher 13 %, Albert 4 %, Verónica 7 % |
+| ¿De quién depende el negocio? | **Los 10 primeros clientes son el 48 %** de 582 |
+| ¿Entran clientes nuevos? | 15 a 27 por mes, sobre 150–215 que compran |
+| ¿Qué se vende? | Rollos 59 %, bolsas 29 %, tubos 9 %, antigrasa 3 % |
+| ¿Por geografía? | **Falta.** El poblado solo existe en las cuentas de la cartera |
+| ¿Mix por cliente? | Ya estaba, en el expediente |
+
+### El segundo hallazgo: 58 % de la venta no tiene vendedor
+
+**$1 115 072 de facturas salen de Zoho sin nombre en el campo de vendedor.** No es venta perdida:
+es venta que no se puede atribuir a nadie, y por eso no se puede premiar ni pedir cuentas de ella.
+La pantalla lo dice en ámbar, con esas palabras.
+
+### Detalles de lectura que se cuidaron
+
+- **El mes en curso va atenuado y con los días que lleva.** Un mes de 26 días al lado de uno de 31
+  se lee como una caída, y es el error más fácil de cometer en una pantalla así.
+- **La venta por línea dice que solo cubre la calle.** Sin esa línea se leería como la venta de
+  toda la empresa, y es un tercio.
+- **«Primera vez» se explica**: es dentro de los doce meses del espejo, así que quien volvió
+  después de años sale como nuevo.
+- **Barras hechas a mano, sin librería de gráficos.** Media hora de trabajo contra medio megabyte
+  y una paleta ajena; y la barra nunca va sola, siempre con su número al lado.
+
+### De paso, la comisión se puso al día
+
+La pasada completa trajo facturas del 25 y 26 que la sincronización rota nunca había traído:
+
+| | Antes | Ahora |
+|---|---:|---:|
+| Christopher Guerra | $256.33 | **$267.80** |
+| Javier Rodríguez | $125.70 | **$139.24** |
+| Albert Batista | $41.75 | **$42.32** |
+
+Comprobado que no es un error de carga: los tres deltas dan **exactos** contra las facturas nuevas
+—$818.56 de Christopher son Cervecería La Rana Dorada y Combustible del Oeste— y hay **cero
+transacciones duplicadas** entre las 4 193.
+
+### Lo que queda de §7.6 y §7.3
+
+- **Venta por geografía.** Necesita poblado en los clientes de la casa, que no tienen cuenta.
+- **Renglones de la venta de la casa**, si alguna vez se quiere el mix del negocio completo.
+- **Contra meta** (§7.3): sigue sin haber metas en el esquema.
+- **Tasa de cierre y tiempo de ciclo** (§7.3): ahora son posibles —hay cotizaciones con fecha—
+  pero todavía hay dos cotizaciones en la base, así que medir no diría nada.

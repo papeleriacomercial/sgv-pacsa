@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { lunesDeEstaSemana } from "@/lib/semana";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -173,6 +173,24 @@ export default async function Tablero() {
       </header>
 
       <main className="flex flex-col gap-4 p-4">
+        {/* **El tablero contesta dos preguntas de distinta velocidad.**
+            Esta pantalla es la de la semana: quién cerró, qué se salió de
+            lo normal, a quién falta responderle. La del negocio es la del
+            mes y el año, y se abre cuando se quiere pensar, no cuando se
+            quiere actuar. Mezclarlas haría que ninguna de las dos se
+            mirara. */}
+        <Link href="/tablero/negocio" className="block">
+          <Tarjeta className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-medium text-texto">El negocio</p>
+              <p className="text-xs text-texto-secundario">
+                Doce meses de facturación: canal, concentración y qué se vende
+              </p>
+            </div>
+            <ChevronRight size={18} className="shrink-0 text-texto-atenuado" aria-hidden />
+          </Tarjeta>
+        </Link>
+
         {/* 1. ¿Se cerró el ciclo? */}
         <Tarjeta className="flex flex-col gap-2">
           <p className="text-sm font-medium text-texto">¿Se cerró el ciclo?</p>
