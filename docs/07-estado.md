@@ -2336,3 +2336,33 @@ Hilos de comentarios anclados al registro. No hay tabla ni pantalla.
 Los tres catálogos provisionales por validar con los vendedores, las metas por vendedor, los
 umbrales de dormido, y la higiene del maestro de Zoho —que dejó de ser un bloqueo abstracto: es
 **848 clientes sin RUC**—.
+
+---
+
+## La misma confusión, en tres pantallas más — 2026-08-26
+
+Cerrando la semana, al líder le aparecían las listas de Aguadulce y Chitré —de Albert— para
+repartir en sus días. Es el mismo fallo de ayer: **poder ver algo no lo hace tuyo.**
+
+Y al buscarlo aparecieron dos más:
+
+| Pantalla | Qué mostraba |
+|---|---|
+| **Plan de la semana** | Las listas del equipo, para planificar los días propios |
+| **Seguimientos** | Los compromisos del equipo, en la pantalla de «a qué me comprometí yo» |
+| **Ventas en marcha** | Las oportunidades de todos |
+
+Las tres arregladas. Ventas y Listas ganan interruptor para mirar al equipo a propósito;
+Seguimientos y el plan no lo necesitan — son personales y punto.
+
+### El arreglo de fondo: la opción peligrosa ya no es la que sale por omisión
+
+`cargarListas()` se podía llamar **sin dueño**, y entonces devolvía todo lo que el RLS
+permitiera. Así se coló tres veces: agenda, listas y plan de la semana. Con la revisión de ayer
+arreglé los síntomas y dejé la trampa puesta.
+
+Ahora **el dueño es obligatorio**. Ver lo del equipo hay que pedirlo por su nombre —
+`cargarListasDelEquipo()`— y eso ya no se escribe por descuido.
+
+Es la lección que se repite: **cuando un fallo aparece tres veces, el error no está en las tres
+pantallas — está en lo que las tres llaman.**

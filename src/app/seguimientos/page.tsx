@@ -33,11 +33,14 @@ export default async function Seguimientos() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
 
-  // Qué compromisos devuelve esta consulta lo decide el RLS: el vendedor ve
-  // los suyos, el líder los de su equipo, gerencia todos.
+  // **Los míos, no los que puedo ver.** Esta pantalla es «a qué me
+  // comprometí yo»: el líder viéndola llena de los compromisos de Albert no
+  // sabe cuáles tiene que cumplir él. Cómo va el equipo es otra pregunta y
+  // se contesta en el tablero.
   const { data } = await supabase
     .from("compromisos")
     .select("id, cuenta_id, descripcion, fecha_compromiso, tipo_accion, cuentas(nombre)")
+    .eq("vendedor_id", user.id)
     .is("deleted_at", null)
     .is("cumplido_en", null)
     .order("fecha_compromiso", { ascending: true });

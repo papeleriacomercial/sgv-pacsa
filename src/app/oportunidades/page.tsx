@@ -88,7 +88,7 @@ function esGrande(fecha: string | null): boolean {
 export default async function Ventas({
   searchParams,
 }: PageProps<"/oportunidades">) {
-  const { vista } = await searchParams;
+  const { vista, equipo } = await searchParams;
   const porMes = vista === "mes";
 
   const supabase = await clienteServidor();
@@ -98,12 +98,28 @@ export default async function Ventas({
   } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
 
-  const { data } = await supabase
+  // Las suyas por omisión, como en la cartera y en las listas: poder ver las
+  // del equipo no las hace suyas. Gerencia y el líder pueden pedir las de
+  // todos con `?equipo=1`.
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("rol")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const puedeVerEquipo = perfil?.rol === "lider" || perfil?.rol === "gerente";
+  const verEquipo = puedeVerEquipo && equipo === "1";
+
+  let consulta = supabase
     .from("oportunidades")
     .select(
       "id, nombre, linea, descripcion, monto_estimado, etapa, fecha_cierre_estimada, cuentas(nombre)",
     )
-    .is("deleted_at", null)
+    .is("deleted_at", null);
+
+  if (!verEquipo) consulta = consulta.eq("vendedor_id", user.id);
+
+  const { data } = await consulta
     .order("monto_estimado", { ascending: false, nullsFirst: false });
 
   const oportunidades = (data ?? []) as Oportunidad[];
@@ -122,8 +138,24 @@ export default async function Ventas({
 
       {/* Se llamaba "Pipeline". Quedó del principio y no es la palabra del
           negocio: en el sistema esto son las ventas en marcha. */}
-      <header className="border-b border-borde bg-superficie px-4 py-3">
-        <h1 className="text-lg font-semibold text-marca">Ventas en marcha</h1>
+      <header className="flex items-center justify-between gap-2 border-b border-borde bg-superficie px-4 py-3">
+        <h1 className="text-lg font-semibold text-marca">
+          {verEquipo ? "Ventas del equipo" : "Ventas en marcha"}
+        </h1>
+        {/* Solo para quien ve a más de uno. A un vendedor, «las mías» y
+            «las del equipo» son lo mismo. */}
+        {puedeVerEquipo && (
+          <Link
+            href={
+              verEquipo
+                ? `/oportunidades${porMes ? "?vista=mes" : ""}`
+                : `/oportunidades?equipo=1${porMes ? "&vista=mes" : ""}`
+            }
+            className="min-h-tactil flex items-center text-sm text-texto-secundario"
+          >
+            {verEquipo ? "Ver las mías" : "Ver el equipo"}
+          </Link>
+        )}
       </header>
 
       {/* Dos vistas de lo mismo, y cada una contesta una pregunta distinta:
@@ -132,8 +164,12 @@ export default async function Ventas({
       <div className="grid grid-cols-2 border-b border-borde bg-superficie">
         {(
           [
-            ["/oportunidades", "Por etapa", !porMes],
-            ["/oportunidades?vista=mes", "Por mes", porMes],
+            [verEquipo ? "/oportunidades?equipo=1" : "/oportunidades", "Por etapa", !porMes],
+            [
+              verEquipo ? "/oportunidades?equipo=1&vista=mes" : "/oportunidades?vista=mes",
+              "Por mes",
+              porMes,
+            ],
           ] as const
         ).map(([href, etiqueta, activa]) => (
           <Link

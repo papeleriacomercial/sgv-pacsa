@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
-import { cargarListas } from "@/lib/listas";
+import { cargarListas, cargarListasDelEquipo } from "@/lib/listas";
 import { CLASES_VENTA, TIPOS_LISTA, type TipoLista } from "@/lib/catalogos";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
@@ -35,7 +35,9 @@ export default async function Listas({ searchParams }: PageProps<"/listas">) {
   const puedeVerEquipo = perfil?.rol === "lider" || perfil?.rol === "gerente";
   const verEquipo = puedeVerEquipo && equipo === "1";
 
-  const listas = await cargarListas(verEquipo ? undefined : user.id);
+  const listas = verEquipo
+    ? await cargarListasDelEquipo()
+    : await cargarListas(user.id);
   const nombres = verEquipo
     ? new Map(
         (

@@ -35,7 +35,11 @@ export default async function Cierre() {
 
   const [semana, listas, { data: previo }] = await Promise.all([
     cargarSemana(user.id),
-    cargarListas(),
+    // **Las suyas, no las que puede ver.** El plan de la semana es donde el
+    // vendedor reparte sus rutas por día; al líder le aparecían las de
+    // Aguadulce y Chitré, que son de Albert. El RLS deja verlas porque es su
+    // equipo — pero planificar con la ruta de otro no significa nada.
+    cargarListas(user.id),
     supabase
       .from("cierres")
       .select("id, sorprendio, freno, necesito, plan, apuesta_potenciales, apuesta_clientes, enviado_en")

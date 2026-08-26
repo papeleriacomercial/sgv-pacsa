@@ -24,17 +24,27 @@ export type Lista = {
 };
 
 /**
- * Las listas de alguien, o las de todo el equipo.
+ * Las listas de una persona.
  *
- * **Con `vendedorId` devuelve solo las suyas, y ese es el uso normal.** El
- * RLS deja al líder ver las de su equipo, pero poder verlas no las hace
- * suyas: sin filtrar, su pantalla de planificación se llenaba de las rutas
- * de Aguadulce y Chitré de otro vendedor.
+ * **El dueño es obligatorio, y eso es el arreglo.** Antes se podía llamar
+ * sin él y devolvía todo lo que el RLS permitiera — o sea que la opción
+ * peligrosa era la que salía por omisión. Se coló tres veces: en la agenda,
+ * en la pantalla de listas y en el plan de la semana, donde al líder le
+ * aparecían las rutas de Aguadulce y Chitré de otro vendedor.
  *
- * Sin `vendedorId` devuelve todo lo que el RLS permita, que es lo que hace
- * falta cuando el líder quiere mirar cómo va el equipo.
+ * Poder ver algo no lo hace tuyo. Para mirar al equipo está
+ * `cargarListasDelEquipo`, que hay que pedir a propósito.
  */
-export async function cargarListas(vendedorId?: string): Promise<Lista[]> {
+export async function cargarListas(vendedorId: string): Promise<Lista[]> {
+  return consultar(vendedorId);
+}
+
+/** Todo lo que el RLS permita ver. Para el líder mirando a su equipo. */
+export async function cargarListasDelEquipo(): Promise<Lista[]> {
+  return consultar(undefined);
+}
+
+async function consultar(vendedorId?: string): Promise<Lista[]> {
   const supabase = await clienteServidor();
 
   let consulta = supabase
