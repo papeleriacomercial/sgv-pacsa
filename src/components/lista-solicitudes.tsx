@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Clock } from "lucide-react";
+import { Clock, FileText } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import {
   ESTADOS_SOLICITUD,
@@ -35,6 +35,16 @@ export type Solicitud = {
   respuesta: string | null;
   horas: number;
   vencida: boolean;
+  /** Quién lo pidió. La oficina atiende a tres y tiene que saber a quién contestar. */
+  vendedor: string;
+  /** El documento que originó el encargo, cuando lo hay. */
+  documento: {
+    codigo: string;
+    tipo: "cotizacion" | "orden_venta";
+    total: number;
+    conItbms: boolean;
+    ruta: string | null;
+  } | null;
 };
 
 const MONTO = new Intl.NumberFormat("es-PA", {
@@ -143,8 +153,21 @@ export function ListaSolicitudes({
 
         <p className="text-sm text-texto-secundario">{s.detalle}</p>
 
+        {/* **El documento es lo que hace atendible la bandeja.** Sin él,
+            «cotización COT-260827-A3F1» es un número y hay que ir a
+            buscarlo; con él, Verónica lo abre, lo imprime y lo levanta en
+            Zoho sin salir de aquí. */}
+        {s.documento && (
+          <VerDocumento documento={s.documento} cuenta={s.cuenta} />
+        )}
+
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <Insignia tono="neutro">{TIPOS_SOLICITUD[s.tipo]}</Insignia>
+          {/* Quien atiende necesita saber a quién le contesta; a quien la
+              pidió, su propio nombre no le dice nada. */}
+          {!s.esMia && (
+            <span className="text-texto-secundario">{s.vendedor}</span>
+          )}
           {s.resuelve === "yo" && (
             <span className="text-texto-atenuado">{RESUELVE.yo}</span>
           )}
@@ -266,6 +289,94 @@ export function ListaSolicitudes({
             ))}
           </div>
         </section>
+      )}
+    </div>
+  );
+}
+
+const DOCUMENTO: Record<"cotizacion" | "orden_venta", string> = {
+  cotizacion: "Cotización",
+  orden_venta: "Orden de venta",
+};
+
+/**
+ * Abrir el PDF que originó el encargo.
+ *
+ * **Se descarga y se abre, no se enlaza.** El bucket es privado —una cotización
+ * lleva los precios de un cliente concreto— así que no hay dirección pública
+ * que poner en un `href`. Se pide con la sesión de quien mira, y el RLS de
+ * Storage decide si puede.
+ *
+ * Verónica lo abre, lo imprime y lo levanta en Zoho. Es todo lo que el sistema
+ * le pide: no reescribe nada.
+ */
+function VerDocumento({
+  documento,
+  cuenta,
+}: {
+  documento: NonNullable<Solicitud["documento"]>;
+  cuenta: string;
+}) {
+  const [trayendo, setTrayendo] = useState(false);
+  const [fallo, setFallo] = useState(false);
+
+  async function abrir() {
+    if (!documento.ruta) return;
+    setTrayendo(true);
+    setFallo(false);
+
+    const supabase = clienteNavegador();
+    const { data } = await supabase.storage
+      .from("cotizaciones")
+      .download(documento.ruta);
+
+    if (!data) {
+      setFallo(true);
+      setTrayendo(false);
+      return;
+    }
+
+    window.open(
+      URL.createObjectURL(
+        new File([data], `${documento.codigo}.pdf`, { type: "application/pdf" }),
+      ),
+      "_blank",
+    );
+    setTrayendo(false);
+  }
+
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border border-borde bg-fondo p-2">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="min-w-0 flex-1 truncate text-xs text-texto-secundario">
+          {DOCUMENTO[documento.tipo]}{" "}
+          <span className="font-mono">{documento.codigo}</span>
+        </p>
+        <p className="shrink-0 font-mono text-sm text-texto">
+          {MONTO.format(documento.total)}
+        </p>
+      </div>
+
+      <p className="text-xs text-texto-atenuado">
+        {documento.conItbms ? "Con ITBMS" : "Sin ITBMS"} · {cuenta}
+      </p>
+
+      {documento.ruta && (
+        <button
+          type="button"
+          onClick={abrir}
+          disabled={trayendo}
+          className="min-h-tactil flex items-center justify-center gap-1.5 rounded-lg border border-borde bg-superficie text-sm text-texto disabled:opacity-50"
+        >
+          <FileText size={16} aria-hidden />
+          {trayendo ? "Abriendo" : "Abrir el PDF"}
+        </button>
+      )}
+
+      {fallo && (
+        <p className="text-xs text-error">
+          No se pudo abrir el archivo. Vuelve a intentar.
+        </p>
       )}
     </div>
   );

@@ -223,21 +223,36 @@ export default async function Expediente({
                 Programar seguimiento
               </Boton>
             </Link>
-            {/* Cotizar en el acto, hasta el tope. Solo el dueño de la
-                cuenta: la venta tiene que quedar a nombre de quien la
-                trabajó. */}
+            {/* Los dos documentos que el vendedor arma en el acto. Solo el
+                dueño de la cuenta: la venta tiene que quedar a nombre de
+                quien la trabajó.
+
+                Ninguno de los dos tiene tope para armarse. Lo que el monto y
+                el ITBMS deciden es a quién se lo entrega — a él mismo o a la
+                oficina—, y eso se resuelve al final, con el PDF delante. */}
             {esMia && (
-              <Link href={`/cuentas/${id}/cotizar`} className="block">
-                <Boton tono="secundario" ancho>
-                  Cotizar
-                </Boton>
-              </Link>
+              <>
+                <Link href={`/cuentas/${id}/cotizar`} className="block">
+                  <Boton tono="secundario" ancho>
+                    Cotizar
+                  </Boton>
+                </Link>
+                {/* La nota de entrega de la libreta, en el teléfono. La
+                    libreta sigue vigente: esto es para el cliente que pide
+                    algo más formal. */}
+                <Link href={`/cuentas/${id}/orden`} className="block">
+                  <Boton tono="secundario" ancho>
+                    Hacer orden de venta
+                  </Boton>
+                </Link>
+              </>
             )}
-            {/* Lo que el cliente pide y resuelve otro. No es un seguimiento:
-                es un encargo con destinatario y con reloj. */}
+            {/* Lo que queda de pedir a la oficina: muestras y precios. La
+                cotización y el pedido ya no se piden por formulario — nacen
+                del documento, que trae los renglones y el total. */}
             <Link href={`/cuentas/${id}/solicitud`} className="block">
               <Boton tono="secundario" ancho>
-                Pedir algo a la oficina
+                Pedir muestra o precio
               </Boton>
             </Link>
           </div>

@@ -2935,3 +2935,79 @@ combustible falta.
 | Chitré (Albert) | 1 | 0 |
 
 Clasificar clientes es lo que enciende esto, y es un toque por cuenta.
+
+---
+
+## La oficina, rediseñada — §7.2 — 2026-08-26
+
+Escrito el módulo que faltaba —[docs/05-modulos/7.2-oficina-y-administracion.md](05-modulos/7.2-oficina-y-administracion.md)—
+y construido. Era el último rol sin diseñar, y resultó ser el que menos pantalla necesita.
+
+> **La oficina no llena formularios: acusa recibo.**
+
+Antes el vendedor describía el pedido en un párrafo de texto libre y alguien en la oficina lo
+volvía a escribir en Zoho — **dos veces lo mismo, y la segunda sin el cliente delante**. Ver
+[D-047](06-decisiones.md).
+
+### Los dos documentos, que son el mismo
+
+`cotizaciones` gana `tipo` y `destino`. Cotización y orden de venta comparten todo; cambian el
+título, el prefijo del código —`COT-` contra `ORD-`— y a dónde van. Ver [D-050](06-decisiones.md).
+
+La **orden de venta** es la nota de entrega de la libreta, hecha en el teléfono, para el cliente
+que pide algo más formal. **La libreta no se jubila**: es una comodidad, no un procedimiento
+nuevo.
+
+En el PDF, una orden de venta dice «Entregado a» en vez de «Cotizado a» y **no lleva línea de
+validez** — la mercancía ya se entregó, y un «válida hasta» invitaría a pensar en devoluciones.
+
+### Las dos reglas de a dónde va cada uno
+
+| | |
+|---|---|
+| **El tope enruta, no bloquea** | Por encima de $500 el vendedor sí puede armar la cotización; lo que desaparece es el botón de dársela al cliente. Antes se trababa el formulario, y **un vendedor trabado vuelve a la libreta y no regresa**. Ver [D-048](06-decisiones.md) |
+| **Con ITBMS solo va a la oficina** | El vendedor no factura. Lo impone la base y sin excepción de rol. Ver [D-049](06-decisiones.md) |
+
+Comprobadas contra la base, siete casos, todos correctos — entre ellos que una orden **sin** ITBMS
+de $900 sí puede entregarse: el tope es de la cotización, no de la orden.
+
+### Lo que quedó en «pedir a la oficina»
+
+Solo **muestra** y **precio o condición especial**. Pedido y cotización siguen existiendo como
+tipo de solicitud —se crean solos al mandar el documento— para que conserven su reloj de
+respuesta, que es la mitad del valor de la tabla.
+
+El botón del expediente pasa a llamarse **«Pedir muestra o precio»**, y al lado aparece **«Hacer
+orden de venta»**.
+
+### La bandeja de Verónica
+
+La misma pantalla de Solicitudes, con dos cosas nuevas donde hacen falta:
+
+- **El documento**, con su código, su total, si lleva ITBMS y un botón para abrir el PDF. Es lo
+  que hace la bandeja atendible: sin él, «cotización COT-260827-A3F1» es un número y hay que ir a
+  buscarlo. Se descarga con la sesión de quien mira —el bucket es privado— y el RLS de Storage ya
+  contemplaba a administración.
+- **El nombre del vendedor**, porque atiende a tres personas y tiene que saber a quién contestar.
+  No se muestra en las propias: a quien la pidió, su propio nombre no le dice nada.
+
+El acuse ya existía y guarda quién, cuándo y una nota. **La nota importa en las muestras**: por
+dónde va lo que se mandó. Sin eso el vendedor pregunta por WhatsApp y el acuse no sirvió.
+
+### Cuarta vez con el mismo tropiezo
+
+`solicitudes_resumen` se crea con `select s.*`, así que la columna `documento_id` —agregada media
+hora antes— no existía para la vista y la bandeja no podía abrir nada. Rehecha entera.
+
+De paso se retiró `bandeja_oficina`, que había creado para lo mismo. **Dos vistas que contestan la
+misma pregunta se desincronizan**: una gana una columna, la otra no, y a los tres meses la
+pantalla del vendedor y la de la oficina dicen cosas distintas del mismo encargo.
+
+### Lo que se perdió y hay que reponer
+
+El formulario viejo pedía el **RUC** cuando el encargo iba a la oficina, aprovechando que el
+vendedor estaba delante del cliente. Al sacar pedido y cotización del formulario, ese momento se
+perdió.
+
+Por ahora la bandeja **muestra si la cuenta tiene RUC o no**, así que Verónica lo ve antes de
+facturar. Falta volver a pedirlo en el camino del documento, que es donde estaba bien pedido.

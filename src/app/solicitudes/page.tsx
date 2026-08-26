@@ -4,7 +4,7 @@ import type { EstadoSolicitud, ResuelveSolicitud, TipoSolicitud } from "@/lib/ca
 import { ListaSolicitudes, type Solicitud } from "@/components/lista-solicitudes";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
-type Cuenta = { nombre: string; ruc: string | null };
+type Cuenta = { nombre: string };
 
 type Fila = {
   id: string;
@@ -20,6 +20,13 @@ type Fila = {
   horas: number;
   vencida: boolean;
   created_at: string;
+  vendedor: string;
+  cuenta_ruc: string | null;
+  documento_codigo: string | null;
+  documento_tipo: "cotizacion" | "orden_venta" | null;
+  documento_total: string | number | null;
+  documento_con_itbms: boolean | null;
+  documento_pdf: string | null;
   cuentas: Cuenta | Cuenta[] | null;
 };
 
@@ -54,7 +61,7 @@ export default async function Solicitudes() {
   const { data } = await supabase
     .from("solicitudes_resumen")
     .select(
-      "id, cuenta_id, vendedor_id, tipo, resuelve, detalle, monto_estimado, para_cuando, estado, respuesta, horas, vencida, created_at, cuentas(nombre, ruc)",
+      "id, cuenta_id, vendedor_id, tipo, resuelve, detalle, monto_estimado, para_cuando, estado, respuesta, horas, vencida, created_at, vendedor, cuenta_ruc, documento_codigo, documento_tipo, documento_total, documento_con_itbms, documento_pdf, cuentas(nombre)",
     )
     .order("estado")
     .order("created_at", { ascending: true });
@@ -67,7 +74,7 @@ export default async function Solicitudes() {
       // Para quien va a facturar, el RUC es lo primero que va a buscar.
       // Que viaje con el pedido le ahorra la llamada al vendedor — y es lo
       // que hace que la factura vuelva enganchada a esta cuenta.
-      ruc: unaCuenta(s.cuentas)?.ruc ?? null,
+      ruc: s.cuenta_ruc,
       esMia: s.vendedor_id === user.id,
       tipo: s.tipo,
       resuelve: s.resuelve,
@@ -78,6 +85,17 @@ export default async function Solicitudes() {
       respuesta: s.respuesta,
       horas: Number(s.horas),
       vencida: s.vencida,
+      vendedor: s.vendedor,
+      documento:
+        s.documento_codigo === null || s.documento_tipo === null
+          ? null
+          : {
+              codigo: s.documento_codigo,
+              tipo: s.documento_tipo,
+              total: Number(s.documento_total ?? 0),
+              conItbms: s.documento_con_itbms ?? true,
+              ruta: s.documento_pdf,
+            },
     }),
   );
 

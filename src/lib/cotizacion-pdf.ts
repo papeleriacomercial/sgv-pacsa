@@ -18,7 +18,28 @@ export type Renglon = {
   precio: number;
 };
 
+export type TipoDocumento = "cotizacion" | "orden_venta";
+
+/**
+ * Cómo se llama cada documento en el papel.
+ *
+ * **Son el mismo documento con otro nombre**, y el nombre es lo único que
+ * el cliente ve para saber si le están ofreciendo un precio o entregándole
+ * mercancía. Por eso vive aquí y no repartido por las pantallas.
+ */
+export const TITULO_DOCUMENTO: Record<TipoDocumento, string> = {
+  cotizacion: "Cotización",
+  orden_venta: "Orden de venta",
+};
+
+/** El «Cotizado a» del encabezado, que tampoco puede decir lo mismo. */
+const DIRIGIDO_A: Record<TipoDocumento, string> = {
+  cotizacion: "Cotizado a",
+  orden_venta: "Entregado a",
+};
+
 export type Cotizacion = {
+  tipo: TipoDocumento;
   codigo: string;
   fecha: Date;
   validezDias: number;
@@ -181,7 +202,7 @@ export async function generarCotizacion(
 
   doc.setFontSize(19);
   doc.setTextColor(...TINTA);
-  doc.text("Cotización", DERECHA, y + 8, { align: "right" });
+  doc.text(TITULO_DOCUMENTO[c.tipo], DERECHA, y + 8, { align: "right" });
 
   doc.setFontSize(9);
   doc.setTextColor(...SUAVE);
@@ -215,7 +236,7 @@ export async function generarCotizacion(
 
   doc.setFontSize(9);
   doc.setTextColor(...SUAVE);
-  doc.text("Cotizado a", MARGEN, Math.max(y, yBloque) + 6);
+  doc.text(DIRIGIDO_A[c.tipo], MARGEN, Math.max(y, yBloque) + 6);
 
   let yCliente = Math.max(y, yBloque) + 12;
   doc.setFontSize(13);
@@ -240,11 +261,13 @@ export async function generarCotizacion(
 
   let yDatos = Math.max(y, yBloque) + 6;
   doc.setFontSize(8.5);
-  for (const [etiqueta, valor] of [
-    ["Fecha de cotización", fecha(c.fecha)],
-    ["Válida hasta", fecha(vence)],
+  // Una orden de venta no vence: la mercancía ya se entregó. Dejar ahí un
+  // «válida hasta» invitaría al cliente a pensar que puede devolverla.
+  for (const [etiqueta, valor] of ([
+    [`Fecha de ${c.tipo === "cotizacion" ? "cotización" : "entrega"}`, fecha(c.fecha)],
+    c.tipo === "cotizacion" ? ["Válida hasta", fecha(vence)] : null,
     ["Vendedor", c.vendedor.nombre],
-  ] as const) {
+  ].filter(Boolean) as [string, string][])) {
     doc.setTextColor(...SUAVE);
     doc.text(etiqueta, 130, yDatos);
     doc.setTextColor(...TINTA);

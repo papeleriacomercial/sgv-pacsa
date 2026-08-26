@@ -24,7 +24,7 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 | [docs/02-modelo-datos.md](docs/02-modelo-datos.md) | Esquema, convenciones y diccionario de campos. | Completo |
 | [docs/03-seguridad-rls.md](docs/03-seguridad-rls.md) | Roles y políticas por tabla. | Completo |
 | [docs/04-design-system.md](docs/04-design-system.md) | Tokens y componentes (deriva de §17 de la visión). | Completo |
-| [docs/05-modulos/](docs/05-modulos/) | Un archivo por módulo (§7.1 … §7.9). | §7.1, §7.4, §7.5 y §7.6 escritos |
+| [docs/05-modulos/](docs/05-modulos/) | Un archivo por módulo (§7.1 … §7.9). | §7.1, §7.2, §7.4, §7.5 y §7.6 escritos |
 | [docs/06-decisiones.md](docs/06-decisiones.md) | Bitácora de decisiones: qué se decidió, cuándo y por qué. | Vivo |
 | [docs/07-estado.md](docs/07-estado.md) | Qué está hecho, qué está en curso, qué falta. | Vivo |
 | [docs/08-plan-v2.md](docs/08-plan-v2.md) | Replanteamiento de 2026-08-21: conciliación con la visión, impacto y plan por etapas. | Vigente |

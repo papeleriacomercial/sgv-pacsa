@@ -6,15 +6,15 @@ import { clienteNavegador } from "@/lib/supabase/navegador";
 import { insertar } from "@/lib/cola";
 import {
   ATIENDE,
+  PIDE_A_LA_OFICINA,
   RESUELVE,
   TIPOS_SOLICITUD,
+  type PideALaOficina,
   type ResuelveSolicitud,
-  type TipoSolicitud,
 } from "@/lib/catalogos";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
-import { CampoRuc } from "@/components/campo-ruc";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
@@ -48,15 +48,11 @@ function Formulario() {
   const [nombreCuenta, setNombreCuenta] = useState("");
   const [cargando, setCargando] = useState(true);
 
-  const [tipo, setTipo] = useState<TipoSolicitud | null>(null);
+  const [tipo, setTipo] = useState<PideALaOficina | null>(null);
   const [resuelve, setResuelve] = useState<ResuelveSolicitud>("oficina");
   const [detalle, setDetalle] = useState("");
   const [monto, setMonto] = useState("");
   const [paraCuando, setParaCuando] = useState("");
-
-  const [rucCuenta, setRucCuenta] = useState<string | null>(null);
-  const [ruc, setRuc] = useState("");
-  const [sinRuc, setSinRuc] = useState(false);
 
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,14 +61,13 @@ function Formulario() {
     const supabase = clienteNavegador();
     supabase
       .from("cuentas")
-      .select("nombre, ruc")
+      .select("nombre")
       .eq("id", cuentaId)
       .is("deleted_at", null)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setNombreCuenta(data.nombre ?? "");
-          setRucCuenta((data.ruc as string | null) ?? null);
         }
         setCargando(false);
       });
@@ -100,14 +95,6 @@ function Formulario() {
     }
 
     const destino: ResuelveSolicitud = esDecisionDeArriba ? "oficina" : resuelve;
-
-    // El RUC se queda en la cuenta, no en la solicitud: es del comercio y
-    // sirve para siempre. Es también lo que va a permitir reconocer la
-    // factura cuando vuelva de Zoho con la razón social en lugar del nombre
-    // del rótulo.
-    if (!rucCuenta && ruc.trim()) {
-      await supabase.from("cuentas").update({ ruc: ruc.trim() }).eq("id", cuentaId);
-    }
 
     const { error: fallo } = await insertar(
       "solicitudes",
@@ -177,9 +164,18 @@ function Formulario() {
             </Tarjeta>
 
             <Tarjeta>
+              {/* **Ya no se piden cotizaciones ni pedidos por aquí.** Los dos
+                  nacen del documento —la cotización o la orden de venta que el
+                  vendedor arma en el expediente—, porque ahí ya están los
+                  renglones, las cantidades y el total. Pedirlos con un párrafo
+                  de texto libre obligaba a que alguien en la oficina lo
+                  volviera a escribir entero en Zoho.
+
+                  Siguen existiendo como tipo de solicitud: se crean solos al
+                  mandar el documento, y así conservan su reloj. */}
               <Opciones
                 etiqueta="¿Qué necesita?"
-                opciones={TIPOS_SOLICITUD}
+                opciones={PIDE_A_LA_OFICINA}
                 valor={tipo}
                 onCambio={setTipo}
               />
@@ -240,20 +236,6 @@ function Formulario() {
               </>
             )}
 
-            {/* Solo cuando lo resuelve la oficina: es quien va a facturar,
-                y sin RUC la factura vuelve de Zoho sin poder engancharse a
-                esta cuenta. */}
-            {(esDecisionDeArriba || resuelve === "oficina") &&
-              !rucCuenta &&
-              (tipo === "pedido" || tipo === "cotizacion") && (
-                <CampoRuc
-                  valor={ruc}
-                  onCambio={setRuc}
-                  sinRuc={sinRuc}
-                  onSinRuc={setSinRuc}
-                  motivo="La oficina lo va a necesitar para facturar. Mandarlo ahora le ahorra la llamada."
-                />
-              )}
 
             {error && <MensajeError titulo="No se pudo guardar" detalle={error} />}
 

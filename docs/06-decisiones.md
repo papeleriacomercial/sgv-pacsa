@@ -1171,3 +1171,78 @@ lista— porque si dicen cosas distintas, la lista y el plan se contradicen.
 
 **El informe de cartera se queda** en `/venta-cruzada`, pero cambia de dueño: es la pantalla de
 «cómo está la cartera» para líder y gerencia. El camino del vendedor es la lista.
+
+---
+
+## D-047 — La oficina acusa recibo; no llena formularios
+
+**Fecha:** 2026-08-26
+
+**Decisión.** El vendedor arma el documento en la calle. La oficina lo recibe, hace lo que ya hace
+hoy en Zoho, y marca que lo hizo. La pantalla de Verónica es una bandeja con un botón de
+«responder», no un formulario de captura.
+
+**Por qué.** La versión anterior tenía al vendedor describiendo el pedido en un párrafo de texto
+libre y a alguien en la oficina volviéndolo a escribir en Zoho. **Se escribía dos veces lo mismo**,
+y la segunda sin el cliente delante para preguntarle.
+
+Ahora el encargo llega con sus renglones, sus cantidades, su total y su PDF. Verónica lo abre, lo
+imprime y lo levanta. El acuse guarda quién y cuándo —ya estaba en el esquema— que es lo único que
+permite contestar «¿cuánto tarda la oficina?».
+
+**El sistema no reemplaza los procedimientos.** La libreta sigue vigente, Zoho sigue siendo donde
+se factura, y el documento llega a Verónica por los canales de siempre.
+
+---
+
+## D-048 — El tope enruta, no bloquea
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Por encima del tope el vendedor **sí** puede armar la cotización: lo que cambia es
+que el botón de «dárselo al cliente» no aparece y solo queda «mandarlo a la oficina».
+
+**Por qué.** Antes el formulario se trababa: el botón quedaba deshabilitado y el vendedor se
+quedaba mirando la pantalla delante del cliente. **Un vendedor trabado vuelve a la libreta y no
+regresa.** El tope existe para que alguien mire el precio antes que el cliente, y eso se cumple
+igual mandándolo a la oficina.
+
+---
+
+## D-049 — Una orden de venta con ITBMS solo puede ir a la oficina
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Si el documento lleva el 7 %, el camino de entregárselo al cliente no existe. Lo
+impone la base, no la pantalla, y **sin excepción de rol** — gerencia tampoco emite documentos
+fiscales desde el teléfono.
+
+**Por qué.** El vendedor no factura. Entregar un papel con impuesto que la empresa no declaró no es
+una preferencia mal escogida: es un problema fiscal. Dejarlo a la memoria del vendedor es dejar
+que un día pase.
+
+La pantalla lo dice antes de armar el documento —«esto va a la oficina», con el porqué— para que
+la regla se aprenda leyéndola y no chocándose con ella delante del cliente.
+
+Comprobado contra la base: siete casos, entre ellos que una orden **sin** ITBMS de $900 sí puede
+entregarse —el tope es de la cotización, no de la orden—.
+
+---
+
+## D-050 — Cotización y orden de venta viven en la misma tabla
+
+**Fecha:** 2026-08-26
+
+**Decisión.** `cotizaciones` gana `tipo` (`cotizacion` | `orden_venta`) y `destino`
+(`cliente` | `oficina`). La tabla conserva el nombre.
+
+**Por qué la misma tabla.** Comparten todo: renglones, cantidad, precio, total, ITBMS opcional,
+código, PDF, estados y anulación. Dos tablas gemelas se desincronizan a la tercera migración —una
+gana una columna, la otra no—.
+
+**Por qué no se renombra.** Renombrarla obligaría a tocar el bucket de Storage, sus cuatro
+políticas y siete pantallas, y no diría nada que la columna `tipo` no diga. El comentario de la
+tabla lo explica para quien la lea dentro de seis meses.
+
+**Y el código lleva el prefijo del tipo:** `COT-260827-A3F1` contra `ORD-260827-B7C2`. En una
+bandeja con los dos mezclados, el prefijo es lo que se lee primero.

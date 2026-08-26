@@ -236,6 +236,24 @@ export const TIPOS_SOLICITUD = {
 
 export type TipoSolicitud = keyof typeof TIPOS_SOLICITUD;
 
+/**
+ * Lo que de verdad se pide con un formulario.
+ *
+ * **Pedido y cotización ya no se piden por aquí**: nacen del documento que el
+ * vendedor arma en el expediente, que trae los renglones, las cantidades y el
+ * total. Pedirlos con un párrafo de texto libre obligaba a que alguien en la
+ * oficina lo volviera a escribir entero en Zoho.
+ *
+ * Siguen existiendo como tipo —se crean solos al mandar el documento— para que
+ * conserven su reloj de respuesta, que es la mitad del valor de la tabla.
+ */
+export const PIDE_A_LA_OFICINA = {
+  muestra: TIPOS_SOLICITUD.muestra,
+  precio: TIPOS_SOLICITUD.precio,
+} as const;
+
+export type PideALaOficina = keyof typeof PIDE_A_LA_OFICINA;
+
 /** Quién atiende cada clase de encargo. */
 export const ATIENDE: Record<TipoSolicitud, string> = {
   pedido: "Administración",

@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Pencil, Plus, Send, Trash2 } from "lucide-react";
+import { FileText, Inbox, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import {
   CONDICIONES,
   generarCotizacion,
+  TITULO_DOCUMENTO,
   type CondicionPago,
   type Empresa,
+  type TipoDocumento,
 } from "@/lib/cotizacion-pdf";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
@@ -63,7 +65,12 @@ const FECHA_CORTA = new Intl.DateTimeFormat("es-PA", {
  * correlativo de Zoho evita que dentro de la casa alguien confunda una con
  * otra.
  */
-function codigoDe(id: string, fecha: Date): string {
+const PREFIJO: Record<TipoDocumento, string> = {
+  cotizacion: "COT",
+  orden_venta: "ORD",
+};
+
+function codigoDe(tipo: TipoDocumento, id: string, fecha: Date): string {
   const p = new Intl.DateTimeFormat("en-CA", {
     year: "2-digit",
     month: "2-digit",
@@ -72,22 +79,25 @@ function codigoDe(id: string, fecha: Date): string {
   })
     .format(fecha)
     .replace(/-/g, "");
-  return `COT-${p}-${id.replace(/-/g, "").slice(0, 4).toUpperCase()}`;
+  return `${PREFIJO[tipo]}-${p}-${id.replace(/-/g, "").slice(0, 4).toUpperCase()}`;
 }
 
 export function ArmarCotizacion({
+  tipo = "cotizacion",
   cuenta,
   empresa,
   vendedor,
   tope,
   itbmsPorcentaje,
 }: {
+  tipo?: TipoDocumento;
   cuenta: Cuenta;
   empresa: Empresa;
   vendedor: { id: string; nombre: string };
   tope: number;
   itbmsPorcentaje: number;
 }) {
+  const titulo = TITULO_DOCUMENTO[tipo];
   const router = useRouter();
 
   const [renglones, setRenglones] = useState<Renglon[]>([]);
@@ -122,7 +132,10 @@ export function ArmarCotizacion({
   const [borrador, setBorrador] = useState<string | null>(null);
 
   // Ya salió de la casa: a partir de aquí solo se puede anular, no corregir.
-  const [emitida, setEmitida] = useState(false);
+  // Null mientras no se ha mandado. Después guarda **a dónde** fue, porque
+  // la pantalla de confirmación dice cosas distintas: al cliente ya le
+  // llegó; a la oficina le queda por atender.
+  const [emitida, setEmitida] = useState<"cliente" | "oficina" | null>(null);
 
   // --- Buscar en el catálogo ------------------------------------------------
 
@@ -214,7 +227,22 @@ export function ArmarCotizacion({
     return { subtotal: sub, itbms: imp, total: sub + imp, completos: ok };
   }, [renglones, conItbms, itbmsPorcentaje]);
 
-  const pasaElTope = total > tope;
+  /**
+   * Si el vendedor puede entregarlo él mismo, y si no, por qué.
+   *
+   * **Es el espejo de lo que impone la base** —`cotizacion_respeta_el_tope`—
+   * y por eso los mensajes dicen lo mismo. La comprobación de verdad es la
+   * de allá; esta existe para que el vendedor no descubra la regla
+   * chocándose con ella delante del cliente.
+   */
+  const puedeEntregarlo =
+    tipo === "orden_venta" ? !conItbms : total <= tope;
+
+  const porQueNo =
+    tipo === "orden_venta"
+      ? "Esta orden lleva ITBMS y tú no facturas. Mándala a la oficina y Verónica la levanta en Zoho."
+      : `Esta cotización pasa de ${DINERO.format(tope)}, que es el tope para entregarla tú mismo. Mándasela a la oficina.`;
+
   const faltanPrecios = renglones.length > 0 && completos < renglones.length;
 
   // --- Emitir ---------------------------------------------------------------
@@ -235,13 +263,14 @@ export function ArmarCotizacion({
       const supabase = clienteNavegador();
       const id = borrador ?? crypto.randomUUID();
       const ahora = new Date();
-      const codigo = codigoDe(id, ahora);
+      const codigo = codigoDe(tipo, id, ahora);
 
       // Primero la cotización y sus renglones. Si el PDF falla después, queda
       // como borrador y se puede reintentar sin perder lo escrito.
       const { error: falloCot } = await supabase.from("cotizaciones").upsert({
         id,
         codigo,
+        tipo,
         cuenta_id: cuenta.id,
         vendedor_id: vendedor.id,
         estado: "borrador",
@@ -285,6 +314,7 @@ export function ArmarCotizacion({
 
       const pdf = await generarCotizacion(
         {
+          tipo,
           codigo,
           fecha: ahora,
           validezDias: empresa.validez_dias ?? 15,
@@ -334,7 +364,18 @@ export function ArmarCotizacion({
    * aquí y no al generarlo: mientras solo se estaba mirando, seguía siendo
    * un borrador que se podía corregir sin dejar rastro.
    */
-  async function enviar() {
+  /**
+   * Emitir el documento y llevarlo a su destino.
+   *
+   * **Los dos caminos emiten igual**: se sube el PDF y el documento deja de
+   * ser borrador. Lo que cambia es a quién llega — al cliente por la hoja de
+   * compartir del teléfono, o a la oficina por la bandeja.
+   *
+   * Es aquí donde la base comprueba las dos reglas: el tope solo aplica al
+   * camino del cliente, y una orden de venta con ITBMS no puede tomarlo.
+   * Si rebota, sigue siendo un borrador y no se perdió nada.
+   */
+  async function enviar(destino: "cliente" | "oficina") {
     if (!listo) return;
     setGuardando(true);
     setError(null);
@@ -351,19 +392,35 @@ export function ArmarCotizacion({
         });
       if (falloSubida) throw falloSubida;
 
-      // Es aquí donde la base comprueba el tope. Si rebota, sigue siendo un
-      // borrador y no se perdió nada.
       const { error: falloEmitir } = await supabase
         .from("cotizaciones")
         .update({
           estado: "emitida",
+          destino,
           emitida_en: new Date().toISOString(),
           pdf_path: ruta,
         })
         .eq("id", listo.id);
       if (falloEmitir) throw falloEmitir;
 
-      setEmitida(true);
+      // **La solicitud es lo que le pone reloj al encargo.** Sin ella el
+      // documento quedaría guardado y nadie sabría que alguien lo espera,
+      // que es exactamente lo que pasa hoy con los correos sueltos.
+      if (destino === "oficina") {
+        const { error: falloSol } = await supabase.from("solicitudes").insert({
+          id: crypto.randomUUID(),
+          cuenta_id: cuenta.id,
+          vendedor_id: vendedor.id,
+          tipo: tipo === "cotizacion" ? "cotizacion" : "pedido",
+          resuelve: "oficina",
+          documento_id: listo.id,
+          detalle: `${titulo} ${listo.codigo} — ${cuenta.nombre}`,
+          monto_estimado: total,
+        });
+        if (falloSol) throw falloSol;
+      }
+
+      setEmitida(destino);
       router.refresh();
     } catch (e) {
       const m = e as { message?: string };
@@ -373,12 +430,18 @@ export function ArmarCotizacion({
     }
     setGuardando(false);
 
+    // Lo que va a la oficina no se comparte con nadie: Verónica lo abre
+    // desde su bandeja. Abrir aquí la hoja de compartir invitaría a
+    // mandárselo también al cliente, y entonces habría dos documentos
+    // circulando con el mismo número.
+    if (destino === "oficina") return;
+
     if (navigator.canShare?.({ files: [listo.archivo] })) {
       try {
         await navigator.share({
           files: [listo.archivo],
-          title: `Cotización ${listo.codigo}`,
-          text: `Cotización para ${cuenta.nombre}`,
+          title: `${titulo} ${listo.codigo}`,
+          text: `${titulo} para ${cuenta.nombre}`,
         });
       } catch {
         // Cancelar no es un error: el documento ya está guardado y se puede
@@ -399,12 +462,14 @@ export function ArmarCotizacion({
         className={`flex flex-col gap-3 ${emitida ? "border-green-200 bg-green-50" : ""}`}
       >
         <p className="text-base font-semibold text-texto">
-          {emitida ? `Cotización ${listo.codigo}` : "Míralo antes de mandarlo"}
+          {emitida ? `${titulo} ${listo.codigo}` : "Míralo antes de mandarlo"}
         </p>
         <p className="text-sm text-texto-secundario">
-          {emitida
-            ? `Enviada y guardada en el expediente de ${cuenta.nombre}.`
-            : "Todavía no ha salido de la casa. Revisa precios y productos: si algo está mal, se corrige sin que quede rastro."}
+          {emitida === "oficina"
+            ? `Va en la bandeja de la oficina. Te avisan aquí mismo cuando la procesen.`
+            : emitida === "cliente"
+              ? `Enviada y guardada en el expediente de ${cuenta.nombre}.`
+              : "Todavía no ha salido de la casa. Revisa precios y productos: si algo está mal, se corrige sin que quede rastro."}
         </p>
 
         {/* Ver va primero y con el peso visual: es el paso que hay que dar
@@ -435,21 +500,42 @@ export function ArmarCotizacion({
               </span>
             </Boton>
 
-            <Boton onClick={enviar} disabled={guardando}>
+            {/* **El camino propio solo aparece cuando de verdad se puede
+                tomar.** Un botón que existe y rebota enseña al vendedor que
+                la aplicación falla; un botón que no está, con el porqué
+                escrito al lado, enseña la regla. */}
+            {puedeEntregarlo ? (
+              <Boton onClick={() => enviar("cliente")} disabled={guardando}>
+                <span className="flex items-center justify-center gap-2">
+                  <Send size={16} aria-hidden />
+                  {guardando
+                    ? "Enviando"
+                    : visto
+                      ? "Dárselo al cliente"
+                      : "Dárselo sin verlo"}
+                </span>
+              </Boton>
+            ) : (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                {porQueNo}
+              </p>
+            )}
+
+            <Boton
+              tono={puedeEntregarlo ? "secundario" : "primario"}
+              onClick={() => enviar("oficina")}
+              disabled={guardando}
+            >
               <span className="flex items-center justify-center gap-2">
-                <Send size={16} aria-hidden />
-                {guardando
-                  ? "Enviando"
-                  : visto
-                    ? "Está bien, enviar"
-                    : "Enviar sin verlo"}
+                <Inbox size={16} aria-hidden />
+                {guardando ? "Mandando" : "Mandarlo a la oficina"}
               </span>
             </Boton>
           </>
         )}
 
-        {emitida && (
-          <Boton tono="secundario" onClick={enviar}>
+        {emitida === "cliente" && (
+          <Boton tono="secundario" onClick={() => enviar("cliente")}>
             <span className="flex items-center justify-center gap-2">
               <Send size={16} aria-hidden />
               Volver a enviar
@@ -613,7 +699,7 @@ export function ArmarCotizacion({
 
       {/* --- Totales y emisión --- */}
       <Tarjeta
-        className={`flex flex-col gap-2 ${pasaElTope ? "border-aviso/50 bg-amber-50" : ""}`}
+        className={`flex flex-col gap-2 ${!puedeEntregarlo ? "border-aviso/50 bg-amber-50" : ""}`}
       >
         <div className="flex justify-between text-sm text-texto-secundario">
           <span>Subtotal</span>
@@ -628,21 +714,18 @@ export function ArmarCotizacion({
           <span className="font-mono">{DINERO.format(total)}</span>
         </div>
 
-        {/* El tope se explica antes de que choque, no cuando ya rebotó. */}
-        {pasaElTope && (
+        {/* **A dónde va a ir, dicho antes de armarlo.** Antes esto era un
+            bloqueo: por encima del tope el vendedor no podía cotizar y se
+            quedaba trabado delante del cliente. Ahora siempre puede — lo que
+            cambia es quién se lo entrega. */}
+        {!puedeEntregarlo && (
           <div className="rounded-lg bg-amber-100 px-3 py-2 text-xs text-amber-900">
-            <p className="font-medium">
-              Pasa de {DINERO.format(tope)}, que es hasta donde puedes cotizar
-              directo.
-            </p>
-            <p className="mt-1">
-              Quita renglones, o pídesela a la oficina desde Solicitudes: ahí la
-              revisan y la emiten ellos.
-            </p>
+            <p className="font-medium">Esto va a la oficina.</p>
+            <p className="mt-1">{porQueNo}</p>
           </div>
         )}
 
-        {faltanPrecios && !pasaElTope && (
+        {faltanPrecios && (
           <p className="text-xs text-aviso">
             Falta ponerle precio a algún renglón.
           </p>
@@ -653,9 +736,7 @@ export function ArmarCotizacion({
         <Boton
           ancho
           onClick={revisar}
-          disabled={
-            guardando || renglones.length === 0 || faltanPrecios || pasaElTope
-          }
+          disabled={guardando || renglones.length === 0 || faltanPrecios}
         >
           <span className="flex items-center justify-center gap-2">
             <Send size={16} aria-hidden />
