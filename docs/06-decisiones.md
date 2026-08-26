@@ -1022,3 +1022,50 @@ Actions —`.github/workflows/sincronizar-zoho.yml`—, a las 2:00 de Panamá.
 se detenga si la dirección de Supabase no apunta al proyecto que se esperaba. Un secreto mal
 pegado no da error: escribe, y escribe bien, en el proyecto que no era. Se descubre semanas
 después, cuando los números no cuadran.
+
+---
+
+## D-041 — El modelo de gemelos dice un rango, no una cifra
+
+**Fecha:** 2026-08-26
+
+**Decisión.** El consumo típico por tipo de comercio se muestra como el rango del medio —del
+cuartil 25 al 75— y no como un solo número: *«Panadería — la mitad compra entre $7 y $75 al mes,
+cada 39 días»*. Con menos de cinco clientes del tipo no se muestra nada.
+
+**Por qué no el promedio.** En «Distribuidora» el promedio anual da $4 480 y la mediana $179: la
+diferencia es un cliente grande que arrastra a los otros ocho.
+
+**Por qué tampoco la mediana sola.** Al medir el reparto completo, entre el cuartil bajo y el alto
+hay de **3 a 27 veces** según el tipo. Se comprobó que no son datos sucios: el cuadre contra las
+1 541 transacciones da 0,2 % de diferencia. Los comercios del mismo rubro de verdad compran
+cantidades muy distintas.
+
+Ante ese reparto, «una panadería compra $20 al mes» da por típico lo que no lo es. El vendedor que
+entra a la de $75 y el que entra a la de $7 reciben el mismo número y no lo reconoce ninguno.
+
+**Un rango dice el orden de magnitud, dice que varía, y no promete precisión que no hay.**
+
+**El piso de cinco clientes hace dos trabajos.** Con dos, la cifra no es un patrón sino una
+anécdota — y además **es** la de esos dos, así que cualquiera que sepa quiénes son acaba de
+enterarse de cuánto compran. Por eso la función es `security definer` —tiene que contar toda la
+empresa, no la cartera de quien pregunta— y el piso es lo que hace que eso no filtre nada.
+
+---
+
+## D-042 — Parecerse no basta: hay que parecerse en tamaño
+
+**Fecha:** 2026-08-26
+
+**Decisión.** En `parecidos()`, la regla de «uno contiene al otro» solo cuenta cuando los dos
+nombres tienen **casi las mismas palabras** —una de diferencia como mucho—.
+
+**Por qué.** La pantalla de depuración proponía meter «Cooperativa agro ferretería y supermercado»
+dentro de «Supermercado». Y también dentro de «Ferretería», las dos a la vez. Aceptar cualquiera
+de las dos habría borrado lo único que ese nombre dice: que el local es las tres cosas.
+
+Sigue funcionando para lo que la regla existía —«super» y «supermercado», «agropecuaria» y «tienda
+agropecuaria»—. Cuatro palabras de diferencia no es la misma categoría escrita de otra forma: es
+otra categoría.
+
+Con el arreglo, la pantalla propone 5 uniones en vez de 7, y las 5 son correctas.

@@ -2655,3 +2655,80 @@ después: «Nada nuevo. Listo.»
 ### De paso
 
 `npm run zoho` corre las dos de un tirón; `npm run zoho:seco` las ensaya sin escribir.
+
+---
+
+## El modelo de gemelos, y por qué dice un rango — §7.5 — 2026-08-26
+
+Escrito el módulo que faltaba: [docs/05-modulos/7.5-calificacion-de-prospectos.md](05-modulos/7.5-calificacion-de-prospectos.md).
+Y construida su pieza principal, la que la visión llama la fuente más valiosa.
+
+> **Panadería** — la mitad compra entre **$7 y $75 al mes**, cada 39 días.
+> *Este compra $180 — por encima de sus iguales.*
+
+Aparece en el expediente de la cuenta. **164 cuentas la ven, y 124 de ellas no han comprado
+nunca** — que es exactamente el caso para el que se construyó: un punto en el mapa que deja de ser
+un nombre y pasa a ser una expectativa.
+
+### Tres versiones hasta llegar a algo honesto
+
+**Promedio.** Descartado enseguida: en «Distribuidora» da $4 480 al año contra $179 de mediana. Un
+cliente grande arrastrando a otros ocho.
+
+**Mediana sola.** Parecía bien hasta medir el reparto completo:
+
+| Tipo | n | Cuartil bajo | Mediana | Cuartil alto | Máximo | Alto ÷ bajo |
+|---|---:|---:|---:|---:|---:|---:|
+| Mini Super | 10 | $3 | $13 | $38 | $160 | 13,5× |
+| Distribuidora | 9 | $4 | $15 | $109 | $2 608 | 26,7× |
+| Panadería | 8 | $7 | $20 | $75 | $645 | 10,5× |
+| Restaurante | 7 | $8 | $19 | $37 | $63 | 4,9× |
+
+*(al mes)*
+
+**Rango.** Es lo que quedó. Ver [D-041](06-decisiones.md).
+
+### El susto del cuadre, que era mío
+
+Al ver las medianas tan bajas comparé el espejo contra las transacciones y me dio **$545 735
+contra $353 843, con 164 de 233 cuentas descuadradas**. Estuve a punto de dar el modelo por
+inservible.
+
+**El error era mío:** PostgREST devuelve mil filas por omisión y yo sumé solo las mil primeras de
+1 541. Paginando bien, el cuadre da **$546 689 contra $545 735 — 0,2 %**, y solo 8 contactos
+difieren, por el día de desfase entre las dos ventanas de doce meses.
+
+De paso quedó comprobado que el historial está completo: una pasada entera encuentra 1 534
+documentos y en la base hay 1 541.
+
+### Lo que limita la cobertura: 5 tipos de 33
+
+- **El catálogo tiene la misma categoría escrita de varias formas.** «Mini Super» (34) +
+  «Minisuper» (28), «Farmacias» (22) + «Farmacia» (11), «Panadería»/«Panaderías»/«Panaderia» (24
+  entre las tres). Las que solo cambian por acento ya se unen solas; las que cambian por plural o
+  por un espacio, no. **Unirlas es un toque en `/categorias` y hace que Farmacia pase el piso y
+  que Mini Super y Panadería casi dupliquen su muestra.** No las uní: cuál nombre sobrevive es
+  vocabulario de la casa, y la fusión no se deshace.
+- **227 de 526 cuentas no tienen tipo de comercio.** Las trajo la carga de Zoho.
+
+### Un falso positivo peligroso en la pantalla de depurar
+
+Proponía meter «Cooperativa agro ferretería y supermercado» dentro de «Supermercado». Y también
+dentro de «Ferretería». Aceptar cualquiera de las dos borraba lo único que ese nombre dice.
+Corregido — ver [D-042](06-decisiones.md). Ahora propone 5 uniones y las 5 son correctas.
+
+### Lo que sigue en manos del negocio
+
+- **El puntaje 1 a 5.** Los pesos son decisión de negocio.
+- **El umbral mínimo de pedido.** Ahora hay con qué discutirlo: la mitad de los minisúper compra
+  entre $3 y $38 al mes.
+- **La mezcla de producto por tipo.** Están los 2 160 renglones, falta el mapeo de producto a
+  línea. Los nombres de Zoho traen prefijos que **parecen** sistemáticos —`TE…` rollos térmicos,
+  `FP-Kraft`/`FC-Kraft` bolsas, `FP-Antigrasa`, `Tubos…`— pero son 141 nombres y esa lectura es
+  mía, no de nadie de la casa. Confirmar los cuatro prefijos desbloquea esto y la pregunta de §7.6
+  sobre venta por línea de producto.
+
+### Y un dato para revisar
+
+Hay cuentas mal clasificadas: «Minisuper La esquina 2» y «Refresquería Las Abejas» aparecen como
+**Panadería**. No lo toqué — corregirlo es trabajo de quien conoce el local.

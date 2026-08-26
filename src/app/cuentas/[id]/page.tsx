@@ -22,6 +22,11 @@ import { AgregarALista } from "@/components/agregar-a-lista";
 import { CadenaCuenta } from "@/components/cadena-cuenta";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { QueCompra } from "@/components/que-compra";
+import {
+  LoQueCompranLosIguales,
+  type Gemelos,
+} from "@/components/lo-que-compran-los-iguales";
+import { normalizar } from "@/lib/texto";
 import { DescargarCotizacion } from "@/components/descargar-cotizacion";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
@@ -47,6 +52,17 @@ function hoyEnPanama() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "America/Panama" });
 }
 
+type FilaConsumo = {
+  tipo: string;
+  cuentas: number;
+  clientes: number;
+  mensual_bajo: number | null;
+  mensual_tipico: number | null;
+  mensual_alto: number | null;
+  cadencia_tipica: number | null;
+  suficiente: boolean;
+};
+
 export default async function Expediente({
   params,
 }: PageProps<"/cuentas/[id]">) {
@@ -70,6 +86,36 @@ export default async function Expediente({
   // Si el RLS no deja verlo, para este usuario no existe. Es la respuesta
   // correcta: decir "existe pero no puedes verlo" ya es filtrar información.
   if (!prospecto) notFound();
+
+  // **El modelo de gemelos** (§7.5): cuánto compra un comercio de este
+  // tipo. Se traen los treinta y tantos tipos y se escoge aquí — son pocos,
+  // y una función con parámetro obligaría a repetir en dos sitios la regla
+  // de cuándo dos categorías son la misma.
+  const { data: consumo } = prospecto.tipo_comercio
+    ? await supabase.rpc("consumo_por_tipo")
+    : { data: null };
+
+  // `suficiente` ya garantiza que la mediana viene, pero se comprueba otra
+  // vez al pasarla: el día que el piso cambie de sitio, esto sigue sin
+  // enseñar un importe nulo formateado como «$0».
+  const fila = ((consumo ?? []) as FilaConsumo[]).find(
+    (x) =>
+      x.suficiente &&
+      x.mensual_bajo !== null &&
+      x.mensual_alto !== null &&
+      normalizar(x.tipo) === normalizar(prospecto.tipo_comercio ?? ""),
+  );
+
+  const gemelos: Gemelos | null = fila
+    ? {
+        tipo: fila.tipo,
+        clientes: fila.clientes,
+        mensualBajo: Number(fila.mensual_bajo),
+        mensualTipico: Number(fila.mensual_tipico),
+        mensualAlto: Number(fila.mensual_alto),
+        cadenciaTipica: fila.cadencia_tipica,
+      }
+    : null;
 
   // Las cotizaciones que se le han emitido. Van a la bitácora junto con los
   // seguimientos: una cotización entregada es un hecho, tan hecho como una
@@ -371,6 +417,15 @@ export default async function Expediente({
             <p className="text-sm text-texto-secundario">{prospecto.notas}</p>
           )}
         </Tarjeta>
+
+        <LoQueCompranLosIguales
+          gemelos={gemelos}
+          mensualPropio={
+            prospecto.total_12m === null || Number(prospecto.total_12m) === 0
+              ? null
+              : Number(prospecto.total_12m) / 12
+          }
+        />
 
         <QueCompra
           cuentaId={prospecto.id}

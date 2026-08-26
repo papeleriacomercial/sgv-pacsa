@@ -56,11 +56,26 @@ export function distancia(a: string, b: string): number {
  */
 export const PARECIDO = 2;
 
+function palabras(t: string): number {
+  return normalizar(t).split(/\s+/).filter(Boolean).length;
+}
+
 /**
  * Pares de nombres que probablemente sean la misma cosa mal escrita.
  *
  * Además de la distancia, se marca cuando uno **contiene** al otro —«super» y
  * «supermercado»—, que no es un dedazo pero casi siempre conviene unificar.
+ *
+ * **Pero contener no basta.** Con la sola regla del contenido, la pantalla
+ * proponía meter «Cooperativa agro ferretería y supermercado» dentro de
+ * «Supermercado» — y también dentro de «Ferretería», las dos a la vez. Aceptar
+ * cualquiera de las dos habría borrado lo único que ese nombre decía, que es
+ * que el local es las tres cosas.
+ *
+ * Por eso el contenido solo cuenta cuando los dos nombres tienen **casi las
+ * mismas palabras**: «super» y «supermercado» son uno y uno; «agropecuaria» y
+ * «tienda agropecuaria», uno y dos. Cuatro palabras de diferencia no es la
+ * misma categoría escrita de otra forma: es otra categoría.
  */
 export function parecidos<T extends { nombre: string }>(lista: T[]): [T, T][] {
   const pares: [T, T][] = [];
@@ -70,7 +85,11 @@ export function parecidos<T extends { nombre: string }>(lista: T[]): [T, T][] {
       const a = normalizar(lista[i].nombre);
       const b = normalizar(lista[j].nombre);
       const cerca = distancia(a, b) <= PARECIDO;
-      const dentro = a.length > 3 && b.length > 3 && (a.includes(b) || b.includes(a));
+      const dentro =
+        a.length > 3 &&
+        b.length > 3 &&
+        (a.includes(b) || b.includes(a)) &&
+        Math.abs(palabras(a) - palabras(b)) <= 1;
       if (cerca || dentro) pares.push([lista[i], lista[j]]);
     }
   }
