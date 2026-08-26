@@ -22,7 +22,18 @@ import { NextResponse, type NextRequest } from "next/server";
 // de que nadie entre, y redirigirlo a /entrar rompe la instalación en la
 // pantalla de inicio sin dar ningún error visible. Los íconos ya salían
 // libres porque el `matcher` excluye los .svg.
-const RUTAS_PUBLICAS = ["/entrar", "/manifest.webmanifest"];
+// `/recuperar` y `/nueva-clave` **tienen que ser públicas**, y la segunda es la
+// que no se ve venir: quien llega desde el enlace del correo todavía no tiene
+// sesión. Supabase manda su credencial en el fragmento de la dirección —después
+// del `#`— y eso **nunca llega al servidor**, así que el proxy vería a un
+// desconocido y lo mandaría a /entrar. El enlace del correo no funcionaría
+// nunca, sin dar ningún error que explique por qué.
+const RUTAS_PUBLICAS = [
+  "/entrar",
+  "/recuperar",
+  "/nueva-clave",
+  "/manifest.webmanifest",
+];
 
 export async function proxy(request: NextRequest) {
   let respuesta = NextResponse.next({ request });

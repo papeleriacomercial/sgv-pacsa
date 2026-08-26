@@ -3267,3 +3267,33 @@ El correo venía con un dedazo de una letra —`papeleriacomerial` en vez de `pa
 se corrigió dejándolo confirmado, para que pueda entrar sin esperar ningún correo de verificación.
 Importaba: ese correo es el de acceso y el de restablecer contraseña, y el equivocado no llegaba a
 ningún buzón.
+
+---
+
+## Contraseñas y recuperación — 2026-08-26
+
+Nadie podía entrar salvo Gerencia. El diagnóstico descartó lo que parecía: las cinco cuentas
+estaban confirmadas, ninguna bloqueada, y el mecanismo respondía «Invalid login credentials» —o
+sea que el circuito funcionaba y solo faltaban las contraseñas.
+
+Puestas las cinco provisionales: la parte del correo que va entre `papeleriacomercial.` y `@`, y
+`gerencia` para la cuenta sin punto.
+
+### Y la recuperación, que no existía
+
+`/recuperar` y `/nueva-clave`, con enlace desde el login —debajo del botón, no arriba— y desde
+donde está «cerrar sesión». Ver [D-056](06-decisiones.md).
+
+El detalle que habría roto todo en silencio: **las dos rutas tenían que salir del proxy**, porque
+quien llega desde el correo no tiene sesión todavía. La credencial viaja en el fragmento de la
+dirección y eso nunca llega al servidor.
+
+### Lo que hay que probar de verdad
+
+**El correo lo manda Supabase con su remitente de fábrica, que está limitado a unos pocos envíos
+por hora y cae seguido en «no deseado».** Para cinco personas que olvidan la contraseña de vez en
+cuando probablemente alcance. Si falla, la solución es configurar un remitente propio en
+Authentication → SMTP, y son diez minutos.
+
+**Todavía nadie ha probado el circuito completo** —pedir el enlace, recibirlo, tocarlo, poner la
+contraseña—. Es lo primero que conviene hacer en producción.

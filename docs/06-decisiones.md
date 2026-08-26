@@ -1363,3 +1363,31 @@ contra el proyecto vacío— pero mientras tanto es un riesgo real.
 
 Los nombres del panel son etiqueta: la dirección de cada proyecto es un código al azar y no dice
 «dev» ni «prod», así que renombrar no rompió nada.
+
+---
+
+## D-056 — La recuperación de contraseña, antes de que salga el equipo
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Se agregan dos pantallas: `/recuperar` pide el enlace, `/nueva-clave` pone la
+contraseña nueva. La segunda sirve también para cambiarla estando dentro, desde el mismo sitio
+donde está «cerrar sesión».
+
+**Por qué ahora.** Sin esto, olvidar la contraseña un martes en Chitré significa **quedar fuera
+hasta que alguien con acceso a Supabase la reponga**. Con cuatro personas en la calle eso iba a
+pasar, y el que se queda fuera un día vuelve a la libreta y no regresa.
+
+**Las dos rutas tienen que ser públicas en el proxy, y la segunda es la que no se ve venir.** Quien
+llega desde el enlace del correo todavía no tiene sesión: Supabase manda su credencial en el
+fragmento de la dirección —después del `#`— y **eso nunca llega al servidor**. El proxy vería a un
+desconocido y lo mandaría a `/entrar`. El enlace del correo no habría funcionado nunca, sin dar
+ningún error que explicara por qué.
+
+**No se dice si el correo existe.** Contestar «ese correo no está registrado» le regala a
+cualquiera la lista de quién trabaja aquí. A quien de verdad se equivocó, el mensaje de éxito no
+le hace daño: no le llega nada y lo vuelve a intentar.
+
+**La pantalla espera el aviso de sesión antes de decidir.** El enlace tarda un instante en
+convertirse en sesión; sin esperar, la pantalla le decía «enlace vencido» a quien acababa de
+tocarlo.

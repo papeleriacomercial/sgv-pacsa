@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import Link from "next/link";
+import { KeyRound, LogOut } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { Boton } from "@/components/ui/boton";
 
@@ -38,8 +39,20 @@ export function CerrarSesion({ compacta = false }: { compacta?: boolean }) {
   }
 
   return (
-    <Boton tono="secundario" onClick={salir}>
-      Cerrar sesión
-    </Boton>
+    <div className="flex flex-col gap-2">
+      {/* Junto a cerrar sesión porque es el mismo cajón mental: «cosas de
+          mi cuenta». Nadie va a buscar su contraseña a otra parte. */}
+      <Link href="/nueva-clave" className="block">
+        <Boton tono="secundario" ancho>
+          <span className="flex items-center justify-center gap-2">
+            <KeyRound size={16} aria-hidden />
+            Cambiar mi contraseña
+          </span>
+        </Boton>
+      </Link>
+      <Boton tono="secundario" onClick={salir}>
+        Cerrar sesión
+      </Boton>
+    </div>
   );
 }

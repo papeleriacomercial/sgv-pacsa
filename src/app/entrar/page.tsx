@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { Boton } from "@/components/ui/boton";
@@ -82,6 +83,17 @@ export default function Entrar() {
             <Boton type="submit" ancho disabled={entrando}>
               {entrando ? "Entrando" : "Entrar"}
             </Boton>
+
+            {/* **Debajo del botón y no arriba.** Quien viene a entrar
+                escribe y pulsa; el que olvidó la contraseña ya recorrió la
+                pantalla y llega aquí solo. Arriba solo distraería a los
+                cuatro de cada cinco que la recuerdan. */}
+            <Link
+              href="/recuperar"
+              className="min-h-tactil flex items-center justify-center text-sm text-texto-secundario"
+            >
+              Olvidé mi contraseña
+            </Link>
           </form>
         </Tarjeta>
       </main>
