@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Plus, Send, Trash2 } from "lucide-react";
+import { FileText, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import {
   CONDICIONES,
@@ -109,11 +109,20 @@ export function ArmarCotizacion({
     url: string;
     codigo: string;
     archivo: File;
+    id: string;
   } | null>(null);
 
   // Si ya lo abrió. No impide mandar —bloquearlo sería tratarlo como a un
   // niño— pero el botón lo dice: «Enviar sin verlo».
   const [visto, setVisto] = useState(false);
+
+  // El borrador se guarda antes de generar el PDF, y se reutiliza si el
+  // vendedor corrige: así corregir tres veces no deja tres borradores
+  // sueltos en el expediente.
+  const [borrador, setBorrador] = useState<string | null>(null);
+
+  // Ya salió de la casa: a partir de aquí solo se puede anular, no corregir.
+  const [emitida, setEmitida] = useState(false);
 
   // --- Buscar en el catálogo ------------------------------------------------
 
@@ -210,19 +219,27 @@ export function ArmarCotizacion({
 
   // --- Emitir ---------------------------------------------------------------
 
-  async function emitir() {
+  /**
+   * Guardar el borrador y generar el PDF **para mirarlo**.
+   *
+   * No emite nada: emitir es el gesto de mandar, y va después de revisar.
+   * Hasta aquí no ha salido nada de la casa, así que corregir no tiene que
+   * explicarle nada a nadie.
+   */
+  async function revisar() {
     setGuardando(true);
     setError(null);
+    setVisto(false);
 
     try {
       const supabase = clienteNavegador();
-      const id = crypto.randomUUID();
+      const id = borrador ?? crypto.randomUUID();
       const ahora = new Date();
       const codigo = codigoDe(id, ahora);
 
       // Primero la cotización y sus renglones. Si el PDF falla después, queda
       // como borrador y se puede reintentar sin perder lo escrito.
-      const { error: falloCot } = await supabase.from("cotizaciones").insert({
+      const { error: falloCot } = await supabase.from("cotizaciones").upsert({
         id,
         codigo,
         cuenta_id: cuenta.id,
@@ -239,6 +256,11 @@ export function ArmarCotizacion({
         created_by: vendedor.id,
       });
       if (falloCot) throw falloCot;
+      setBorrador(id);
+
+      // Se rehacen enteros: corregir puede haber quitado renglones, y
+      // actualizarlos uno a uno dejaría los viejos colgando.
+      await supabase.from("renglones_cotizacion").delete().eq("cotizacion_id", id);
 
       const { error: falloRen } = await supabase.from("renglones_cotizacion").insert(
         renglones.map((r, i) => ({
@@ -288,37 +310,15 @@ export function ArmarCotizacion({
         logo,
       );
 
-      const ruta = `${id}/${codigo}.pdf`;
-      const { error: falloSubida } = await supabase.storage
-        .from("cotizaciones")
-        .upload(ruta, pdf, { contentType: "application/pdf" });
-      if (falloSubida) throw falloSubida;
-
-      // Aquí es donde la base comprueba el tope. Se deja para el final a
-      // propósito: si rebota, no se perdió nada de lo escrito.
-      const { error: falloEmitir } = await supabase
-        .from("cotizaciones")
-        .update({
-          estado: "emitida",
-          emitida_en: ahora.toISOString(),
-          pdf_path: ruta,
-        })
-        .eq("id", id);
-      if (falloEmitir) throw falloEmitir;
-
-      // **No se manda solo.** Antes se abría la hoja de compartir en cuanto
-      // terminaba de generarse, y el vendedor acababa mandando por WhatsApp un
-      // documento que no había visto. Una cotización es una promesa de precio:
-      // un dígito mal puesto lo cobra el cliente, y ya salió de la casa.
-      //
-      // Se genera, se guarda, y se enseña. Mandar es un segundo gesto, después
-      // de mirarlo.
+      // **Aquí no se emite ni se sube nada.** Se genera para que el vendedor
+      // lo abra y compruebe precios y productos. Si algo está mal, corrige y
+      // se rehace: hasta este punto no ha salido nada de la casa.
       setListo({
         url: URL.createObjectURL(pdf),
         codigo,
         archivo: new File([pdf], `${codigo}.pdf`, { type: "application/pdf" }),
+        id,
       });
-      router.refresh();
     } catch (e) {
       const m = e as { message?: string };
       setError(m.message ?? "No se pudo emitir la cotización.");
@@ -327,9 +327,51 @@ export function ArmarCotizacion({
     }
   }
 
-  /** Mandar por donde el vendedor quiera: correo, WhatsApp, lo que tenga. */
+  /**
+   * Emitir y mandar.
+   *
+   * Emitir es el gesto de que el documento sale de la casa, y por eso pasa
+   * aquí y no al generarlo: mientras solo se estaba mirando, seguía siendo
+   * un borrador que se podía corregir sin dejar rastro.
+   */
   async function enviar() {
     if (!listo) return;
+    setGuardando(true);
+    setError(null);
+
+    try {
+      const supabase = clienteNavegador();
+      const ruta = `${listo.id}/${listo.codigo}.pdf`;
+
+      const { error: falloSubida } = await supabase.storage
+        .from("cotizaciones")
+        .upload(ruta, listo.archivo, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+      if (falloSubida) throw falloSubida;
+
+      // Es aquí donde la base comprueba el tope. Si rebota, sigue siendo un
+      // borrador y no se perdió nada.
+      const { error: falloEmitir } = await supabase
+        .from("cotizaciones")
+        .update({
+          estado: "emitida",
+          emitida_en: new Date().toISOString(),
+          pdf_path: ruta,
+        })
+        .eq("id", listo.id);
+      if (falloEmitir) throw falloEmitir;
+
+      setEmitida(true);
+      router.refresh();
+    } catch (e) {
+      const m = e as { message?: string };
+      setError(m.message ?? "No se pudo emitir.");
+      setGuardando(false);
+      return;
+    }
+    setGuardando(false);
 
     if (navigator.canShare?.({ files: [listo.archivo] })) {
       try {
@@ -353,15 +395,19 @@ export function ArmarCotizacion({
 
   if (listo) {
     return (
-      <Tarjeta className="flex flex-col gap-3 border-green-200 bg-green-50">
+      <Tarjeta
+        className={`flex flex-col gap-3 ${emitida ? "border-green-200 bg-green-50" : ""}`}
+      >
         <p className="text-base font-semibold text-texto">
-          Cotización {listo.codigo}
+          {emitida ? `Cotización ${listo.codigo}` : "Míralo antes de mandarlo"}
         </p>
         <p className="text-sm text-texto-secundario">
-          Guardada en el expediente de {cuenta.nombre}.
+          {emitida
+            ? `Enviada y guardada en el expediente de ${cuenta.nombre}.`
+            : "Todavía no ha salido de la casa. Revisa precios y productos: si algo está mal, se corrige sin que quede rastro."}
         </p>
 
-        {/* Ver va primero, y con el peso visual: es el paso que hay que dar
+        {/* Ver va primero y con el peso visual: es el paso que hay que dar
             antes de mandar nada. */}
         <a
           href={listo.url}
@@ -374,17 +420,42 @@ export function ArmarCotizacion({
           Ver el PDF
         </a>
 
-        <p className="text-xs text-texto-secundario">
-          Míralo antes de mandarlo: los precios que salgan ahí son una promesa,
-          y una vez enviada la cotización sale de la casa.
-        </p>
+        {error && <MensajeError titulo="No se pudo enviar" detalle={error} />}
 
-        <Boton tono="secundario" onClick={enviar}>
-          <span className="flex items-center justify-center gap-2">
-            <Send size={16} aria-hidden />
-            {visto ? "Enviar" : "Enviar sin verlo"}
-          </span>
-        </Boton>
+        {!emitida && (
+          <>
+            {/* **Corregir mientras se pueda corregir de verdad.** Hasta que se
+                manda es un borrador: se vuelve al formulario con todo puesto,
+                se arregla el precio y se rehace. Después ya hay un papel
+                circulando y lo único honesto es anular. */}
+            <Boton tono="secundario" onClick={() => setListo(null)}>
+              <span className="flex items-center justify-center gap-2">
+                <Pencil size={16} aria-hidden />
+                Corregir algo
+              </span>
+            </Boton>
+
+            <Boton onClick={enviar} disabled={guardando}>
+              <span className="flex items-center justify-center gap-2">
+                <Send size={16} aria-hidden />
+                {guardando
+                  ? "Enviando"
+                  : visto
+                    ? "Está bien, enviar"
+                    : "Enviar sin verlo"}
+              </span>
+            </Boton>
+          </>
+        )}
+
+        {emitida && (
+          <Boton tono="secundario" onClick={enviar}>
+            <span className="flex items-center justify-center gap-2">
+              <Send size={16} aria-hidden />
+              Volver a enviar
+            </span>
+          </Boton>
+        )}
 
         <Boton
           tono="secundario"
@@ -581,14 +652,14 @@ export function ArmarCotizacion({
 
         <Boton
           ancho
-          onClick={emitir}
+          onClick={revisar}
           disabled={
             guardando || renglones.length === 0 || faltanPrecios || pasaElTope
           }
         >
           <span className="flex items-center justify-center gap-2">
             <Send size={16} aria-hidden />
-            {guardando ? "Generando" : "Generar la cotización"}
+            {guardando ? "Generando" : "Ver cómo queda"}
           </span>
         </Boton>
 

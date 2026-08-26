@@ -77,9 +77,9 @@ export default async function Expediente({
   // cotizó y no compró.
   const { data: cotizaciones } = await supabase
     .from("cotizaciones")
-    .select("id, codigo, total, emitida_en, pdf_path, con_itbms")
+    .select("id, codigo, total, emitida_en, pdf_path, con_itbms, estado, motivo_anulacion")
     .eq("cuenta_id", id)
-    .eq("estado", "emitida")
+    .in("estado", ["emitida", "anulada"])
     .is("deleted_at", null)
     .order("emitida_en", { ascending: false });
 
@@ -449,11 +449,15 @@ export default async function Expediente({
             {(cotizaciones ?? []).map((c) => (
               <DescargarCotizacion
                 key={c.id}
+                id={c.id}
                 codigo={c.codigo}
                 total={Number(c.total)}
                 conItbms={c.con_itbms}
                 emitidaEn={c.emitida_en}
                 ruta={c.pdf_path}
+                anulada={c.estado === "anulada"}
+                motivo={c.motivo_anulacion}
+                esMia={esMia}
               />
             ))}
           </section>
