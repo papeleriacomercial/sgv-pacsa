@@ -93,6 +93,16 @@ type CotizacionFila = {
   emitida_en: string | null;
   cuenta_id: string;
   vendedor_id: string;
+  /**
+   * Las tres las calcula `cotizaciones_vivas`. **Antes se deducían acá**, con
+   * los quince días escritos a mano: si un documento salía con otra validez, la
+   * pantalla mentía. Y se comparaba contra la fecha del servidor, no contra la
+   * de Panamá, así que después de las 7 p.m. una cotización se veía vencida un
+   * día antes de estarlo.
+   */
+  vence_el: string | null;
+  dias_vencida: number | null;
+  esta_vencida: boolean;
   cuentas: { nombre: string } | { nombre: string }[] | null;
 };
 
@@ -241,11 +251,16 @@ export default async function Ventas({
         .in("vendedor_id", ids)
         .is("deleted_at", null)
         .order("monto_estimado", { ascending: false, nullsFirst: false }),
+      // **De la vista y no de la tabla.** `cotizaciones_vivas` ya descuenta las
+      // que llevan más de treinta días vencidas: sin eso, la pestaña se llena
+      // de promesas que nadie va a perseguir y deja de servir para lo único que
+      // sirve, que es acordarse de volver a llamar.
       supabase
-        .from("cotizaciones")
-        .select("id, codigo, total, emitida_en, cuenta_id, vendedor_id, cuentas(nombre)")
+        .from("cotizaciones_vivas")
+        .select(
+          "id, codigo, total, emitida_en, cuenta_id, vendedor_id, vence_el, dias_vencida, esta_vencida, cuentas(nombre)",
+        )
         .in("vendedor_id", ids)
-        .eq("estado", "emitida")
         .is("deleted_at", null)
         .order("emitida_en", { ascending: false }),
     ]);
@@ -665,8 +680,8 @@ function Cotizaciones({
       </Tarjeta>
 
       {filas.map((c) => {
-        // Quince días es la validez por omisión. Pasado eso, el papel que
-        // tiene el cliente ya no obliga a nadie.
+        // Lo dice la vista, con la validez real de cada documento y la fecha de
+        // Panamá. Pasada, el papel que tiene el cliente ya no obliga a nadie.
         const dias = c.emitida_en
           ? Math.floor(
               (new Date(`${hoy}T12:00:00Z`).getTime() -
@@ -674,7 +689,7 @@ function Cotizaciones({
                 86_400_000,
             )
           : null;
-        const vencida = dias !== null && dias > 15;
+        const vencida = c.esta_vencida;
 
         return (
           <Link key={c.id} href={`/cuentas/${c.cuenta_id}`} className="block">

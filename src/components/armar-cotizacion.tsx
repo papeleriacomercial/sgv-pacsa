@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, Inbox, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { actualizar, insertar, subir } from "@/lib/cola";
 import {
   CONDICIONES,
   generarCotizacion,
@@ -264,10 +265,23 @@ export function ArmarCotizacion({
       const id = borrador ?? crypto.randomUUID();
       const ahora = new Date();
       const codigo = codigoDe(tipo, id, ahora);
+      const sinSenal = typeof navigator !== "undefined" && !navigator.onLine;
+
+      // **Corregir un borrador exige señal, y crear uno no.** Rehacer los
+      // renglones empieza por borrarlos, y borrar es justo lo que no se puede
+      // encolar: si el borrado queda esperando y la inserción también, no hay
+      // forma de garantizar cuál llega primero, y el documento terminaría con
+      // los renglones viejos y los nuevos juntos. Cotizar de cero sí funciona
+      // sin señal, que es el caso que pasa en la calle.
+      if (sinSenal && borrador) {
+        throw new Error(
+          "Sin señal no se puede corregir una cotización ya guardada. Podés hacer una nueva, o esperar a tener señal.",
+        );
+      }
 
       // Primero la cotización y sus renglones. Si el PDF falla después, queda
       // como borrador y se puede reintentar sin perder lo escrito.
-      const { error: falloCot } = await supabase.from("cotizaciones").upsert({
+      const cabecera = {
         id,
         codigo,
         tipo,
@@ -283,27 +297,40 @@ export function ArmarCotizacion({
         validez_dias: empresa.validez_dias ?? 15,
         notas: notas.trim() || null,
         created_by: vendedor.id,
-      });
-      if (falloCot) throw falloCot;
+      };
+
+      const guardada = borrador
+        ? await actualizar("cotizaciones", id, cabecera, `Cotización ${codigo}`)
+        : await insertar("cotizaciones", cabecera, `Cotización ${codigo}`);
+      if (guardada.error) throw new Error(guardada.error);
       setBorrador(id);
 
       // Se rehacen enteros: corregir puede haber quitado renglones, y
-      // actualizarlos uno a uno dejaría los viejos colgando.
-      await supabase.from("renglones_cotizacion").delete().eq("cotizacion_id", id);
+      // actualizarlos uno a uno dejaría los viejos colgando. Solo hay algo que
+      // borrar si esto es una corrección, y una corrección exige señal.
+      if (!sinSenal) {
+        await supabase.from("renglones_cotizacion").delete().eq("cotizacion_id", id);
+      }
 
-      const { error: falloRen } = await supabase.from("renglones_cotizacion").insert(
-        renglones.map((r, i) => ({
-          id: crypto.randomUUID(),
-          cotizacion_id: id,
-          item_id: r.itemId,
-          nombre: r.nombre,
-          unidad: r.unidad,
-          cantidad: Number(r.cantidad),
-          precio: Number(r.precio),
-          orden: i,
-        })),
-      );
-      if (falloRen) throw falloRen;
+      // **Uno por uno y no en bloque**: la cola guarda filas sueltas, y cada
+      // renglón trae su propio uuid, así que un reintento no duplica nada.
+      for (const [i, r] of renglones.entries()) {
+        const fallo = await insertar(
+          "renglones_cotizacion",
+          {
+            id: crypto.randomUUID(),
+            cotizacion_id: id,
+            item_id: r.itemId,
+            nombre: r.nombre,
+            unidad: r.unidad,
+            cantidad: Number(r.cantidad),
+            precio: Number(r.precio),
+            orden: i,
+          },
+          `Renglón de ${codigo}`,
+        );
+        if (fallo.error) throw new Error(fallo.error);
+      }
 
       // El logo viaja con la aplicación; se convierte a datos para meterlo.
       const respuesta = await fetch("/logo-papeleria.png");
@@ -381,43 +408,53 @@ export function ArmarCotizacion({
     setError(null);
 
     try {
-      const supabase = clienteNavegador();
       const ruta = `${listo.id}/${listo.codigo}.pdf`;
 
-      const { error: falloSubida } = await supabase.storage
-        .from("cotizaciones")
-        .upload(ruta, listo.archivo, {
-          contentType: "application/pdf",
-          upsert: true,
-        });
-      if (falloSubida) throw falloSubida;
+      // **El PDF ya está hecho y en la mano del vendedor.** Subirlo es para que
+      // la oficina y el histórico tengan la misma copia; que eso espere señal no
+      // impide entregárselo al cliente, porque la hoja de compartir del teléfono
+      // trabaja con el archivo local.
+      const subida = await subir(
+        "cotizaciones",
+        ruta,
+        listo.archivo,
+        listo.id,
+        `PDF de ${listo.codigo}`,
+      );
+      if (subida.error) throw new Error(subida.error);
 
-      const { error: falloEmitir } = await supabase
-        .from("cotizaciones")
-        .update({
+      const emitir = await actualizar(
+        "cotizaciones",
+        listo.id,
+        {
           estado: "emitida",
           destino,
           emitida_en: new Date().toISOString(),
           pdf_path: ruta,
-        })
-        .eq("id", listo.id);
-      if (falloEmitir) throw falloEmitir;
+        },
+        `Emisión de ${listo.codigo}`,
+      );
+      if (emitir.error) throw new Error(emitir.error);
 
       // **La solicitud es lo que le pone reloj al encargo.** Sin ella el
       // documento quedaría guardado y nadie sabría que alguien lo espera,
       // que es exactamente lo que pasa hoy con los correos sueltos.
       if (destino === "oficina") {
-        const { error: falloSol } = await supabase.from("solicitudes").insert({
-          id: crypto.randomUUID(),
-          cuenta_id: cuenta.id,
-          vendedor_id: vendedor.id,
-          tipo: tipo === "cotizacion" ? "cotizacion" : "pedido",
-          resuelve: "oficina",
-          documento_id: listo.id,
-          detalle: `${titulo} ${listo.codigo} — ${cuenta.nombre}`,
-          monto_estimado: total,
-        });
-        if (falloSol) throw falloSol;
+        const fallo = await insertar(
+          "solicitudes",
+          {
+            id: crypto.randomUUID(),
+            cuenta_id: cuenta.id,
+            vendedor_id: vendedor.id,
+            tipo: tipo === "cotizacion" ? "cotizacion" : "pedido",
+            resuelve: "oficina",
+            documento_id: listo.id,
+            detalle: `${titulo} ${listo.codigo} — ${cuenta.nombre}`,
+            monto_estimado: total,
+          },
+          `Encargo de ${listo.codigo} a la oficina`,
+        );
+        if (fallo.error) throw new Error(fallo.error);
       }
 
       setEmitida(destino);

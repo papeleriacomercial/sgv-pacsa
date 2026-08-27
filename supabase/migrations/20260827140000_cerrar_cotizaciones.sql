@@ -1,0 +1,41 @@
+-- ===========================================================================
+-- Una cotización se cierra, y el motivo se guarda — parte 1: los estados
+--
+-- Hasta hoy había un solo camino para sacar una cotización de la lista:
+-- **anularla**. Y anular quiere decir «el papel que circula está mal» — puse el
+-- precio equivocado, el producto no era ese. No quiere decir que el cliente
+-- dijera que no.
+--
+-- Las dos cosas compartían estado, así que un vendedor que anulaba escribiendo
+-- «lo rechazaron» dejaba la lista limpia y la medición ciega: después no se
+-- puede contestar **«¿cuánto perdemos por precio?»**, porque esa información
+-- quedó en un campo de texto libre mezclada con los errores de digitación.
+--
+-- ---------------------------------------------------------------------------
+-- Los cinco estados
+-- ---------------------------------------------------------------------------
+--
+--   borrador   se está armando, no ha salido
+--   emitida    viva: el cliente la tiene y nadie ha dicho nada
+--   ganada     compró
+--   perdida    dijo que no. **Exige motivo del catálogo cerrado**
+--   anulada    el papel estaba mal. Exige motivo libre
+--
+-- **Vencida no es un estado guardado, y es a propósito.** Se deduce de la fecha
+-- de emisión más los días de validez, así que no hace falta un trabajo nocturno
+-- que las marque —ni hay forma de que se desincronice si ese trabajo falla una
+-- noche—. Es la misma razón por la que las fechas se comparan con
+-- `hoy_panama()` y no con `current_date`.
+--
+-- ---------------------------------------------------------------------------
+-- Por qué esto va solo en su migración
+-- ---------------------------------------------------------------------------
+--
+-- PostgreSQL deja agregar un valor a un enum dentro de una transacción, pero
+-- **no deja usarlo en esa misma transacción**. Las restricciones y las vistas
+-- que nombran 'ganada' y 'perdida' van en la migración siguiente; si estuvieran
+-- acá, esto fallaría al aplicarse con un mensaje que no dice por qué.
+-- ===========================================================================
+
+alter type public.estado_cotizacion add value if not exists 'ganada';
+alter type public.estado_cotizacion add value if not exists 'perdida';

@@ -101,6 +101,8 @@ function Formulario() {
   const [tipoCuenta, setTipoCuenta] = useState<TipoCuenta | null>(null);
   const [lineaDeLaCuenta, setLineaDeLaCuenta] = useState<LineaProducto>("otros");
   const [cargando, setCargando] = useState(true);
+  /** Cuántas promesas escritas siguen vivas con este cliente. Ver el efecto. */
+  const [cotizacionesVivas, setCotizacionesVivas] = useState(0);
 
   const [tipo, setTipo] = useState<TipoInteraccion>("visita");
   const [resultado, setResultado] = useState<Resultado | null>(null);
@@ -158,6 +160,29 @@ function Formulario() {
         }
         setCargando(false);
       });
+  }, [cuentaId]);
+
+  /**
+   * Las cotizaciones que este cliente todavía tiene en la mano.
+   *
+   * **No se pregunta por ellas acá.** Ese fue el primer diseño y el usuario lo
+   * corrigió el 27 de agosto de 2026: *«es lo más limpio que estar tú
+   * asumiendo»*. Meter la lista dentro de este formulario obligaba a inventar
+   * reglas sobre cuál de tres cotizaciones corresponde a lo que se acaba de
+   * hablar, y con un cliente que pidió bolsas y rollos por separado, adivinar
+   * mal cierra la que seguía viva.
+   *
+   * Lo que sí hace falta es que el vendedor **se entere en este momento**, que
+   * es cuando tiene el contexto fresco. Se cuentan y se avisa; al guardar
+   * aterriza en el expediente, donde cada una tiene su botón de cerrar.
+   */
+  useEffect(() => {
+    const supabase = clienteNavegador();
+    supabase
+      .from("cotizaciones_vivas")
+      .select("id", { count: "exact", head: true })
+      .eq("cuenta_id", cuentaId)
+      .then(({ count }) => setCotizacionesVivas(count ?? 0));
   }, [cuentaId]);
 
   // El check-in arranca solo, sin botón: es uno de los gestos que hay que
@@ -430,12 +455,19 @@ function Formulario() {
 
     // Volver a donde se venía: si el seguimiento salió de la agenda, ahí es
     // donde el vendedor sigue trabajando.
+    //
+    // **Salvo que el cliente tenga cotizaciones vivas.** Entonces se aterriza
+    // en el expediente, que es donde cada una tiene su botón de cerrar. Acaba
+    // de hablar con el cliente: es el único momento en que sabe qué contestó, y
+    // mandarlo a otra pantalla es perder esa respuesta.
     router.replace(
-      oportunidadId
-        ? `/oportunidades/${oportunidadId}`
-        : compromisoId
-          ? "/seguimientos"
-          : `/cuentas/${cuentaId}`,
+      cotizacionesVivas > 0
+        ? `/cuentas/${cuentaId}#cotizaciones`
+        : oportunidadId
+          ? `/oportunidades/${oportunidadId}`
+          : compromisoId
+            ? "/seguimientos"
+            : `/cuentas/${cuentaId}`,
     );
     router.refresh();
   }
@@ -452,6 +484,23 @@ function Formulario() {
           Registrar seguimiento
         </h1>
       </header>
+
+      {/* LA PROMESA QUE SIGUE EN PIE.
+          No pregunta nada ni bloquea nada: avisa. Es información que el vendedor
+          necesita tener delante justo cuando está hablando con el cliente, y al
+          guardar aterriza en el expediente para cerrarla. */}
+      {cotizacionesVivas > 0 && (
+        <p className="border-b border-borde bg-fondo px-4 py-2 text-xs text-texto-secundario">
+          Este cliente tiene{" "}
+          <span className="font-semibold text-texto">
+            {cotizacionesVivas === 1
+              ? "una cotización"
+              : `${cotizacionesVivas} cotizaciones`}
+          </span>{" "}
+          sin respuesta. Al guardar vas a poder cerrarla
+          {cotizacionesVivas === 1 ? "" : "s"}.
+        </p>
+      )}
 
       <main className="flex flex-col gap-4 p-4">
         {cargando && <Cargando />}

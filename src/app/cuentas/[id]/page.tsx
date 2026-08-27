@@ -109,13 +109,32 @@ export default async function Expediente({
   // cotizó y no compró.
   const { data: cotizaciones } = await supabase
     .from("cotizaciones")
-    .select("id, codigo, total, emitida_en, pdf_path, con_itbms, estado, motivo_anulacion")
+    .select(
+      "id, codigo, total, emitida_en, pdf_path, con_itbms, estado, motivo_anulacion, motivo_perdida, validez_dias",
+    )
     .eq("cuenta_id", id)
-    .in("estado", ["emitida", "anulada"])
+    // Las cerradas también. El expediente tiene que contar qué pasó con cada
+    // promesa, no sólo cuáles siguen vivas: una cotización perdida por precio
+    // es justo lo que hay que ver antes de volver a cotizarle a este cliente.
+    .in("estado", ["emitida", "anulada", "ganada", "perdida"])
     .is("deleted_at", null)
     .order("emitida_en", { ascending: false });
 
   const esMia = prospecto.vendedor_id === user.id;
+
+  /**
+   * Cuándo se le acaba la validez a una cotización.
+   *
+   * Se calcula acá —en el servidor— y no en el navegador del vendedor: el
+   * teléfono puede tener la hora corrida, y una cotización que se ve vencida un
+   * día antes le hace perder una venta.
+   */
+  function venceEl(emitida: string | null, dias: number | null): string | null {
+    if (!emitida) return null;
+    const d = new Date(emitida);
+    d.setDate(d.getDate() + (dias ?? 15));
+    return d.toISOString();
+  }
 
   // **Si esta cuenta fue un error.** La regla vive en la base —la creó
   // quien pregunta, es potencial o prospecto, y nadie la tocó— y aquí solo
@@ -505,8 +524,10 @@ export default async function Expediente({
           ))}
         </section>
 
+        {/* El ancla la usa el seguimiento: al guardar uno en un cliente con
+            cotizaciones vivas, aterriza acá y no arriba del expediente. */}
         {(cotizaciones ?? []).length > 0 && (
-          <section className="flex flex-col gap-2">
+          <section id="cotizaciones" className="flex flex-col gap-2 scroll-mt-4">
             <h2 className="text-sm font-medium text-texto">Cotizaciones</h2>
             {(cotizaciones ?? []).map((c) => (
               <DescargarCotizacion
@@ -520,6 +541,9 @@ export default async function Expediente({
                 anulada={c.estado === "anulada"}
                 motivo={c.motivo_anulacion}
                 esMia={esMia}
+                estado={c.estado}
+                motivoPerdidaGuardado={c.motivo_perdida}
+                venceEl={venceEl(c.emitida_en, c.validez_dias)}
               />
             ))}
           </section>
