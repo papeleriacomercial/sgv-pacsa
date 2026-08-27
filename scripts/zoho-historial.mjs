@@ -405,6 +405,47 @@ console.log(
 
 const idsDoc = transacciones.map((t) => t.documento_id);
 
+// **Se conserva el identificador que ya tenía cada documento.** Esto costó una
+// pasada entera el 27 de agosto de 2026: el guion genera un `uuid` nuevo para
+// cada transacción, y el `upsert` por `(documento_id, tipo)` actualiza *todas*
+// las columnas de la fila que ya existía — el identificador incluido. Para los
+// documentos que ya tenían renglones colgando, eso es cambiarle la llave a algo
+// que otra tabla está apuntando, y la base lo rechaza con razón:
+//
+//   Key (id)=(…) is still referenced from table "renglones_zoho"
+//
+// Reventó al primer lote, después de haber abierto 2 208 documentos en Zoho.
+// **No se perdió nada** —la escritura es lo primero que hace— pero se gastaron
+// dos mil consultas de cuota para nada.
+//
+// Buscar los identificadores existentes cuesta unas veinte consultas a Supabase
+// y ninguna a Zoho.
+const existentes = new Map();
+for (let i = 0; i < idsDoc.length; i += 100) {
+  const lote = idsDoc.slice(i, i + 100);
+  for (const t of await sb(
+    `/transacciones_zoho?select=id,documento_id,tipo&documento_id=in.(${lote.join(",")})`,
+  )) {
+    existentes.set(`${t.documento_id}|${t.tipo}`, t.id);
+  }
+}
+
+// El identificador viejo se sustituye también en los renglones que se acaban de
+// armar, que todavía apuntan al que generó esta pasada.
+const reemplazo = new Map();
+for (const t of transacciones) {
+  const yaEstaba = existentes.get(`${t.documento_id}|${t.tipo}`);
+  if (yaEstaba && yaEstaba !== t.id) {
+    reemplazo.set(t.id, yaEstaba);
+    t.id = yaEstaba;
+  }
+}
+for (const l of renglones) {
+  const nuevo = reemplazo.get(l.transaccion_id);
+  if (nuevo) l.transaccion_id = nuevo;
+}
+console.log(`  ${existentes.size} documentos ya estaban: conservan su identificador.`);
+
 for (let i = 0; i < transacciones.length; i += 200) {
   await sb("/transacciones_zoho?on_conflict=documento_id,tipo", {
     method: "POST",
