@@ -451,7 +451,6 @@ export default async function Ventas({
                   ? null
                   : (nombreVendedor.get(elegido) ?? null)
             }
-            hrefListas="/listas"
           />
         )}
 

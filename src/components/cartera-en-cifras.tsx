@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Layers } from "lucide-react";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Vacio } from "@/components/ui/estados";
 import { Barra } from "@/components/barras";
@@ -53,14 +52,11 @@ export function CarteraEnCifras({
   clientes,
   lineas,
   deQuien,
-  hrefListas,
 }: {
   clientes: ClienteRanking[];
   lineas: LineaVendida[];
   /** Null cuando es la propia. Con nombre cuando el líder mira a alguien. */
   deQuien: string | null;
-  /** A las listas: es donde la venta cruzada se convierte en ruta. */
-  hrefListas: string;
 }) {
   const total = clientes.reduce((s, c) => s + c.total, 0);
 
@@ -234,18 +230,6 @@ export function CarteraEnCifras({
           )}
         </Tarjeta>
 
-        {/* **Lleva a las listas, no a un informe.** Saber qué línea no vende
-            solo sirve si termina en una ruta: en la lista de la zona hay un
-            botón que trae a los clientes a los que les falta y los agrega al
-            recorrido. Un informe aparte era un segundo camino para lo mismo,
-            y el vendedor no sabía cuál de los dos era el bueno. */}
-        <Link
-          href={hrefListas}
-          className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
-        >
-          <Layers size={16} aria-hidden />
-          Agregarlos a una lista de zona
-        </Link>
       </section>
     </div>
   );
