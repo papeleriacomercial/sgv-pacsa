@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, ChevronRight, FileText, Layers } from "lucide-react";
+import { AlertTriangle, FileText } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import {
   ETAPAS,
@@ -102,6 +102,7 @@ type FilaRanking = {
   cuenta_id: string | null;
   documentos: number;
   total: string | number;
+  neto: string | number;
   por_cobrar: string | number;
   ultima_compra: string;
 };
@@ -326,7 +327,9 @@ export default async function Ventas({
       return {
         id: x.id,
         nombre: x.nombre,
-        vendido: Number(d?.vendido ?? 0),
+        // El neto, no el bruto: es sobre lo que se calcula la comisión y es
+        // lo que el vendedor reconoce como su venta.
+        vendido: Number(d?.base ?? 0),
         comision: Number(d?.comision ?? 0),
         documentos: Number(d?.documentos ?? 0),
         esMio: x.id === user.id,
@@ -403,7 +406,7 @@ export default async function Ventas({
             />
           ) : (
             <MiMes
-              vendido={Number(uno?.vendido ?? 0)}
+              vendido={Number(uno?.base ?? 0)}
               comision={Number(uno?.comision ?? 0)}
               porcentaje={porcentaje}
               sobreNeto={uno?.sobre_neto ?? true}
@@ -421,34 +424,17 @@ export default async function Ventas({
             />
           ))}
 
-        {/* **La venta más barata que hay**, y por eso vive aquí: es la
-            pantalla donde el vendedor se pregunta cómo cerrar el mes. Un
-            cliente que ya te compra una línea y no otra que sí compran sus
-            iguales ya te conoce, ya te paga y ya te abrió la puerta. */}
-        {pestana === "facturado" && (
-          <Link
-            href={
-              elegido === propio
-                ? "/venta-cruzada"
-                : `/venta-cruzada?v=${elegido}`
-            }
-            className="min-h-tactil flex items-center justify-between gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
-          >
-            <span className="flex items-center gap-2">
-              <Layers size={16} aria-hidden />
-              Lo que no te compran
-            </span>
-            <ChevronRight size={16} aria-hidden />
-          </Link>
-        )}
-
         {pestana === "cartera" && (
           <CarteraEnCifras
             clientes={((ranking ?? []) as FilaRanking[]).map((c) => ({
               contactoId: c.contacto_id,
               nombre: c.nombre ?? "Sin nombre",
               cuentaId: c.cuenta_id,
-              total: Number(c.total),
+              // **Sin ITBMS, siempre.** El vendedor no maneja números con
+              // impuesto: su comisión sale del neto y su papel también. Y
+              // de paso el desglose por producto —que suma renglones, sin
+              // impuesto— queda en la misma unidad y cuadra.
+              total: Number(c.neto),
               porCobrar: Number(c.por_cobrar),
               documentos: c.documentos,
               ultimaCompra: c.ultima_compra,
@@ -465,11 +451,7 @@ export default async function Ventas({
                   ? null
                   : (nombreVendedor.get(elegido) ?? null)
             }
-            hrefCruzada={
-              elegido === propio || todos
-                ? "/venta-cruzada"
-                : `/venta-cruzada?v=${elegido}`
-            }
+            hrefListas="/listas"
           />
         )}
 

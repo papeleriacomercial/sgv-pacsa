@@ -29,6 +29,7 @@ type PorMes = {
   documentos: number;
   clientes: number;
   total: string | number;
+  neto: string | number;
   por_cobrar: string | number;
 };
 
@@ -39,6 +40,7 @@ type PorCliente = {
   canal_habitual: "calle" | "casa";
   vendedores: number;
   total: string | number;
+  neto: string | number;
   por_cobrar: string | number;
 };
 
@@ -148,17 +150,20 @@ export default async function Negocio({
     );
   }
 
-  const total = porMes.reduce((s, m) => s + Number(m.total), 0);
+  // **Todo sin ITBMS**, igual que en las pantallas del vendedor. Que dos
+  // pantallas del mismo sistema midan en unidades distintas es la forma más
+  // segura de que nadie confíe en ninguna de las dos.
+  const total = porMes.reduce((s, m) => s + Number(m.neto), 0);
   const deCalle = porMes
     .filter((m) => m.canal === "calle")
-    .reduce((s, m) => s + Number(m.total), 0);
+    .reduce((s, m) => s + Number(m.neto), 0);
   const porCobrar = porMes.reduce((s, m) => s + Number(m.por_cobrar), 0);
 
   // --- Los meses, con su reparto por canal --------------------------------
   const meses = new Map<string, { calle: number; casa: number }>();
   for (const m of porMes) {
     const p = meses.get(m.mes) ?? { calle: 0, casa: 0 };
-    p[m.canal] += Number(m.total);
+    p[m.canal] += Number(m.neto);
     meses.set(m.mes, p);
   }
   // **Todos los meses del año, no los últimos seis.** Cortar a seis dejaba
@@ -181,13 +186,13 @@ export default async function Negocio({
   const firmas = new Map<string, number>();
   for (const m of porMes) {
     const clave = m.vendedor_zoho ?? "";
-    firmas.set(clave, (firmas.get(clave) ?? 0) + Number(m.total));
+    firmas.set(clave, (firmas.get(clave) ?? 0) + Number(m.neto));
   }
   const porFirma = [...firmas.entries()].sort((a, b) => b[1] - a[1]);
   const sinFirma = firmas.get("") ?? 0;
 
   // --- Concentración -------------------------------------------------------
-  const top10 = clientes.slice(0, 10).reduce((s, c) => s + Number(c.total), 0);
+  const top10 = clientes.slice(0, 10).reduce((s, c) => s + Number(c.neto), 0);
 
 
   // --- Líneas de producto --------------------------------------------------
@@ -219,7 +224,7 @@ export default async function Negocio({
         <div className="flex-1">
           <h1 className="text-lg font-semibold text-marca">El negocio</h1>
           <p className="text-xs text-texto-atenuado">
-            Facturación de Zoho, año {anio}
+            Zoho, año {anio}, sin ITBMS
             {enCurso && " — todavía abierto"}
           </p>
         </div>
@@ -415,10 +420,10 @@ export default async function Negocio({
                 </div>
                 <span className="shrink-0 text-right">
                   <span className="block font-mono text-sm text-texto">
-                    {DINERO.format(Number(c.total))}
+                    {DINERO.format(Number(c.neto))}
                   </span>
                   <span className="block font-mono text-xs text-texto-atenuado">
-                    {Math.round((Number(c.total) / total) * 100)}%
+                    {Math.round((Number(c.neto) / total) * 100)}%
                   </span>
                 </span>
               </Tarjeta>

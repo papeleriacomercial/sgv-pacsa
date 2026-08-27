@@ -82,7 +82,27 @@ export default async function Cerradas({
     .order("fecha", { ascending: false });
 
   const filas = (data ?? []) as unknown as Fila[];
-  const total = filas.reduce((s, f) => s + Number(f.total), 0);
+
+  // **El neto de cada documento, que es lo que se muestra.** Sale de sus
+  // renglones; si todavía no se han traído, se usa su total. Contar de más
+  // es preferible a esconderle una venta al vendedor.
+  const { data: renglones } = await supabase
+    .from("renglones_zoho")
+    .select("transaccion_id, total")
+    .in(
+      "transaccion_id",
+      filas.length > 0
+        ? filas.map((f) => f.id)
+        : ["00000000-0000-0000-0000-000000000000"],
+    );
+
+  const netoDe = new Map<string, number>();
+  for (const r of (renglones ?? []) as { transaccion_id: string; total: string | number }[]) {
+    netoDe.set(r.transaccion_id, (netoDe.get(r.transaccion_id) ?? 0) + Number(r.total));
+  }
+
+  const neto = (f: Fila) => netoDe.get(f.id) ?? Number(f.total);
+  const total = filas.reduce((s, f) => s + neto(f), 0);
 
   return (
     <>
@@ -98,7 +118,7 @@ export default async function Cerradas({
           </h1>
           <p className="text-xs text-texto-atenuado">
             {filas.length} {filas.length === 1 ? "documento" : "documentos"} ·{" "}
-            {DINERO.format(total)}
+            {DINERO.format(total)} sin ITBMS
           </p>
         </div>
       </header>
@@ -128,7 +148,7 @@ export default async function Cerradas({
                   {nombreDe(f.cuentas)}
                 </p>
                 <p className="shrink-0 font-mono text-sm text-texto">
-                  {DINERO.format(Number(f.total))}
+                  {DINERO.format(neto(f))}
                 </p>
               </div>
 

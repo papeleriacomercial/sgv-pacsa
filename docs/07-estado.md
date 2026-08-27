@@ -3361,3 +3361,37 @@ falta por traer de Zoho, en ámbar. Y el tablero de gerencia nombra las tres raz
 
 **Una cifra que no se puede cuadrar no se cree, y quien deja de creerle a un número deja de
 creerle a la pantalla entera.** Decir por qué no cuadra es la mitad del trabajo de mostrarla.
+
+---
+
+## Sin ITBMS en todas partes, y se retira la pantalla de venta cruzada — 2026-08-26
+
+Dos correcciones de la primera caminata por las pantallas en producción.
+
+### Todas las cifras de venta, sin impuesto
+
+Ver [D-057](06-decisiones.md). Cambió el mes del vendedor, el detalle factura por factura, el
+ranking de clientes, la cartera y el tablero de gerencia. Cada cifra dice **«sin ITBMS»** al lado.
+
+Migración `20260827090000_todo_sin_itbms.sql`: `ranking_de_clientes` y `venta_por_mes` devuelven
+ahora `total` y `neto`, y las pantallas usan el segundo.
+
+Hoy la diferencia se ve chica —1,3 % a 2,6 %— **porque a la mayoría de documentos les faltan los
+renglones**, y sin ellos se usa el total. Con la reposición de las 00:30 sube al 6,5 % real.
+
+| Vendedor | Con ITBMS | Sin ITBMS (hoy) |
+|---|---:|---:|
+| Christopher Guerra | $250 295 | $243 676 |
+| Javier Rodríguez | $211 367 | $206 583 |
+| Albert Batista | $82 955 | $81 916 |
+
+**El efecto secundario es el que más vale:** el desglose por producto y el total de la cartera
+quedan en la misma unidad, así que cuadran solos. La nota que explicaba por qué no cuadraban ya no
+hace falta — solo queda un aviso cuando de verdad falta detalle por traer.
+
+### Se retira `/venta-cruzada`
+
+Ver [D-058](06-decisiones.md). Era un segundo camino para lo que ya hacen las listas, y arrastraba
+un salto incoherente: «26 clientes sin tipo de comercio» llevaba a un filtro de 179 cuentas.
+
+El botón de «Mi cartera» ahora dice **«Agregarlos a una lista de zona»** y lleva a Listas.

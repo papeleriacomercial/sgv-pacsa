@@ -79,9 +79,16 @@ export function MiMes({
     <div className="flex flex-col gap-4">
       <Tarjeta className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm text-texto-secundario">
-            {deQuien ? `Vendido por ${deQuien}` : "Vendido este mes"}
-          </p>
+          <div>
+            <p className="text-sm text-texto-secundario">
+              {deQuien ? `Vendido por ${deQuien}` : "Vendido este mes"}
+            </p>
+            {/* **Sin ITBMS, y dicho.** El impuesto se cobra para el Estado
+                y se entrega; no es venta de nadie. Si el número no lo
+                aclara, el vendedor lo compara con el papel de la oficina
+                —que sí lo lleva— y concluye que la pantalla miente. */}
+            <p className="text-xs text-texto-atenuado">sin ITBMS</p>
+          </div>
           <p className="font-mono text-2xl text-texto">{DINERO.format(vendido)}</p>
         </div>
 
@@ -156,7 +163,12 @@ export function VentasEquipo({
     <div className="flex flex-col gap-4">
       <Tarjeta className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm text-texto-secundario">Vendido por el equipo</p>
+          <div>
+            <p className="text-sm text-texto-secundario">
+              Vendido por el equipo
+            </p>
+            <p className="text-xs text-texto-atenuado">sin ITBMS</p>
+          </div>
           <p className="font-mono text-2xl text-texto">{DINERO.format(vendido)}</p>
         </div>
 

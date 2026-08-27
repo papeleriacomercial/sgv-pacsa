@@ -1391,3 +1391,54 @@ le hace daño: no le llega nada y lo vuelve a intentar.
 **La pantalla espera el aviso de sesión antes de decidir.** El enlace tarda un instante en
 convertirse en sesión; sin esperar, la pantalla le decía «enlace vencido» a quien acababa de
 tocarlo.
+
+---
+
+## D-057 — Toda cifra de venta que se muestre va sin ITBMS
+
+**Fecha:** 2026-08-26
+
+**Decisión.** El impuesto no aparece en ninguna cifra de venta de ninguna pantalla: ni en el mes
+del vendedor, ni en el detalle factura por factura, ni en el ranking de clientes, ni en el tablero
+de gerencia. Cada cifra lleva escrito **«sin ITBMS»** al lado.
+
+**Por qué.** El vendedor no maneja números con impuesto: su comisión ya se calculaba sobre el neto
+(D-033) y su papel también. Enseñarle «vendiste $250 295» cuando lo suyo son $234 000 es enseñarle
+plata del Estado como si fuera venta.
+
+**Y arregla de paso una incoherencia que se vio en la primera caminata por las pantallas.** El
+desglose por producto suma renglones —sin impuesto— y el total facturado sumaba el bruto: no
+cuadraban nunca, y la primera reacción de quien lo mira es que la pantalla suma mal. Con las dos
+cifras en la misma unidad **cuadran solas y sobra la explicación**.
+
+**El neto sale de los renglones, no de restarle 7 % al total.** Hay documentos exentos y otros con
+líneas exentas; restar a ojo daría un número que no cuadra con ninguna factura. Es la misma regla
+que ya usaba la comisión.
+
+**Que dos pantallas del mismo sistema midan en unidades distintas es la forma más segura de que
+nadie confíe en ninguna de las dos.**
+
+---
+
+## D-058 — La venta cruzada vive en las listas y en ningún otro sitio
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Se retira la pantalla `/venta-cruzada`. El único camino es el de siempre: en la lista
+de la zona, «Agregar clientes por cruzar».
+
+**Por qué.** La construí como informe antes de acordar dónde iba (D-046), y cuando quedó claro que
+el sitio eran las listas la dejé «para líder y gerencia». Eso fue quedarme con algo por no
+tirarlo, no por necesitarlo.
+
+Al caminar las pantallas se vio el costo: **dos caminos para lo mismo y el vendedor sin saber cuál
+es el bueno.** El informe contesta *qué podría vender* y la lista contesta *a quién visito el
+martes* — pero solo la segunda produce trabajo, y la primera lo único que hacía era competir por
+la atención.
+
+**Y arrastraba un salto incoherente**: una tarjeta decía «26 clientes que compran no tienen tipo de
+comercio» y al tocarla llevaba a un filtro con 179 cuentas, porque contaban poblaciones distintas.
+Dos números que no cuadran en dos toques.
+
+Desde «Mi cartera», el botón ahora dice **«Agregarlos a una lista de zona»** y lleva a Listas, que
+es donde la línea que no se vende se convierte en una ruta.

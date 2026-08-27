@@ -53,13 +53,14 @@ export function CarteraEnCifras({
   clientes,
   lineas,
   deQuien,
-  hrefCruzada,
+  hrefListas,
 }: {
   clientes: ClienteRanking[];
   lineas: LineaVendida[];
   /** Null cuando es la propia. Con nombre cuando el líder mira a alguien. */
   deQuien: string | null;
-  hrefCruzada: string;
+  /** A las listas: es donde la venta cruzada se convierte en ruta. */
+  hrefListas: string;
 }) {
   const total = clientes.reduce((s, c) => s + c.total, 0);
 
@@ -91,9 +92,12 @@ export function CarteraEnCifras({
       {/* --- De quién depende --- */}
       <Tarjeta className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm text-texto-secundario">
-            {deQuien ? `Cartera de ${deQuien}` : "Tu cartera"} · 12 meses
-          </p>
+          <div>
+            <p className="text-sm text-texto-secundario">
+              {deQuien ? `Cartera de ${deQuien}` : "Tu cartera"} · 12 meses
+            </p>
+            <p className="text-xs text-texto-atenuado">sin ITBMS</p>
+          </div>
           <p className="font-mono text-2xl text-texto">{DINERO.format(total)}</p>
         </div>
 
@@ -218,27 +222,29 @@ export function CarteraEnCifras({
               Cuando además falta detalle por cargar, la diferencia se
               dispara muy por encima del 7 % del impuesto, y entonces se
               dicen las dos cosas. */}
-          {faltan > total * 0.1 ? (
+          {/* **Las dos cifras están ahora en la misma unidad** —las dos sin
+              ITBMS— así que tienen que cuadrar. Si no cuadran es que falta
+              detalle por traer de Zoho, y eso sí hay que decirlo. */}
+          {faltan > total * 0.05 && (
             <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
-              Faltan {DINERO.format(faltan)} de{" "}
-              {DINERO.format(total)} facturados. La mayor parte es detalle
-              de compra que todavía no se ha traído de Zoho; el resto es el
-              ITBMS, que se cobra pero no es producto.
-            </p>
-          ) : (
-            <p className="text-xs text-texto-atenuado">
-              Suma menos que los {DINERO.format(total)} facturados porque
-              aquí no entra el ITBMS: eso se cobra, pero no es producto.
+              Faltan {DINERO.format(faltan)} de los{" "}
+              {DINERO.format(total)} de arriba: es detalle de compra que
+              todavía no se ha traído de Zoho. Se completa solo.
             </p>
           )}
         </Tarjeta>
 
+        {/* **Lleva a las listas, no a un informe.** Saber qué línea no vende
+            solo sirve si termina en una ruta: en la lista de la zona hay un
+            botón que trae a los clientes a los que les falta y los agrega al
+            recorrido. Un informe aparte era un segundo camino para lo mismo,
+            y el vendedor no sabía cuál de los dos era el bueno. */}
         <Link
-          href={hrefCruzada}
+          href={hrefListas}
           className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
         >
           <Layers size={16} aria-hidden />
-          A quién ofrecerle lo que no compra
+          Agregarlos a una lista de zona
         </Link>
       </section>
     </div>
