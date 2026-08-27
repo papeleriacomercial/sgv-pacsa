@@ -146,10 +146,15 @@ const porCliente = new Map();
 
 function anotarCompra(cliente, vendedor, fecha, total) {
   if (!porCliente.has(cliente)) {
-    porCliente.set(cliente, { vendedores: new Set(), fechas: [], total: 0 });
+    // **Cuántas por vendedor, no sólo quiénes.** Antes era un conjunto de
+    // nombres, y con eso no se puede distinguir «este cliente es de Javier y
+    // una vez le facturó la oficina» de «este cliente lo atienden dos». Ver la
+    // regla de pertenencia más abajo.
+    porCliente.set(cliente, { vendedores: new Map(), fechas: [], total: 0 });
   }
   const x = porCliente.get(cliente);
-  x.vendedores.add((vendedor ?? "").trim());
+  const nombre = (vendedor ?? "").trim();
+  x.vendedores.set(nombre, (x.vendedores.get(nombre) ?? 0) + 1);
   x.fechas.push(fecha);
   x.total += Number(total ?? 0);
 }
@@ -164,31 +169,73 @@ for (const o of entregadas) {
 // ---------------------------------------------------------------------------
 // 3. La regla de pertenencia
 //
-// Un solo vendedor en todas sus facturas, y que ese vendedor sea de calle.
-// Lo demás es de la casa: lo atiende Verónica desde el CRM y no entra aquí.
+// Un cliente es de **la calle** si algún vendedor de calle le vendió, y es de
+// aquel que más le vendió. Si nadie de calle le vendió, es de la casa: lo
+// atiende la oficina desde el CRM y no entra aquí.
+//
 // ---------------------------------------------------------------------------
+// POR QUÉ SE CAMBIÓ, el 27 de agosto de 2026
+// ---------------------------------------------------------------------------
+//
+// La regla anterior era «un solo vendedor en TODAS sus facturas, y de calle».
+// Sonaba prudente y dejaba fuera **21 clientes con $57 174 de venta**, 229 de
+// esas facturas de Javier. Se midió qué tenían en común:
+//
+//     Alimentos y Servicios Fritos    219 de Javier  +  1 en blanco
+//     Inversora Leos                   79 de Javier  +  2 de Verónica
+//     Colombipan                       81 de Javier  +  7 de Verónica
+//
+// Es decir: **un cliente de la ruta de Javier quedaba huérfano porque alguna vez
+// llamó a la oficina y le facturaron desde allá.** Eso no es un dato sucio, es
+// cómo trabaja la empresa, y arreglarlo en Zoho habría exigido reescribir unas
+// sesenta facturas ya contabilizadas — para volver a romperse el mes siguiente.
+//
+// Las facturas de la casa ya no le quitan el cliente a nadie: **sólo se miran
+// las que llevan nombre de vendedor de calle.**
+//
+// EMPATES. Con dos vendedores de calle sobre el mismo cliente gana el que más
+// le vendió, que resuelve los casos obvios —75 de Javier contra 1 de
+// Christopher—. Cuando el segundo pasa del 20 % de los documentos, la elección
+// deja de ser obvia y se avisa por pantalla para que el líder decida; el
+// sistema no se calla un reparto que no le corresponde.
+// ---------------------------------------------------------------------------
+
+/** Desde cuándo un cliente reasignado por esta regla acredita sus ventas. */
+const REGLA_NUEVA_DESDE = "2026-09-01";
 
 const deCalle = new Map();
 let deLaCasa = 0;
-let mezclados = 0;
+const dudosos = [];
 
 for (const [id, x] of porCliente) {
-  if (x.vendedores.size > 1) {
-    mezclados += 1;
-    continue;
-  }
-  const nombre = [...x.vendedores][0];
-  const perfil = perfilDe.get(nombre);
-  if (!perfil) {
+  // Sólo los nombres reconocidos como vendedores de calle, con su cuenta.
+  const suyos = [...x.vendedores]
+    .filter(([nombre]) => perfilDe.has(nombre))
+    .sort((a, b) => b[1] - a[1]);
+
+  if (suyos.length === 0) {
     deLaCasa += 1;
     continue;
   }
-  deCalle.set(id, { ...x, nombre, perfil });
+
+  const [nombre, docs] = suyos[0];
+  const total = suyos.reduce((a, [, n]) => a + n, 0);
+  if (suyos.length > 1 && suyos[1][1] / total > 0.2) {
+    dudosos.push({ id, reparto: suyos.map(([n, c]) => `${c}×${n.split("_")[0].trim()}`).join(" vs ") });
+  }
+
+  deCalle.set(id, { ...x, nombre, perfil: perfilDe.get(nombre), docs });
 }
 
 console.log(
-  `  ${deCalle.size} clientes de calle · ${deLaCasa} de la casa · ${mezclados} con más de un vendedor\n`,
+  `  ${deCalle.size} clientes de calle · ${deLaCasa} de la casa\n`,
 );
+
+if (dudosos.length > 0) {
+  console.log(`  ${dudosos.length} clientes con el reparto parejo — que los mire el líder:`);
+  for (const d of dudosos) console.log(`     ${d.reparto}`);
+  console.log("");
+}
 
 // ---------------------------------------------------------------------------
 // 4. El ritmo de compra

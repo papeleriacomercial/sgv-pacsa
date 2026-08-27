@@ -1583,3 +1583,58 @@ regla: es la confianza en el sistema.
 **Lo que sí funciona sin señal desde siempre:** el PDF se genera en el teléfono, así que el vendedor
 puede entregárselo al cliente por la hoja de compartir. Lo que espera señal es la subida al
 archivo, que es para la oficina y el histórico.
+
+---
+
+## D-064
+
+**2026-08-27 · Un cliente es del vendedor de calle que más le vendió, y las facturas de la oficina no le quitan el cliente a nadie**
+
+La regla anterior decía: *un cliente es de un vendedor si **todas** sus facturas llevan el mismo
+nombre, y ese nombre es de calle*. Sonaba prudente y dejaba fuera **21 clientes con $57 174**, de los
+cuales 229 facturas eran de Javier.
+
+Se midió qué tenían en común:
+
+```
+Alimentos y Servicios Fritos    219 de Javier  +  1 en blanco
+Inversora Leos                   79 de Javier  +  2 de Verónica
+Colombipan                       81 de Javier  +  7 de Verónica
+Abarrotería Premiun              75 de Javier  + 11 de Verónica + 1 de Christopher
+```
+
+**Un cliente de la ruta de Javier quedaba huérfano porque alguna vez llamó a la oficina y le
+facturaron desde allá.** No es un dato sucio: es cómo trabaja la empresa.
+
+**Alternativa descartada: arreglarlo en Zoho.** Habría exigido reescribir unas sesenta facturas ya
+contabilizadas —cambiarles el vendedor— y se rompería otra vez el mes siguiente, la próxima vez que
+la oficina tome un pedido de un cliente de ruta.
+
+La regla nueva: **sólo se miran las facturas con nombre de vendedor de calle.** Si queda uno solo, el
+cliente es suyo. Si quedan dos, gana el que más le vendió —75 contra 1 no es una duda— y **cuando el
+segundo pasa del 20 % de los documentos el sistema lo avisa por pantalla** para que el líder decida:
+no se calla un reparto que no le corresponde.
+
+Resultado: **de 232 a 254 clientes de calle**, y un solo caso marcado como parejo.
+
+---
+
+## D-065
+
+**2026-08-27 · La regla nueva vale de septiembre en adelante**
+
+Acreditarle esos clientes a Javier **le sube la facturación de los últimos doce meses**, y la comisión
+se calcula sobre eso. Mover un número de un mes ya liquidado obligaría a explicar por qué cambió, o
+a pagar dos veces.
+
+Decisión del usuario: el corte es **2026-09-01**. Las 237 facturas anteriores —$57 174— se quedan sin
+acreditar, **a la vista y sin disimulo**: es preferible un hueco explicable a un ajuste silencioso.
+
+El corte es una constante en `acreditar_transacciones_sin_dueno()` y se puede quitar el día que se
+decida, cambiando la fecha y corriendo la función a mano. No hay nada que rehacer.
+
+**Efecto secundario que conviene tener anotado:** las cifras de agosto se movieron un poco al
+completar los renglones —Christopher $19 022 → $19 087, Javier $10 640 → $10 678, Albert $2 833 →
+$2 783—. No es que alguien haya cambiado de dueño: el espejo trajo un documento más de Christopher y
+uno de Javier, y los que antes contaban por su bruto —porque no tenían desglose— ahora cuentan por su
+neto. Se comprobó documento por documento: **ninguno suma más que su propio total.**
