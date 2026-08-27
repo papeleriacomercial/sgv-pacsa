@@ -492,11 +492,18 @@ export default async function Negocio({
             </div>
 
             {/* **Decir por qué no cuadra es la mitad del trabajo.** Sin esta
-                línea, la primera reacción es que la pantalla suma mal. */}
+                línea, la primera reacción es que la pantalla suma mal — y quien
+                piensa eso una vez deja de creerle a la pantalla entera.
+
+                Son tres razones distintas y conviene nombrarlas todas: de la
+                venta de la casa no se guarda el detalle, el ITBMS se cobra pero
+                no es producto, y mientras la carga esté incompleta falta
+                además el detalle que todavía no se trajo. */}
             <p className="text-xs text-texto-atenuado">
-              No cuadra con {DINERO.format(total)} porque aquí solo entra la
-              venta de los vendedores: de la venta de la casa se guarda la
-              factura, no lo que llevaba dentro.
+              No cuadra con {DINERO.format(total)} por tres motivos: aquí solo
+              entra la venta de los vendedores —de la de la casa se guarda la
+              factura, no lo que llevaba dentro—, no se cuenta el ITBMS, y de
+              algunos documentos todavía no se ha traído el detalle.
             </p>
           </Tarjeta>
         </section>

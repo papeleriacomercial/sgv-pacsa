@@ -80,6 +80,7 @@ export function CarteraEnCifras({
   const concentrado = mayor.total / total >= CONCENTRADO;
 
   const totalLineas = lineas.reduce((s, l) => s + l.total, 0);
+  const faltan = total - totalLineas;
   const conVenta = lineas.filter((l) => l.linea !== "otros" && l.total > 0);
   const sinVender = (Object.keys(LINEAS_PRODUCTO) as LineaProducto[]).filter(
     (l) => l !== "otros" && !conVenta.some((x) => x.linea === l),
@@ -208,12 +209,26 @@ export function CarteraEnCifras({
             </p>
           )}
 
-          {/* Diferencia con el total de arriba: aquí solo entra lo que tiene
-              renglones, y de algunas facturas viejas no se guardó el detalle. */}
-          {Math.abs(totalLineas - total) > total * 0.02 && (
+          {/* **Este total nunca va a ser igual al de arriba, y hay que
+              decirlo.** Arriba está lo que se cobró, con el ITBMS adentro;
+              aquí lo que se vendió, sin él. Callarlo hace que la primera
+              reacción sea que la pantalla suma mal — y quien piensa eso una
+              vez deja de creerle a la pantalla entera.
+
+              Cuando además falta detalle por cargar, la diferencia se
+              dispara muy por encima del 7 % del impuesto, y entonces se
+              dicen las dos cosas. */}
+          {faltan > total * 0.1 ? (
+            <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
+              Faltan {DINERO.format(faltan)} de{" "}
+              {DINERO.format(total)} facturados. La mayor parte es detalle
+              de compra que todavía no se ha traído de Zoho; el resto es el
+              ITBMS, que se cobra pero no es producto.
+            </p>
+          ) : (
             <p className="text-xs text-texto-atenuado">
-              No cuadra con {DINERO.format(total)} porque de algunos documentos
-              solo se guardó la factura, no lo que llevaba dentro.
+              Suma menos que los {DINERO.format(total)} facturados porque
+              aquí no entra el ITBMS: eso se cobra, pero no es producto.
             </p>
           )}
         </Tarjeta>

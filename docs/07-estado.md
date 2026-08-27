@@ -3327,3 +3327,37 @@ configuración, y por eso se buscó el problema en las contraseñas.
 Ahora se separan: de las credenciales sigue sin decirse nada; **cualquier otro fallo se muestra
 tal cual, con «no es tu contraseña — avisa a quien administra el sistema»**. Un vendedor en la
 calle necesita saber si el problema es suyo o del sistema.
+
+---
+
+## «Qué le vendes» no cuadraba con lo facturado — 2026-08-26
+
+Al caminar la pantalla de Ventas, Christopher aparecía con **$250 295 facturados en doce meses y
+solo $95 116 en el desglose por producto**. Medido, son dos causas distintas:
+
+```
+Facturado ......................... $250,295
+Sin detalle cargado ............... $148,560   ← la pasada que reventó anoche
+ITBMS de lo que sí tiene detalle ..   $6,619   ← permanente, 6,5 %
+Suma de renglones .................  $95,116
+```
+
+**La grande es temporal**: son los renglones que quedaron sin cargar. Con la reposición de las
+00:30 ese número sube a unos $234 000.
+
+**La chica no se arregla nunca, y está bien.** El desglose suma **lo que se vendió**; el total
+facturado suma **lo que se cobró, con el ITBMS adentro**. Forzarlos a cuadrar sería inventar
+impuesto en los productos.
+
+### Lo que se corrigió es lo que la pantalla decía
+
+Antes solo aparecía una nota cuando la diferencia pasaba del 2 %, y decía «de algunos documentos
+solo se guardó la factura» — que después de esta noche va a ser falso, porque la razón que va a
+quedar es el impuesto.
+
+Ahora la pantalla del vendedor distingue los dos casos: si la diferencia es del orden del
+impuesto, dice que **aquí no entra el ITBMS**; si se dispara muy por encima, dice además cuánto
+falta por traer de Zoho, en ámbar. Y el tablero de gerencia nombra las tres razones que le aplican.
+
+**Una cifra que no se puede cuadrar no se cree, y quien deja de creerle a un número deja de
+creerle a la pantalla entera.** Decir por qué no cuadra es la mitad del trabajo de mostrarla.
