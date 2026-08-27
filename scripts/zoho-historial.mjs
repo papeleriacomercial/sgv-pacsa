@@ -496,6 +496,27 @@ for (let i = 0; i < listos.length; i += 400) {
 }
 console.log(`  ${listos.length} renglones escritos.`);
 
+// ---------------------------------------------------------------------------
+// Acreditarle al vendedor lo que se escribió antes de que su cliente tuviera
+// uno asignado.
+//
+// **Sin esto, arreglar una ficha en Zoho no sirve de nada para el pasado.** El
+// `perfil_id` de una factura se copia del cliente en el momento en que se
+// escribe la factura, y esta pasada solo trae lo modificado desde la marca de
+// agua: asignarle el vendedor a un contacto no modifica sus facturas de hace
+// ocho meses, así que se quedarían sin dueño para siempre.
+//
+// Corre todas las noches y **no cuesta una sola consulta a Zoho**. Solo rellena
+// lo que está vacío: reasignar borraría de quién fue una venta ya comisionada.
+// ---------------------------------------------------------------------------
+const acreditadas = await sb("/rpc/acreditar_transacciones_sin_dueno", {
+  method: "POST",
+  body: "{}",
+});
+if (acreditadas > 0) {
+  console.log(`  ${acreditadas} transacciones acreditadas a su vendedor.`);
+}
+
 // La marca solo avanza si se abrió todo. Si se cortó por cuota, la próxima
 // pasada vuelve a pedir desde donde estaba y recupera lo que faltó.
 if (!cortado) {
