@@ -1482,3 +1482,104 @@ vacía se borra y una con un punto adentro rebota con su explicación.
 **Quitar de la lista es lo que más falta y lo que menos riesgo tiene.** Sin eso, los puntos que no
 sirven se quedan para siempre ensuciando el conteo de «sin tocar» con el que se arma el compromiso
 de la semana — y un contador que cuenta trabajo que nadie va a hacer deja de servir para prometer.
+
+---
+
+## D-060
+
+**2026-08-27 · Cerrar una cotización no es lo mismo que anularla**
+
+Hasta hoy había un solo camino para sacar una cotización de la lista: **anularla**. Y anular quiere
+decir *«el papel que circula está mal»* —puse el precio equivocado, el producto no era ese—, no
+*«el cliente dijo que no»*.
+
+Las dos cosas compartían estado, con un motivo de texto libre. Un vendedor que anulaba escribiendo
+«lo rechazaron» dejaba la lista limpia y **la medición ciega**: después no se puede contestar
+«¿cuánto perdemos por precio?», porque esa información quedó mezclada con los errores de digitación.
+
+Ahora hay cinco estados: `borrador`, `emitida`, `ganada`, `perdida` y `anulada`. Perder **exige
+motivo del catálogo cerrado** —el mismo de las oportunidades—, que es lo único que después permite
+sumar.
+
+**Alternativa descartada:** dejar que el motivo siguiera siendo texto libre y clasificarlo después.
+Nadie clasifica trescientas notas, y el que lo intente va a inventar categorías distintas cada vez.
+
+---
+
+## D-061
+
+**2026-08-27 · Vencida se deduce, no se guarda**
+
+Una cotización vence a los quince días —o los que diga su `validez_dias`—, y a partir de ahí lo que
+el cliente tiene en la mano dejó de obligar a nadie.
+
+**No hay un trabajo nocturno que las marque.** Se calcula al leerlas, de la fecha de emisión más su
+validez, comparando contra `hoy_panama()`. Un trabajo nocturno puede fallar una noche y dejar la
+lista mintiendo sin que nadie se entere; un cálculo no tiene cómo desincronizarse.
+
+**Vencida no cuenta como perdida.** Nadie dijo que no: el cliente no contestó. Meterlas juntas sería
+culpar al vendedor del silencio del cliente, y arruinaría la única medición que importa acá —de cada
+diez cotizaciones, cuántas se ganan y por qué se pierden las otras.
+
+**Las dos ventanas, acordadas con el usuario:** vigente hasta la validez; **vencida pero a la vista
+hasta 30 días después**, porque es justo la que hay que volver a llamar; pasados los 30 sale de la
+persecución sin cerrarse.
+
+Esto corrigió además una regla escrita a mano en la pantalla de Ventas: los quince días estaban
+quemados en el código y se comparaban contra la fecha del servidor. Un documento emitido con otra
+validez se veía mal, y **después de las 7 p.m. de Panamá una cotización se veía vencida un día antes
+de estarlo**.
+
+---
+
+## D-062
+
+**2026-08-27 · El vendedor cierra las que él selecciona; nada se cierra solo**
+
+Un mismo cliente puede tener dos o tres cotizaciones vivas —pidió una por bolsas y otra por rollos,
+o la misma mercancía en dos cantidades para comparar—. Lo observó el usuario: *«de repente no te
+compra la de rollos, pero sigue pensando la de bolsas»*.
+
+**El primer diseño ponía la lista dentro del formulario de seguimiento**, preguntando por cada una.
+El usuario lo corrigió: *«es lo más limpio que estar tú asumiendo o haciendo pantallas especiales
+para este caso»*. Tenía razón —las cotizaciones ya son su propia sección del expediente, separada de
+la bitácora, y meterlas en el formulario obligaba a inventar reglas sobre cuál corresponde a qué.
+
+Queda así: **un botón de cerrar en cada cotización de la lista**, con su motivo. Y al guardar un
+seguimiento en un cliente con cotizaciones vivas, se aterriza en esa sección — acaba de hablar con
+el cliente, y es el único momento en que sabe qué contestó.
+
+**Alternativa descartada: cerrar todas cuando la oportunidad se marca perdida.** Mata la de bolsas
+que seguía viva. Se consideró una excepción para el motivo «no contactar» —no hay lectura en la que
+el cliente diga que no lo llamen más y una cotización siga en pie— y **también se descartó**, por
+coherencia con lo anterior: un cierre que ocurre solo es un cierre que el vendedor no vio, y el día
+que cierre de más nadie va a saber por qué desapareció. Si se ve que «no contactar» siempre termina
+cerrando todas a mano, se automatiza entonces, con la evidencia delante.
+
+---
+
+## D-063
+
+**2026-08-27 · Cotizar deja de exigir señal, y la libreta se retira después — en ese orden**
+
+Se preguntó si eliminar la cotización en libreta. La respuesta corta es sí, y la larga tiene un
+orden que no es negociable.
+
+**Por qué sí, y por qué es distinto del pedido.** Un pedido en papel reaparece en Zoho como factura:
+el sistema lo ve por el otro lado, así que la libreta de pedidos es redundante pero inofensiva —y se
+decidió conservarla—. **Una cotización en papel no reaparece en ningún lado.** Es un punto ciego
+permanente: si la mitad de las promesas no está en el sistema, «cotizamos $80 000 este mes» no
+significa nada, y el recordatorio a los quince días sólo protege a la mitad.
+
+**Por qué no todavía.** Se afirmó primero que cotizar funcionaba sin señal, porque el código no es
+correlativo justamente para eso. **Era falso**: de sus cinco pasos, cuatro llamaban a la red. La
+cola de escrituras existía desde hacía semanas y la usaban seis pantallas —seguimiento incluido—,
+pero cotizar nunca se conectó a ella.
+
+Sacar la libreta antes de arreglar eso sería decirle al vendedor que sólo puede cotizar por la
+aplicación, mientras la aplicación no puede hacerlo donde él trabaja. Lo que se rompe ahí no es la
+regla: es la confianza en el sistema.
+
+**Lo que sí funciona sin señal desde siempre:** el PDF se genera en el teléfono, así que el vendedor
+puede entregárselo al cliente por la hoja de compartir. Lo que espera señal es la subida al
+archivo, que es para la oficina y el histórico.

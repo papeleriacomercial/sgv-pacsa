@@ -3427,3 +3427,52 @@ lista con un punto adentro     rechazada
 `created_by`, así que la lista nunca se creaba y el `update` no tocaba ninguna fila — con lo que
 «se borró» era en realidad «no había nada que borrar». Vale anotarlo: una prueba que pasa sin
 ejercitar lo que dice ejercitar es peor que no tenerla.
+
+---
+
+## 2026-08-27 · Cotizaciones: se cierran, se vencen, y se pueden hacer sin señal
+
+Ver D-060 a D-063.
+
+### Qué se puede hacer ahora
+
+- **Cerrar una cotización desde el expediente** — «La aprobaron» o «No caminó», y en el segundo caso
+  el motivo del catálogo cerrado. Cada cotización tiene su botón: un cliente puede tener dos vivas
+  —bolsas y rollos— y morirse una sola.
+- **Ver el estado de un vistazo** — ganada, perdida, vencida o anulada, con su sello.
+- **Cotizar sin señal.** Se guarda en la cola y se manda sola al volver la conexión. El PDF se
+  genera en el teléfono, así que el cliente se lo lleva igual.
+- **El aviso al registrar un seguimiento** — «Este cliente tiene 2 cotizaciones sin respuesta». Al
+  guardar, aterriza en la sección de cotizaciones del expediente.
+
+### Comprobado contra la base
+
+```
+la vista cotizaciones_vivas          responde · 2 vivas
+las tres consultas de las pantallas  corren con sus columnas reales
+cerrar sin motivo                    rechazado por la base
+cerrar como 'anulada'                rechazado: anular es otro camino
+cerrar como 'ganada'                 aceptado
+la vista con la llave pública        accesible, y RLS filtra
+```
+
+### Lo que NO está comprobado, y hay que probar en la calle
+
+**La cola sin señal no se ejercitó de punta a punta.** El SGV no tiene corredor de pruebas —el que
+tiene 837 pruebas es el SGP— y desde acá no se puede cortar la red del teléfono.
+
+La prueba de campo son dos minutos:
+
+1. Modo avión.
+2. Cotizar a un cliente cualquiera y mandársela.
+3. Debe salir el PDF y el aviso de que quedó pendiente de sincronizar.
+4. Quitar el modo avión y esperar unos segundos.
+5. La cotización tiene que aparecer en el expediente **con su PDF**, no como borrador.
+
+Si el paso 5 falla, lo que falló es el orden de la cola y hay que mirarlo antes de retirar la
+libreta.
+
+### Lo que falta para retirar la libreta de cotizaciones
+
+Solo la prueba de campo de arriba. La decisión ya está tomada (D-063); el orden era: primero que
+funcione sin señal, después retirarla.
