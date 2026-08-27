@@ -1442,3 +1442,43 @@ Dos números que no cuadran en dos toques.
 
 Desde «Mi cartera», el botón ahora dice **«Agregarlos a una lista de zona»** y lleva a Listas, que
 es donde la línea que no se vende se convierte en una ruta.
+
+---
+
+## D-059 — Se borra el error, no el juicio
+
+**Fecha:** 2026-08-26
+
+**Decisión.** Aparecen cinco formas de retirar algo, todas del vendedor y todas con borrado
+lógico:
+
+| Qué | Condición |
+|---|---|
+| Quitar un punto de una lista | Ninguna. No toca la cuenta |
+| Descartar una cuenta con motivo | Ya existía (D-010) |
+| Borrar una cuenta | La creó él, es potencial o prospecto, y **nadie la tocó** |
+| Archivar una lista | Ninguna |
+| Borrar una lista | Solo si está vacía |
+
+**Por qué del vendedor y no del líder.** Pedir permiso para corregir un dedazo enseña que el
+sistema es un trámite, y a la tercera vez el vendedor deja de corregir y empieza a ignorar los
+datos malos. El líder ya tiene el control que importa: ve el trabajo en el cierre semanal.
+
+**Por qué «nadie la tocó» no alcanza como única condición.** De las 521 cuentas de la cartera,
+**286 no tienen ninguna historia** —221 son prospectos que trajo Badger y nadie ha visitado—. Una
+regla de «se borra lo que no tiene historia» no sería una escapatoria para errores: dejaría borrar
+media cartera. Por eso va junto con «la creó quien la borra», que es lo que distingue el error del
+juicio.
+
+**Si alguien la evaluó, eso pasó.** Descartar con motivo es mejor que borrar: deja dicho por qué
+no sirve y **evita que otro repita el viaje**. Borrar haría que la volvieran a escoger del mapa
+dentro de tres meses.
+
+**Las reglas viven en la base, no en la pantalla** — dos disparadores. Las pantallas solo deciden
+si enseñan el botón, para no ofrecer algo que va a rebotar. Comprobado con seis casos: potencial y
+prospecto sin historia se borran; con un seguimiento encima, no; un cliente, nunca; una lista
+vacía se borra y una con un punto adentro rebota con su explicación.
+
+**Quitar de la lista es lo que más falta y lo que menos riesgo tiene.** Sin eso, los puntos que no
+sirven se quedan para siempre ensuciando el conteo de «sin tocar» con el que se arma el compromiso
+de la semana — y un contador que cuenta trabajo que nadie va a hacer deja de servir para prometer.

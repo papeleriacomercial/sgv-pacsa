@@ -18,6 +18,7 @@ import {
 } from "@/lib/catalogos";
 import { FichaPunto } from "@/components/ficha-punto";
 import { ClasificarCuenta } from "@/components/clasificar-cuenta";
+import { BorrarCuenta } from "@/components/borrar-cuenta";
 import { AgregarALista } from "@/components/agregar-a-lista";
 import { CadenaCuenta } from "@/components/cadena-cuenta";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -115,6 +116,13 @@ export default async function Expediente({
     .order("emitida_en", { ascending: false });
 
   const esMia = prospecto.vendedor_id === user.id;
+
+  // **Si esta cuenta fue un error.** La regla vive en la base —la creó
+  // quien pregunta, es potencial o prospecto, y nadie la tocó— y aquí solo
+  // se consulta, para no ofrecer un botón que va a rebotar.
+  const { data: esUnError } = await supabase.rpc("cuenta_es_un_error", {
+    p_cuenta: id,
+  });
 
   // Cómo se llama esta cuenta en la contabilidad. Casi nunca es igual: el
   // vendedor conoce el rótulo y la factura lleva la razón social.
@@ -269,6 +277,12 @@ export default async function Expediente({
             Editar datos
           </Boton>
         </Link>
+
+        {/* Al final y en letra pequeña. Borrar es raro y no debe competir
+            por la atención con lo que se hace todos los días. */}
+        {esUnError === true && (
+          <BorrarCuenta id={id} nombre={prospecto.nombre} />
+        )}
 
         <AgregarALista cuentaId={id} />
 

@@ -11,6 +11,8 @@ import {
 } from "@/lib/catalogos";
 import { AgregarObjetivo } from "@/components/agregar-objetivo";
 import { FichaPunto } from "@/components/ficha-punto";
+import { QuitarDeLista } from "@/components/quitar-de-lista";
+import { ArchivarLista } from "@/components/archivar-lista";
 import { diasDesde } from "@/lib/fechas";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
@@ -81,12 +83,16 @@ export default async function DetalleLista({
 
   const { data: lista } = await supabase
     .from("listas_resumen")
-    .select("id, nombre, tipo, clase, poblado, total, sin_tocar, trabajadas, sin_tocar_hace_mucho, sin_tocar_potenciales, sin_tocar_clientes")
+    .select("id, nombre, tipo, clase, poblado, archivada, vendedor_id, total, sin_tocar, trabajadas, sin_tocar_hace_mucho, sin_tocar_potenciales, sin_tocar_clientes")
     .eq("id", id)
     .maybeSingle();
 
   // Si el RLS no la deja ver, para este usuario no existe.
   if (!lista) notFound();
+
+  // **Poder ver una lista no la hace tuya.** El líder abre las de su equipo
+  // para saber cómo va, y no tiene por qué poder desarmarle la ruta a nadie.
+  const esMia = lista.vendedor_id === user.id;
 
   const { data: filas } = await supabase
     .from("listas_cuentas")
@@ -274,19 +280,32 @@ export default async function DetalleLista({
                 </span>
               )}
             </div>
+            {/* La equis solo va en los que no se han trabajado. Sacar de la
+                ruta algo que ya se visitó no tendría sentido: la visita
+                ocurrió y queda en la bitácora igual. */}
             {sinTocar.map((m) =>
               m.cuentas ? (
-                <FichaPunto
-                  key={m.cuenta_id}
-                  id={m.cuentas.id}
-                  nombre={m.cuentas.nombre}
-                  tipoComercio={m.cuentas.tipo_comercio}
-                  tipo={m.cuentas.tipo}
-                  zona={m.cuentas.poblado}
-                  falta={esObjetivo ? queFalta(m.cuentas) : null}
-                  ultimaInteraccion={null}
-                  esperaDias={diasDesde(m.agregada_en)}
-                />
+                <div key={m.cuenta_id} className="flex items-start gap-1">
+                  <div className="min-w-0 flex-1">
+                    <FichaPunto
+                      id={m.cuentas.id}
+                      nombre={m.cuentas.nombre}
+                      tipoComercio={m.cuentas.tipo_comercio}
+                      tipo={m.cuentas.tipo}
+                      zona={m.cuentas.poblado}
+                      falta={esObjetivo ? queFalta(m.cuentas) : null}
+                      ultimaInteraccion={null}
+                      esperaDias={diasDesde(m.agregada_en)}
+                    />
+                  </div>
+                  {esMia && (
+                    <QuitarDeLista
+                      listaId={id}
+                      cuentaId={m.cuenta_id}
+                      nombre={m.cuentas.nombre}
+                    />
+                  )}
+                </div>
               ) : null,
             )}
           </section>
@@ -323,6 +342,16 @@ export default async function DetalleLista({
           <p className="text-center text-xs text-texto-atenuado">
             Levantaste {lista.total}, tocaste {lista.trabajadas}
           </p>
+        )}
+
+        {/* Al final y en letra pequeña: retirar una lista es raro, y una
+            acción rara arriba y en grande se toca por error. */}
+        {esMia && (
+          <ArchivarLista
+            listaId={id}
+            nombre={lista.nombre}
+            vacia={lista.total === 0}
+          />
         )}
       </main>
     </>

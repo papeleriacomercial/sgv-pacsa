@@ -3395,3 +3395,35 @@ Ver [D-058](06-decisiones.md). Era un segundo camino para lo que ya hacen las li
 un salto incoherente: «26 clientes sin tipo de comercio» llevaba a un filtro de 179 cuentas.
 
 El botón de «Mi cartera» ahora dice **«Agregarlos a una lista de zona»** y lleva a Listas.
+
+---
+
+## Cinco formas de retirar algo — 2026-08-26
+
+Hasta hoy no había forma de deshacer nada en todo el sistema. Ver [D-059](06-decisiones.md).
+
+- **Quitar un punto de una lista** — una equis al lado de cada punto sin trabajar. No borra la
+  cuenta: vuelve a estar disponible en el mapa. Solo en los que no se han tocado, porque sacar de
+  la ruta algo que ya se visitó no significa nada.
+- **Archivar o borrar una lista** — al final de la lista y en letra pequeña. Archivar es lo normal;
+  borrar solo se ofrece si está vacía. `archivada` existía en el esquema **desde el primer día** y
+  nunca tuvo pantalla.
+- **Borrar una cuenta** — solo aparece cuando de verdad fue un error, y la base lo comprueba.
+
+Todo con borrado lógico (§16): la fila se queda, deja de verse.
+
+### Comprobado contra la base
+
+```
+potencial sin historia         borrable
+prospecto sin historia         borrable
+prospecto CON un seguimiento   no se borra
+cliente sin historia           no se borra
+lista vacía                    borrada
+lista con un punto adentro     rechazada
+```
+
+**Las dos primeras pasadas de la prueba no probaban nada** y lo dijeron: a `listas` le faltaba
+`created_by`, así que la lista nunca se creaba y el `update` no tocaba ninguna fila — con lo que
+«se borró» era en realidad «no había nada que borrar». Vale anotarlo: una prueba que pasa sin
+ejercitar lo que dice ejercitar es peor que no tenerla.
