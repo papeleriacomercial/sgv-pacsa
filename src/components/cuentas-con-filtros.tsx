@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { List, MapPin } from "lucide-react";
+import { List, MapPin, Search } from "lucide-react";
 import {
   aplicar,
   aUrl,
@@ -18,6 +18,7 @@ import { haceDias } from "@/lib/fechas";
 import { PanelFiltros } from "@/components/panel-filtros";
 import { FichaPunto } from "@/components/ficha-punto";
 import { Tarjeta } from "@/components/ui/tarjeta";
+import { contiene } from "@/lib/texto";
 import { Cargando, Vacio } from "@/components/ui/estados";
 
 // Sigue siendo dinámico y sin render en servidor: el mapa solo existe en el
@@ -71,6 +72,7 @@ export function CuentasConFiltros({
     }
     return desde;
   });
+  const [busqueda, setBusqueda] = useState("");
   const [abierto, setAbierto] = useState(false);
   const [vista, setVista] = useState<"lista" | "mapa">(
     (parametros.get("vista") as "lista" | "mapa") ?? vistaInicial,
@@ -92,7 +94,21 @@ export function CuentasConFiltros({
   }, [filtros, dimension, vista, ruta, router]);
 
   const visibles = useMemo(() => {
-    const lista = aplicar(cuentas, filtros);
+    const filtradas = aplicar(cuentas, filtros);
+
+    // **La búsqueda se aplica encima de los filtros, no en vez de ellos.** Se busca por nombre, por
+    // pueblo y por tipo de comercio: el vendedor a veces recuerda el rótulo, y a veces sólo que era
+    // la panadería de Chorrera. `contiene` compara sin acentos, así que «bodega jose» encuentra
+    // «Bodega José».
+    const escrito = busqueda.trim();
+    const lista = escrito
+      ? filtradas.filter(
+          (c) =>
+            contiene(c.nombre, escrito) ||
+            contiene(c.poblado ?? "", escrito) ||
+            contiene(c.tipo_comercio ?? "", escrito),
+        )
+      : filtradas;
 
     // **Filtrar por reposición y ordenar por nombre no sirve de nada.** La
     // pregunta que se está haciendo es a quién ir a ver primero. Ordenadas
@@ -120,7 +136,7 @@ export function CuentasConFiltros({
     }
 
     return lista;
-  }, [cuentas, filtros]);
+  }, [cuentas, filtros, busqueda]);
 
   const nombrePorVendedor = useMemo(
     () => new Map(vendedores.map((v) => [v.id, v.nombre])),
@@ -153,6 +169,29 @@ export function CuentasConFiltros({
 
   return (
     <div className="flex flex-1 flex-col gap-3">
+      {/* BUSCAR ENTRE LAS PROPIAS CUENTAS, que es lo que faltaba.
+          El usuario, 2 de septiembre de 2026: «quise buscar la cuenta de prueba... no abre una
+          búsqueda dentro de mi lista de cuentas». El panel de filtros contesta «a quién ir a ver»;
+          esto contesta otra pregunta, la de «dónde está aquélla», y no se resuelve con filtros
+          porque el vendedor ya sabe cuál busca.
+          VA ARRIBA Y SIEMPRE VISIBLE: si viviera dentro del panel, habría que abrir el panel para
+          buscar, y buscar es lo más frecuente que se hace en esta pantalla. */}
+      <div className="relative">
+        <Search
+          size={18}
+          aria-hidden
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-texto-atenuado"
+        />
+        <input
+          type="search"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar entre tus cuentas"
+          aria-label="Buscar entre tus cuentas por nombre, pueblo o tipo de comercio"
+          className="min-h-tactil w-full rounded-lg border border-borde bg-superficie pl-10 pr-3 text-base outline-none focus:border-marca focus:ring-2 focus:ring-marca/30"
+        />
+      </div>
+
       <PanelFiltros
         filtros={filtros}
         onCambio={setFiltros}
@@ -231,11 +270,21 @@ export function CuentasConFiltros({
         </div>
       )}
 
+      {/* EL MENSAJE TIENE QUE DECIR POR QUÉ NO HAY NADA. Con la barra de búsqueda, «quita algún
+          filtro» manda a mirar el sitio equivocado: lo que esconde las cuentas es lo que se acaba de
+          escribir, no un filtro que quizá ni está puesto. */}
       {visibles.length === 0 && (
         <Tarjeta>
-          <Vacio titulo="Ninguna cuenta pasa el filtro">
-            Quita algún filtro para volver a verlas.
-          </Vacio>
+          {busqueda.trim() ? (
+            <Vacio titulo={`Ninguna cuenta dice «${busqueda.trim()}»`}>
+              Se busca por nombre, pueblo y tipo de comercio. Prueba con menos letras, o borra lo
+              escrito para volver a verlas todas.
+            </Vacio>
+          ) : (
+            <Vacio titulo="Ninguna cuenta pasa el filtro">
+              Quita algún filtro para volver a verlas.
+            </Vacio>
+          )}
         </Tarjeta>
       )}
 

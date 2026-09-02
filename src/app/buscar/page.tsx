@@ -18,7 +18,7 @@ export default async function Buscar() {
       <AvisoSinConexion />
 
       <header className="border-b border-borde bg-superficie px-4 py-3">
-        <h1 className="text-lg font-semibold text-marca">Buscar prospectos</h1>
+        <h1 className="text-lg font-semibold text-marca">Buscar potenciales</h1>
       </header>
 
       <main className="flex flex-col p-4">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ListChecks, PackageSearch, Plus, Search, Tags } from "lucide-react";
+import { ListChecks, PackageSearch, Plus, Tags } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { cargarCartera } from "@/lib/cartera";
 import { CuentasConFiltros } from "@/components/cuentas-con-filtros";
@@ -90,7 +90,7 @@ export default async function Cuentas() {
           <span>Consultar precios y existencia</span>
         </Link>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           <Link
             href="/cuentas/nuevo"
             className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-4 text-base font-medium text-white"
@@ -98,13 +98,12 @@ export default async function Cuentas() {
             <Plus size={18} aria-hidden />
             Nueva cuenta
           </Link>
-          <Link
-            href="/buscar"
-            className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
-          >
-            <Search size={18} aria-hidden />
-            Buscar
-          </Link>
+          {/* AQUÍ HUBO UN BOTÓN «BUSCAR» QUE LLEVABA A BUSCAR POTENCIALES EN EL MAPA DE GOOGLE.
+              Una etiqueta se lee en el contexto de la pantalla donde está, y «Buscar» en la
+              pantalla de tus cuentas no puede significar otra cosa que buscar entre tus cuentas.
+              El usuario fue a buscar una cuenta suya y acabó en una pantalla que le preguntaba
+              categoría y distancia. Se mudó al mapa, que es donde la barra de navegación ya decía
+              que tenía que estar. La búsqueda de cuentas es ahora la barra de arriba. */}
         </div>
 
         {potenciales > 0 && (
