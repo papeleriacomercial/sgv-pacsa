@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Boton } from "@/components/ui/boton";
 import { Tarjeta } from "@/components/ui/tarjeta";
+import { useRouter } from "next/navigation";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { actualizar } from "@/lib/cola";
 import { nombreDelArchivo } from "@/lib/comparador-xlsx";
 
 /**
@@ -27,6 +29,7 @@ export type ComparacionGuardada = {
   ahorro_por_pedido: number | null;
   diferencia_al_ano: number | null;
   archivo_path: string | null;
+  compromiso_id: string | null;
 };
 
 const dinero = (v: number | null) =>
@@ -40,12 +43,55 @@ const fecha = (iso: string) =>
 export function ComparacionEnLaFicha({
   c,
   nombreCuenta,
+  esMia,
 }: {
   c: ComparacionGuardada;
   nombreCuenta: string;
+  esMia: boolean;
 }) {
+  const router = useRouter();
   const [trabajando, setTrabajando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
+
+  /**
+   * Borra la comparación de la ficha.
+   *
+   * **SE VA CON SU SEGUIMIENTO.** El compromiso que dejó dice, con todas las letras, «dar seguimiento
+   * a la comparación de costo entregada a X»: si la comparación desaparece y él se queda, en la
+   * agenda del vendedor sobrevive una tarea que apunta a algo que ya no existe.
+   *
+   * **No se borra de verdad, se marca como borrada.** Es lo que hace el resto del sistema, y acá
+   * importa más que en otros lados: esto es el registro de lo que se le dijo a un cliente.
+   */
+  async function borrar() {
+    setTrabajando(true);
+    setError(null);
+
+    if (c.compromiso_id) {
+      await actualizar(
+        "compromisos",
+        c.compromiso_id,
+        { deleted_at: new Date().toISOString() },
+        `Seguimiento de la comparación con ${nombreCuenta}`,
+      );
+    }
+
+    const { error: fallo } = await actualizar(
+      "comparaciones",
+      c.id,
+      { deleted_at: new Date().toISOString() },
+      `Comparación de costo con ${nombreCuenta}`,
+    );
+
+    if (fallo) {
+      setError(fallo);
+      setTrabajando(false);
+      return;
+    }
+
+    router.refresh();
+  }
 
   async function abrir() {
     if (!c.archivo_path) return;
@@ -127,9 +173,37 @@ export function ComparacionEnLaFicha({
         // Se dice, no se calla: la copia puede estar esperando señal en la cola, y quien mire la
         // ficha tiene que saber por qué no hay botón en vez de suponer que se perdió.
         <p className="text-xs text-texto-atenuado">
-          La copia del archivo todavía no se ha subido.
+          Sin copia del archivo. Si acabas de hacerla, puede estar esperando señal.
         </p>
       )}
+
+      {/* AL FINAL Y EN LETRA PEQUEÑA, como el resto de los borrados del sistema: borrar es raro y no
+          debe competir con lo que se hace todos los días. Sólo el dueño de la cuenta — a otro los
+          permisos se lo rebotarían, y ofrecer un botón que va a fallar es peor que no ofrecerlo. */}
+      {esMia &&
+        (confirmando ? (
+          <div className="flex flex-col gap-2 border-t border-borde pt-2">
+            <p className="text-xs text-texto-secundario">
+              Se borra esta comparación y el seguimiento que dejó. ¿Seguimos?
+            </p>
+            <div className="flex gap-2">
+              <Boton tono="destructivo" onClick={borrar} disabled={trabajando}>
+                {trabajando ? "Borrando…" : "Sí, borrar"}
+              </Boton>
+              <Boton tono="secundario" onClick={() => setConfirmando(false)} disabled={trabajando}>
+                Dejarla
+              </Boton>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmando(true)}
+            className="self-start text-xs text-texto-atenuado underline underline-offset-2"
+          >
+            Borrar esta comparación
+          </button>
+        ))}
     </Tarjeta>
   );
 }

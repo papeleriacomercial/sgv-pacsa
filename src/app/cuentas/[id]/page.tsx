@@ -167,7 +167,7 @@ export default async function Expediente({
   const { data: comparaciones } = await supabase
     .from("comparaciones")
     .select(
-      "id, creada_en, marca_competencia, nuestro_precio_caja, nuestro_rollos_caja, nuestro_metros_rollo, nuestro_calibre, cliente_precio_caja, cliente_rollos_caja, cliente_metros_rollo, ahorro_por_pedido, diferencia_al_ano, archivo_path",
+      "id, creada_en, marca_competencia, nuestro_precio_caja, nuestro_rollos_caja, nuestro_metros_rollo, nuestro_calibre, cliente_precio_caja, cliente_rollos_caja, cliente_metros_rollo, ahorro_por_pedido, diferencia_al_ano, archivo_path, compromiso_id",
     )
     .eq("cuenta_id", id)
     .is("deleted_at", null)
@@ -582,6 +582,7 @@ export default async function Expediente({
               <ComparacionEnLaFicha
                 key={c.id}
                 nombreCuenta={prospecto.nombre}
+                esMia={esMia}
                 c={{
                   ...c,
                   nuestro_precio_caja: Number(c.nuestro_precio_caja),
