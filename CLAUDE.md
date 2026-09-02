@@ -58,8 +58,9 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 Slug único `sgv-pacsa` en GitHub, Vercel y Supabase (estos dos últimos con sufijo `-dev` y
 `-prod`). §14 de la visión dice `sgv`; se corrigió a lo que realmente quedó desplegado —
 ver `docs/06-decisiones.md`. Ramas de trabajo: `feat/<módulo>`. Los dos
-proyectos de Supabase están separados **desde el día uno**; nunca uno solo que después
-"se limpia".
+proyectos de Supabase se crearon separados **desde el día uno**. **Pero hoy no se usan así:**
+comprobado el 2 de septiembre de 2026, producción y las previsualizaciones hablan con la misma base,
+y el proyecto que iba a ser producción está vacío. Ver el aviso en `docs/01-arquitectura.md`.
 
 ---
 

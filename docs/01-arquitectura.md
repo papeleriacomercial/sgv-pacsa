@@ -31,6 +31,24 @@ No hay entorno local de Supabase: no se usa Docker. La decisión y su porqué es
 | | Desarrollo | Producción |
 |---|---|---|
 | Proyecto Supabase | `sgv-pacsa-dev` | `sgv-pacsa-prod` |
+
+> ### ⚠ Esto describe el diseño, no lo que hay hoy — comprobado el 2 de septiembre de 2026
+>
+> **Producción y las previsualizaciones usan la misma base de datos**, `xoesriakyqhpzwxzmkcu`. Se
+> verificó leyendo la dirección de Supabase dentro del código que ambos sitios envían al navegador:
+> los dos apuntan al mismo proyecto.
+>
+> **Y el proyecto que iba a ser producción está vacío**: `yzztxbumcyhcogoiwryv` no tiene ninguna
+> tabla — ni `perfiles`, ni `cuentas`. Coincide con lo que `07-estado.md` dejó escrito el primer
+> día y nunca se actualizó.
+>
+> **Los nombres en el panel de Supabase están cruzados respecto a los documentos.** No existe ningún
+> proyecto llamado `sgv-pacsa-prod`. El que tiene todo se llama `sgv-pacsa`; el vacío se llama
+> `sgv-pacsa-dev`. **Guiarse por el nombre lleva a la base equivocada**, y el archivo local
+> `supabase/.temp/linked-project.json` también trae el nombre viejo.
+>
+> **Consecuencia práctica:** no hay dónde probar un cambio destructivo, y los datos de prueba viven
+> entre los reales. Decisión pendiente del usuario.
 | Ref del proyecto | `xoesriakyqhpzwxzmkcu` | `yzztxbumcyhcogoiwryv` |
 | Región | us-east-1 | us-east-1 |
 | Rama de Git | `dev` | `main` |
