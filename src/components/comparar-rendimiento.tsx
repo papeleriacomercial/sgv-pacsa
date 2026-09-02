@@ -8,6 +8,20 @@ import { Tarjeta } from "@/components/ui/tarjeta";
 import { compararRendimiento } from "@/lib/comparador";
 import { generarComparador, nombreDelArchivo } from "@/lib/comparador-xlsx";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { insertar, actualizar, subir } from "@/lib/cola";
+import { TIPOS_INTERACCION, type TipoInteraccion } from "@/lib/catalogos";
+
+/**
+ * Dentro de tres días, en el formato que espera un campo de fecha.
+ *
+ * **Tres no es un número redondo elegido al azar**: es la única señal disponible. No hay forma de
+ * saber si el cliente abrió la hoja, así que el seguimiento es lo único que dice si sirvió.
+ */
+function enTresDias(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 3);
+  return d.toISOString().slice(0, 10);
+}
 
 /** Quién entrega la hoja. El teléfono se guarda en su perfil la primera vez que lo escribe. */
 export type Vendedor = { id: string; nombre: string | null; telefono: string | null };
@@ -94,12 +108,22 @@ export function CompararRendimiento({
   const [metrosNuestro, setMetrosNuestro] = useState("");
   const [calibre, setCalibre] = useState<Calibre | null>(null);
 
+  // La marca que usa hoy. Va al registro de la bitácora; en la etapa 3b saldrá del catálogo.
+  const [marca, setMarca] = useState("");
+
   // EL TELÉFONO SE PIDE ACÁ Y NO EN UNA PANTALLA DE PERFIL, porque el SGV no tiene una. Se pregunta
   // donde hace falta, se guarda en el perfil, y a partir de la segunda vez ya viene puesto.
   const [telefono, setTelefono] = useState(vendedor.telefono ?? "");
 
+  // EL PRÓXIMO PASO. Se crea solo, y la fecha se puede cambiar antes de generar: el vendedor sabe si
+  // ese local no abre el jueves, y corregirlo después desde la agenda es un paso que nadie da.
+  const [fechaSeguimiento, setFechaSeguimiento] = useState(enTresDias);
+  const [accion, setAccion] = useState<TipoInteraccion>("visita");
+
   const [armando, setArmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // La hoja salió pero el registro no. NO ES UN ERROR DE LA ENTREGA: el cliente ya tiene su copia.
+  const [avisoRegistro, setAvisoRegistro] = useState<string | null>(null);
 
   const cliente = {
     precioCaja: aNumero(precioCliente),
@@ -144,8 +168,107 @@ export function CompararRendimiento({
     cliente.semanasEntrePedidos !== null &&
     Math.abs(r.semanasQueDura - cliente.semanasEntrePedidos) > 0.5;
 
+  /**
+   * Deja la comparación en la bitácora de la cuenta y programa el próximo paso.
+   *
+   * *«El vendedor va a estar haciendo varias de estas comparaciones en diferentes clientes, y no va
+   * a tener la memoria de qué fue lo que le ofreció a uno en particular.»* La hoja se la lleva el
+   * cliente; sin esto **no queda copia de nuestro lado**.
+   *
+   * NUNCA LEVANTA UN ERROR. La hoja ya está entregada cuando esto corre, así que un fallo acá se
+   * avisa sin bloquear. Lo que sea falta de señal lo guarda la cola y sale al reconectar.
+   *
+   * EL ORDEN NO ES ARBITRARIO: el compromiso primero porque la comparación lo referencia; la fila de
+   * la comparación antes que el archivo porque **el permiso del depósito comprueba que esa fila
+   * exista**; y la ruta del archivo se escribe al final, cuando la subida ya ocurrió, para que no
+   * quede apuntando a un archivo que nunca llegó.
+   */
+  async function registrar(archivo: File) {
+    const idComparacion = crypto.randomUUID();
+    const conQuien = cuenta.nombre;
+
+    try {
+      let idCompromiso: string | null = crypto.randomUUID();
+      const paso = await insertar(
+        "compromisos",
+        {
+          id: idCompromiso,
+          cuenta_id: cuenta.id,
+          // No nace de una visita registrada, igual que un seguimiento programado a mano.
+          visita_id: null,
+          vendedor_id: vendedor.id,
+          descripcion: `Dar seguimiento a la comparación de costo entregada a ${conQuien}`,
+          fecha_compromiso: fechaSeguimiento,
+          tipo_accion: accion,
+        },
+        `Seguimiento de la comparación con ${conQuien}`,
+      );
+      if (paso.error) idCompromiso = null;
+
+      const fila = await insertar(
+        "comparaciones",
+        {
+          id: idComparacion,
+          cuenta_id: cuenta.id,
+          vendedor_id: vendedor.id,
+          marca_competencia: marca.trim() || null,
+          cliente_precio_caja: cliente.precioCaja,
+          cliente_rollos_caja: cliente.rollosCaja,
+          cliente_metros_rollo: cliente.metrosRollo,
+          cliente_cajas_pedido: cliente.cajasPedido,
+          cliente_semanas: cliente.semanasEntrePedidos,
+          nuestro_precio_caja: nuestro.precioCaja,
+          nuestro_rollos_caja: nuestro.rollosCaja,
+          nuestro_metros_rollo: nuestro.metrosRollo,
+          nuestro_calibre: nuestro.calibre,
+          // EL RESULTADO QUE SE LE ENSEÑÓ, aunque sea recalculable: es lo que se dijo esa tarde.
+          costo_metro_cliente: r.costoPorMetroCliente,
+          costo_metro_nuestro: r.costoPorMetroNuestro,
+          cajas_equivalentes: r.cajasEquivalentes,
+          ahorro_por_pedido: r.ahorroPorPedido,
+          diferencia_al_ano: r.diferenciaAlAno,
+          compromiso_id: idCompromiso,
+        },
+        `Comparación de costo con ${conQuien}`,
+      );
+      if (fila.error) {
+        setAvisoRegistro(
+          `La hoja salió, pero no quedó registrada en la bitácora: ${fila.error}`,
+        );
+        return;
+      }
+
+      const ruta = `${idComparacion}/${archivo.name}`;
+      const subida = await subir(
+        "comparaciones",
+        ruta,
+        archivo,
+        idComparacion,
+        `Copia de la comparación con ${conQuien}`,
+      );
+      if (subida.error) {
+        setAvisoRegistro(
+          `Quedó en la bitácora, pero la copia del archivo no se pudo guardar: ${subida.error}`,
+        );
+        return;
+      }
+
+      await actualizar(
+        "comparaciones",
+        idComparacion,
+        { archivo_path: ruta },
+        `Copia de la comparación con ${conQuien}`,
+      );
+    } catch (e) {
+      setAvisoRegistro(
+        `La hoja salió, pero no quedó registrada: ${e instanceof Error ? e.message : "error desconocido"}`,
+      );
+    }
+  }
+
   async function armarYCompartir() {
     setError(null);
+    setAvisoRegistro(null);
     setArmando(true);
     try {
       const blob = await generarComparador({
@@ -169,6 +292,8 @@ export function CompararRendimiento({
         }
       }
 
+      // PRIMERO SE ENTREGA. El registro va después: si algo de aquello falla —sin señal, que en la
+      // calle es lo normal— el cliente igual se lleva su hoja.
       if (navigator.canShare?.({ files: [archivo] })) {
         try {
           await navigator.share({
@@ -179,16 +304,17 @@ export function CompararRendimiento({
         } catch {
           // Cancelar no es un error: la hoja se vuelve a armar cuando quiera.
         }
-        return;
+      } else {
+        // Sin hoja de compartir —un escritorio— se descarga.
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement("a");
+        enlace.href = url;
+        enlace.download = archivo.name;
+        enlace.click();
+        URL.revokeObjectURL(url);
       }
 
-      // Sin hoja de compartir —un escritorio— se descarga.
-      const url = URL.createObjectURL(blob);
-      const enlace = document.createElement("a");
-      enlace.href = url;
-      enlace.download = archivo.name;
-      enlace.click();
-      URL.revokeObjectURL(url);
+      await registrar(archivo);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo armar la hoja. Intenta de nuevo.");
     } finally {
@@ -206,6 +332,15 @@ export function CompararRendimiento({
             Ninguno es obligatorio. Anota lo que el cliente quiera decirte.
           </p>
         </div>
+
+        {/* Va al registro de la bitácora, para saber contra quién se compitió en cada local. En la
+            etapa 3b saldrá del catálogo de marcas en vez de escribirse. */}
+        <Campo
+          etiqueta="Marca que usa hoy"
+          value={marca}
+          onChange={(e) => setMarca(e.target.value)}
+          placeholder="Como la conozca el cliente"
+        />
 
         <Campo
           etiqueta="Precio que paga por caja"
@@ -359,7 +494,38 @@ export function CompararRendimiento({
         />
       </Tarjeta>
 
-      {/* --- 5. El archivo -------------------------------------------------- */}
+      {/* --- 5. El próximo paso --------------------------------------------- */}
+      <Tarjeta className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-texto">El próximo paso</h2>
+          <p className="text-xs text-texto-atenuado">
+            Se agenda solo al generar la hoja. Cambia la fecha si sabes que no conviene.
+          </p>
+        </div>
+
+        <Campo
+          etiqueta="Volver a buscarlo el"
+          type="date"
+          value={fechaSeguimiento}
+          onChange={(e) => setFechaSeguimiento(e.target.value)}
+          ayuda="Tres días es la única señal que tenemos: no hay forma de saber si abrió la hoja."
+        />
+
+        <Opciones
+          etiqueta="Cómo"
+          opciones={TIPOS_INTERACCION}
+          valor={accion}
+          onCambio={(v) => setAccion(v)}
+        />
+      </Tarjeta>
+
+      {/* --- 6. El archivo -------------------------------------------------- */}
+      {avisoRegistro && (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+          {avisoRegistro}
+        </p>
+      )}
+
       {error && (
         <p className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error" role="alert">
           {error}

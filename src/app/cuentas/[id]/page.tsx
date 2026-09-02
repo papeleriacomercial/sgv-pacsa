@@ -25,6 +25,7 @@ import { Tarjeta } from "@/components/ui/tarjeta";
 import { QueCompra } from "@/components/que-compra";
 import { VentaCruzada, type Cruce } from "@/components/venta-cruzada";
 import { DescargarCotizacion } from "@/components/descargar-cotizacion";
+import { ComparacionEnLaFicha } from "@/components/comparacion-guardada";
 import { Insignia } from "@/components/ui/insignia";
 import { Boton } from "@/components/ui/boton";
 import { Vacio } from "@/components/ui/estados";
@@ -159,6 +160,18 @@ export default async function Expediente({
     .select("producto, veces, total, ultima_vez, dias_sin_pedirlo")
     .eq("cuenta_id", id)
     .order("total", { ascending: false })
+    .limit(8);
+
+  // Las comparaciones de costo entregadas. Van a la bitácora por la misma razón
+  // que las cotizaciones: son un hecho, tan hecho como una visita.
+  const { data: comparaciones } = await supabase
+    .from("comparaciones")
+    .select(
+      "id, creada_en, marca_competencia, nuestro_precio_caja, nuestro_rollos_caja, nuestro_metros_rollo, nuestro_calibre, cliente_precio_caja, cliente_rollos_caja, cliente_metros_rollo, ahorro_por_pedido, diferencia_al_ano, archivo_path",
+    )
+    .eq("cuenta_id", id)
+    .is("deleted_at", null)
+    .order("creada_en", { ascending: false })
     .limit(8);
 
   const { data: visitas } = await supabase
@@ -553,6 +566,37 @@ export default async function Expediente({
                 estado={c.estado}
                 motivoPerdidaGuardado={c.motivo_perdida}
                 venceEl={venceEl(c.emitida_en, c.validez_dias)}
+              />
+            ))}
+          </section>
+        )}
+
+        {/* Contesta la pregunta que el vendedor se hace al volver al local: qué
+            le ofrecí a éste. Sin esto no tiene respuesta — la hoja se la llevó
+            el cliente y el precio iba escrito a mano, así que no se puede
+            deducir de ninguna lista. */}
+        {(comparaciones ?? []).length > 0 && (
+          <section id="comparaciones" className="flex flex-col gap-2 scroll-mt-4">
+            <h2 className="text-sm font-medium text-texto">Comparaciones de costo</h2>
+            {(comparaciones ?? []).map((c) => (
+              <ComparacionEnLaFicha
+                key={c.id}
+                c={{
+                  ...c,
+                  nuestro_precio_caja: Number(c.nuestro_precio_caja),
+                  nuestro_rollos_caja: Number(c.nuestro_rollos_caja),
+                  nuestro_metros_rollo: Number(c.nuestro_metros_rollo),
+                  cliente_precio_caja:
+                    c.cliente_precio_caja === null ? null : Number(c.cliente_precio_caja),
+                  cliente_rollos_caja:
+                    c.cliente_rollos_caja === null ? null : Number(c.cliente_rollos_caja),
+                  cliente_metros_rollo:
+                    c.cliente_metros_rollo === null ? null : Number(c.cliente_metros_rollo),
+                  ahorro_por_pedido:
+                    c.ahorro_por_pedido === null ? null : Number(c.ahorro_por_pedido),
+                  diferencia_al_ano:
+                    c.diferencia_al_ano === null ? null : Number(c.diferencia_al_ano),
+                }}
               />
             ))}
           </section>
