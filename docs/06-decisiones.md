@@ -1638,3 +1638,34 @@ completar los renglones —Christopher $19 022 → $19 087, Javier $10 640 → $
 $2 783—. No es que alguien haya cambiado de dueño: el espejo trajo un documento más de Christopher y
 uno de Javier, y los que antes contaban por su bruto —porque no tenían desglose— ahora cuentan por su
 neto. Se comprobó documento por documento: **ninguno suma más que su propio total.**
+
+## D-066
+
+**2026-09-02 · Los dos entornos usan la misma base — PENDIENTE DE ARREGLAR**
+
+**Comprobado, no supuesto.** Producción y las previsualizaciones por rama apuntan al mismo proyecto
+de Supabase, `xoesriakyqhpzwxzmkcu`: se leyó la dirección dentro del código que ambos sitios envían
+al navegador y es la misma. El proyecto que iba a ser producción, `yzztxbumcyhcogoiwryv`, **no tiene
+ninguna tabla** — ni `perfiles` ni `cuentas`.
+
+**Los nombres del panel están cruzados respecto a los documentos.** No existe ningún proyecto llamado
+`sgv-pacsa-prod`: el que tiene todo se llama `sgv-pacsa` y el vacío se llama `sgv-pacsa-dev`.
+**Guiarse por el nombre lleva a la base equivocada**, y el archivo local
+`supabase/.temp/linked-project.json` también trae el nombre viejo — fue lo que hizo afirmar, con
+confianza, que el enlace apuntaba a desarrollo.
+
+**Lo que esto cuesta hoy:** nada visible. La aplicación funciona y los datos están sanos.
+
+**Lo que cuesta el día que importe:** no hay dónde probar un cambio destructivo. Una migración que
+borre o mueva datos los borra sobre los reales, sin red. Y los datos de prueba —cuentas inventadas,
+comparaciones de ensayo— viven mezclados con los buenos.
+
+**Qué haría falta para arreglarlo**, cuando el usuario lo decida:
+
+1. Poblar `yzztxbumcyhcogoiwryv` corriendo las 65 migraciones desde cero.
+2. Cambiar las variables de Preview y Development en Vercel para que apunten ahí.
+3. Decidir qué datos lleva desarrollo: ninguno, una copia, o unos pocos hechos a mano.
+4. **Arreglar los nombres en el panel de Supabase**, que es lo más barato y lo que más engaña.
+
+**Decisión del usuario, 2 de septiembre de 2026: queda anotado como pendiente.** No es urgente
+mientras nadie escriba una migración destructiva; el día que se escriba una, esto es lo primero.
