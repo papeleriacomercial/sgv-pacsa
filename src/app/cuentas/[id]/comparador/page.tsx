@@ -5,7 +5,7 @@ import { BotonVolver } from "@/components/boton-volver";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
 /**
- * Comparar rendimiento — §7.10.
+ * Comparar rendimiento de rollos — §7.10.
  *
  * Demostrar, delante del cliente, que nuestro rollo cuesta menos por metro aunque la caja sea más
  * cara. **Sin pedirle que revele lo que paga hoy**: si hubiera que exigírselo, la herramienta no
@@ -50,7 +50,7 @@ export default async function Comparador({ params }: PageProps<"/cuentas/[id]/co
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
         <BotonVolver alterno={`/cuentas/${id}`} />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-semibold text-marca">Comparar rendimiento</h1>
+          <h1 className="truncate text-lg font-semibold text-marca">Comparar rendimiento de rollos</h1>
           <p className="truncate text-xs text-texto-atenuado">{cuenta.nombre}</p>
         </div>
       </header>

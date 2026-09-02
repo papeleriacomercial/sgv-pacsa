@@ -283,7 +283,7 @@ export default async function Expediente({
                     caja, que es justamente donde perdemos. */}
                 <Link href={`/cuentas/${id}/comparador`} className="block">
                   <Boton tono="secundario" ancho>
-                    Comparar rendimiento
+                    Comparar rendimiento de rollos
                   </Boton>
                 </Link>
                 {/* La nota de entrega de la libreta, en el teléfono. La

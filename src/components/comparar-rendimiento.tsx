@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
@@ -121,6 +122,7 @@ export function CompararRendimiento({
   const [fechaSeguimiento, setFechaSeguimiento] = useState(enTresDias);
   const [accion, setAccion] = useState<TipoInteraccion>("visita");
 
+  const router = useRouter();
   const [armando, setArmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /**
@@ -577,6 +579,27 @@ export function CompararRendimiento({
         >
           {registro.texto}
         </p>
+      )}
+
+      {/* SIN ESTE BOTÓN, VOLVER ENSEÑA EL EXPEDIENTE DE ANTES.
+          Lo encontró el usuario el 2 de septiembre de 2026: grabó, salió el verde, subió con el
+          dedo, tocó «volver» y la comparación no estaba. El botón de volver **navega**, y la
+          aplicación guarda una copia de cada pantalla que ya visitaste — así que devolvía la copia
+          del expediente de antes de la comparación.
+          `router.refresh()` tira esa copia; recién entonces se navega.
+          **Y NO SE RECARGA LA PÁGINA ENTERA A PROPÓSITO**: en el iPhone del usuario, arrastrar para
+          refrescar lo devuelve a la pantalla de ingreso. Una recarga completa acá le haría lo
+          mismo, y perdería el trabajo. */}
+      {registro && registro.tono !== "falla" && (
+        <Boton
+          ancho
+          onClick={() => {
+            router.refresh();
+            router.push(`/cuentas/${cuenta.id}`);
+          }}
+        >
+          Volver al expediente
+        </Boton>
       )}
 
       {error && (
