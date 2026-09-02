@@ -100,26 +100,6 @@ test('con datos parciales, los que faltan quedan vacíos y no con el ejemplo', a
   assert.match(String(porNombre.COMPARADOR_NOTA_EJEMPLO), /los que usted nos indicó/)
 })
 
-test('el metraje sin medir se declara arriba; medido, el renglón queda mudo', async () => {
-  servir(readFileSync(PLANTILLA))
-  const sinMedir = await abrir(
-    await generarComparador({
-      nuestro: NUESTRO,
-      cliente: {},
-      marcaCompetencia: 'Termorollo',
-      metrajeMedido: false,
-    })
-  )
-  assert.match(String(sinMedir.porNombre.COMPARADOR_AVISO), /estimación/)
-  assert.match(String(sinMedir.porNombre.COMPARADOR_AVISO), /Termorollo/)
-
-  servir(readFileSync(PLANTILLA))
-  const medido = await abrir(
-    await generarComparador({ nuestro: NUESTRO, cliente: {}, metrajeMedido: true })
-  )
-  assert.equal(medido.porNombre.COMPARADOR_AVISO, null)
-})
-
 test('ninguna fórmula viaja con su resultado guardado', async () => {
   // Sin esto el cliente abre la hoja y ve los números del ejemplo al lado de sus propios datos,
   // porque Excel muestra el último resultado guardado hasta que recalcula.

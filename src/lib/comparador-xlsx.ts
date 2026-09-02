@@ -37,15 +37,6 @@ export type DatosDelComparador = {
   nombreCliente?: string | null
   /** Cuándo se preparó. Va en el encabezado. */
   fecha?: Date
-  /** La marca que el cliente usa hoy, si se sabe. */
-  marcaCompetencia?: string | null
-  /**
-   * Si el metraje de esa marca está medido por nosotros o es una estimación.
-   *
-   * **Cuando está sin medir, la hoja lo declara arriba de todo.** Es la regla del documento: *«no se
-   * presenta como dato verificado lo que no lo es»*.
-   */
-  metrajeMedido?: boolean
 }
 
 /** Los nombres que la plantilla tiene que traer. Si falta uno, el archivo no se genera. */
@@ -63,7 +54,6 @@ const CELDAS_DE_VALOR = [
 
 const CELDAS_DE_TEXTO = [
   'COMPARADOR_ENCABEZADO',
-  'COMPARADOR_AVISO',
   'COMPARADOR_NOTA_EJEMPLO',
 ] as const
 
@@ -164,24 +154,6 @@ function textoEncabezado(datos: DatosDelComparador): string {
 }
 
 /**
- * El aviso de arriba, cuando el metraje de la competencia no está medido por nosotros.
- *
- * **Va en positivo y no como una disculpa.** Decir «no sabemos» debilita el argumento; decir «esta
- * cifra es estimada **y se la medimos gratis**» convierte la debilidad en el siguiente paso de la
- * conversación. La plantilla ya ofrece esa medición más abajo; acá se adelanta porque es lo primero
- * que el cliente tiene que saber antes de creerle a un número.
- *
- * **Devuelve vacío cuando el metraje está medido**, y entonces el renglón no dice nada. El renglón
- * existe siempre; lo que cambia es si tiene texto.
- */
-function textoAviso(datos: DatosDelComparador): string {
-  if (datos.metrajeMedido !== false) return ''
-  const marca = datos.marcaCompetencia?.trim()
-  const cual = marca ? `de ${marca}` : 'del rollo que usa hoy'
-  return `Atención: el metraje ${cual} es una estimación, no una medición nuestra. Le medimos su rollo actual sin costo y le entregamos la cifra exacta.`
-}
-
-/**
  * Arma el archivo del comparador.
  *
  * Devuelve un `Blob` listo para compartir con el botón nativo del celular, igual que la cotización.
@@ -242,7 +214,6 @@ export async function generarComparador(datos: DatosDelComparador): Promise<Blob
   }
 
   hoja = escribirCelda(hoja, nombres.COMPARADOR_ENCABEZADO, textoEncabezado(datos), true)
-  hoja = escribirCelda(hoja, nombres.COMPARADOR_AVISO, textoAviso(datos) || null, true)
   hoja = escribirCelda(
     hoja,
     nombres.COMPARADOR_NOTA_EJEMPLO,

@@ -78,10 +78,6 @@ export function CompararRendimiento({ cuenta }: { cuenta: { id: string; nombre: 
   const [cajasPedido, setCajasPedido] = useState("");
   const [semanas, setSemanas] = useState("");
 
-  // La marca que usa hoy. En la etapa 3 sale del catálogo de competencia; por ahora se escribe.
-  const [marca, setMarca] = useState("");
-  const [metrajeMedido, setMetrajeMedido] = useState(false);
-
   // Lo nuestro.
   const [precioNuestro, setPrecioNuestro] = useState("");
   const [rollosNuestro, setRollosNuestro] = useState("");
@@ -142,8 +138,6 @@ export function CompararRendimiento({ cuenta }: { cuenta: { id: string; nombre: 
         nuestro,
         cliente,
         nombreCliente: cuenta.nombre,
-        marcaCompetencia: marca.trim() || null,
-        metrajeMedido,
       });
       const archivo = new File([blob], nombreDelArchivo(cuenta.nombre), { type: blob.type });
 
@@ -186,13 +180,6 @@ export function CompararRendimiento({ cuenta }: { cuenta: { id: string; nombre: 
         </div>
 
         <Campo
-          etiqueta="Marca que usa hoy"
-          value={marca}
-          onChange={(e) => setMarca(e.target.value)}
-          placeholder="Como la conozca el cliente"
-        />
-
-        <Campo
           etiqueta="Precio que paga por caja"
           inputMode="decimal"
           value={precioCliente}
@@ -217,14 +204,6 @@ export function CompararRendimiento({ cuenta }: { cuenta: { id: string; nombre: 
           value={metrosCliente}
           onChange={(e) => setMetrosCliente(e.target.value)}
           ayuda="Si la caja dice 80 × 70, eso son milímetros: ancho y diámetro del rollo. No son metros. Si no lo sabe, déjalo vacío y ofrécele medírselo."
-        />
-
-        <Opciones
-          etiqueta="¿Ese metraje lo medimos nosotros?"
-          opciones={{ si: "Sí, medido", no: "No, es estimado" }}
-          valor={metrajeMedido ? "si" : "no"}
-          onCambio={(v) => setMetrajeMedido(v === "si")}
-          ayuda="Si es estimado, la hoja lo declara arriba y ofrece la medición sin costo."
         />
 
         <Campo
