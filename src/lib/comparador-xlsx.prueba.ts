@@ -128,3 +128,69 @@ test('si la plantilla pierde un nombre de celda, el archivo no se genera', async
     'tenía que negarse a generar el archivo'
   )
 })
+
+test('la plantilla cabe impresa en una sola hoja carta', () => {
+  // «Ya dos páginas rompe esto, el cliente no lo va a imprimir... es importante que lo pueda
+  // imprimir y llevárselo a una tercera persona. Usualmente es el jefe que aprueba.» — el usuario,
+  // 2 de septiembre de 2026. La hoja se lee en pantalla pero se DECIDE en papel, así que el tamaño
+  // impreso es un requisito y no una preferencia.
+  const zip = unzipSync(new Uint8Array(readFileSync(PLANTILLA)))
+  const hoja = strFromU8(zip['xl/worksheets/sheet1.xml'])
+
+  const filas = [...hoja.matchAll(/<row[^>]*r="(\d+)"[^>]*?(?:\/>|>.*?<\/row>)/gs)]
+  const ultima = Math.max(...filas.map((m) => Number(m[1])))
+
+  // PRIMERO: QUE SE PUEDA MEDIR. Una fila en blanco sin formato propio no genera elemento `<row>`,
+  // y Excel igual le da su alto al imprimir. Sumar sólo lo escrito dio una vez 10,02" para una hoja
+  // que medía 11,27" — cabía en la aritmética y no en el papel. Si falta una fila, esta prueba se
+  // niega a medir en vez de dar un número tranquilizador.
+  const sinEscribir = []
+  for (let f = 1; f <= ultima; f++) {
+    if (!filas.some((m) => Number(m[1]) === f)) sinEscribir.push(f)
+  }
+  assert.deepEqual(sinEscribir, [], 'estas filas no están escritas y su alto no se puede medir')
+
+  const alto = filas.reduce((s, m) => s + Number((m[0].match(/ht="([\d.]+)"/) || [])[1] ?? 15), 0)
+  const margenes = strFromU8(zip['xl/worksheets/sheet1.xml']).match(/<pageMargins[^>]*\/>/)![0]
+  // `[0-9.]` y no `\d`: dentro de una plantilla de texto la barra invertida se pierde y el patrón
+  // acabaría buscando la letra «d». Pasó al escribir esta misma prueba, y no dio error de sintaxis:
+  // dio `null` al buscar el margen.
+  const margen = (lado: string) =>
+    Number(margenes.match(new RegExp(`${lado}="([0-9.]+)"`))![1])
+
+  const altoUtil = (11 - margen('top') - margen('bottom')) * 72
+  assert.ok(alto <= altoUtil, `la hoja mide ${(alto / 72).toFixed(2)}" y caben ${(altoUtil / 72).toFixed(2)}"`)
+
+  // El ancho de las columnas que se imprimen. Un carácter de ancho son 7 píxeles más 5 de relleno.
+  const ancho = ['2', '3', '4'].reduce((s, col) => {
+    const c = hoja.match(new RegExp(`<col[^>]*min="${col}"[^>]*/>`))![0]
+    return s + Number(c.match(/width="([\d.]+)"/)![1]) * 7 + 5
+  }, 0)
+  const anchoUtil = (8.5 - margen('left') - margen('right')) * 96
+  assert.ok(ancho <= anchoUtil, `las columnas miden ${(ancho / 96).toFixed(2)}" y caben ${(anchoUtil / 96).toFixed(2)}"`)
+
+  // Carta, no A4. Y el interruptor sin el cual los «ajustar a una página» no hacen nada.
+  assert.match(hoja, /<pageSetup[^>]*paperSize="1"/)
+  assert.match(hoja, /<pageSetUpPr fitToPage="true"\/>/)
+})
+
+test('ninguna línea de texto se sale del ancho imprimible', () => {
+  // No hay celdas combinadas a propósito: en Excel el texto largo se derrama sobre las columnas
+  // vacías de la derecha, y dentro de una celda combinada **se cortaría en silencio**. Pero el
+  // derrame también tiene fin: lo que pase del ancho de B+C+D se pierde al imprimir.
+  const zip = unzipSync(new Uint8Array(readFileSync(PLANTILLA)))
+  const hoja = strFromU8(zip['xl/worksheets/sheet1.xml'])
+  const compartidas = [
+    ...strFromU8(zip['xl/sharedStrings.xml']).matchAll(/<si>(.*?)<\/si>/gs),
+  ].map((m) => m[1].replace(/<[^>]+>/g, ''))
+
+  const CABEN = 100
+  const largas: string[] = []
+  for (const m of hoja.matchAll(/<c r="(B\d+)"([^>]*)>(.*?)<\/c>/gs)) {
+    const v = (m[3].match(/<v>(.*?)<\/v>/s) || [])[1]
+    const enLinea = (m[3].match(/<is>.*?<t[^>]*>(.*?)<\/t>.*?<\/is>/s) || [])[1]
+    const texto = enLinea ?? (/t="s"/.test(m[2]) ? compartidas[Number(v)] : '')
+    if (texto && texto.length > CABEN) largas.push(`${m[1]} (${texto.length})`)
+  }
+  assert.deepEqual(largas, [], `estas líneas se cortarían al imprimir, el ancho es ${CABEN}`)
+})
