@@ -581,6 +581,7 @@ export default async function Expediente({
             {(comparaciones ?? []).map((c) => (
               <ComparacionEnLaFicha
                 key={c.id}
+                nombreCuenta={prospecto.nombre}
                 c={{
                   ...c,
                   nuestro_precio_caja: Number(c.nuestro_precio_caja),

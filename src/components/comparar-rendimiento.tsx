@@ -6,7 +6,7 @@ import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { compararRendimiento } from "@/lib/comparador";
-import { generarComparador, nombreDelArchivo } from "@/lib/comparador-xlsx";
+import { generarComparador, nombreDelArchivo, rutaEnDeposito } from "@/lib/comparador-xlsx";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { insertar, actualizar, subir } from "@/lib/cola";
 import { TIPOS_INTERACCION, type TipoInteraccion } from "@/lib/catalogos";
@@ -37,7 +37,8 @@ export type Vendedor = { id: string; nombre: string | null; telefono: string | n
  * el precio que paga hoy, la herramienta no serviría para el cliente que no lo quiere decir — que es
  * justamente el que hay que convencer.
  *
- * NO GUARDA NADA. El registro en el expediente y el próximo paso a tres días son la etapa 3.
+ * DEJA RASTRO. La comparación queda en la ficha con una copia del archivo, y programa el próximo
+ * paso a tres días — etapa 3a. Lo que falta es el catálogo de marcas de competencia, etapa 3b.
  */
 
 /** Los dos calibres que hoy se ofrecen. Cuando exista catálogo de productos, saldrán de ahí. */
@@ -122,8 +123,25 @@ export function CompararRendimiento({
 
   const [armando, setArmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // La hoja salió pero el registro no. NO ES UN ERROR DE LA ENTREGA: el cliente ya tiene su copia.
-  const [avisoRegistro, setAvisoRegistro] = useState<string | null>(null);
+  /**
+   * Qué pasó con el registro, después de que la hoja ya salió.
+   *
+   * **GENERAR UNA HOJA NO CONFIRMABA NADA.** Se compartía el archivo y la pantalla quedaba igual que
+   * antes, así que el vendedor no tenía cómo distinguir «guardado» de «no guardado» — ni de «quedó
+   * esperando señal». El 2 de septiembre de 2026 el usuario probó contra una compilación vieja que
+   * no grababa, y **la pantalla no le dio ninguna señal de eso**: tuvo que deducirlo.
+   *
+   * Los tres estados son distintos y se dicen distinto:
+   *
+   * · `bien`   — está en la ficha, y el seguimiento en la agenda.
+   * · `espera` — quedó guardado en este teléfono y sale al recuperar señal. **No es una falla**, y
+   *              decirlo como si lo fuera haría que el vendedor lo repita y queden dos.
+   * · `falla`  — no se guardó y no se va a guardar solo.
+   */
+  const [registro, setRegistro] = useState<{
+    tono: "bien" | "espera" | "falla";
+    texto: string;
+  } | null>(null);
 
   const cliente = {
     precioCaja: aNumero(precioCliente),
@@ -232,13 +250,14 @@ export function CompararRendimiento({
         `Comparación de costo con ${conQuien}`,
       );
       if (fila.error) {
-        setAvisoRegistro(
-          `La hoja salió, pero no quedó registrada en la bitácora: ${fila.error}`,
-        );
+        setRegistro({
+          tono: "falla",
+          texto: `La hoja salió, pero no quedó registrada en la ficha: ${fila.error}`,
+        });
         return;
       }
 
-      const ruta = `${idComparacion}/${archivo.name}`;
+      const ruta = rutaEnDeposito(idComparacion);
       const subida = await subir(
         "comparaciones",
         ruta,
@@ -247,9 +266,10 @@ export function CompararRendimiento({
         `Copia de la comparación con ${conQuien}`,
       );
       if (subida.error) {
-        setAvisoRegistro(
-          `Quedó en la bitácora, pero la copia del archivo no se pudo guardar: ${subida.error}`,
-        );
+        setRegistro({
+          tono: "falla",
+          texto: `Quedó en la ficha, pero la copia del archivo no se pudo guardar: ${subida.error}`,
+        });
         return;
       }
 
@@ -259,16 +279,38 @@ export function CompararRendimiento({
         { archivo_path: ruta },
         `Copia de la comparación con ${conQuien}`,
       );
-    } catch (e) {
-      setAvisoRegistro(
-        `La hoja salió, pero no quedó registrada: ${e instanceof Error ? e.message : "error desconocido"}`,
+
+      // LO QUE QUEDÓ EN COLA NO ES UNA FALLA, y decirlo como si lo fuera haría que el vendedor
+      // repita la comparación y queden dos en la ficha del mismo cliente.
+      const enCola = paso.encolada || fila.encolada || subida.encolada;
+      const cuando = new Date(`${fechaSeguimiento}T12:00:00`).toLocaleDateString("es-PA", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      });
+
+      setRegistro(
+        enCola
+          ? {
+              tono: "espera",
+              texto: `Guardado en este teléfono: entra a la ficha de ${conQuien} y a tu agenda en cuanto haya señal.`,
+            }
+          : {
+              tono: "bien",
+              texto: `Quedó en la ficha de ${conQuien}, con la copia del archivo. Te toca volver el ${cuando}.`,
+            },
       );
+    } catch (e) {
+      setRegistro({
+        tono: "falla",
+        texto: `La hoja salió, pero no quedó registrada: ${e instanceof Error ? e.message : "error desconocido"}`,
+      });
     }
   }
 
   async function armarYCompartir() {
     setError(null);
-    setAvisoRegistro(null);
+    setRegistro(null);
     setArmando(true);
     try {
       const blob = await generarComparador({
@@ -520,9 +562,20 @@ export function CompararRendimiento({
       </Tarjeta>
 
       {/* --- 6. El archivo -------------------------------------------------- */}
-      {avisoRegistro && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
-          {avisoRegistro}
+      {/* NO ES DECORACIÓN: es la única forma que tiene el vendedor de saber si la comparación quedó
+          guardada. Sin esto, «grabó» y «no grabó» se ven exactamente igual. */}
+      {registro && (
+        <p
+          role="status"
+          className={`rounded-lg px-3 py-2 text-sm ${
+            registro.tono === "bien"
+              ? "bg-green-50 text-green-900"
+              : registro.tono === "espera"
+                ? "bg-amber-50 text-amber-900"
+                : "bg-error/10 text-error"
+          }`}
+        >
+          {registro.texto}
         </p>
       )}
 

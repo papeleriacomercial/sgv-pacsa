@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Boton } from "@/components/ui/boton";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { nombreDelArchivo } from "@/lib/comparador-xlsx";
 
 /**
  * Una comparación entregada, en la bitácora de la cuenta — §7.10, etapa 3a.
@@ -36,7 +37,13 @@ const dinero = (v: number | null) =>
 const fecha = (iso: string) =>
   new Date(iso).toLocaleDateString("es-PA", { day: "numeric", month: "long", year: "numeric" });
 
-export function ComparacionEnLaFicha({ c }: { c: ComparacionGuardada }) {
+export function ComparacionEnLaFicha({
+  c,
+  nombreCuenta,
+}: {
+  c: ComparacionGuardada;
+  nombreCuenta: string;
+}) {
   const [trabajando, setTrabajando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,8 +55,21 @@ export function ComparacionEnLaFicha({ c }: { c: ComparacionGuardada }) {
       .storage.from("comparaciones")
       .download(c.archivo_path);
 
-    if (fallo || !data) setError("No se pudo abrir el archivo.");
-    else window.open(URL.createObjectURL(data), "_blank");
+    if (fallo || !data) {
+      setError("No se pudo abrir el archivo.");
+      setTrabajando(false);
+      return;
+    }
+
+    // DENTRO DEL DEPÓSITO EL ARCHIVO SE LLAMA `comparacion.xlsx` — tuvo que ser así porque la ruta
+    // no admite tildes—, así que al bajarlo hay que devolverle su nombre. Sin esto caen varios
+    // archivos idénticos en la carpeta de descargas y no se distinguen entre clientes.
+    const url = URL.createObjectURL(data);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = nombreDelArchivo(nombreCuenta);
+    enlace.click();
+    URL.revokeObjectURL(url);
     setTrabajando(false);
   }
 
@@ -101,7 +121,7 @@ export function ComparacionEnLaFicha({ c }: { c: ComparacionGuardada }) {
 
       {c.archivo_path ? (
         <Boton tono="secundario" ancho onClick={abrir} disabled={trabajando}>
-          {trabajando ? "Abriendo…" : "Abrir la hoja que recibió"}
+          {trabajando ? "Bajando…" : "Bajar la hoja que recibió"}
         </Boton>
       ) : (
         // Se dice, no se calla: la copia puede estar esperando señal en la cola, y quien mire la

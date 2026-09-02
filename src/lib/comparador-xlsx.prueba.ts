@@ -11,7 +11,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { unzipSync, zipSync, strToU8, strFromU8 } from 'fflate'
-import { generarComparador } from './comparador-xlsx.ts'
+import { generarComparador, nombreDelArchivo, rutaEnDeposito } from './comparador-xlsx.ts'
 
 const PLANTILLA = 'public/plantillas/comparador-rollos-termicos.xlsx'
 
@@ -286,4 +286,22 @@ test('todos los nombres apuntan a la hoja que existe', () => {
     if (m[2] !== laHoja) ajenos.push(`${m[1]} → ${m[2]}`)
   }
   assert.deepEqual(ajenos, [], `la hoja se llama «${laHoja}»`)
+})
+
+test('la ruta del depósito no lleva caracteres que el depósito rechace', () => {
+  // EL DEFECTO QUE ESTA PRUEBA CUIDA LO ENCONTRÓ EL USUARIO con la primera comparación real, el 2 de
+  // septiembre de 2026: «Invalid key... comparación de costo, Abarrotería Jessie». La ruta se armaba
+  // con el nombre bonito del archivo, que lleva tildes y una raya larga, y el depósito sólo admite
+  // caracteres simples. La cotización nunca lo topó porque su archivo se llama `COT-0001.pdf`.
+  const ruta = rutaEnDeposito('3f2b1a44-0000-4000-8000-000000000000')
+
+  // El juego de caracteres que Supabase Storage acepta en una clave.
+  assert.match(ruta, /^[a-zA-Z0-9!\-_.*'()/ &$@=;:+,?]+$/, `ruta rechazable: ${ruta}`)
+  assert.ok(ruta.startsWith('3f2b1a44-0000-4000-8000-000000000000/'), 'la carpeta es el identificador')
+
+  // Y LA COMPROBACIÓN QUE DE VERDAD IMPORTA: que el nombre bonito nunca sirva de ruta. Es el que
+  // recibe el cliente, y por eso lleva su nombre y sus tildes.
+  const bonito = nombreDelArchivo('Abarrotería Jessie')
+  assert.doesNotMatch(bonito, /^[a-zA-Z0-9!\-_.*'()/ &$@=;:+,?]+$/, 'el nombre del cliente lleva tildes, y así debe ser')
+  assert.ok(!ruta.includes(bonito), 'el nombre bonito no puede ser parte de la ruta')
 })

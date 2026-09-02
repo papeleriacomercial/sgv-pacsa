@@ -270,6 +270,24 @@ export async function generarComparador(datos: DatosDelComparador): Promise<Blob
  * archivos, y «comparador.xlsx» no se distingue de nada. Se limpian los caracteres que Windows no
  * admite en un nombre.
  */
+/**
+ * Dónde se guarda la copia dentro del depósito.
+ *
+ * **NO LLEVA EL NOMBRE DEL CLIENTE, y no es por gusto.** El depósito sólo admite caracteres simples
+ * en la ruta: una tilde o una raya larga la rechazan con «Invalid key». El nombre bonito
+ * —«Comparación de costo — Abarrotería Jessie.xlsx»— tiene las dos cosas, así que sirve para el
+ * archivo que recibe el cliente y no para la ruta donde se guarda.
+ *
+ * Lo descubrió el usuario el 2 de septiembre de 2026, con la primera comparación real. La cotización
+ * nunca lo topó porque su archivo se llama `COT-0001.pdf`.
+ *
+ * **La carpeta es el identificador de la comparación**, que es lo que el permiso del depósito
+ * comprueba; el nombre de adentro no tiene que distinguir nada.
+ */
+export function rutaEnDeposito(idComparacion: string): string {
+  return `${idComparacion}/comparacion.xlsx`
+}
+
 export function nombreDelArchivo(nombreCliente?: string | null): string {
   const limpio = (nombreCliente ?? '').trim().replace(/[\\/:*?"<>|]+/g, '-')
   return limpio ? `Comparación de costo — ${limpio}.xlsx` : 'Comparación de costo.xlsx'
