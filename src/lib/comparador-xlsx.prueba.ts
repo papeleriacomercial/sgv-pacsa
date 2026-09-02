@@ -195,46 +195,36 @@ test('ninguna línea de texto se sale del ancho imprimible', () => {
   assert.deepEqual(largas, [], `estas líneas se cortarían al imprimir, el ancho es ${CABEN}`)
 })
 
-test('la hoja sale firmada: la casa y quien la entregó', async () => {
-  // «La calculadora no tiene el nombre de nuestra empresa ni tampoco el nombre del vendedor que le
-  // está generando este documento con su número de contacto... sería bueno dejar esto como si fuera
-  // una tarjeta de presentación.» — el usuario, 2 de septiembre de 2026.
+test('la hoja dice quién la entregó, y no se llama su vendedor', async () => {
+  // «Todavía no somos sus vendedores... todavía no le estamos vendiendo.» — el usuario, 2 de
+  // septiembre de 2026. La hoja se entrega en una visita a alguien que hoy le compra a otro, y
+  // darse por su proveedor en el encabezado es empezar mintiendo. **La prueba cuida las palabras**
+  // porque el rótulo es lo primero que el cliente lee de nosotros.
   servir(readFileSync(PLANTILLA))
   const { porNombre } = await abrir(
     await generarComparador({
       nuestro: NUESTRO,
       cliente: {},
-      empresa: {
-        nombre: 'Papelería Comercial, S.A.',
-        telefono: '000-0000',
-        correo: 'ventas@ejemplo.com',
-        web: 'ejemplo.com',
-      },
       vendedor: { nombre: 'Ana Ruiz', telefono: '6000-0000' },
     })
   )
-  assert.equal(
-    porNombre.COMPARADOR_EMPRESA,
-    'Papelería Comercial, S.A. · 000-0000 · ventas@ejemplo.com · ejemplo.com'
-  )
-  assert.equal(porNombre.COMPARADOR_VENDEDOR, 'Su vendedor: Ana Ruiz · 6000-0000')
+  assert.equal(porNombre.COMPARADOR_VENDEDOR, 'Vendedor que le visita: Ana Ruiz · 6000-0000')
+  assert.doesNotMatch(String(porNombre.COMPARADOR_VENDEDOR), /Su vendedor/)
 })
 
 test('lo que falta de la firma no deja separadores sueltos', async () => {
   // UN «·» SOLO DELATA QUE FALTA UN DATO, y esta hoja es lo único que la casa deja sobre la mesa.
   servir(readFileSync(PLANTILLA))
-  const solaLaCasa = await abrir(
+  const sinTelefono = await abrir(
     await generarComparador({
       nuestro: NUESTRO,
       cliente: {},
-      empresa: { nombre: 'Papelería Comercial, S.A.', telefono: null, correo: '', web: undefined },
       vendedor: { nombre: 'Ana Ruiz', telefono: null },
     })
   )
-  assert.equal(solaLaCasa.porNombre.COMPARADOR_EMPRESA, 'Papelería Comercial, S.A.')
-  assert.equal(solaLaCasa.porNombre.COMPARADOR_VENDEDOR, 'Su vendedor: Ana Ruiz')
+  assert.equal(sinTelefono.porNombre.COMPARADOR_VENDEDOR, 'Vendedor que le visita: Ana Ruiz')
 
-  // Sin nombre no sale ni el rótulo: «Su vendedor:» a secas es peor que el silencio.
+  // Sin nombre no sale ni el rótulo: «Vendedor que le visita:» a secas es peor que el silencio.
   servir(readFileSync(PLANTILLA))
   const sinNadie = await abrir(
     await generarComparador({
@@ -244,7 +234,20 @@ test('lo que falta de la firma no deja separadores sueltos', async () => {
     })
   )
   assert.equal(sinNadie.porNombre.COMPARADOR_VENDEDOR, null)
-  assert.equal(sinNadie.porNombre.COMPARADOR_EMPRESA, null)
+})
+
+test('el logo está a la izquierda y no encima del título', async () => {
+  // «El logo estando a la derecha quedó pisando el título de la línea número uno.» Una imagen flota
+  // por encima de la cuadrícula: si se ancla donde hay texto, lo tapa. Acá se ancla en la columna B
+  // de la fila 1, **que se dejó vacía a propósito**, y el título vive en la fila 2.
+  const zip = unzipSync(new Uint8Array(readFileSync(PLANTILLA)))
+  const dibujo = strFromU8(zip['xl/drawings/drawing1.xml'])
+  assert.match(dibujo, /<xdr:col>1<\/xdr:col>/, 'el logo tiene que anclar en la columna B')
+  assert.match(dibujo, /<xdr:row>0<\/xdr:row>/, 'y en la primera fila')
+
+  const hoja = strFromU8(zip['xl/worksheets/sheet1.xml'])
+  const fila1 = hoja.match(/<row[^>]*r="1"[^>]*?(?:\/>|>.*?<\/row>)/s)![0]
+  assert.ok(!/<v>|<is>/.test(fila1), 'la fila del logo tiene que estar vacía o el logo la pisa')
 })
 
 test('el logo viaja dentro del archivo y está bien declarado', async () => {

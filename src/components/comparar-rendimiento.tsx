@@ -9,14 +9,6 @@ import { compararRendimiento } from "@/lib/comparador";
 import { generarComparador, nombreDelArchivo } from "@/lib/comparador-xlsx";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 
-/** La casa, para firmar la hoja. */
-export type Empresa = {
-  nombre?: string | null;
-  telefono?: string | null;
-  correo?: string | null;
-  web?: string | null;
-};
-
 /** Quién entrega la hoja. El teléfono se guarda en su perfil la primera vez que lo escribe. */
 export type Vendedor = { id: string; nombre: string | null; telefono: string | null };
 
@@ -83,11 +75,9 @@ function Renglon({
 
 export function CompararRendimiento({
   cuenta,
-  empresa,
   vendedor,
 }: {
   cuenta: { id: string; nombre: string };
-  empresa: Empresa;
   vendedor: Vendedor;
 }) {
   // Lo que el cliente quiso decir. Se guarda como texto para que el campo pueda quedar vacío: un
@@ -162,7 +152,6 @@ export function CompararRendimiento({
         nuestro,
         cliente,
         nombreCliente: cuenta.nombre,
-        empresa,
         vendedor: { nombre: vendedor.nombre, telefono: telefono.trim() || null },
       });
       const archivo = new File([blob], nombreDelArchivo(cuenta.nombre), { type: blob.type });
@@ -348,18 +337,16 @@ export function CompararRendimiento({
         <div>
           <h2 className="text-base font-semibold text-texto">Cómo sale firmada</h2>
           <p className="text-xs text-texto-atenuado">
-            Esto es lo que el cliente lee arriba de la hoja, debajo del logo.
+            Esto es lo que el cliente lee arriba de la hoja. El logo de la casa va encima.
           </p>
         </div>
 
         <p className="rounded-lg bg-fondo px-3 py-2 text-xs text-texto-secundario">
-          {[empresa.nombre, empresa.telefono, empresa.correo, empresa.web]
-            .filter(Boolean)
-            .join(" · ") || "Sin datos de la empresa cargados."}
-          <br />
           {vendedor.nombre
-            ? ["Su vendedor: " + vendedor.nombre, telefono.trim()].filter(Boolean).join(" · ")
-            : "Tu perfil no tiene nombre, así que la hoja saldrá sin vendedor."}
+            ? ["Vendedor que le visita: " + vendedor.nombre, telefono.trim()]
+                .filter(Boolean)
+                .join(" · ")
+            : "Tu perfil no tiene nombre, así que la hoja saldrá sin este renglón."}
         </p>
 
         <Campo
