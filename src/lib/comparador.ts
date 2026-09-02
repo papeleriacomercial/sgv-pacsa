@@ -21,6 +21,19 @@ export type DatosDeProducto = {
   metrosRollo: number | null
 }
 
+/**
+ * Lo nuestro. **Es un producto, no sólo tres números**, y por eso lleva el calibre.
+ *
+ * EL CALIBRE NO ENTRA EN NINGUNA CUENTA: se declara. Y aun así es el dato que sostiene todo el
+ * argumento — un papel de 48 gramos por metro cuadrado da más metros que uno de 55 en el mismo
+ * diámetro de rollo, que es exactamente la razón por la que nuestra caja rinde más. Sin decirlo, la
+ * hoja pide que le crean; diciéndolo, se puede comprobar.
+ */
+export type NuestraOferta = DatosDeProducto & {
+  /** Gramos por metro cuadrado. Hoy se ofrecen 48 y 55. */
+  calibre: number | null
+}
+
 /** Lo que el cliente quiso decir. **Ninguno es obligatorio**: ésa es la razón de ser del módulo. */
 export type DatosDelCliente = DatosDeProducto & {
   /** Cuántas cajas compra en cada pedido. */

@@ -264,6 +264,15 @@ export default async function Expediente({
                     Cotizar
                   </Boton>
                 </Link>
+                {/* Debajo de la cotización a propósito: es el paso anterior. Se le demuestra
+                    al cliente que el metro le sale más barato, y con eso en la mano se le
+                    cotiza. Al revés —cotizar primero— la conversación se va al precio de la
+                    caja, que es justamente donde perdemos. */}
+                <Link href={`/cuentas/${id}/comparador`} className="block">
+                  <Boton tono="secundario" ancho>
+                    Comparar rendimiento
+                  </Boton>
+                </Link>
                 {/* La nota de entrega de la libreta, en el teléfono. La
                     libreta sigue vigente: esto es para el cliente que pide
                     algo más formal. */}

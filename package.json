@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "zoho": "node scripts/zoho-sincronizar.mjs --aplicar && node scripts/zoho-historial.mjs --aplicar",
-    "zoho:seco": "node scripts/zoho-sincronizar.mjs && node scripts/zoho-historial.mjs"
+    "zoho:seco": "node scripts/zoho-sincronizar.mjs && node scripts/zoho-historial.mjs",
+    "prueba": "node --test \"src/lib/*.prueba.ts\"",
+    "listo": "npm run prueba && npx tsc --noEmit && npx tsc -p tsconfig.pruebas.json && next build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

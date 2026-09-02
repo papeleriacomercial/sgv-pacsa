@@ -22,7 +22,7 @@
  */
 
 import { unzipSync, zipSync, strToU8, strFromU8 } from 'fflate'
-import type { DatosDeProducto, DatosDelCliente } from '@/lib/comparador'
+import type { DatosDelCliente, NuestraOferta } from '@/lib/comparador'
 
 /** Dónde vive la plantilla, servida como archivo estático. */
 export const RUTA_PLANTILLA = '/plantillas/comparador-rollos-termicos.xlsx'
@@ -30,7 +30,7 @@ export const RUTA_PLANTILLA = '/plantillas/comparador-rollos-termicos.xlsx'
 /** Lo que hace falta para armar el archivo. */
 export type DatosDelComparador = {
   /** Los nuestros. **Son los únicos obligatorios**: la hoja nunca sale en blanco completo. */
-  nuestro: DatosDeProducto
+  nuestro: NuestraOferta
   /** Los del cliente. Cualquiera puede faltar. */
   cliente: Partial<DatosDelCliente>
   /** Para quién es la hoja. Va en el encabezado. */
@@ -58,6 +58,7 @@ const CELDAS_DE_VALOR = [
   'NUESTRO_PRECIO_CAJA',
   'NUESTRO_ROLLOS_CAJA',
   'NUESTRO_METROS_ROLLO',
+  'NUESTRO_CALIBRE',
 ] as const
 
 const CELDAS_DE_TEXTO = [
@@ -208,6 +209,11 @@ export async function generarComparador(datos: DatosDelComparador): Promise<Blob
   hoja = escribirCelda(hoja, nombres.NUESTRO_PRECIO_CAJA, datos.nuestro.precioCaja ?? null, false)
   hoja = escribirCelda(hoja, nombres.NUESTRO_ROLLOS_CAJA, datos.nuestro.rollosCaja ?? null, false)
   hoja = escribirCelda(hoja, nombres.NUESTRO_METROS_ROLLO, datos.nuestro.metrosRollo ?? null, false)
+  // EL CALIBRE SÍ PUEDE IR VACÍO, a diferencia de los otros tres. Es declarativo: no entra en
+  // ninguna fórmula, así que una celda en blanco no rompe nada. **Y una celda en blanco es
+  // preferible a un calibre inventado** en una hoja que existe justamente para señalar que la
+  // competencia rotula sin declarar la unidad.
+  hoja = escribirCelda(hoja, nombres.NUESTRO_CALIBRE, datos.nuestro.calibre ?? null, false)
 
   // LOS DEL CLIENTE, O TODOS O NINGUNO. **Nunca mezclados**, y ésta es la decisión menos obvia de
   // este archivo:
