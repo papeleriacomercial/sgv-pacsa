@@ -194,3 +194,93 @@ test('ninguna línea de texto se sale del ancho imprimible', () => {
   }
   assert.deepEqual(largas, [], `estas líneas se cortarían al imprimir, el ancho es ${CABEN}`)
 })
+
+test('la hoja sale firmada: la casa y quien la entregó', async () => {
+  // «La calculadora no tiene el nombre de nuestra empresa ni tampoco el nombre del vendedor que le
+  // está generando este documento con su número de contacto... sería bueno dejar esto como si fuera
+  // una tarjeta de presentación.» — el usuario, 2 de septiembre de 2026.
+  servir(readFileSync(PLANTILLA))
+  const { porNombre } = await abrir(
+    await generarComparador({
+      nuestro: NUESTRO,
+      cliente: {},
+      empresa: {
+        nombre: 'Papelería Comercial, S.A.',
+        telefono: '000-0000',
+        correo: 'ventas@ejemplo.com',
+        web: 'ejemplo.com',
+      },
+      vendedor: { nombre: 'Ana Ruiz', telefono: '6000-0000' },
+    })
+  )
+  assert.equal(
+    porNombre.COMPARADOR_EMPRESA,
+    'Papelería Comercial, S.A. · 000-0000 · ventas@ejemplo.com · ejemplo.com'
+  )
+  assert.equal(porNombre.COMPARADOR_VENDEDOR, 'Su vendedor: Ana Ruiz · 6000-0000')
+})
+
+test('lo que falta de la firma no deja separadores sueltos', async () => {
+  // UN «·» SOLO DELATA QUE FALTA UN DATO, y esta hoja es lo único que la casa deja sobre la mesa.
+  servir(readFileSync(PLANTILLA))
+  const solaLaCasa = await abrir(
+    await generarComparador({
+      nuestro: NUESTRO,
+      cliente: {},
+      empresa: { nombre: 'Papelería Comercial, S.A.', telefono: null, correo: '', web: undefined },
+      vendedor: { nombre: 'Ana Ruiz', telefono: null },
+    })
+  )
+  assert.equal(solaLaCasa.porNombre.COMPARADOR_EMPRESA, 'Papelería Comercial, S.A.')
+  assert.equal(solaLaCasa.porNombre.COMPARADOR_VENDEDOR, 'Su vendedor: Ana Ruiz')
+
+  // Sin nombre no sale ni el rótulo: «Su vendedor:» a secas es peor que el silencio.
+  servir(readFileSync(PLANTILLA))
+  const sinNadie = await abrir(
+    await generarComparador({
+      nuestro: NUESTRO,
+      cliente: {},
+      vendedor: { nombre: null, telefono: '6000-0000' },
+    })
+  )
+  assert.equal(sinNadie.porNombre.COMPARADOR_VENDEDOR, null)
+  assert.equal(sinNadie.porNombre.COMPARADOR_EMPRESA, null)
+})
+
+test('el logo viaja dentro del archivo y está bien declarado', async () => {
+  // Un paquete de Excel es un zip con reglas: si la imagen está pero la relación o el tipo de
+  // contenido no, Excel no muestra un hueco — **avisa que el archivo está dañado y ofrece
+  // repararlo**, delante del cliente. Por eso se comprueban las cuatro piezas y no solo la imagen.
+  servir(readFileSync(PLANTILLA))
+  const blob = await generarComparador({ nuestro: NUESTRO, cliente: {} })
+  const zip = unzipSync(new Uint8Array(await blob.arrayBuffer()))
+
+  for (const pieza of [
+    'xl/media/image1.png',
+    'xl/drawings/drawing1.xml',
+    'xl/drawings/_rels/drawing1.xml.rels',
+    'xl/worksheets/_rels/sheet1.xml.rels',
+  ]) {
+    assert.ok(zip[pieza]?.length, `falta ${pieza}`)
+  }
+
+  const hoja = strFromU8(zip['xl/worksheets/sheet1.xml'])
+  assert.match(hoja, /<drawing r:id="rId1"\/><\/worksheet>/, 'el dibujo va al final de la hoja')
+  assert.match(strFromU8(zip['[Content_Types].xml']), /drawing\+xml/)
+  assert.match(strFromU8(zip['xl/worksheets/_rels/sheet1.xml.rels']), /drawings\/drawing1\.xml/)
+  assert.match(strFromU8(zip['xl/drawings/_rels/drawing1.xml.rels']), /media\/image1\.png/)
+})
+
+test('todos los nombres apuntan a la hoja que existe', () => {
+  // Los nombres se escribieron una vez con «Comparación» y la hoja se llama «Comparacion». Apuntaban
+  // a una hoja inexistente, y el archivo se abría igual: la celda simplemente no se llenaba.
+  const zip = unzipSync(new Uint8Array(readFileSync(PLANTILLA)))
+  const libro = strFromU8(zip['xl/workbook.xml'])
+  const laHoja = libro.match(/<sheet name="([^"]+)"/)![1]
+
+  const ajenos: string[] = []
+  for (const m of libro.matchAll(/<definedName name="([^"]+)"[^>]*>'([^']+)'!/g)) {
+    if (m[2] !== laHoja) ajenos.push(`${m[1]} → ${m[2]}`)
+  }
+  assert.deepEqual(ajenos, [], `la hoja se llama «${laHoja}»`)
+})

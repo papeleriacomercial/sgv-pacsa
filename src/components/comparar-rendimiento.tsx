@@ -7,6 +7,18 @@ import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { compararRendimiento } from "@/lib/comparador";
 import { generarComparador, nombreDelArchivo } from "@/lib/comparador-xlsx";
+import { clienteNavegador } from "@/lib/supabase/navegador";
+
+/** La casa, para firmar la hoja. */
+export type Empresa = {
+  nombre?: string | null;
+  telefono?: string | null;
+  correo?: string | null;
+  web?: string | null;
+};
+
+/** Quién entrega la hoja. El teléfono se guarda en su perfil la primera vez que lo escribe. */
+export type Vendedor = { id: string; nombre: string | null; telefono: string | null };
 
 /**
  * Comparador de Rendimiento — §7.10, etapa 2.
@@ -69,7 +81,15 @@ function Renglon({
   );
 }
 
-export function CompararRendimiento({ cuenta }: { cuenta: { id: string; nombre: string } }) {
+export function CompararRendimiento({
+  cuenta,
+  empresa,
+  vendedor,
+}: {
+  cuenta: { id: string; nombre: string };
+  empresa: Empresa;
+  vendedor: Vendedor;
+}) {
   // Lo que el cliente quiso decir. Se guarda como texto para que el campo pueda quedar vacío: un
   // cero se leería como «no paga nada», que es otra cosa.
   const [precioCliente, setPrecioCliente] = useState("");
@@ -83,6 +103,10 @@ export function CompararRendimiento({ cuenta }: { cuenta: { id: string; nombre: 
   const [rollosNuestro, setRollosNuestro] = useState("");
   const [metrosNuestro, setMetrosNuestro] = useState("");
   const [calibre, setCalibre] = useState<Calibre | null>(null);
+
+  // EL TELÉFONO SE PIDE ACÁ Y NO EN UNA PANTALLA DE PERFIL, porque el SGV no tiene una. Se pregunta
+  // donde hace falta, se guarda en el perfil, y a partir de la segunda vez ya viene puesto.
+  const [telefono, setTelefono] = useState(vendedor.telefono ?? "");
 
   const [armando, setArmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,8 +162,23 @@ export function CompararRendimiento({ cuenta }: { cuenta: { id: string; nombre: 
         nuestro,
         cliente,
         nombreCliente: cuenta.nombre,
+        empresa,
+        vendedor: { nombre: vendedor.nombre, telefono: telefono.trim() || null },
       });
       const archivo = new File([blob], nombreDelArchivo(cuenta.nombre), { type: blob.type });
+
+      // Se recuerda el teléfono para la próxima. VA APARTE DE LA HOJA a propósito: si el guardado
+      // falla —sin señal en la calle, que es el caso normal— la hoja sale igual y lo único que pasa
+      // es que la próxima vez se vuelve a pedir. Frenar al vendedor con el cliente delante por no
+      // haber podido guardar un teléfono sería el peor intercambio posible.
+      const nuevo = telefono.trim();
+      if (nuevo && nuevo !== (vendedor.telefono ?? "")) {
+        try {
+          await clienteNavegador().from("perfiles").update({ telefono: nuevo }).eq("id", vendedor.id);
+        } catch {
+          /* la hoja ya está armada y es lo que importa */
+        }
+      }
 
       if (navigator.canShare?.({ files: [archivo] })) {
         try {
@@ -304,7 +343,36 @@ export function CompararRendimiento({ cuenta }: { cuenta: { id: string; nombre: 
         )}
       </Tarjeta>
 
-      {/* --- 4. El archivo -------------------------------------------------- */}
+      {/* --- 4. Con qué firma sale ------------------------------------------ */}
+      <Tarjeta className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-texto">Cómo sale firmada</h2>
+          <p className="text-xs text-texto-atenuado">
+            Esto es lo que el cliente lee arriba de la hoja, debajo del logo.
+          </p>
+        </div>
+
+        <p className="rounded-lg bg-fondo px-3 py-2 text-xs text-texto-secundario">
+          {[empresa.nombre, empresa.telefono, empresa.correo, empresa.web]
+            .filter(Boolean)
+            .join(" · ") || "Sin datos de la empresa cargados."}
+          <br />
+          {vendedor.nombre
+            ? ["Su vendedor: " + vendedor.nombre, telefono.trim()].filter(Boolean).join(" · ")
+            : "Tu perfil no tiene nombre, así que la hoja saldrá sin vendedor."}
+        </p>
+
+        <Campo
+          etiqueta="Tu teléfono"
+          inputMode="tel"
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          placeholder="6000-0000"
+          ayuda="Queda guardado en tu perfil: solo lo escribes la primera vez."
+        />
+      </Tarjeta>
+
+      {/* --- 5. El archivo -------------------------------------------------- */}
       {error && (
         <p className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error" role="alert">
           {error}

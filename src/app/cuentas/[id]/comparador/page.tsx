@@ -22,12 +22,19 @@ export default async function Comparador({ params }: PageProps<"/cuentas/[id]/co
   } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
 
-  const { data: cuenta } = await supabase
-    .from("cuentas")
-    .select("id, nombre, vendedor_id")
-    .eq("id", id)
-    .is("deleted_at", null)
-    .maybeSingle();
+  // LA HOJA SOBREVIVE A LA VISITA, así que sale firmada: de qué casa viene y quién la entregó. Quien
+  // la lee después —el jefe que aprueba la compra— muchas veces no estuvo en la conversación, y si
+  // decide comprar tiene que poder llamar sin volver a preguntar quién trajo el papel.
+  const [{ data: cuenta }, { data: empresa }, { data: perfil }] = await Promise.all([
+    supabase
+      .from("cuentas")
+      .select("id, nombre, vendedor_id")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle(),
+    supabase.from("empresa").select("nombre, telefono, correo, web").maybeSingle(),
+    supabase.from("perfiles").select("nombre, telefono").eq("id", user.id).maybeSingle(),
+  ]);
 
   if (!cuenta) notFound();
 
@@ -50,7 +57,15 @@ export default async function Comparador({ params }: PageProps<"/cuentas/[id]/co
 
       <main className="flex flex-1 flex-col p-4">
         {esMia ? (
-          <CompararRendimiento cuenta={{ id: cuenta.id, nombre: cuenta.nombre }} />
+          <CompararRendimiento
+            cuenta={{ id: cuenta.id, nombre: cuenta.nombre }}
+            empresa={empresa ?? {}}
+            vendedor={{
+              id: user.id,
+              nombre: perfil?.nombre ?? null,
+              telefono: perfil?.telefono ?? null,
+            }}
+          />
         ) : (
           <p className="text-sm text-texto-secundario">
             Esta cuenta no es tuya. La comparación la hace quien la atiende, para que la venta quede

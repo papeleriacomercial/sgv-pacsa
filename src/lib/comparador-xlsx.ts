@@ -37,6 +37,20 @@ export type DatosDelComparador = {
   nombreCliente?: string | null
   /** Cuándo se preparó. Va en el encabezado. */
   fecha?: Date
+  /**
+   * La casa. Sale del registro de la empresa, el mismo que usa la cotización.
+   *
+   * **La hoja sobrevive a la visita**, y quien la lee después —el jefe que aprueba— muchas veces no
+   * estuvo en la conversación. Sin esto es una calculadora anónima.
+   */
+  empresa?: { nombre?: string | null; telefono?: string | null; correo?: string | null; web?: string | null }
+  /**
+   * Quién la entregó, con su teléfono.
+   *
+   * **Es la mitad que cierra el circuito.** Si el que aprueba decide comprar, tiene que poder llamar
+   * sin volver a preguntar quién trajo el papel.
+   */
+  vendedor?: { nombre?: string | null; telefono?: string | null }
 }
 
 /** Los nombres que la plantilla tiene que traer. Si falta uno, el archivo no se genera. */
@@ -54,6 +68,8 @@ const CELDAS_DE_VALOR = [
 
 const CELDAS_DE_TEXTO = [
   'COMPARADOR_ENCABEZADO',
+  'COMPARADOR_EMPRESA',
+  'COMPARADOR_VENDEDOR',
   'COMPARADOR_NOTA_EJEMPLO',
 ] as const
 
@@ -146,6 +162,32 @@ function fechaLegible(fecha: Date): string {
  * **Sin esto, dos hojas de dos clientes distintos son indistinguibles a los tres días** — y el
  * seguimiento a tres días es la única señal que este módulo tiene.
  */
+/**
+ * Junta lo que haya, separado por puntos medios, y descarta lo vacío.
+ *
+ * **Un separador suelto delata que falta un dato.** «Papelería Comercial ·  · » en una hoja que va a
+ * un cliente se lee como descuido, y este documento es lo único que la casa deja sobre la mesa.
+ */
+const renglon = (partes: (string | null | undefined)[]): string =>
+  partes.map((p) => p?.trim()).filter((p): p is string => !!p).join(' · ')
+
+/** La casa: nombre, teléfono, correo y web, los que estén cargados. */
+function renglonEmpresa(empresa: DatosDelComparador['empresa']): string {
+  return renglon([empresa?.nombre, empresa?.telefono, empresa?.correo, empresa?.web])
+}
+
+/**
+ * Quién entregó la hoja.
+ *
+ * **Sin nombre no sale nada**, ni siquiera el rótulo: «Su vendedor:» a secas es peor que el silencio.
+ * Y si tiene nombre pero no teléfono, sale igual — el nombre solo ya sirve para preguntar por él.
+ */
+function renglonVendedor(vendedor: DatosDelComparador['vendedor']): string {
+  const nombre = vendedor?.nombre?.trim()
+  if (!nombre) return ''
+  return `Su vendedor: ${renglon([nombre, vendedor?.telefono])}`
+}
+
 function textoEncabezado(datos: DatosDelComparador): string {
   const partes: string[] = []
   if (datos.nombreCliente?.trim()) partes.push(`Preparado para ${datos.nombreCliente.trim()}`)
@@ -214,6 +256,8 @@ export async function generarComparador(datos: DatosDelComparador): Promise<Blob
   }
 
   hoja = escribirCelda(hoja, nombres.COMPARADOR_ENCABEZADO, textoEncabezado(datos), true)
+  hoja = escribirCelda(hoja, nombres.COMPARADOR_EMPRESA, renglonEmpresa(datos.empresa) || null, true)
+  hoja = escribirCelda(hoja, nombres.COMPARADOR_VENDEDOR, renglonVendedor(datos.vendedor) || null, true)
   hoja = escribirCelda(
     hoja,
     nombres.COMPARADOR_NOTA_EJEMPLO,
