@@ -221,6 +221,21 @@ export default async function Tablero() {
             mes y el año, y se abre cuando se quiere pensar, no cuando se
             quiere actuar. Mezclarlas haría que ninguna de las dos se
             mirara. */}
+        {/* **La tercera pregunta, que es del arranque y no de siempre: ¿la están usando?** Vive
+            aparte por la misma razón que la del negocio — el tablero del lunes son tres cosas, y
+            una cuarta lo convierte en la pantalla que se abre con desgano. */}
+        <Link href="/tablero/actividad" className="block">
+          <Tarjeta className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-medium text-texto">Actividad del día</p>
+              <p className="text-xs text-texto-secundario">
+                Qué capturó cada vendedor: cuentas, seguimientos y listas
+              </p>
+            </div>
+            <ChevronRight size={18} className="shrink-0 text-texto-atenuado" aria-hidden />
+          </Tarjeta>
+        </Link>
+
         <Link href="/tablero/negocio" className="block">
           <Tarjeta className="flex items-center justify-between gap-2">
             <div>
