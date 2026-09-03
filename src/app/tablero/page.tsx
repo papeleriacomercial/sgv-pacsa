@@ -215,15 +215,14 @@ export default async function Tablero() {
       </header>
 
       <main className="flex flex-col gap-4 p-4">
-        {/* **El tablero contesta dos preguntas de distinta velocidad.**
-            Esta pantalla es la de la semana: quién cerró, qué se salió de
-            lo normal, a quién falta responderle. La del negocio es la del
-            mes y el año, y se abre cuando se quiere pensar, no cuando se
-            quiere actuar. Mezclarlas haría que ninguna de las dos se
-            mirara. */}
-        {/* **La tercera pregunta, que es del arranque y no de siempre: ¿la están usando?** Vive
-            aparte por la misma razón que la del negocio — el tablero del lunes son tres cosas, y
-            una cuarta lo convierte en la pantalla que se abre con desgano. */}
+        {/* **El tablero contesta preguntas de distinta velocidad, y por eso son tres pantallas y
+            no una.** Ésta es la de la semana: quién cerró, qué se salió de lo normal, a quién
+            falta responderle. La de actividad es la del día y es del arranque —¿la están
+            usando?—. La del negocio es la del mes y el año, y se abre cuando se quiere pensar, no
+            cuando se quiere actuar. Mezclarlas haría que ninguna de las tres se mirara.
+
+            Las dos que llevan a otra pantalla van arriba **porque son la pregunta con la que se
+            entra**; lo de la semana se lee después, ya adentro. */}
         <Link href="/tablero/actividad" className="block">
           <Tarjeta className="flex items-center justify-between gap-2">
             <div>
