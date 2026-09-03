@@ -5,12 +5,11 @@
       "args": [
         "-y",
         "@playwright/mcp@0.0.80",
-        "--browser=chromium",
+        "--browser=chrome",
         "--user-data-dir=.playwright-perfil",
         "--viewport-size=390,844"
       ]
     },
-
     "supabase": {
       "command": "npx",
       "args": [
@@ -24,7 +23,6 @@
         "SUPABASE_ACCESS_TOKEN": "${SGV_SUPABASE_ACCESS_TOKEN}"
       }
     },
-
     "vercel": {
       "type": "http",
       "url": "https://mcp.vercel.com"
