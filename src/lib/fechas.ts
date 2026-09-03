@@ -51,3 +51,20 @@ export function esperaEnLista(dias: number): string {
   if (dias < ESPERA_LARGA) return `Esperando ${Math.floor(dias / 7)} semanas`;
   return `Esperando ${Math.floor(dias / 30)} meses`;
 }
+
+/**
+ * Correr un día calendario hacia adelante o hacia atrás, sin salirse del día.
+ *
+ * **La hora del mediodía es lo único que importa acá.** `new Date("2026-09-03")` es medianoche
+ * UTC, que en Panamá todavía es el 2: sumar un día desde ahí devuelve el 3 cuando se pedía el 4.
+ * Parado al mediodía sobran doce horas de margen para cualquier lado, y ningún salto de mes ni de
+ * año cae en el borde.
+ *
+ * Entra y sale como `YYYY-MM-DD`, que es el formato con el que trabajan el `input type="date"` y
+ * las direcciones de las pantallas.
+ */
+export function correrDias(dia: string, cuantos: number): string {
+  const d = new Date(`${dia}T12:00:00`);
+  d.setDate(d.getDate() + cuantos);
+  return d.toLocaleDateString("en-CA");
+}

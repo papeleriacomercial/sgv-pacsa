@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import type { EstadoSolicitud, ResuelveSolicitud, TipoSolicitud } from "@/lib/catalogos";
+import { esDeMiBandeja } from "@/lib/catalogos";
 import { ListaSolicitudes, type Solicitud } from "@/components/lista-solicitudes";
+import { Insignia } from "@/components/ui/insignia";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
 type Cuenta = { nombre: string };
@@ -102,6 +104,21 @@ export default async function Solicitudes() {
   const puedeResolver =
     perfil?.rol === "gerente" || perfil?.rol === "administracion";
 
+  // CADA QUIEN VE LO SUYO PRIMERO — 3 de septiembre de 2026.
+  //
+  // La consulta traía todas las solicitudes para todo el mundo, y el rol sólo decidía si se podían
+  // resolver. El gerente entraba a ver precios especiales y se encontraba con pedidos, cotizaciones
+  // y documentos esperando a la oficina. La regla de quién atiende qué **existía desde el primer
+  // día en un comentario de la migración**, y nadie la hacía cumplir.
+  const mias = solicitudes.filter((s) => esDeMiBandeja(s.tipo, perfil?.rol));
+  const deOtros = solicitudes.filter((s) => !esDeMiBandeja(s.tipo, perfil?.rol));
+
+  // LO AJENO SE PLIEGA, NO SE ESCONDE, y la razón es de piso: hoy nada garantiza que administración
+  // esté mirando su bandeja. Quitárselo de la vista al gerente dejaría una solicitud sin contestar
+  // **sin ningún testigo**. Plegado no compite con lo suyo y sigue estando a un clic.
+  const pendientesDeOtros = deOtros.filter((s) => s.estado === "pendiente");
+  const vencidasDeOtros = pendientesDeOtros.filter((s) => s.vencida);
+
   return (
     <>
       <AvisoSinConexion />
@@ -111,10 +128,30 @@ export default async function Solicitudes() {
       </header>
 
       <main className="flex flex-col gap-4 p-4">
-        <ListaSolicitudes
-          solicitudes={solicitudes}
-          puedeResolver={puedeResolver}
-        />
+        <ListaSolicitudes solicitudes={mias} puedeResolver={puedeResolver} />
+
+        {deOtros.length > 0 && (
+          <details className="rounded-lg border border-borde bg-superficie">
+            <summary className="min-h-tactil flex cursor-pointer items-center gap-2 px-4 py-3 text-sm text-texto">
+              <span className="font-medium">
+                {perfil?.rol === "gerente" ? "Lo que atiende Administración" : "Lo que atiende Gerencia"}
+              </span>
+              <Insignia tono="neutro">{String(pendientesDeOtros.length)}</Insignia>
+              {/* LA VENCIDA SÍ SE ASOMA SIN ABRIR. Es la única de la bandeja ajena que amerita que
+                  el otro se entere: pasó de 24 horas y alguien la está esperando. */}
+              {vencidasDeOtros.length > 0 && (
+                <Insignia tono="error">{`${vencidasDeOtros.length} pasadas de 24 h`}</Insignia>
+              )}
+            </summary>
+            <div className="border-t border-borde p-4">
+              <p className="mb-3 text-xs text-texto-atenuado">
+                No es tu bandeja. Está aquí para que nada se quede sin testigo, y puedes contestarla
+                si hace falta.
+              </p>
+              <ListaSolicitudes solicitudes={deOtros} puedeResolver={puedeResolver} />
+            </div>
+          </details>
+        )}
       </main>
     </>
   );

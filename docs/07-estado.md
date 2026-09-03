@@ -1369,6 +1369,93 @@ cinco o más compromisos vencidos, **pidió algo y nadie le contestó**, y solic
 Muestra excepciones y no todo. Un tablero que lo muestra todo tarda cuarenta minutos y deja de
 abrirse.
 
+
+#### Silenciarlas una vez leídas
+
+Lo pidió el usuario el 3 de septiembre de 2026: *«hay que agregarle una forma de borrar las
+excepciones una vez leídas»*. Una ✕ por aviso, y **Borrar todas** al final del renglón del título.
+
+**Borrar no puede significar borrar, y ahí está toda la decisión.** Las excepciones no están
+guardadas en ninguna parte: se recalculan cada vez que se abre el tablero, a partir de los cierres,
+los compromisos vencidos y las solicitudes sin contestar. Borrar una no la quitaría — al recargar
+vuelve, porque la condición que la produce sigue viva.
+
+Así que lo que se guarda es **que ya se leyó**, en `excepciones_silenciadas`, y el aviso deja de
+mostrarse **mientras siga diciendo lo mismo**. Se silencia *ese aviso*, no la persona ni el tema.
+
+**La clave la arma la pantalla, y cada tipo elige la suya con criterio propio** — es donde vive la
+regla de cuándo un aviso vuelve:
+
+| Excepción | Clave | Vuelve cuando |
+|---|---|---|
+| No cerró la semana | semana + persona | Empieza otra semana |
+| Menos del 70% verificadas | semana + persona + **el porcentaje** | El porcentaje cambia |
+| Cinco o más compromisos vencidos | semana + persona + **el número** | Pasa de 5 a 8 |
+| Pidió algo y nadie le contestó | persona + **lo que pidió** | Pide otra cosa. Y si le contestan, desaparece sola |
+| Solicitud sin contestar | **el identificador de la solicitud** | Nunca por sí sola; desaparece al contestarla |
+
+La última es la que tiene trampa: **con las horas adentro reaparecería cada hora**, porque las horas
+crecen solas — silenciarla no habría servido de nada.
+
+Cuando no queda ninguna a la vista, la pantalla **distingue «no pasó nada» de «ya lo leíste»**. Un
+tablero no puede confundir esas dos.
+
+Es por persona: hoy sólo gerencia lo abre, pero que uno silencie no debe dejar ciego a otro.
+
+### Actividad del día
+
+Lo pidió el usuario el 3 de septiembre de 2026, y dijo para qué — que es lo que decide cómo se
+cuenta todo lo demás: *«para entender si los vendedores están inicialmente sacando provecho de la
+herramienta»*.
+
+**Mide uso, no ventas.** Un vendedor puede tener un día excelente en la calle y salir en cero: lo
+que eso dice es que no lo capturó, que es exactamente el riesgo del arranque. La pantalla lo
+advierte antes de mostrar un solo número, porque seis ceros sin ese aviso se leen como «no
+trabajó» y la conversación que sigue sería injusta.
+
+Seis cifras por persona y por día: **cuentas creadas, cuentas actualizadas, seguimientos
+registrados, seguimientos programados, listas creadas y cuentas agregadas a listas.**
+
+**Vive fuera del tablero del lunes**, como la del negocio y por la misma razón: aquél son tres
+cosas y ninguna más, y una cuarta lo convierte en la pantalla que se abre con desgano.
+
+#### Lo que hubo que arreglar para poder contarlo
+
+**«Cuántas cuentas actualizó sus datos» no se podía contestar, y descubrirlo fue el trabajo.** La
+vía obvia, `updated_at`, no sirve: la mueven seis caminos distintos —editar la ficha, clasificar un
+potencial al cerrar un seguimiento, capturar el RUC de una venta, ubicar en el mapa, adoptar la
+cadencia, borrar la cuenta— y además **la mueve el espejo de Zoho**, que crea y enlaza cuentas de
+madrugada. Un día de sincronización habría mostrado cuarenta cuentas «actualizadas» por alguien que
+estaba de vacaciones.
+
+Y la auditoría tampoco servía: **guardaba dos campos**, elegidos cuando lo que importaba era la
+reasignación de cartera y el paso a cliente. Se amplió a todos (ver §`auditoria` en el modelo de
+datos), y de ahí sale la cifra exacta.
+
+**Con una consecuencia que la pantalla dice en voz alta: los días anteriores al 3 de septiembre no
+tienen ese dato y no lo van a tener nunca.** Van con una raya, no con un cero. Un cero dice «no
+hizo nada» y lo cierto es «no se sabe», y en un reporte que se usa para evaluar a alguien esas dos
+cosas no se pueden confundir.
+
+#### Las decisiones de conteo
+
+| Cifra | De dónde sale | Lo que se decidió |
+|---|---|---|
+| Cuentas creadas | `cuentas.created_at` | **Sin las de origen `facturacion`**: nacen a nombre del vendedor que factura, pero las levantó un guion |
+| Cuentas actualizadas | `auditoria`, contando cuentas distintas | **Se acredita al dueño de la cuenta, no al que la tocó** — decisión del usuario. Y `actor_id` no nulo, que es lo que deja fuera a la máquina. Borrar no cuenta como actualizar |
+| Seguimientos registrados | `seguimientos.created_at` | **Por cuándo se capturó, no por la fecha de la visita.** Quien sale toda la semana y captura el viernes trabajó cinco días, pero **usó la herramienta uno** — y eso es lo que aquí se pregunta |
+| Seguimientos programados | `compromisos.created_at` | Casi siempre acompaña al anterior, porque cerrar un seguimiento obliga a dejar el próximo paso. **El renglón que vale la pena mirar es cuando este número es mayor**: ahí hubo planificación desde la ficha |
+| Listas creadas | `listas.created_at` | |
+| Cuentas a listas | `listas_cuentas.agregada_en` | El usuario dijo «potenciales»; **se cuentan todas**, porque desde el 27 de agosto una lista también admite clientes y filtrar escondería trabajo hecho |
+
+El día es **el de Panamá y no el del servidor**. Sin eso, lo que se registra a las siete de la
+noche cae en el día siguiente y el reporte del lunes trae trabajo del domingo.
+
+**El orden es alfabético, no por quién trabajó más.** Un reporte que se lee todos los días tiene
+que tener a cada persona en el mismo sitio; ordenar por actividad mueve el renglón y obliga a
+buscar. Quien no hizo nada se distingue por su etiqueta, no por su posición. Y si **nadie** tocó la
+herramienta ese día, se dice arriba y en ámbar: es el hallazgo más importante que esta pantalla
+puede dar.
 ### Mercado
 
 La pantalla que hace que valga la pena capturar la competencia. **Sin ella el vendedor levanta

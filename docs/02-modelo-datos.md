@@ -355,6 +355,22 @@ y existe porque una bitácora editable no sirve como bitácora.
 De aquí sale el historial de etapas de las oportunidades y el registro de cuándo una cuenta
 pasó de prospecto a cliente.
 
+**Desde el 3 de septiembre de 2026 guarda todos los campos de `cuentas`, no dos.** Hasta ese día
+el disparador escribía únicamente `vendedor_id` y `tipo` —la reasignación de cartera y el paso a
+cliente—, así que **un cambio de teléfono no dejaba rastro en ninguna parte**. Se descubrió al
+querer contestar «cuántas cuentas actualizó sus datos este vendedor» para el reporte de actividad
+de §7.1: la vía obvia, `updated_at`, la mueven seis caminos del código y además el espejo de Zoho,
+que enlaza cuentas de madrugada sin que nadie toque nada.
+
+Ahora el disparador **compara la fila entera y escribe lo que haya cambiado**, con dos excepciones
+que son máquina y no persona: `updated_at`, que cambia en todo UPDATE por definición, y
+`zoho_contacto_id`, que lo escribe el espejo. Los campos **se descubren, no se listan**: una
+columna que nazca mañana queda auditada sola.
+
+**`actor_id` es lo que separa a la persona de la máquina.** Viene nulo cuando quien escribe es un
+guion con llave de servicio, y es la única forma de no acreditarle a un vendedor el trabajo de una
+sincronización nocturna.
+
 ---
 
 ## Vista `cuentas_resumen`
