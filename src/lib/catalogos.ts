@@ -254,13 +254,43 @@ export const PIDE_A_LA_OFICINA = {
 
 export type PideALaOficina = keyof typeof PIDE_A_LA_OFICINA;
 
-/** Quién atiende cada clase de encargo. */
-export const ATIENDE: Record<TipoSolicitud, string> = {
-  pedido: "Administración",
-  cotizacion: "Administración",
-  muestra: "Administración",
-  precio: "Gerencia",
+/**
+ * Quién atiende cada clase de encargo — **y no es sólo un rótulo**.
+ *
+ * La regla estaba escrita desde el primer día en un comentario de la migración: *«pedido, cotización
+ * y muestra las atiende administración; precio y condiciones, gerencia»*. **Pero vivía en un
+ * comentario y en una etiqueta de pantalla, y nadie la hacía cumplir**: la bandeja traía todas las
+ * solicitudes para todo el mundo. El gerente entraba a ver precios especiales y se encontraba con
+ * pedidos y cotizaciones. Lo reportó el usuario el 3 de septiembre de 2026.
+ *
+ * Ahora es un dato, y de él salen las dos cosas: el rótulo que ve el vendedor al pedir, y el reparto
+ * de la bandeja. **Que sea uno solo es lo que impide que se separen** — que fue exactamente lo que
+ * pasó cuando la regla vivía en dos sitios.
+ */
+export const ROL_QUE_ATIENDE: Record<TipoSolicitud, "administracion" | "gerente"> = {
+  pedido: "administracion",
+  cotizacion: "administracion",
+  muestra: "administracion",
+  precio: "gerente",
 };
+
+const NOMBRE_DEL_ROL = { administracion: "Administración", gerente: "Gerencia" } as const;
+
+/** El rótulo, derivado de la regla. No se escribe aparte para que no pueda contradecirla. */
+export const ATIENDE: Record<TipoSolicitud, string> = Object.fromEntries(
+  (Object.keys(ROL_QUE_ATIENDE) as TipoSolicitud[]).map((t) => [t, NOMBRE_DEL_ROL[ROL_QUE_ATIENDE[t]]]),
+) as Record<TipoSolicitud, string>;
+
+/**
+ * ¿Esta solicitud es de la bandeja de quien está mirando?
+ *
+ * **El líder y el vendedor no tienen bandeja propia**: ven lo suyo por otras reglas, y para ellos
+ * esta separación no aplica. Devuelve `true` para que la pantalla no les esconda nada.
+ */
+export function esDeMiBandeja(tipo: TipoSolicitud, rol: string | null | undefined): boolean {
+  if (rol !== "gerente" && rol !== "administracion") return true;
+  return ROL_QUE_ATIENDE[tipo] === rol;
+}
 
 /**
  * Quién lo resuelve.
