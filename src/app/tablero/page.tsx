@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { AlertTriangle, CheckCircle2, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { lunesDeEstaSemana } from "@/lib/semana";
 import { Tarjeta } from "@/components/ui/tarjeta";
-import { Insignia } from "@/components/ui/insignia";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
+import { ExcepcionesDelTablero } from "@/components/excepciones-del-tablero";
 
 const FECHA = new Intl.DateTimeFormat("es-PA", {
   day: "numeric",
@@ -31,6 +31,17 @@ type Excepcion = {
   quien: string;
   que: string;
   detalle: string;
+  /**
+   * Lo que identifica a ESTE aviso, para poder silenciarlo.
+   *
+   * **Cada tipo elige la suya con criterio propio, y ahí está toda la decisión:
+   * el aviso vuelve cuando la clave cambia.** La del cierre lleva la semana —la
+   * que se silencia hoy reaparece el lunes que viene—; la de compromisos
+   * vencidos lleva el número, así que pasar de 5 a 8 es un aviso distinto; y la
+   * de una solicitud sin contestar lleva su identificador y **no sus horas,
+   * porque las horas crecen solas y reaparecería cada hora**.
+   */
+  clave: string;
 };
 
 /**
@@ -119,6 +130,8 @@ export default async function Tablero() {
         quien: p.nombre,
         que: "No ha cerrado la semana",
         detalle: "Sin cierre entregado.",
+        // Con la semana adentro: silenciarlo hoy no debe taparlo el lunes que viene.
+        clave: `${lunes}|${p.id}|sin-cierre`,
       });
       continue;
     }
@@ -132,6 +145,8 @@ export default async function Tablero() {
         quien: p.nombre,
         que: `${Math.round((n.verificadas / n.visitas) * 100)}% de visitas verificadas`,
         detalle: "Vale la pena preguntar qué pasó esa semana.",
+        // Con el porcentaje: si empeora, es otro aviso y tiene que volver.
+        clave: `${lunes}|${p.id}|verificadas|${Math.round((n.verificadas / n.visitas) * 100)}`,
       });
     }
 
@@ -140,6 +155,8 @@ export default async function Tablero() {
         quien: p.nombre,
         que: `${n.compromisosVencidos} compromisos vencidos`,
         detalle: "O se mueven, o las cuentas se están apagando.",
+        // Con el número: de 5 a 8 es un aviso distinto, y silenciar el de 5 no puede taparlo.
+        clave: `${lunes}|${p.id}|compromisos|${n.compromisosVencidos}`,
       });
     }
 
@@ -149,6 +166,9 @@ export default async function Tablero() {
         quien: p.nombre,
         que: "Pidió algo y no tiene respuesta",
         detalle: c.necesito,
+        // Lo que pidió, no la semana: si pide otra cosa es otro aviso. Y si alguien le contesta,
+        // la excepción desaparece sola sin que nadie la silencie.
+        clave: `${p.id}|necesito|${c.necesito}`,
       });
     }
   }
@@ -158,8 +178,30 @@ export default async function Tablero() {
       quien: nombreDe(s.vendedor_id),
       que: `Solicitud sin contestar hace ${Math.floor(s.horas)} h`,
       detalle: s.detalle,
+      // EL IDENTIFICADOR, NO LAS HORAS. Las horas crecen solas, así que una clave con ellas haría
+      // reaparecer el aviso cada hora y silenciarlo no serviría de nada. Con el identificador se
+      // silencia esa solicitud, y desaparece de verdad cuando alguien la contesta.
+      clave: `solicitud|${s.id}`,
     });
   }
+
+  // Lo que este usuario ya leyó y calló. VA DESPUÉS DE ARMARLAS TODAS: se consulta sólo por las
+  // claves que hoy están en pantalla, en vez de traer meses de avisos que ya no existen. Y por eso
+  // tiene que ir aquí abajo — puesto antes, se habría saltado las solicitudes vencidas.
+  const { data: calladas } = excepciones.length
+    ? await supabase
+        .from("excepciones_silenciadas")
+        .select("clave")
+        .eq("silenciada_por", user.id)
+        .in(
+          "clave",
+          excepciones.map((e) => e.clave),
+        )
+    : // Sin excepciones no hay nada que preguntar, y `in.()` con la lista vacía no es una consulta
+      // que devuelve cero: es una consulta que falla.
+      { data: [] };
+
+  const silenciadas = ((calladas ?? []) as { clave: string }[]).map((c) => c.clave);
 
   return (
     <>
@@ -211,43 +253,12 @@ export default async function Tablero() {
           </div>
         </Tarjeta>
 
-        {/* 2. Las excepciones. Casi siempre corto: por eso sirve. */}
-        <section className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-medium text-texto">Excepciones</h2>
-            <Insignia tono={excepciones.length === 0 ? "ok" : "error"}>
-              {String(excepciones.length)}
-            </Insignia>
-          </div>
+        {/* 2. Las excepciones. Casi siempre corto: por eso sirve.
 
-          {excepciones.length === 0 && (
-            <Tarjeta className="flex items-center gap-2">
-              <CheckCircle2 size={18} className="shrink-0 text-ok" aria-hidden />
-              <p className="text-sm text-texto-secundario">
-                Nada fuera de lo normal esta semana.
-              </p>
-            </Tarjeta>
-          )}
-
-          {excepciones.map((e, i) => (
-            <Tarjeta
-              key={`${e.quien}-${i}`}
-              className="flex items-start gap-2 border-amber-200 bg-amber-50"
-            >
-              <AlertTriangle
-                size={18}
-                className="mt-0.5 shrink-0 text-aviso"
-                aria-hidden
-              />
-              <div>
-                <p className="text-sm font-medium text-texto">
-                  {e.quien} · {e.que}
-                </p>
-                <p className="text-xs text-texto-secundario">{e.detalle}</p>
-              </div>
-            </Tarjeta>
-          ))}
-        </section>
+            AHORA SE PUEDEN CALLAR, y la pieza vive aparte porque necesita ser del navegador: la ✕
+            escribe. Lo que NO cambia es que se recalculan cada vez — silenciar guarda que ya se
+            leyeron, no las borra, porque no hay nada que borrar. */}
+        <ExcepcionesDelTablero excepciones={excepciones} silenciadas={silenciadas} />
 
         {/* 3. El cierre del líder, completo. Es el único que lee entero, y el
             único a quien le responde. */}

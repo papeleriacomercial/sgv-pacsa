@@ -1369,6 +1369,38 @@ cinco o más compromisos vencidos, **pidió algo y nadie le contestó**, y solic
 Muestra excepciones y no todo. Un tablero que lo muestra todo tarda cuarenta minutos y deja de
 abrirse.
 
+
+#### Silenciarlas una vez leídas
+
+Lo pidió el usuario el 3 de septiembre de 2026: *«hay que agregarle una forma de borrar las
+excepciones una vez leídas»*. Una ✕ por aviso, y **Borrar todas** al final del renglón del título.
+
+**Borrar no puede significar borrar, y ahí está toda la decisión.** Las excepciones no están
+guardadas en ninguna parte: se recalculan cada vez que se abre el tablero, a partir de los cierres,
+los compromisos vencidos y las solicitudes sin contestar. Borrar una no la quitaría — al recargar
+vuelve, porque la condición que la produce sigue viva.
+
+Así que lo que se guarda es **que ya se leyó**, en `excepciones_silenciadas`, y el aviso deja de
+mostrarse **mientras siga diciendo lo mismo**. Se silencia *ese aviso*, no la persona ni el tema.
+
+**La clave la arma la pantalla, y cada tipo elige la suya con criterio propio** — es donde vive la
+regla de cuándo un aviso vuelve:
+
+| Excepción | Clave | Vuelve cuando |
+|---|---|---|
+| No cerró la semana | semana + persona | Empieza otra semana |
+| Menos del 70% verificadas | semana + persona + **el porcentaje** | El porcentaje cambia |
+| Cinco o más compromisos vencidos | semana + persona + **el número** | Pasa de 5 a 8 |
+| Pidió algo y nadie le contestó | persona + **lo que pidió** | Pide otra cosa. Y si le contestan, desaparece sola |
+| Solicitud sin contestar | **el identificador de la solicitud** | Nunca por sí sola; desaparece al contestarla |
+
+La última es la que tiene trampa: **con las horas adentro reaparecería cada hora**, porque las horas
+crecen solas — silenciarla no habría servido de nada.
+
+Cuando no queda ninguna a la vista, la pantalla **distingue «no pasó nada» de «ya lo leíste»**. Un
+tablero no puede confundir esas dos.
+
+Es por persona: hoy sólo gerencia lo abre, pero que uno silencie no debe dejar ciego a otro.
 ### Mercado
 
 La pantalla que hace que valga la pena capturar la competencia. **Sin ella el vendedor levanta
