@@ -50,3 +50,6 @@ datos/*
 # El perfil del navegador de Playwright: guarda cookies de sesión reales.
 # NUNCA se sube — subirlo sería publicar una sesión abierta del sistema.
 .playwright-perfil/
+
+# Salidas de Playwright MCP (capturas, trazas): son de una corrida, no del proyecto.
+.playwright-mcp/
