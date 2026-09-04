@@ -19,6 +19,8 @@ type Fila = {
   enviado_en: string | null;
   respuesta: string | null;
   respondido_en: string | null;
+  plan: Record<string, { listaId: string; cantidad: number }[]> | null;
+  visto_en: string | null;
   perfiles: { nombre: string } | { nombre: string }[] | null;
 };
 
@@ -55,7 +57,7 @@ export default async function Contrato() {
   const { data } = await supabase
     .from("cierres")
     .select(
-      "id, vendedor_id, semana, numeros, sorprendio, freno, necesito, apuesta_potenciales, apuesta_clientes, enviado_en, respuesta, respondido_en, perfiles(nombre)",
+      "id, vendedor_id, semana, numeros, sorprendio, freno, necesito, plan, apuesta_potenciales, apuesta_clientes, enviado_en, respuesta, respondido_en, visto_en, perfiles(nombre)",
     )
     .neq("vendedor_id", user.id)
     .not("enviado_en", "is", null)
@@ -63,7 +65,38 @@ export default async function Contrato() {
     .order("semana", { ascending: false })
     .limit(12);
 
-  const cierres: CierreDeAlguien[] = ((data ?? []) as unknown as Fila[]).map(
+  const filas = (data ?? []) as unknown as Fila[];
+
+  // EL PLAN GUARDA IDENTIFICADORES, NO NOMBRES — y con razón: si la lista se renombra, el plan de
+  // agosto tiene que seguir apuntando a la misma. Pero entonces hay que ir a buscar cómo se llaman,
+  // o la pantalla muestra un renglón de identificadores que no le dice nada a nadie.
+  //
+  // El RLS ya deja: el líder ve las listas de su equipo, gerencia las de todos. Una lista que no
+  // vuelva —borrada, o de alguien que ya no es del equipo— se dibuja igual, diciendo que no está.
+  const idsDeListas = [
+    ...new Set(
+      filas.flatMap((c) =>
+        Object.values(c.plan ?? {}).flatMap((puestas) =>
+          puestas.map((p) => p.listaId),
+        ),
+      ),
+    ),
+  ];
+
+  const { data: listas } = idsDeListas.length
+    ? await supabase.from("listas").select("id, nombre").in("id", idsDeListas)
+    : { data: [] };
+
+  const nombreDeLista = new Map(
+    ((listas ?? []) as { id: string; nombre: string }[]).map((l) => [l.id, l.nombre]),
+  );
+
+  // Los días en el orden en que se trabajan. Object.keys los devuelve en el orden en que se
+  // escribieron, que es el de los toques del vendedor: si marcó el jueves antes que el lunes, el
+  // plan saldría en ese orden y se leería como si fuera el orden de la semana.
+  const DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes"];
+
+  const cierres: CierreDeAlguien[] = filas.map(
     (c) => ({
       id: c.id,
       vendedor: nombreDe(c.perfiles),
@@ -77,6 +110,14 @@ export default async function Contrato() {
       apuestaClientes: c.apuesta_clientes,
       respuesta: c.respuesta,
       respondido: c.respondido_en !== null,
+      visto: c.visto_en !== null,
+      plan: DIAS.map((dia) => ({
+        dia,
+        puestas: (c.plan?.[dia] ?? []).map((p) => ({
+          lista: nombreDeLista.get(p.listaId) ?? "Una lista que ya no está",
+          cantidad: p.cantidad,
+        })),
+      })),
     }),
   );
 

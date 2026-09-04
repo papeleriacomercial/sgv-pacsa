@@ -27,6 +27,10 @@ type Previo = {
   apuesta_potenciales: number | null;
   apuesta_clientes: number | null;
   enviado_en: string | null;
+  /** Cuándo lo revisó su líder. Con esto puesto, el cierre queda como está. */
+  visto_en: string | null;
+  /** Lo que le contestaron. Se muestra acá porque es donde se viene a corregir. */
+  respuesta: string | null;
 };
 
 /**
@@ -56,6 +60,10 @@ export function FormularioCierre({
   const router = useRouter();
 
   const [paso, setPaso] = useState(1);
+  // Ya lo revisaron: de acá en adelante es de lectura. La base lo impide igual —el trigger
+  // rechaza el cambio— y esto es para que no se entere escribiendo un párrafo y perdiéndolo.
+  const visto = previo?.visto_en != null;
+
   const [sorprendio, setSorprendio] = useState(previo?.sorprendio ?? "");
   const [freno, setFreno] = useState(previo?.freno ?? "");
   const [necesito, setNecesito] = useState(previo?.necesito ?? "");
@@ -102,6 +110,22 @@ export function FormularioCierre({
     }));
   }
 
+  /**
+   * Los días donde marcó una lista y dejó la cantidad en blanco.
+   *
+   * **ES EL ERROR QUE DE VERDAD PASA, Y PASABA EN SILENCIO.** Tocar el nombre de la lista la
+   * pone en el día con cantidad cero y abre la casilla del número al lado; si no se escribe
+   * nada, el plan sale marcado y vacío. Ocurrió el 31 de agosto de 2026: el líder marcó la
+   * misma lista los cinco días y las cinco cantidades quedaron en cero — un plan que se lee
+   * como hecho y no compromete ni una visita. Nada se lo dijo al enviarlo.
+   *
+   * No es lo mismo que un día vacío: **un día sin lista es una decisión** —ese día no sale— y
+   * se respeta. Lo que no puede quedar es una lista puesta sin decir cuántos.
+   */
+  const diasSinCantidad = DIAS.filter((d) =>
+    plan[d].some((x) => !x.cantidad || x.cantidad <= 0),
+  );
+
   // La suma de lo repartido por día. Se ofrece como sugerencia de la apuesta,
   // pero el número lo escribe él: en el momento en que la aplicación lo
   // proponga como meta, deja de ser su plan.
@@ -147,9 +171,36 @@ export function FormularioCierre({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* LO QUE LE CONTESTARON VA ARRIBA, NO AL FINAL. Si vino a corregir es por esto, y
+          dejarlo abajo obliga a recorrer cuatro pasos para leerlo. */}
+      {previo?.respuesta && (
+        <Tarjeta className="flex flex-col gap-1">
+          <p className="text-xs text-texto-secundario">Te respondieron</p>
+          <p className="text-sm text-texto">{previo.respuesta}</p>
+        </Tarjeta>
+      )}
+
+      {/* **NO SE ESCONDE EL FORMULARIO, SE DICE POR QUÉ NO SE PUEDE.** Una pantalla que
+          desaparece deja a la persona pensando que se le perdió el cierre. */}
+      {visto && (
+        <Tarjeta className="flex flex-col gap-1 border-borde bg-fondo">
+          <p className="text-sm font-medium text-texto">
+            Tu líder ya revisó esta semana.
+          </p>
+          <p className="text-xs text-texto-secundario">
+            Queda como está. Lo que quieras cambiar va en el cierre de la próxima.
+          </p>
+        </Tarjeta>
+      )}
+
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-texto-secundario">Paso {paso} de 4</p>
-        {previo?.enviado_en && <Insignia tono="ok">Ya enviado</Insignia>}
+        {previo?.enviado_en &&
+          (visto ? (
+            <Insignia tono="neutro">Revisado</Insignia>
+          ) : (
+            <Insignia tono="ok">Enviado · lo puedes corregir</Insignia>
+          ))}
       </div>
 
       {paso === 1 && (
@@ -313,6 +364,15 @@ export function FormularioCierre({
               </Tarjeta>
             ))}
 
+          {/* El mismo aviso donde se corrige, no sólo donde se traba. Descubrirlo en el paso 4
+              obliga a devolverse; acá está al lado de la casilla que falta. */}
+          {diasSinCantidad.length > 0 && (
+            <p className="text-xs text-aviso">
+              Te falta el número en:{" "}
+              <span className="font-medium">{diasSinCantidad.join(", ")}</span>.
+            </p>
+          )}
+
           <Tarjeta className="flex flex-col gap-4">
             <p className="text-sm font-medium text-texto">Tu apuesta</p>
             <Campo
@@ -366,13 +426,35 @@ export function FormularioCierre({
             </p>
           </Tarjeta>
 
+          {/* **NO SE DEJA ENVIAR UN DÍA MARCADO SIN CANTIDAD.** Es lo único que se traba en toda
+              la pantalla, y se traba porque no es una omisión sino una contradicción: dice que va
+              a esa lista ese día y no dice a cuántos. Un día en blanco, en cambio, se envía sin
+              chistar — no salir el miércoles es una decisión legítima. */}
+          {diasSinCantidad.length > 0 && (
+            <Tarjeta className="flex flex-col gap-1 border-amber-200 bg-amber-50">
+              <p className="text-sm font-medium text-texto">
+                {diasSinCantidad.length === 1
+                  ? `Marcaste lista el ${diasSinCantidad[0]} y no dijiste cuántos.`
+                  : `Marcaste lista sin decir cuántos: ${diasSinCantidad.join(", ")}.`}
+              </p>
+              <p className="text-xs text-texto-secundario">
+                Vuelve al paso 3 y escribe el número, o quita la lista de ese
+                día si no vas a salir.
+              </p>
+            </Tarjeta>
+          )}
+
           {error && <MensajeError titulo="No se pudo enviar" detalle={error} />}
 
           <div className="grid grid-cols-2 gap-2">
             <Boton tono="secundario" ancho onClick={() => setPaso(3)}>
               Atrás
             </Boton>
-            <Boton ancho disabled={guardando} onClick={enviar}>
+            <Boton
+              ancho
+              disabled={guardando || diasSinCantidad.length > 0}
+              onClick={enviar}
+            >
               {guardando ? "Enviando" : "Enviar"}
             </Boton>
           </div>

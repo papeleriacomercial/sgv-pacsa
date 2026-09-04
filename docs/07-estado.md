@@ -1214,6 +1214,43 @@ irrefutable e inútil. La tercera es la que devuelve algo.
 **El trigger `cierres_protege_el_plan`** rechaza que quien no es el dueño toque los números,
 las respuestas, el plan o la apuesta. Solo pasa la respuesta.
 
+#### El plan se traba cuando alguien lo lee — 4 de septiembre de 2026
+
+**Nadie veía el plan.** Se escribía en `cierres.plan` y **no lo leía ninguna pantalla** — ni
+gerencia, ni el líder, ni el propio vendedor después de enviarlo. El estado vacío de Contrato
+llevaba meses prometiendo *«aparecen aquí con sus números y su plan»*. Lo destapó el usuario
+pidiendo responderle al líder y no encontrando el plan por ningún lado.
+
+Ahora sale día por día, con el nombre de la lista y la cantidad, y **el cero va en ámbar**: marcar
+la lista y dejar el número en blanco es el error que de verdad pasa —el líder lo hizo los cinco
+días del 31 de agosto— y sin señalarlo se lee como un plan hecho.
+
+**Y el vendedor puede corregir mientras nadie lo haya revisado.** La ventana no la marca el
+calendario sino la lectura, y lo decidió así el usuario: *«me parece que sería mejor que estar
+manejando días calendarios sin saber en qué momento se leen los planes»*. Quien revisa marca
+**Visto** y ahí queda; al vendedor lo revisa su líder, al líder gerencia.
+
+**Responder y marcar son dos gestos distintos, y ese es todo el mecanismo.** El que tiene una
+observación responde y no marca — con eso el plan queda abierto para que el otro lo arregle. El que
+no tiene nada que decir marca, y lo congela. No hizo falta un botón de «reabrir»: **no marcar es
+dejarlo abierto**. Marcar sí es reversible, porque uno marca, sigue leyendo y encuentra algo.
+
+**Se llama «Visto» y no «Aprobado» a propósito.** Este módulo existe sobre la idea de que un plan
+editable desde arriba deja de ser el plan del vendedor, que entonces aprende a proponer lo que le
+van a aprobar. «Aprobado» reintroduce por la etiqueta exactamente lo que el trigger impide por el
+dato.
+
+#### No se envía un día marcado sin cantidad
+
+Tocar el nombre de la lista la pone en el día con cantidad cero y abre la casilla del número; si no
+se escribe nada, **el plan sale marcado y vacío sin que nada lo diga**. Pasó el 31 de agosto: cinco
+días, la misma lista, las cinco cantidades en cero, y una apuesta de 15 y 15 al lado que lo
+contradecía.
+
+Ahora se avisa en el paso donde se corrige y se traba el envío. **Un día en blanco sí se envía**:
+no salir el miércoles es una decisión legítima. Lo que no puede quedar es una lista puesta sin
+decir a cuántos — eso no es una omisión, es una contradicción.
+
 Está en la base y no en la pantalla porque es la regla que sostiene el esquema de abajo hacia
 arriba: **si el plan se puede editar desde arriba deja de ser su plan**, y el vendedor aprende
 a proponer lo que va a ser aprobado. Ahí se acabó la información. Un plan flojo con su nombre
