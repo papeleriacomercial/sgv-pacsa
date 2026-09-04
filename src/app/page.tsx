@@ -155,12 +155,14 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
         .eq("vendedor_id", user.id)
         .eq("semana", lunes)
         .maybeSingle(),
-      // El de la semana pasada trae la apuesta contra la que se reconcilia.
+      // El de la semana pasada trae la apuesta contra la que se reconcilia — y, desde el 4 de
+      // septiembre de 2026, si todavía se puede corregir.
       supabase
         .from("cierres")
-        .select("apuesta_potenciales, apuesta_clientes, respuesta, respondido_en")
+        .select("semana, plan, apuesta_potenciales, apuesta_clientes, respuesta, respondido_en, visto_en")
         .eq("vendedor_id", user.id)
         .lt("semana", lunes)
+        .is("deleted_at", null)
         .order("semana", { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -271,7 +273,43 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
       <main className="flex flex-1 flex-col gap-4 p-4">
         {enSemana ? (
           <>
-            {/* La respuesta de quien lo acompaña, primero: es lo que arranca la
+            {/* **LO PRIMERO ES LO QUE TODAVÍA SE PUEDE ARREGLAR.** Desde que el plan se traba
+                cuando alguien lo lee y no cuando cambia la semana, un cierre viejo sin revisar
+                sigue siendo corregible — pero nadie va a adivinar la dirección. Sin este aviso, la
+                regla existe y no le sirve a nadie.
+
+                Sólo aparece cuando de verdad falta algo: el plan vacío o con un día marcado sin
+                cantidad. Un cierre viejo bien hecho no tiene por qué reabrirse. */}
+            {anterior &&
+              anterior.visto_en === null &&
+              (() => {
+                const dias = Object.values(
+                  (anterior.plan ?? {}) as Record<
+                    string,
+                    { listaId: string; cantidad: number }[]
+                  >,
+                );
+                const puestas = dias.flat();
+                const leFalta =
+                  puestas.length === 0 ||
+                  puestas.some((x) => !x.cantidad || x.cantidad <= 0);
+
+                return leFalta ? (
+                  <Link href={`/cierre?semana=${anterior.semana}`}>
+                    <Tarjeta className="flex flex-col gap-1 border-amber-200 bg-amber-50">
+                      <p className="text-sm font-medium text-texto">
+                        Al plan que mandaste le falta el reparto.
+                      </p>
+                      <p className="text-xs text-texto-secundario">
+                        Todavía lo puedes arreglar: nadie lo ha revisado.
+                        Toca aquí.
+                      </p>
+                    </Tarjeta>
+                  </Link>
+                ) : null;
+              })()}
+
+            {/* La respuesta de quien lo acompaña: es lo que arranca la
                 semana con dirección en vez de con una lista. */}
             {anterior?.respuesta && (
               <Tarjeta className="flex flex-col gap-1">
