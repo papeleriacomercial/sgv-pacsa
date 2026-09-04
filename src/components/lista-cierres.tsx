@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
@@ -22,6 +23,10 @@ export type CierreDeAlguien = {
   apuestaClientes: number | null;
   respuesta: string | null;
   respondido: boolean;
+  /** Ya lo revisó quien lo tenía que revisar. Mientras sea falso, el dueño puede corregirlo. */
+  visto: boolean;
+  /** El plan de la semana entrante, día por día y con los nombres ya resueltos. */
+  plan: { dia: string; puestas: { lista: string; cantidad: number }[] }[];
 };
 
 const FECHA = new Intl.DateTimeFormat("es-PA", {
@@ -45,11 +50,20 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState<string | null>(null);
   const [texto, setTexto] = useState("");
+  const [marcarVisto, setMarcarVisto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function responder(id: string) {
-    if (!texto.trim()) return;
+  /**
+   * Responder, marcar como visto, o las dos cosas.
+   *
+   * **SON DOS GESTOS DISTINTOS Y AHÍ ESTÁ LA REGLA ENTERA.** El que tiene una observación responde y
+   * **no** marca: con eso el plan queda abierto y el vendedor lo puede corregir. El que no tiene nada
+   * que decir marca, y lo congela. No hace falta un botón de «reabrir» — no marcar *es* dejarlo
+   * abierto.
+   */
+  async function guardar(id: string) {
+    if (!texto.trim() && !marcarVisto) return;
     setGuardando(true);
     setError(null);
 
@@ -58,14 +72,21 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Solo la respuesta. El trigger de la base rechaza cualquier intento de
-    // tocar el plan, aunque esta pantalla no lo ofrezca.
+    // La respuesta y el visto, nada más. El trigger de la base rechaza cualquier intento de tocar
+    // una cifra o el plan, aunque esta pantalla no lo ofrezca.
     const { error: fallo } = await supabase
       .from("cierres")
       .update({
-        respuesta: texto.trim(),
-        respondido_por: user?.id ?? null,
-        respondido_en: new Date().toISOString(),
+        ...(texto.trim()
+          ? {
+              respuesta: texto.trim(),
+              respondido_por: user?.id ?? null,
+              respondido_en: new Date().toISOString(),
+            }
+          : {}),
+        ...(marcarVisto
+          ? { visto_por: user?.id ?? null, visto_en: new Date().toISOString() }
+          : {}),
       })
       .eq("id", id);
 
@@ -77,6 +98,22 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
 
     setAbierto(null);
     setTexto("");
+    setMarcarVisto(false);
+    setGuardando(false);
+    router.refresh();
+  }
+
+  /** Devolverle el plan al vendedor después de haberlo marcado, por si al releerlo apareció algo. */
+  async function reabrir(id: string) {
+    setGuardando(true);
+    setError(null);
+
+    const { error: fallo } = await clienteNavegador()
+      .from("cierres")
+      .update({ visto_en: null, visto_por: null })
+      .eq("id", id);
+
+    if (fallo) setError(fallo.message);
     setGuardando(false);
     router.refresh();
   }
@@ -100,9 +137,17 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
                   Semana del {FECHA.format(new Date(`${c.semana}T12:00:00`))}
                 </p>
               </div>
-              <Insignia tono={c.respondido ? "ok" : "aviso"}>
-                {c.respondido ? "Respondido" : "Sin responder"}
-              </Insignia>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <Insignia tono={c.respondido ? "ok" : "aviso"}>
+                  {c.respondido ? "Respondido" : "Sin responder"}
+                </Insignia>
+                {/* «PUEDE CORREGIR» ES LA MITAD ÚTIL DE ESTE PAR. Que esté visto no sorprende a
+                    nadie; lo que hay que saber de un vistazo es cuáles siguen abiertos, porque son
+                    los que el vendedor todavía puede arreglar si uno lo llama. */}
+                <Insignia tono={c.visto ? "neutro" : "info"}>
+                  {c.visto ? "Visto" : "Puede corregir"}
+                </Insignia>
+              </div>
             </div>
 
             <dl className="flex flex-col gap-1 text-sm">
@@ -151,6 +196,51 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
               </div>
             )}
 
+            {/* EL PLAN DE LA SEMANA ENTRANTE. Faltaba: esta pantalla pedía responder a un plan que
+                no mostraba, y el estado vacío llevaba meses prometiendo «aparecen aquí con sus
+                números y su plan». Se escribía en la base y no lo leía ninguna pantalla. */}
+            <div className="flex flex-col gap-1 rounded-lg border border-borde p-3">
+              <p className="text-xs text-texto-secundario">Su plan de la semana entrante</p>
+
+              {c.plan.every((d) => d.puestas.length === 0) ? (
+                <p className="text-sm text-texto-secundario">
+                  No repartió la semana por día.
+                </p>
+              ) : (
+                c.plan.map((d) => (
+                  <div key={d.dia} className="flex items-baseline gap-2 text-sm">
+                    <span className="w-20 shrink-0 capitalize text-texto-secundario">
+                      {d.dia}
+                    </span>
+                    {d.puestas.length === 0 ? (
+                      <span className="text-texto-atenuado">—</span>
+                    ) : (
+                      <span className="min-w-0 flex-1">
+                        {d.puestas.map((p, i) => (
+                          <span key={`${p.lista}-${i}`}>
+                            {i > 0 && ", "}
+                            {/* EL CERO EN ÁMBAR. Marcar la lista y dejar la cantidad en blanco es
+                                el error real —pasó el 31 de agosto, los cinco días en cero— y sin
+                                señalarlo se lee como un plan hecho. */}
+                            <span
+                              className={
+                                p.cantidad > 0
+                                  ? "font-mono text-texto"
+                                  : "font-mono text-aviso"
+                              }
+                            >
+                              {p.cantidad}
+                            </span>{" "}
+                            <span className="text-texto-secundario">de {p.lista}</span>
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
             {c.apuestaPotenciales !== null && (
               <p className="text-sm text-texto-secundario">
                 Apuesta la semana entrante:{" "}
@@ -183,6 +273,50 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
                   onChange={(e) => setTexto(e.target.value)}
                   ayuda="Cuestiona, pregunta, agrega un objetivo. El plan es de él: no se reescribe."
                 />
+
+                {/* LA CASILLA DICE LA CONSECUENCIA, NO EL NOMBRE DEL CAMPO. «Visto» a secas no le
+                    dice a nadie que al marcarlo el otro deja de poder corregir, que es justamente
+                    lo único que hay que saber antes de tocarla. */}
+                {!c.visto && (
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={marcarVisto}
+                    onClick={() => setMarcarVisto((v) => !v)}
+                    className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left ${
+                      marcarVisto ? "border-marca bg-marca/5" : "border-borde"
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 ${
+                        marcarVisto
+                          ? "border-marca bg-marca text-white"
+                          : "border-borde bg-fondo"
+                      }`}
+                    >
+                      {marcarVisto && <Check size={16} />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-texto">
+                        Marcarlo como visto
+                      </span>
+                      {/* LA CONSECUENCIA SE DICE SIEMPRE, MARCADA O NO. Puesta sólo cuando ya está
+                          marcada llega tarde: se lee después de haber decidido. Es lo que pidió el
+                          usuario — que al líder le quede claro que el plan se traba. */}
+                      <span className="block text-xs text-texto-secundario">
+                        Una vez marcado, {c.vendedor.split(" ")[0]} ya no puede
+                        modificar su plan de esta semana.
+                      </span>
+                      {!marcarVisto && (
+                        <span className="block text-xs text-texto-secundario">
+                          Si le vas a pedir que corrija algo, déjalo sin marcar.
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                )}
+
                 {error && (
                   <MensajeError titulo="No se pudo guardar" detalle={error} />
                 )}
@@ -190,30 +324,57 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
                   <Boton
                     tono="secundario"
                     ancho
-                    onClick={() => setAbierto(null)}
+                    onClick={() => {
+                      setAbierto(null);
+                      setMarcarVisto(false);
+                    }}
                   >
                     Cancelar
                   </Boton>
+                  {/* EL BOTÓN DICE LO QUE VA A PASAR. Con la casilla puesta y sin texto,
+                      «Responder» sería mentira: no se está respondiendo nada. */}
                   <Boton
                     ancho
-                    disabled={guardando || !texto.trim()}
-                    onClick={() => responder(c.id)}
+                    disabled={guardando || (!texto.trim() && !marcarVisto)}
+                    onClick={() => guardar(c.id)}
                   >
-                    {guardando ? "Guardando" : "Responder"}
+                    {guardando
+                      ? "Guardando"
+                      : texto.trim() && marcarVisto
+                        ? "Responder y marcar"
+                        : marcarVisto
+                          ? "Marcar como visto"
+                          : "Responder"}
                   </Boton>
                 </div>
               </div>
             ) : (
-              <Boton
-                tono="secundario"
-                ancho
-                onClick={() => {
-                  setAbierto(c.id);
-                  setTexto(c.respuesta ?? "");
-                }}
-              >
-                {c.respondido ? "Cambiar la respuesta" : "Responder"}
-              </Boton>
+              <div className="flex flex-col gap-2">
+                <Boton
+                  tono="secundario"
+                  ancho
+                  onClick={() => {
+                    setAbierto(c.id);
+                    setTexto(c.respuesta ?? "");
+                    setMarcarVisto(false);
+                  }}
+                >
+                  {c.respondido ? "Cambiar la respuesta" : "Responder"}
+                </Boton>
+
+                {/* MARCAR ES REVERSIBLE, Y TIENE QUE SERLO. Uno marca, sigue leyendo y encuentra
+                    el cinco de cero — sin esto habría que llamar a alguien para desatascarlo. */}
+                {c.visto && (
+                  <button
+                    type="button"
+                    disabled={guardando}
+                    onClick={() => reabrir(c.id)}
+                    className="min-h-tactil text-xs text-texto-secundario underline underline-offset-2 disabled:opacity-50"
+                  >
+                    Devolvérselo para que corrija
+                  </button>
+                )}
+              </div>
             )}
           </Tarjeta>
         );
