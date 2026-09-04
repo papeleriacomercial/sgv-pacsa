@@ -1271,6 +1271,38 @@ tablero dejó de llamarse «Responderle a Christopher», cada tarjeta marca cuá
 un aviso de que el arreglo es del arranque. **Está anotado en el código para devolverlo**, porque el
 puesto de líder existe justamente para que gerencia no tenga tres frentes.
 
+#### Había dos cerrojos donde se acordó uno
+
+La regla acordada es que **el plan se traba cuando alguien lo lee**. Pero el código lo trababa
+además **cuando cambiaba la semana**, porque la pantalla de cierre abría siempre la semana en
+curso. Ese segundo cerrojo no lo decidió nadie: venía de cómo estaba escrita la pantalla.
+
+**Lo destapó un caso real, no una revisión.** Viernes 4 de septiembre de 2026, cinco y media de la
+tarde: dos cierres mandados con el plan sin repartir —uno con los cinco días en cero, otro sin
+marcar nada— y los vendedores de vuelta el lunes a las ocho, cuando esa pantalla ya no alcanzaba
+esos cierres. *«No tenemos opción de corregir estos planes, van a quedar mal por esta semana que
+viene»*.
+
+**No se hizo cirugía de datos.** Se comprobó primero qué consume el plan: **nada** — no alimenta la
+agenda del vendedor, que sale de los compromisos. Lo único que se perdía era el punto de
+comparación de un módulo que todavía no existe. Borrar planes en producción por eso habría sido
+riesgo sin beneficio, y además no habría servido: el lunes tampoco los habrían alcanzado.
+
+Ahora `/cierre` acepta `?semana=`, y **la acepta sólo si ese cierre es suyo y nadie lo ha marcado**.
+La dirección la escribe cualquiera, así que cualquier otra cosa cae en la semana en curso.
+
+**Dos cuidados que el cambio obligó:**
+
+Los números de una semana vieja son **los congelados**, no los de hoy. `cargarSemana` siempre
+calcula la semana en curso; usarla para corregir la anterior habría mostrado cifras equivocadas y,
+al reenviar, **habría reescrito el histórico** — justo lo que el congelado existe para impedir.
+
+Y la cabecera dice **«Corregir la semana pasada»** con su fecha. Sin eso se ve idéntico a cerrar la
+de hoy y el vendedor termina planificando la semana equivocada sin enterarse.
+
+En la agenda aparece el aviso que lleva ahí — **sin él la regla existe y no le sirve a nadie**,
+porque nadie va a adivinar la dirección. Sale sólo cuando de verdad falta el reparto.
+
 #### No se envía un día marcado sin cantidad
 
 Tocar el nombre de la lista la pone en el día con cantidad cero y abre la casilla del número; si no
