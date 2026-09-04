@@ -15,6 +15,8 @@ export type CierreDeAlguien = {
   vendedor: string;
   semana: string;
   esDeEstaSemana: boolean;
+  /** Para gerencia, que durante el arranque ve al líder y a los vendedores en la misma lista. */
+  esLider: boolean;
   numeros: Record<string, number>;
   sorprendio: string | null;
   freno: string | null;
@@ -130,8 +132,13 @@ export function ListaCierres({ cierres }: { cierres: CierreDeAlguien[] }) {
           <Tarjeta key={c.id} className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-base font-semibold text-texto">
+                <p className="flex items-center gap-2 text-base font-semibold text-texto">
                   {c.vendedor}
+                  {c.esLider && (
+                    <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                      Líder
+                    </span>
+                  )}
                 </p>
                 <p className="font-mono text-xs text-texto-atenuado">
                   Semana del {FECHA.format(new Date(`${c.semana}T12:00:00`))}

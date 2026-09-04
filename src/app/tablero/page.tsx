@@ -320,13 +320,20 @@ export default async function Tablero() {
               </Tarjeta>
             )}
 
-            {/* La única caja de respuesta del tablero, y va al líder. */}
+            {/* La única caja de respuesta del tablero. **Va al líder por diseño** —el puesto
+                existe para que gerencia no tenga tres frentes— pero durante el arranque lleva a
+                todos los cierres, porque el usuario quiere leer lo que están contestando los
+                vendedores para afinar las preguntas. Se devuelve cuando eso termine. */}
             <Link
               href="/contrato"
               className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-4 text-base font-medium text-white"
             >
-              Responderle a {lider.nombre.split(" ")[0]}
+              Responder los cierres
             </Link>
+            <p className="text-center text-xs text-texto-atenuado">
+              El de {lider.nombre.split(" ")[0]} y, mientras arranca, los de
+              los vendedores.
+            </p>
           </section>
         )}
 

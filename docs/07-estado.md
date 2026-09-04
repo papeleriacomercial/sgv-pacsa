@@ -1240,6 +1240,37 @@ editable desde arriba deja de ser el plan del vendedor, que entonces aprende a p
 van a aprobar. «Aprobado» reintroduce por la etiqueta exactamente lo que el trigger impide por el
 dato.
 
+#### La pantalla de Contrato nunca había funcionado
+
+**Mostraba «Todavía no hay cierres» desde el día que nació, el 23 de agosto de 2026.** La consulta
+embebía `perfiles(nombre)` sin calificar con qué clave, y `cierres` apunta a `perfiles` por más de
+un camino —quién lo escribió y quién lo respondió—, así que PostgREST la rechaza **entera** con un
+300 y no devuelve nada.
+
+Es la tercera vez que este proyecto tropieza con lo mismo. **Agregar una columna que referencia una
+tabla vuelve ambiguo todo embebido sin calificar de esa tabla**, y no falla al compilar: falla al
+abrir la pantalla.
+
+**Pero lo que lo hizo durar dos semanas fue otra cosa, y es la lección que vale.** La consulta se
+leía con `const { data } = await …`, **sin mirar el error**, y la pantalla decía «Todavía no hay
+cierres» — una frase perfectamente creíble en un equipo que acaba de arrancar. **Un fallo
+disfrazado de estado vacío no se reporta: se cree.** Lo destapó el usuario yendo a responderle al
+líder, no una comprobación.
+
+Ninguna pantalla que pueda estar legítimamente vacía debe descartar el error de su consulta.
+
+#### Gerencia ve todos los cierres mientras arranca
+
+Pedido del usuario el 4 de septiembre de 2026: *«quiero ver precisamente las respuestas que estén
+colocando los vendedores para ir afinando la aplicación; ya después regresaremos al punto donde el
+líder se encarga de los vendedores y yo solamente del líder»*.
+
+**No hubo que abrir ningún permiso** — `cierres_gerencia` ya los dejaba ver todos. Lo que los
+escondía era el embebido de arriba. Lo que sí cambió es que la pantalla lo diga: el botón del
+tablero dejó de llamarse «Responderle a Christopher», cada tarjeta marca cuál es la del líder, y hay
+un aviso de que el arreglo es del arranque. **Está anotado en el código para devolverlo**, porque el
+puesto de líder existe justamente para que gerencia no tenga tres frentes.
+
 #### No se envía un día marcado sin cantidad
 
 Tocar el nombre de la lista la pone en el día con cantidad cero y abre la casilla del número; si no

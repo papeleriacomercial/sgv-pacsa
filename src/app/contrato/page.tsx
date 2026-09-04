@@ -3,7 +3,7 @@ import { clienteServidor } from "@/lib/supabase/servidor";
 import { lunesDeEstaSemana } from "@/lib/semana";
 import { ListaCierres, type CierreDeAlguien } from "@/components/lista-cierres";
 import { Tarjeta } from "@/components/ui/tarjeta";
-import { Vacio } from "@/components/ui/estados";
+import { MensajeError, Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 
 type Fila = {
@@ -21,12 +21,13 @@ type Fila = {
   respondido_en: string | null;
   plan: Record<string, { listaId: string; cantidad: number }[]> | null;
   visto_en: string | null;
-  perfiles: { nombre: string } | { nombre: string }[] | null;
+  perfiles: { nombre: string; rol: string } | { nombre: string; rol: string }[] | null;
 };
 
-function nombreDe(x: Fila["perfiles"]) {
-  if (!x) return "Vendedor";
-  return Array.isArray(x) ? (x[0]?.nombre ?? "Vendedor") : x.nombre;
+/** El embebido llega como objeto o como arreglo de uno según la versión; se resuelve una vez. */
+function quien(x: Fila["perfiles"]) {
+  const p = Array.isArray(x) ? x[0] : x;
+  return { nombre: p?.nombre ?? "Vendedor", rol: p?.rol ?? "vendedor" };
 }
 
 /**
@@ -52,12 +53,28 @@ export default async function Contrato() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
 
+  const { data: yo } = await supabase
+    .from("perfiles")
+    .select("rol")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const esGerente = yo?.rol === "gerente";
+
   const lunes = lunesDeEstaSemana();
 
-  const { data } = await supabase
+  // **`perfiles` VA CALIFICADO CON SU CLAVE, Y NO ES UN DETALLE: SIN ESO LA CONSULTA NO DEVUELVE
+  // NADA.** `cierres` apunta a `perfiles` por tres caminos —quién lo escribió, quién lo respondió y
+  // quién lo marcó como visto—, así que un `perfiles(nombre)` a secas es ambiguo y PostgREST lo
+  // rechaza entero con un 300.
+  //
+  // Estuvo así **desde que nació la tabla el 23 de agosto de 2026**: `respondido_por` ya la volvía
+  // ambigua, y esta pantalla nunca mostró un solo cierre. Lo destapó el usuario el 4 de septiembre
+  // yendo a responderle al líder y encontrando «Todavía no hay cierres».
+  const { data, error } = await supabase
     .from("cierres")
     .select(
-      "id, vendedor_id, semana, numeros, sorprendio, freno, necesito, plan, apuesta_potenciales, apuesta_clientes, enviado_en, respuesta, respondido_en, visto_en, perfiles(nombre)",
+      "id, vendedor_id, semana, numeros, sorprendio, freno, necesito, plan, apuesta_potenciales, apuesta_clientes, enviado_en, respuesta, respondido_en, visto_en, perfiles!cierres_vendedor_id_fkey(nombre, rol)",
     )
     .neq("vendedor_id", user.id)
     .not("enviado_en", "is", null)
@@ -99,7 +116,8 @@ export default async function Contrato() {
   const cierres: CierreDeAlguien[] = filas.map(
     (c) => ({
       id: c.id,
-      vendedor: nombreDe(c.perfiles),
+      vendedor: quien(c.perfiles).nombre,
+      esLider: quien(c.perfiles).rol === "lider",
       semana: c.semana,
       esDeEstaSemana: c.semana === lunes,
       numeros: c.numeros ?? {},
@@ -137,7 +155,41 @@ export default async function Contrato() {
       </header>
 
       <main className="flex flex-col gap-4 p-4">
-        {cierres.length === 0 ? (
+        {/* **ARREGLO TEMPORAL DEL ARRANQUE, Y ESTÁ ANOTADO PARA DEVOLVERLO.** El diseño dice que
+            gerencia lee al líder y el líder a su equipo — el puesto de líder existe justamente
+            para que gerencia no tenga tres frentes. Mientras la aplicación arranca, el usuario
+            quiere leer lo que están contestando todos para afinarla: *«ya después regresaremos
+            al punto donde el líder se encarga de los vendedores y yo solamente del líder»*.
+
+            No hubo que abrir ningún permiso: gerencia ya podía verlos todos. Lo que los
+            escondía era el embebido ambiguo de arriba. */}
+        {esGerente && cierres.some((c) => !c.esLider) && (
+          <Tarjeta className="flex flex-col gap-1">
+            <p className="text-sm text-texto">
+              Estás viendo también los cierres de los vendedores, no sólo el
+              del líder.
+            </p>
+            <p className="text-xs text-texto-secundario">
+              Es para el arranque, mientras se afinan las preguntas. Después
+              vuelve a ser cosa del líder.
+            </p>
+          </Tarjeta>
+        )}
+
+        {/* **LO QUE HIZO QUE EL DEFECTO VIVIERA DOS SEMANAS.** La consulta fallaba y la pantalla
+            decía «todavía no hay cierres» — que es una frase perfectamente creíble cuando el equipo
+            acaba de arrancar. Un fallo que se disfraza de estado vacío no se reporta: se cree.
+
+            Ahora el error se mira y se dice. Ningún `const { data } = await …` sin mirar el error
+            en una pantalla que puede estar legítimamente vacía. */}
+        {error && (
+          <MensajeError
+            titulo="No se pudieron leer los cierres"
+            detalle={error.message}
+          />
+        )}
+
+        {!error && cierres.length === 0 ? (
           <Tarjeta>
             <Vacio titulo="Todavía no hay cierres">
               Cuando los vendedores cierren su semana, aparecen aquí con sus
