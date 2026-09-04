@@ -8,6 +8,7 @@ import { Boton } from "@/components/ui/boton";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { MensajeError } from "@/components/ui/estados";
+import { ElegirTodos } from "@/components/ui/elegir-todos";
 import { LINEAS_PRODUCTO, type LineaProducto } from "@/lib/catalogos";
 
 export type Candidato = {
@@ -79,6 +80,18 @@ export function ElegirParaCruzar({
         compra la mitad o más de los comercios de su tipo. Marca los que vas a
         visitar.
       </p>
+
+      {/* **Acá se eligen casi siempre todos, y ese es el punto.** La pantalla ya viene filtrada:
+          son los clientes de la zona a los que les falta una línea que compra la mitad de su
+          gremio. Marcarlos uno por uno es cobrarle al vendedor por un cruce que ya hizo la
+          consulta. */}
+      <ElegirTodos
+        total={candidatos.length}
+        elegidos={marcados.length}
+        sustantivo="clientes"
+        onTodos={() => setMarcados(candidatos.map((c) => c.id))}
+        onNinguno={() => setMarcados([])}
+      />
 
       {candidatos.map((c) => {
         const marcado = marcados.includes(c.id);

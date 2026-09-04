@@ -42,6 +42,7 @@ import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, MensajeError, Vacio } from "@/components/ui/estados";
+import { ElegirTodos } from "@/components/ui/elegir-todos";
 
 /**
  * Búsqueda de prospectos (§7.4).
@@ -117,6 +118,18 @@ function situacionDe(c: Candidato): Situacion {
   if (c.estado?.es_mio) return "mio";
   if (c.estado?.cuenta_id) return "de_otro";
   return "nuevo";
+}
+
+/**
+ * Si este punto se puede tomar.
+ *
+ * **Sale de `situacionDe` y no de sus propias condiciones**, porque son dos sitios que tienen que
+ * decir lo mismo: la casilla de la tarjeta y el «elegir los N nuevos» de arriba. Escritas por
+ * separado —como estuvieron— coincidían por casualidad, y el día que alguien cambiara una, la otra
+ * habría prometido elegir puntos que no se pueden elegir.
+ */
+function sePuedeElegir(c: Candidato): boolean {
+  return situacionDe(c) === "nuevo";
 }
 
 /**
@@ -552,6 +565,13 @@ function Buscador() {
       : (b.resenas ?? -1) - (a.resenas ?? -1),
   );
 
+  // LOS ÚNICOS QUE SE PUEDEN ELEGIR. De las cuatro situaciones sólo el nuevo es tomable: el que ya
+  // es tuyo lo abres, el de otro vendedor no te toca, y el descartado ya lo miró alguien. Es la
+  // misma condición con la que la tarjeta decide si dibuja o no su casilla — sale de `situacionDe`
+  // para que no puedan discrepar el día que alguien cambie una de las dos.
+  const nuevos = ordenados.filter(sePuedeElegir);
+  const nuevosElegidos = nuevos.filter((c) => elegidos.includes(c.placeId)).length;
+
   return (
     <div className="flex flex-col gap-4">
       {/* Sin esto se pierde el hilo: escoge veinte puntos y no sabe a dónde
@@ -727,6 +747,31 @@ function Buscador() {
           </div>
 
           <Leyenda resultados={resultados} elegidos={elegidos.length} />
+
+          {/* DEBAJO DE LA LEYENDA A PROPÓSITO. La leyenda acaba de decir «7 Nuevo»; el control
+              dice «Elegir los 7 nuevos». Puesto encima, el número aparecería antes de que se sepa
+              de dónde sale. */}
+          <ElegirTodos
+            total={nuevos.length}
+            elegidos={nuevosElegidos}
+            sustantivo="nuevos"
+            onTodos={() =>
+              setElegidos((a) => [
+                ...a,
+                ...nuevos
+                  .map((c) => c.placeId)
+                  .filter((id) => !a.includes(id)),
+              ])
+            }
+            // QUITA LOS QUE HOY SE PUEDEN ELEGIR, no todo lo marcado. Los estados se refrescan
+            // mientras se trabaja —alguien descarta un punto, otro vendedor lo levanta— y uno que
+            // dejó de ser nuevo sale de esta cuenta; borrarlo de la selección a la fuerza sería
+            // decidir por el vendedor sobre algo que este control ya no representa.
+            onNinguno={() => {
+              const enPantalla = new Set(nuevos.map((c) => c.placeId));
+              setElegidos((a) => a.filter((id) => !enPantalla.has(id)));
+            }}
+          />
 
           {/* Ordenar por reseñas es lo que separa un supermercado de 400 de
               una tienda de 12. Es el proxy de tráfico de §7.5. */}
@@ -1090,7 +1135,7 @@ function Resultado({
           </div>
         </div>
 
-        {!yaEsProspecto && !descartado && (
+        {sePuedeElegir(candidato) && (
           <button
             type="button"
             aria-pressed={elegido}
