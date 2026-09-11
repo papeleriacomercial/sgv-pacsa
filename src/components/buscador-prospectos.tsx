@@ -292,6 +292,27 @@ function Buscador() {
    * de ventas el 11 de septiembre de 2026 para reconocer el local por el techo y el patio.
    */
   const [tipoMapa, setTipoMapa] = useState<"roadmap" | "hybrid">("roadmap");
+
+  /**
+   * Salir, advirtiendo sólo cuando hay algo que perder.
+   *
+   * La selección **no existe en ninguna parte hasta que se confirma**: irse la pierde entera. Y
+   * un «¿seguro?» que salta siempre se contesta que sí sin leerlo, y el día que de verdad
+   * importa tampoco se lee.
+   */
+  function salir() {
+    if (
+      elegidos.length > 0 &&
+      !confirm(
+        `Tienes ${elegidos.length} ${
+          elegidos.length === 1 ? "punto elegido" : "puntos elegidos"
+        } sin agregar. Si sales, se pierden.`,
+      )
+    ) {
+      return;
+    }
+    router.push(listaId ? `/listas/${listaId}` : "/mapa");
+  }
   const [orden, setOrden] = useState<Orden>("cercania");
   const [vista, setVista] = useState<"lista" | "mapa">("lista");
   const [abierto, setAbierto] = useState<Candidato | null>(null);
@@ -609,6 +630,9 @@ function Buscador() {
   const nuevos = ordenados.filter(sePuedeElegir);
   const nuevosElegidos = nuevos.filter((c) => elegidos.includes(c.placeId)).length;
 
+  // El mapa a pantalla casi completa: con resultados a la vista y el mapa elegido.
+  const enMapaPleno = vista === "mapa" && Boolean(resultados?.length);
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       {/* **NO HABÍA CÓMO SALIR DE ACÁ**, y el que llega armando una lista lleva encima una
@@ -617,31 +641,28 @@ function Buscador() {
 
           La advertencia sale **sólo cuando hay algo que perder**. Un «¿seguro?» que salta
           siempre se contesta que sí sin leerlo, y el día que de verdad importa tampoco se lee. */}
-      <button
-        type="button"
-        onClick={() => {
-          if (
-            elegidos.length > 0 &&
-            !confirm(
-              `Tienes ${elegidos.length} ${
-                elegidos.length === 1 ? "punto elegido" : "puntos elegidos"
-              } sin agregar. Si sales, se pierden.`,
-            )
-          ) {
-            return;
-          }
-          router.push(listaId ? `/listas/${listaId}` : "/mapa");
-        }}
-        className="min-h-tactil -mb-2 flex items-center gap-1.5 self-start text-sm text-texto-secundario"
-      >
-        <ChevronLeft size={18} aria-hidden />
-        {listaId ? "Volver a la lista" : "Volver al mapa"}
-      </button>
+      {/* En modo mapa no se dibuja acá: se muda a la fila de la vista, para no gastar un
+          renglón entero en un botón. */}
+      <div className={enMapaPleno ? "hidden" : "contents"}>
+        <BotonSalir
+          listaId={listaId}
+          cuantosElegidos={elegidos.length}
+          onSalir={salir}
+        />
+      </div>
 
       {/* Sin esto se pierde el hilo: escoge veinte puntos y no sabe a dónde
           van a caer. */}
       {listaId && (
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+        // En mapa no se dibuja: el botón de volver ya dice «Volver a la lista», así que el
+        // recordatorio es el mismo dato ocupando un renglón que el mapa necesita.
+        <div
+          className={
+            vista === "mapa" && resultados && resultados.length > 0
+              ? "hidden"
+              : "flex items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
+          }
+        >
           <p className="text-sm text-blue-800">
             Armando la lista{" "}
             <span className="font-semibold">{nombreLista ?? "…"}</span>
@@ -792,30 +813,27 @@ function Buscador() {
               En mapa, el conteo y el orden no dicen nada —no hay filas que ordenar— y la leyenda
               se mudó encima del propio mapa, donde no gasta alto. */}
           <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-sm font-medium text-texto">
+            {enMapaPleno && (
+              <BotonSalir
+                listaId={listaId}
+                cuantosElegidos={elegidos.length}
+                onSalir={salir}
+              />
+            )}
+
+            <p
+              className={
+                vista === "mapa"
+                  ? "hidden"
+                  : "truncate text-sm font-medium text-texto"
+              }
+            >
               {resultados.length} encontrados
             </p>
             <div className="flex shrink-0 gap-1">
-              {/* **EL SATÉLITE SÓLO EN MAPA**, que es donde significa algo. */}
-              {vista === "mapa" && (
-                <button
-                  type="button"
-                  aria-pressed={tipoMapa === "hybrid"}
-                  onClick={() =>
-                    setTipoMapa((a) => (a === "hybrid" ? "roadmap" : "hybrid"))
-                  }
-                  className={`min-h-tactil w-11 rounded-lg border ${
-                    tipoMapa === "hybrid"
-                      ? "border-marca bg-marca text-white"
-                      : "border-borde bg-superficie text-texto"
-                  }`}
-                  aria-label={
-                    tipoMapa === "hybrid" ? "Ver el mapa de calles" : "Ver satélite"
-                  }
-                >
-                  <Layers size={16} className="mx-auto" aria-hidden />
-                </button>
-              )}
+              {/* El satélite no está acá: **vive encima del propio mapa**, que es donde el
+                  usuario lo pidió —y donde ya estaba el del mapa de la cartera—. Fuera del mapa
+                  ocupa un renglón de la pantalla que el mapa necesita. */}
               <button
                 type="button"
                 aria-pressed={vista === "lista"}
@@ -916,7 +934,9 @@ function Buscador() {
           {vista === "mapa" ? (
             // `flex-1` y `min-h-0`: se lleva todo el alto que sobre después del cromo, sin que
             // nadie tenga que adivinar cuánto mide la barra de abajo en cada teléfono.
-            <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-lg border border-borde">
+            // **A SANGRE.** Los márgenes negativos se comen el `p-4` de la pantalla y el hueco de
+            // abajo: en un teléfono son casi cien píxeles de mapa, que es de lo que se trataba.
+            <div className="relative -mx-4 -mb-4 min-h-0 w-[calc(100%+2rem)] flex-1 overflow-hidden border-y border-borde">
               <div className="pointer-events-none absolute left-2 top-2 z-10 max-w-[calc(100%-1rem)]">
                 <Leyenda resultados={resultados} elegidos={elegidos.length} />
               </div>
@@ -938,6 +958,9 @@ function Buscador() {
                 // un `?lista=` vacío en la dirección los dos prometerían cosas distintas.
                 enLista={Boolean(listaId)}
                 tipoMapa={tipoMapa}
+                onCambiarTipo={() =>
+                  setTipoMapa((a) => (a === "hybrid" ? "roadmap" : "hybrid"))
+                }
                 onTocarComercio={tocarComercio}
                 // **SE CIERRA AL ELEGIR.** Barrer una zona es tocar quince marcadores seguidos;
                 // dejar la ventanita abierta obliga a cerrarla a mano cada vez, y son quince
@@ -1036,6 +1059,61 @@ function Centrar({ candidato }: { candidato: Candidato | null }) {
   return null;
 }
 
+/** Salir del buscador. Se dibuja en un renglón propio, o dentro de la fila de la vista. */
+function BotonSalir({
+  listaId,
+  cuantosElegidos,
+  onSalir,
+}: {
+  listaId: string | null;
+  cuantosElegidos: number;
+  onSalir: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSalir}
+      className="min-h-tactil flex shrink-0 items-center gap-0.5 self-start pr-1 text-sm text-texto-secundario"
+    >
+      <ChevronLeft size={18} aria-hidden />
+      {listaId ? "Volver a la lista" : "Volver al mapa"}
+      {cuantosElegidos > 0 && (
+        <span className="sr-only">, {cuantosElegidos} sin agregar</span>
+      )}
+    </button>
+  );
+}
+
+/**
+ * Calle o satélite, encima del mapa.
+ *
+ * **Va sobre el mapa y no en una barra**, por pedido del usuario y porque es lo coherente: un
+ * control que sólo sirve mirando el mapa no debería cobrarle al mapa un renglón de alto.
+ */
+function BotonSatelite({
+  tipo,
+  onCambiar,
+}: {
+  tipo: "roadmap" | "hybrid";
+  onCambiar: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={tipo === "hybrid"}
+      onClick={onCambiar}
+      className={`min-h-tactil absolute right-3 top-3 z-10 w-11 rounded-lg border shadow-sm ${
+        tipo === "hybrid"
+          ? "border-marca bg-marca text-white"
+          : "border-borde bg-superficie text-texto"
+      }`}
+      aria-label={tipo === "hybrid" ? "Ver el mapa de calles" : "Ver satélite"}
+    >
+      <Layers size={16} className="mx-auto" aria-hidden />
+    </button>
+  );
+}
+
 /**
  * "Buscar en esta zona".
  *
@@ -1085,6 +1163,7 @@ function MapaCandidatos({
   onElegir,
   enLista,
   tipoMapa,
+  onCambiarTipo,
   onTocarComercio,
   sucursales,
   contando,
@@ -1100,8 +1179,9 @@ function MapaCandidatos({
   onElegir: (placeId: string) => void;
   /** Si se llegó armando una lista. Cambia lo que promete el botón de la ventanita. */
   enLista: boolean;
-  /** Calle o satélite con rótulos. Lo decide la barra de arriba. */
+  /** Calle o satélite con rótulos. El botón vive encima del mapa. */
   tipoMapa: "roadmap" | "hybrid";
+  onCambiarTipo: () => void;
   /** Un comercio del mapa de Google que no venía en la búsqueda. */
   onTocarComercio: (placeId: string) => void;
   sucursales: Record<string, number>;
@@ -1145,6 +1225,7 @@ function MapaCandidatos({
         buscando={buscando}
         queBusca={queBusca}
       />
+      <BotonSatelite tipo={tipoMapa} onCambiar={onCambiarTipo} />
       <Centrar candidato={abierto} />
 
       {core &&

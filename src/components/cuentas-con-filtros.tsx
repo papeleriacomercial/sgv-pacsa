@@ -40,6 +40,7 @@ export function CuentasConFiltros({
   vendedores,
   vistaInicial = "lista",
   cuentaDestacada,
+  mapaProtagonista = false,
   yo,
 }: {
   cuentas: Cuenta[];
@@ -47,6 +48,14 @@ export function CuentasConFiltros({
   vistaInicial?: "lista" | "mapa";
   /** Se abre centrada y con su ventana desplegada. Llega desde el expediente. */
   cuentaDestacada?: string;
+  /**
+   * El mapa es el motivo de la pantalla, no una de dos vistas.
+   *
+   * En `/mapa` se entra **a mirar el territorio**: el buscador entre las propias cuentas y el
+   * panel de filtros son dos renglones que le quitan al mapa casi la mitad de un teléfono. En
+   * `/cuentas` es al revés —se filtra y después se mira— y ahí sí tienen que estar.
+   */
+  mapaProtagonista?: boolean;
   /** Quién está mirando. Su cartera es la que sale por omisión. */
   yo?: string;
 }) {
@@ -167,6 +176,9 @@ export function CuentasConFiltros({
 
   const conUbicacion = visibles.filter((c) => !c.sin_ubicacion);
 
+  // Sólo cuando las dos cosas se cumplen: la pantalla es del mapa y el mapa está a la vista.
+  const enMapaPleno = mapaProtagonista && vista === "mapa";
+
   return (
     <div className="flex flex-1 flex-col gap-3">
       {/* BUSCAR ENTRE LAS PROPIAS CUENTAS, que es lo que faltaba.
@@ -176,7 +188,7 @@ export function CuentasConFiltros({
           porque el vendedor ya sabe cuál busca.
           VA ARRIBA Y SIEMPRE VISIBLE: si viviera dentro del panel, habría que abrir el panel para
           buscar, y buscar es lo más frecuente que se hace en esta pantalla. */}
-      <div className="relative">
+      <div className={enMapaPleno ? "hidden" : "relative"}>
         <Search
           size={18}
           aria-hidden
@@ -192,6 +204,7 @@ export function CuentasConFiltros({
         />
       </div>
 
+      <div className={enMapaPleno ? "hidden" : ""}>
       <PanelFiltros
         filtros={filtros}
         onCambio={setFiltros}
@@ -207,6 +220,7 @@ export function CuentasConFiltros({
         yo={yo}
         conColor
       />
+      </div>
 
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium text-texto">
@@ -304,7 +318,13 @@ export function CuentasConFiltros({
             // El hijo va absoluto porque el mapa se dibuja con `height: 100%`, y un porcentaje
             // contra un padre que sólo crece con `flex-1` resuelve a cero. Desaparece sin
             // error: ni la consola ni la compilación dicen nada.
-            <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-lg border border-borde">
+            <div
+              className={
+                enMapaPleno
+                  ? "relative -mx-4 -mb-4 min-h-0 w-[calc(100%+2rem)] flex-1 overflow-hidden border-y border-borde"
+                  : "relative min-h-0 w-full flex-1 overflow-hidden rounded-lg border border-borde"
+              }
+            >
               <div className="absolute inset-0">
                 <MapaCuentas
                   cuentas={conUbicacion}

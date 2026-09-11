@@ -101,6 +101,9 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
             vistaInicial="mapa"
             yo={user.id}
             cuentaDestacada={typeof cuenta === "string" ? cuenta : undefined}
+            // Acá se entra a mirar el territorio, no a filtrar. El buscador entre cuentas y el
+            // panel de filtros le quitaban al mapa casi la mitad de un teléfono.
+            mapaProtagonista
           />
         )}
       </main>
