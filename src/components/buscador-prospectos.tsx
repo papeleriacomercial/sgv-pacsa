@@ -1294,10 +1294,6 @@ function MapaCandidatos({
               metros o una tienda con estacionamiento — que es lo que decide si vale el viaje. */}
           <VerLaFachada lat={abierto.lat} lng={abierto.lng} />
 
-          {/* Antes de marcarlo: mirar la fachada dice en un vistazo si es un local de dos
-              metros o una tienda con estacionamiento — que es lo que decide si vale el viaje. */}
-          <VerLaFachada lat={abierto.lat} lng={abierto.lng} />
-
           {/* La consulta nacional va aquí y no en la lista: para llegar, el
               vendedor ya miró el mapa y tocó este punto. Es un gesto
               deliberado, no algo que se toca de paso en veinte filas. */}
