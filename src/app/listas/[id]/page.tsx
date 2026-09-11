@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { rutaDeBusqueda } from "@/lib/potenciales";
 import { notFound, redirect } from "next/navigation";
 import { Layers, MapPinned, Search } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
@@ -155,16 +156,17 @@ export default async function DetalleLista({
 
   // A Buscar y no al mapa de la cartera: el mapa muestra lo que ya es suyo, y
   // aquí lo que hace falta es encontrar puntos que todavía no lo son.
-  const destinoBusqueda = lista.poblado
-    ? `/buscar?lista=${id}&q=${encodeURIComponent(lista.poblado)}`
-    : `/buscar?lista=${id}`;
+  const destinoBusqueda = rutaDeBusqueda(id, lista.poblado);
 
   return (
     <>
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <BotonVolver alterno="/listas" />
+        {/* **DESTINO FIJO, NO HISTORIAL.** El padre de una lista es la pantalla de listas,
+            siempre. Con historial, entrar acá, ir a buscar puntos y regresar dejaba el
+            buscador como «lo de atrás», y el botón llevaba ahí en vez de a las listas. */}
+        <BotonVolver href="/listas" />
         <h1 className="flex-1 truncate text-lg font-semibold text-marca">
           {lista.nombre}
         </h1>

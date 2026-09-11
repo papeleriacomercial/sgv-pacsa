@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Layers } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   APIProvider,
@@ -13,10 +14,14 @@ import {
   type MapMouseEvent,
 } from "@vis.gl/react-google-maps";
 import { TIPOS_CUENTA, VOLUMENES } from "@/lib/catalogos";
-import { iconoPin } from "@/lib/marcadores";
+import { COLOR, iconoPin } from "@/lib/marcadores";
 import { haceDias } from "@/lib/fechas";
 import type { Cuenta } from "@/lib/filtros";
 import { MensajeError } from "@/components/ui/estados";
+import { VerLaFachada } from "@/components/ver-la-fachada";
+import { Boton } from "@/components/ui/boton";
+import { crearPotenciales, type PuntoElegido } from "@/lib/potenciales";
+import { clienteNavegador } from "@/lib/supabase/navegador";
 
 const CENTRO_POR_OMISION = { lat: 8.9824, lng: -79.5199 };
 
@@ -148,6 +153,65 @@ function Contenido({
   } | null>(null);
 
   /**
+   * Los comercios del mapa que se van marcando para esta lista.
+   *
+   * **ANTES ESTO NO EXISTÍA:** el botón llevaba a la pantalla de Cuentas, de la que la aplicación
+   * no volvía a Listas. Lo reportó el equipo de ventas el 11 de septiembre de 2026: *«esto está
+   * bien si estuviera en el menú de CUENTAS, pero al estar en el menú de LISTAS ha creado
+   * confusión»*.
+   *
+   * Ahora se marcan varios y se confirman de un golpe, igual que en el buscador de potenciales.
+   * Que las dos pantallas se comporten igual es lo que permite ir de una a otra sin reaprender.
+   */
+  const [elegidos, setElegidos] = useState<PuntoElegido[]>([]);
+  const [guardando, setGuardando] = useState(false);
+
+  /**
+   * Calle o satélite.
+   *
+   * **`hybrid` y no `satellite`:** el satélite puro no trae nombres de calle ni rótulos, y un
+   * vendedor mirando techos sin saber en qué calle está no puede planificar nada.
+   */
+  const [tipoMapa, setTipoMapa] = useState<"roadmap" | "hybrid">("roadmap");
+  const [error, setError] = useState<string | null>(null);
+
+  /** Crear de un golpe todo lo marcado, y meterlo en la lista. */
+  async function agregarALaLista() {
+    if (!listaId || elegidos.length === 0) return;
+    setGuardando(true);
+    setError(null);
+
+    const {
+      data: { user },
+    } = await clienteNavegador().auth.getUser();
+
+    if (!user) {
+      setError("Se cerró la sesión. Vuelve a entrar.");
+      setGuardando(false);
+      return;
+    }
+
+    // **LA MISMA FUNCIÓN QUE USA EL BUSCADOR.** Acá se hereda el poblado de la lista, el origen
+    // y el que entren sin `tipo` —o sea como potenciales— sin tener que acordarse de nada.
+    const fallo = await crearPotenciales({
+      puntos: elegidos,
+      vendedorId: user.id,
+      listaId,
+    });
+
+    if (fallo) {
+      setError(fallo);
+      setGuardando(false);
+      return;
+    }
+
+    setElegidos([]);
+    setGuardando(false);
+    router.push(`/listas/${listaId}`);
+    router.refresh();
+  }
+
+  /**
    * Tocar un local de tercero en el mapa y agregarlo.
    *
    * De Google solo se guarda el `place_id` y la ubicación. El nombre viaja
@@ -182,83 +246,157 @@ function Contenido({
   );
 
   return (
-    <MapaGoogle
-      defaultCenter={CENTRO_POR_OMISION}
-      defaultZoom={12}
-      gestureHandling="greedy"
-      disableDefaultUI
-      zoomControl
-      clickableIcons
-      onClick={tocarMapa}
-      style={{ height: "100%", width: "100%" }}
-    >
-      <Encuadrar cuentas={cuentas} destacada={destacada} />
+    <div className="relative h-full w-full">
+      <MapaGoogle
+        defaultCenter={CENTRO_POR_OMISION}
+        defaultZoom={12}
+        gestureHandling="greedy"
+        // Controlado: cambia cuando se toca el botón de capas.
+        mapTypeId={tipoMapa}
+        disableDefaultUI
+        zoomControl
+        clickableIcons
+        onClick={tocarMapa}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <Encuadrar cuentas={cuentas} destacada={destacada} />
 
-      {core &&
-        cuentas.map((c) => (
-          <Marker
-            key={c.id}
-            position={{ lat: c.lat!, lng: c.lng! }}
-            icon={iconoPin(color(c))}
-            onClick={() => setAbierta(c)}
-          />
-        ))}
+        {core &&
+          cuentas.map((c) => (
+            <Marker
+              key={c.id}
+              position={{ lat: c.lat!, lng: c.lng! }}
+              icon={iconoPin(color(c))}
+              onClick={() => setAbierta(c)}
+            />
+          ))}
 
-      {abierta && (
-        <InfoWindow
-          position={{ lat: abierta.lat!, lng: abierta.lng! }}
-          onCloseClick={() => setAbierta(null)}
-        >
-          {/* El color va acompañado siempre del dato escrito: es lo que
-              mantiene la regla de §17 dentro de la excepción de D-013. */}
-          <span className="block text-sm font-semibold">{abierta.nombre}</span>
-          <span className="block text-xs">
-            {TIPOS_CUENTA[abierta.tipo]}
-            {abierta.volumen && ` · Volumen ${VOLUMENES[abierta.volumen]}`}
-          </span>
-          <span className="block text-xs">
-            {abierta.dias_sin_contacto === null
-              ? "Nunca contactada"
-              : `${haceDias(abierta.dias_sin_contacto)} sin contacto`}
-          </span>
-          <Link
-            href={`/cuentas/${abierta.id}`}
-            className="mt-1 block text-xs underline"
+        {abierta && (
+          <InfoWindow
+            position={{ lat: abierta.lat!, lng: abierta.lng! }}
+            onCloseClick={() => setAbierta(null)}
           >
-            Abrir expediente
-          </Link>
-        </InfoWindow>
-      )}
+            {/* El color va acompañado siempre del dato escrito: es lo que
+                mantiene la regla de §17 dentro de la excepción de D-013. */}
+            <span className="block text-sm font-semibold">{abierta.nombre}</span>
+            <span className="block text-xs">
+              {TIPOS_CUENTA[abierta.tipo]}
+              {abierta.volumen && ` · Volumen ${VOLUMENES[abierta.volumen]}`}
+            </span>
+            <span className="block text-xs">
+              {abierta.dias_sin_contacto === null
+                ? "Nunca contactada"
+                : `${haceDias(abierta.dias_sin_contacto)} sin contacto`}
+            </span>
+            <Link
+              href={`/cuentas/${abierta.id}`}
+              className="mt-1 block text-xs underline"
+            >
+              Abrir expediente
+            </Link>
+            <VerLaFachada lat={abierta.lat!} lng={abierta.lng!} />
+          </InfoWindow>
+        )}
 
-      {candidato && (
-        <InfoWindow
-          position={{ lat: candidato.lat, lng: candidato.lng }}
-          onCloseClick={() => setCandidato(null)}
-        >
-          <span className="block text-sm font-semibold">
-            {candidato.nombre || "Este local"}
-          </span>
-          <span className="block text-xs">Todavía no es cuenta tuya</span>
-          <button
-            type="button"
-            onClick={() => {
-              const p = new URLSearchParams({
-                place_id: candidato.placeId,
-                lat: String(candidato.lat),
-                lng: String(candidato.lng),
-                nombre: candidato.nombre,
-              });
-              // Si se está armando una lista, la cuenta entra ahí al crearse.
-              if (listaId) p.set("lista", listaId);
-              router.push(`/cuentas/nuevo?${p}`);
-            }}
-            className="mt-1 text-xs font-medium underline"
+        {/* Los marcados llevan pin propio: sin esto, el vendedor pierde la cuenta de cuáles ya
+            tocó en cuanto el mapa tiene veinte rótulos. */}
+        {core &&
+          elegidos.map((p) => (
+            <Marker
+              key={p.placeId}
+              position={{ lat: p.lat, lng: p.lng }}
+              icon={iconoPin(COLOR.marca)}
+              onClick={() => setCandidato(p)}
+            />
+          ))}
+
+        {candidato && (
+          <InfoWindow
+            position={{ lat: candidato.lat, lng: candidato.lng }}
+            onCloseClick={() => setCandidato(null)}
           >
-            Agregar como cuenta
-          </button>
-        </InfoWindow>
+            <span className="block text-sm font-semibold">
+              {candidato.nombre || "Este local"}
+            </span>
+            <span className="block text-xs">Todavía no es cuenta tuya</span>
+            <VerLaFachada lat={candidato.lat} lng={candidato.lng} />
+            <button
+              type="button"
+              onClick={() => {
+                if (!listaId) {
+                  // Fuera de una lista sigue siendo lo de siempre: se abre la ficha y se llena.
+                  const p = new URLSearchParams({
+                    place_id: candidato.placeId,
+                    lat: String(candidato.lat),
+                    lng: String(candidato.lng),
+                    nombre: candidato.nombre,
+                  });
+                  router.push(`/cuentas/nuevo?${p}`);
+                  return;
+                }
+
+                // **MARCA Y SE CIERRA.** Barrer una zona es tocar un comercio tras otro; llevarlo
+                // a otra pantalla en cada uno es lo que hacía imposible armar una lista desde acá.
+                setElegidos((a) =>
+                  a.some((x) => x.placeId === candidato.placeId)
+                    ? a.filter((x) => x.placeId !== candidato.placeId)
+                    : [...a, candidato],
+                );
+                setCandidato(null);
+              }}
+              className="mt-1 text-xs font-medium underline"
+            >
+              {/* **«POTENCIAL» Y NO «CUENTA»**, que es lo que de verdad se crea: entra sin tipo,
+                  o sea como potencial. Un prospecto es un potencial que ya se visitó, y una cuenta
+                  a secas no dice en qué punto del ciclo está. Es la misma corrección de vocabulario
+                  que el usuario hizo el 2 de septiembre de 2026 con «Buscar potenciales». */}
+              {!listaId
+                ? "Agregar como potencial"
+                : elegidos.some((x) => x.placeId === candidato.placeId)
+                  ? "Quitar de mi lista"
+                  : "Agregar a mi lista"}
+            </button>
+          </InfoWindow>
+        )}
+        </MapaGoogle>
+
+      {/* **FLOTA SOBRE EL MAPA.** Esta pantalla no tiene barra de herramientas donde ponerlo, y
+          crear una le quitaría al mapa el alto que se le acaba de dar. */}
+      <button
+        type="button"
+        aria-pressed={tipoMapa === "hybrid"}
+        onClick={() => setTipoMapa((a) => (a === "hybrid" ? "roadmap" : "hybrid"))}
+        className={`min-h-tactil absolute right-3 top-3 z-10 w-11 rounded-lg border shadow-sm ${
+          tipoMapa === "hybrid"
+            ? "border-marca bg-marca text-white"
+            : "border-borde bg-superficie text-texto"
+        }`}
+        aria-label={tipoMapa === "hybrid" ? "Ver el mapa de calles" : "Ver satélite"}
+      >
+        <Layers size={16} className="mx-auto" aria-hidden />
+      </button>
+
+      {/* **FLOTANTE SOBRE EL MAPA, NO DEBAJO.** Debajo obligaría a encoger el mapa para dejarle
+          sitio, y sólo aparece cuando hay algo que agregar: el resto del tiempo no ocupa nada. */}
+      {listaId && elegidos.length > 0 && (
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 flex flex-col gap-2">
+          {error && (
+            <div className="pointer-events-auto">
+              <MensajeError titulo="No se pudo agregar" detalle={error} />
+            </div>
+          )}
+          <div className="pointer-events-auto">
+            <Boton ancho onClick={agregarALaLista} disabled={guardando}>
+              {guardando
+                ? "Agregando"
+                : `Agregar ${elegidos.length} ${
+                    elegidos.length === 1 ? "potencial" : "potenciales"
+                  } a la lista`}
+            </Boton>
+          </div>
+        </div>
       )}
-    </MapaGoogle>
+    </div>
   );
 }
 

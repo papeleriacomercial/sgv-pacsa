@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { rutaDeBusqueda } from "@/lib/potenciales";
+import { BotonVolver } from "@/components/boton-volver";
 import { redirect } from "next/navigation";
 import { Search } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
@@ -27,16 +29,20 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
   // y meterla al motor de filtros obligaría a cargarla siempre.
   let visibles = cuentas;
   let nombreLista: string | null = null;
+  let pobladoLista: string | null = null;
 
   if (typeof lista === "string") {
     const [{ data: miembros }, { data: fila }] = await Promise.all([
       supabase.from("listas_cuentas").select("cuenta_id").eq("lista_id", lista),
-      supabase.from("listas").select("nombre").eq("id", lista).maybeSingle(),
+      supabase.from("listas").select("nombre, poblado").eq("id", lista).maybeSingle(),
     ]);
 
     const ids = new Set((miembros ?? []).map((m) => m.cuenta_id as string));
     visibles = cuentas.filter((c) => ids.has(c.id));
     nombreLista = fila?.nombre ?? null;
+    // EL POBLADO VIAJA A LA BÚSQUEDA. Sin él, llegar por acá abría el buscador con el campo del
+    // área en blanco, y había que volver a escribir el nombre del pueblo de la lista.
+    pobladoLista = fila?.poblado ?? null;
   }
 
   // Los que llegaron sin coordenadas no se pueden dibujar, y decirlo es mejor
@@ -47,12 +53,20 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
     <>
       <AvisoSinConexion />
 
-      <header className="border-b border-borde bg-superficie px-4 py-3">
-        <h1 className="text-lg font-semibold text-marca">
+      {/* **NO TENÍA CÓMO SALIR.** Se llega mirando una lista y el título decía «Aguadulce»,
+          pero no había con qué regresar: *«no tengo cómo volver desde la pantalla que me lleva
+          a ver la lista»*. Con lista se vuelve a esa lista, sin ella al inicio — son dos
+          procedencias distintas y el botón tiene que decir la verdad en las dos. */}
+      <header className="flex items-center gap-2 border-b border-borde bg-superficie px-4 py-3">
+        <BotonVolver
+          href={typeof lista === "string" ? `/listas/${lista}` : undefined}
+          alterno="/"
+        />
+        <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-marca">
           {nombreLista ?? "Mapa"}
         </h1>
         {nombreLista && (
-          <p className="text-xs text-texto-atenuado">
+          <p className="shrink-0 text-xs text-texto-atenuado">
             {visibles.length} de esta lista
             {sinUbicar > 0 && " · " + sinUbicar + " sin ubicación"}
           </p>
@@ -74,7 +88,7 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
             encuentre cae dentro en vez de soltarse en la cartera. No hubo que construir nada — el
             mapa ya sabe qué lista muestra y la búsqueda ya sabe recibirla. */}
         <Link
-          href={typeof lista === "string" ? `/buscar?lista=${lista}` : "/buscar"}
+          href={typeof lista === "string" ? rutaDeBusqueda(lista, pobladoLista) : "/buscar"}
           className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
         >
           <Search size={18} aria-hidden />
@@ -96,6 +110,9 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
             vistaInicial="mapa"
             yo={user.id}
             cuentaDestacada={typeof cuenta === "string" ? cuenta : undefined}
+            // Acá se entra a mirar el territorio, no a filtrar. El buscador entre cuentas y el
+            // panel de filtros le quitaban al mapa casi la mitad de un teléfono.
+            mapaProtagonista
           />
         )}
       </main>

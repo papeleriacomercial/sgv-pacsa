@@ -31,6 +31,7 @@ import { Boton } from "@/components/ui/boton";
 import { Vacio } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { BotonVolver } from "@/components/boton-volver";
+import { VerLaFachada } from "@/components/ver-la-fachada";
 
 const MONTO = new Intl.NumberFormat("es-PA", {
   style: "currency",
@@ -75,7 +76,7 @@ export default async function Expediente({
   const { data: prospecto } = await supabase
     .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, vendedor_id, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
+      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, lat, lng, vendedor_id, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -222,17 +223,31 @@ export default async function Expediente({
           enlazada={false}
         />
 
-        {/* Salta al mapa centrado en esta cuenta. El camino de vuelta lo
-            resuelve el historial, y como los filtros viven en la dirección, el
-            mapa filtrado que se estaba mirando reaparece intacto. */}
+        {/* **LAS DOS FORMAS DE MIRAR EL SITIO, JUNTAS Y ARRIBA.** Son la misma clase de acción
+            —dónde queda y cómo se ve— y separarlas obligaba a bajar media pantalla para
+            encontrar una de ellas, entre las tarjetas de números. El usuario no la encontró.
+
+            Sólo con ubicación: sin coordenadas, el mapa no sabe dónde centrar y Street View
+            abriría en cualquier parte. Un enlace que lleva a un sitio equivocado es peor que no
+            tenerlo, y para eso está el aviso que manda a marcarla. */}
         {!prospecto.sin_ubicacion && (
-          <Link
-            href={`/mapa?cuenta=${id}`}
-            className="min-h-tactil flex items-center justify-center gap-2 self-start rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
-          >
-            <MapPinned size={16} aria-hidden />
-            Ver en el mapa
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/mapa?cuenta=${id}`}
+              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
+            >
+              <MapPinned size={16} aria-hidden />
+              Ver en el mapa
+            </Link>
+
+            {prospecto.lat !== null && prospecto.lng !== null && (
+              <VerLaFachada
+                lat={prospecto.lat}
+                lng={prospecto.lng}
+                className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
+              />
+            )}
+          </div>
         )}
 
         {/* La cola de trabajo hecha visible: una cuenta puesta en el mapa desde
@@ -407,6 +422,7 @@ export default async function Expediente({
             </p>
           </Tarjeta>
         </div>
+
 
         {prospecto.sin_ubicacion && (
           <Link href={`/cuentas/${id}/ubicar`} className="block">
