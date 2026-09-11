@@ -920,6 +920,12 @@ function Buscador() {
               <div className="pointer-events-none absolute left-2 top-2 z-10 max-w-[calc(100%-1rem)]">
                 <Leyenda resultados={resultados} elegidos={elegidos.length} />
               </div>
+              {/* **EL MAPA VA ABSOLUTO, Y NO ES CAPRICHO.** Se dibuja con `height: 100%`, y un
+                  porcentaje contra un padre que sólo crece con `flex-1` —sin altura declarada—
+                  resuelve a cero: el mapa desaparece sin error de consola ni fallo de compilación.
+                  Pasó al darle el alto que sobra en vez de un `60vh` fijo. Posicionado absoluto, la
+                  caja tiene alto de verdad y el porcentaje vuelve a significar algo. */}
+              <div className="absolute inset-0">
               <MapaCandidatos
                 candidatos={ordenados}
                 abierto={abierto}
@@ -952,6 +958,7 @@ function Buscador() {
                     : null
                 }
               />
+              </div>
             </div>
           ) : (
             ordenados.map((c) => (

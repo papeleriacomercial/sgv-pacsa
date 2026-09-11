@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Layers } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   APIProvider,
@@ -163,6 +164,14 @@ function Contenido({
    */
   const [elegidos, setElegidos] = useState<PuntoElegido[]>([]);
   const [guardando, setGuardando] = useState(false);
+
+  /**
+   * Calle o satélite.
+   *
+   * **`hybrid` y no `satellite`:** el satélite puro no trae nombres de calle ni rótulos, y un
+   * vendedor mirando techos sin saber en qué calle está no puede planificar nada.
+   */
+  const [tipoMapa, setTipoMapa] = useState<"roadmap" | "hybrid">("roadmap");
   const [error, setError] = useState<string | null>(null);
 
   /** Crear de un golpe todo lo marcado, y meterlo en la lista. */
@@ -239,108 +248,126 @@ function Contenido({
     <div className="relative h-full w-full">
       <MapaGoogle
         defaultCenter={CENTRO_POR_OMISION}
-      defaultZoom={12}
-      gestureHandling="greedy"
-      disableDefaultUI
-      zoomControl
-      clickableIcons
-      onClick={tocarMapa}
-      style={{ height: "100%", width: "100%" }}
-    >
-      <Encuadrar cuentas={cuentas} destacada={destacada} />
+        defaultZoom={12}
+        gestureHandling="greedy"
+        // Controlado: cambia cuando se toca el botón de capas.
+        mapTypeId={tipoMapa}
+        disableDefaultUI
+        zoomControl
+        clickableIcons
+        onClick={tocarMapa}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <Encuadrar cuentas={cuentas} destacada={destacada} />
 
-      {core &&
-        cuentas.map((c) => (
-          <Marker
-            key={c.id}
-            position={{ lat: c.lat!, lng: c.lng! }}
-            icon={iconoPin(color(c))}
-            onClick={() => setAbierta(c)}
-          />
-        ))}
+        {core &&
+          cuentas.map((c) => (
+            <Marker
+              key={c.id}
+              position={{ lat: c.lat!, lng: c.lng! }}
+              icon={iconoPin(color(c))}
+              onClick={() => setAbierta(c)}
+            />
+          ))}
 
-      {abierta && (
-        <InfoWindow
-          position={{ lat: abierta.lat!, lng: abierta.lng! }}
-          onCloseClick={() => setAbierta(null)}
-        >
-          {/* El color va acompañado siempre del dato escrito: es lo que
-              mantiene la regla de §17 dentro de la excepción de D-013. */}
-          <span className="block text-sm font-semibold">{abierta.nombre}</span>
-          <span className="block text-xs">
-            {TIPOS_CUENTA[abierta.tipo]}
-            {abierta.volumen && ` · Volumen ${VOLUMENES[abierta.volumen]}`}
-          </span>
-          <span className="block text-xs">
-            {abierta.dias_sin_contacto === null
-              ? "Nunca contactada"
-              : `${haceDias(abierta.dias_sin_contacto)} sin contacto`}
-          </span>
-          <Link
-            href={`/cuentas/${abierta.id}`}
-            className="mt-1 block text-xs underline"
+        {abierta && (
+          <InfoWindow
+            position={{ lat: abierta.lat!, lng: abierta.lng! }}
+            onCloseClick={() => setAbierta(null)}
           >
-            Abrir expediente
-          </Link>
-        </InfoWindow>
-      )}
+            {/* El color va acompañado siempre del dato escrito: es lo que
+                mantiene la regla de §17 dentro de la excepción de D-013. */}
+            <span className="block text-sm font-semibold">{abierta.nombre}</span>
+            <span className="block text-xs">
+              {TIPOS_CUENTA[abierta.tipo]}
+              {abierta.volumen && ` · Volumen ${VOLUMENES[abierta.volumen]}`}
+            </span>
+            <span className="block text-xs">
+              {abierta.dias_sin_contacto === null
+                ? "Nunca contactada"
+                : `${haceDias(abierta.dias_sin_contacto)} sin contacto`}
+            </span>
+            <Link
+              href={`/cuentas/${abierta.id}`}
+              className="mt-1 block text-xs underline"
+            >
+              Abrir expediente
+            </Link>
+          </InfoWindow>
+        )}
 
-      {/* Los marcados llevan pin propio: sin esto, el vendedor pierde la cuenta de cuáles ya
-          tocó en cuanto el mapa tiene veinte rótulos. */}
-      {core &&
-        elegidos.map((p) => (
-          <Marker
-            key={p.placeId}
-            position={{ lat: p.lat, lng: p.lng }}
-            icon={iconoPin(COLOR.marca)}
-            onClick={() => setCandidato(p)}
-          />
-        ))}
+        {/* Los marcados llevan pin propio: sin esto, el vendedor pierde la cuenta de cuáles ya
+            tocó en cuanto el mapa tiene veinte rótulos. */}
+        {core &&
+          elegidos.map((p) => (
+            <Marker
+              key={p.placeId}
+              position={{ lat: p.lat, lng: p.lng }}
+              icon={iconoPin(COLOR.marca)}
+              onClick={() => setCandidato(p)}
+            />
+          ))}
 
-      {candidato && (
-        <InfoWindow
-          position={{ lat: candidato.lat, lng: candidato.lng }}
-          onCloseClick={() => setCandidato(null)}
-        >
-          <span className="block text-sm font-semibold">
-            {candidato.nombre || "Este local"}
-          </span>
-          <span className="block text-xs">Todavía no es cuenta tuya</span>
-          <button
-            type="button"
-            onClick={() => {
-              if (!listaId) {
-                // Fuera de una lista sigue siendo lo de siempre: se abre la ficha y se llena.
-                const p = new URLSearchParams({
-                  place_id: candidato.placeId,
-                  lat: String(candidato.lat),
-                  lng: String(candidato.lng),
-                  nombre: candidato.nombre,
-                });
-                router.push(`/cuentas/nuevo?${p}`);
-                return;
-              }
-
-              // **MARCA Y SE CIERRA.** Barrer una zona es tocar un comercio tras otro; llevarlo
-              // a otra pantalla en cada uno es lo que hacía imposible armar una lista desde acá.
-              setElegidos((a) =>
-                a.some((x) => x.placeId === candidato.placeId)
-                  ? a.filter((x) => x.placeId !== candidato.placeId)
-                  : [...a, candidato],
-              );
-              setCandidato(null);
-            }}
-            className="mt-1 text-xs font-medium underline"
+        {candidato && (
+          <InfoWindow
+            position={{ lat: candidato.lat, lng: candidato.lng }}
+            onCloseClick={() => setCandidato(null)}
           >
-            {!listaId
-              ? "Agregar como cuenta"
-              : elegidos.some((x) => x.placeId === candidato.placeId)
-                ? "Quitar de mi lista"
-                : "Agregar a mi lista"}
-          </button>
-        </InfoWindow>
-      )}
-      </MapaGoogle>
+            <span className="block text-sm font-semibold">
+              {candidato.nombre || "Este local"}
+            </span>
+            <span className="block text-xs">Todavía no es cuenta tuya</span>
+            <button
+              type="button"
+              onClick={() => {
+                if (!listaId) {
+                  // Fuera de una lista sigue siendo lo de siempre: se abre la ficha y se llena.
+                  const p = new URLSearchParams({
+                    place_id: candidato.placeId,
+                    lat: String(candidato.lat),
+                    lng: String(candidato.lng),
+                    nombre: candidato.nombre,
+                  });
+                  router.push(`/cuentas/nuevo?${p}`);
+                  return;
+                }
+
+                // **MARCA Y SE CIERRA.** Barrer una zona es tocar un comercio tras otro; llevarlo
+                // a otra pantalla en cada uno es lo que hacía imposible armar una lista desde acá.
+                setElegidos((a) =>
+                  a.some((x) => x.placeId === candidato.placeId)
+                    ? a.filter((x) => x.placeId !== candidato.placeId)
+                    : [...a, candidato],
+                );
+                setCandidato(null);
+              }}
+              className="mt-1 text-xs font-medium underline"
+            >
+              {!listaId
+                ? "Agregar como cuenta"
+                : elegidos.some((x) => x.placeId === candidato.placeId)
+                  ? "Quitar de mi lista"
+                  : "Agregar a mi lista"}
+            </button>
+          </InfoWindow>
+        )}
+        </MapaGoogle>
+
+      {/* **FLOTA SOBRE EL MAPA.** Esta pantalla no tiene barra de herramientas donde ponerlo, y
+          crear una le quitaría al mapa el alto que se le acaba de dar. */}
+      <button
+        type="button"
+        aria-pressed={tipoMapa === "hybrid"}
+        onClick={() => setTipoMapa((a) => (a === "hybrid" ? "roadmap" : "hybrid"))}
+        className={`min-h-tactil absolute right-3 top-3 z-10 w-11 rounded-lg border shadow-sm ${
+          tipoMapa === "hybrid"
+            ? "border-marca bg-marca text-white"
+            : "border-borde bg-superficie text-texto"
+        }`}
+        aria-label={tipoMapa === "hybrid" ? "Ver el mapa de calles" : "Ver satélite"}
+      >
+        <Layers size={16} className="mx-auto" aria-hidden />
+      </button>
 
       {/* **FLOTANTE SOBRE EL MAPA, NO DEBAJO.** Debajo obligaría a encoger el mapa para dejarle
           sitio, y sólo aparece cuando hay algo que agregar: el resto del tiempo no ocupa nada. */}

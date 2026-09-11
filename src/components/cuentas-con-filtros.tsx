@@ -297,12 +297,21 @@ export function CuentasConFiltros({
               </Vacio>
             </Tarjeta>
           ) : (
-            <div className="h-[60vh] w-full overflow-hidden rounded-lg border border-borde">
-              <MapaCuentas
-                cuentas={conUbicacion}
-                color={color}
-                destacada={cuentaDestacada}
-              />
+            // **EL MAPA SE LLEVA EL ALTO QUE SOBRE**, en vez de los 60vh de antes. Lo pidió el
+            // equipo de ventas el 11 de septiembre de 2026 para el buscador, y acá vale igual:
+            // es la misma tarea —mirar una zona y decidir— en otra pantalla.
+            //
+            // El hijo va absoluto porque el mapa se dibuja con `height: 100%`, y un porcentaje
+            // contra un padre que sólo crece con `flex-1` resuelve a cero. Desaparece sin
+            // error: ni la consola ni la compilación dicen nada.
+            <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-lg border border-borde">
+              <div className="absolute inset-0">
+                <MapaCuentas
+                  cuentas={conUbicacion}
+                  color={color}
+                  destacada={cuentaDestacada}
+                />
+              </div>
             </div>
           )}
 
