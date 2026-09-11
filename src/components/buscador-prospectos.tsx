@@ -812,11 +812,18 @@ function Buscador() {
                 contando={contando}
                 onContarSucursales={contarSucursales}
                 elegidos={elegidos}
-                onElegir={(id) =>
+                // `Boolean` y no `!== null`: el botón de abajo decide con `listaId ?` a secas, y con
+                // un `?lista=` vacío en la dirección los dos prometerían cosas distintas.
+                enLista={Boolean(listaId)}
+                // **SE CIERRA AL ELEGIR.** Barrer una zona es tocar quince marcadores seguidos;
+                // dejar la ventanita abierta obliga a cerrarla a mano cada vez, y son quince
+                // toques que no hacen nada. El pin cambia de color, que es la confirmación.
+                onElegir={(id) => {
                   setElegidos((a) =>
                     a.includes(id) ? a.filter((x) => x !== id) : [...a, id],
-                  )
-                }
+                  );
+                  setAbierto(null);
+                }}
                 onBuscarAqui={(centro) => buscar("cerca", centro)}
                 buscando={buscando}
                 queBusca={
@@ -858,7 +865,9 @@ function Buscador() {
           <Boton ancho onClick={agregarElegidos} disabled={guardando}>
             {guardando
               ? "Agregando"
-              : `Agregar ${elegidos.length} a mi cartera`}
+              : `Agregar ${elegidos.length} ${
+                  elegidos.length === 1 ? "potencial" : "potenciales"
+                } ${listaId ? "a la lista" : "a mi cartera"}`}
           </Boton>
         </div>
       )}
@@ -949,6 +958,7 @@ function MapaCandidatos({
   onAbrir,
   elegidos,
   onElegir,
+  enLista,
   sucursales,
   contando,
   onContarSucursales,
@@ -961,6 +971,8 @@ function MapaCandidatos({
   onAbrir: (c: Candidato | null) => void;
   elegidos: string[];
   onElegir: (placeId: string) => void;
+  /** Si se llegó armando una lista. Cambia lo que promete el botón de la ventanita. */
+  enLista: boolean;
   sucursales: Record<string, number>;
   contando: boolean;
   onContarSucursales: (c: Candidato) => void;
@@ -1026,13 +1038,26 @@ function MapaCandidatos({
                   : "Nuevo"}
           </span>
 
-          {!abierto.estado?.cuenta_id && !abierto.estado?.motivo_descarte && (
+          {/* **DICE A DÓNDE VA, NO «ELEGIR».** Lo pidió el equipo de ventas el 11 de septiembre
+              de 2026: parado en una lista, «Elegir» no dice para qué, y el botón de abajo hablaba
+              de «mi cartera» aunque los puntos fueran a entrar a la lista que se está armando.
+
+              **No crea nada todavía: marca.** Es la misma selección del modo lista —el mismo
+              ganchito, el mismo contador— y todo se crea de un golpe al final. Que los dos modos
+              hagan lo mismo es lo que permite ir saltando entre mapa y lista sin perder el hilo. */}
+          {sePuedeElegir(abierto) && (
             <button
               type="button"
               onClick={() => onElegir(abierto.placeId)}
               className="mt-1 block text-xs font-medium underline"
             >
-              {elegidos.includes(abierto.placeId) ? "Quitar" : "Elegir"}
+              {elegidos.includes(abierto.placeId)
+                ? enLista
+                  ? "Quitar de mi lista"
+                  : "Quitar"
+                : enLista
+                  ? "Agregar a mi lista"
+                  : "Agregar a mis potenciales"}
             </button>
           )}
 
