@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { rutaDeBusqueda } from "@/lib/potenciales";
+import { BotonVolver } from "@/components/boton-volver";
 import { redirect } from "next/navigation";
 import { Search } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
@@ -52,12 +53,20 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
     <>
       <AvisoSinConexion />
 
-      <header className="border-b border-borde bg-superficie px-4 py-3">
-        <h1 className="text-lg font-semibold text-marca">
+      {/* **NO TENÍA CÓMO SALIR.** Se llega mirando una lista y el título decía «Aguadulce»,
+          pero no había con qué regresar: *«no tengo cómo volver desde la pantalla que me lleva
+          a ver la lista»*. Con lista se vuelve a esa lista, sin ella al inicio — son dos
+          procedencias distintas y el botón tiene que decir la verdad en las dos. */}
+      <header className="flex items-center gap-2 border-b border-borde bg-superficie px-4 py-3">
+        <BotonVolver
+          href={typeof lista === "string" ? `/listas/${lista}` : undefined}
+          alterno="/"
+        />
+        <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-marca">
           {nombreLista ?? "Mapa"}
         </h1>
         {nombreLista && (
-          <p className="text-xs text-texto-atenuado">
+          <p className="shrink-0 text-xs text-texto-atenuado">
             {visibles.length} de esta lista
             {sinUbicar > 0 && " · " + sinUbicar + " sin ubicación"}
           </p>

@@ -163,7 +163,10 @@ export default async function DetalleLista({
       <AvisoSinConexion />
 
       <header className="flex items-center gap-3 border-b border-borde bg-superficie px-4 py-3">
-        <BotonVolver alterno="/listas" />
+        {/* **DESTINO FIJO, NO HISTORIAL.** El padre de una lista es la pantalla de listas,
+            siempre. Con historial, entrar acá, ir a buscar puntos y regresar dejaba el
+            buscador como «lo de atrás», y el botón llevaba ahí en vez de a las listas. */}
+        <BotonVolver href="/listas" />
         <h1 className="flex-1 truncate text-lg font-semibold text-marca">
           {lista.nombre}
         </h1>

@@ -311,7 +311,10 @@ function Buscador() {
     ) {
       return;
     }
-    router.push(listaId ? `/listas/${listaId}` : "/mapa");
+    // **`replace` Y NO `push`**, como el resto de la aplicación al salir de un formulario: con
+    // `push`, el buscador se quedaba en el historial y el gesto de atrás del teléfono volvía a él
+    // desde la lista. Es la mitad del defecto que reportó el usuario el 11 de septiembre de 2026.
+    router.replace(listaId ? `/listas/${listaId}` : "/mapa");
   }
   const [orden, setOrden] = useState<Orden>("cercania");
   const [vista, setVista] = useState<"lista" | "mapa">("lista");
@@ -553,7 +556,8 @@ function Buscador() {
       return;
     }
 
-    router.push(listaId ? `/listas/${listaId}` : "/cuentas");
+    // Igual que arriba: lo creado ya está, y el buscador no tiene por qué quedar detrás.
+    router.replace(listaId ? `/listas/${listaId}` : "/cuentas");
     router.refresh();
   }
 
