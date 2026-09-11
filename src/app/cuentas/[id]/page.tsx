@@ -223,17 +223,31 @@ export default async function Expediente({
           enlazada={false}
         />
 
-        {/* Salta al mapa centrado en esta cuenta. El camino de vuelta lo
-            resuelve el historial, y como los filtros viven en la dirección, el
-            mapa filtrado que se estaba mirando reaparece intacto. */}
+        {/* **LAS DOS FORMAS DE MIRAR EL SITIO, JUNTAS Y ARRIBA.** Son la misma clase de acción
+            —dónde queda y cómo se ve— y separarlas obligaba a bajar media pantalla para
+            encontrar una de ellas, entre las tarjetas de números. El usuario no la encontró.
+
+            Sólo con ubicación: sin coordenadas, el mapa no sabe dónde centrar y Street View
+            abriría en cualquier parte. Un enlace que lleva a un sitio equivocado es peor que no
+            tenerlo, y para eso está el aviso que manda a marcarla. */}
         {!prospecto.sin_ubicacion && (
-          <Link
-            href={`/mapa?cuenta=${id}`}
-            className="min-h-tactil flex items-center justify-center gap-2 self-start rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
-          >
-            <MapPinned size={16} aria-hidden />
-            Ver en el mapa
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/mapa?cuenta=${id}`}
+              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
+            >
+              <MapPinned size={16} aria-hidden />
+              Ver en el mapa
+            </Link>
+
+            {prospecto.lat !== null && prospecto.lng !== null && (
+              <VerLaFachada
+                lat={prospecto.lat}
+                lng={prospecto.lng}
+                className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-3 text-sm text-texto"
+              />
+            )}
+          </div>
         )}
 
         {/* La cola de trabajo hecha visible: una cuenta puesta en el mapa desde
@@ -409,18 +423,6 @@ export default async function Expediente({
           </Tarjeta>
         </div>
 
-        {/* **SÓLO SI ESTÁ UBICADA.** Sin coordenadas, Street View abriría en cualquier parte, y
-            un enlace que lleva a un sitio equivocado es peor que no tenerlo. Para eso está el
-            aviso de abajo, que lleva a marcarla. */}
-        {!prospecto.sin_ubicacion &&
-          prospecto.lat !== null &&
-          prospecto.lng !== null && (
-            <VerLaFachada
-              lat={prospecto.lat}
-              lng={prospecto.lng}
-              className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
-            />
-          )}
 
         {prospecto.sin_ubicacion && (
           <Link href={`/cuentas/${id}/ubicar`} className="block">
