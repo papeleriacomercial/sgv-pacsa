@@ -154,10 +154,10 @@ function Contenido({
   /**
    * Los comercios del mapa que se van marcando para esta lista.
    *
-   * **ANTES ESTO NO EXISTÍA: el botón decía «Agregar como cuenta» y se iba a la pantalla de**
-   * **Cuentas**, de la que la aplicación no volvía a Listas. Lo reportó el equipo de ventas el
-   * 11 de septiembre de 2026: *«esto está bien si estuviera en el menú de CUENTAS, pero al
-   * estar en el menú de LISTAS ha creado confusión»*.
+   * **ANTES ESTO NO EXISTÍA:** el botón llevaba a la pantalla de Cuentas, de la que la aplicación
+   * no volvía a Listas. Lo reportó el equipo de ventas el 11 de septiembre de 2026: *«esto está
+   * bien si estuviera en el menú de CUENTAS, pero al estar en el menú de LISTAS ha creado
+   * confusión»*.
    *
    * Ahora se marcan varios y se confirman de un golpe, igual que en el buscador de potenciales.
    * Que las dos pantallas se comporten igual es lo que permite ir de una a otra sin reaprender.
@@ -343,8 +343,12 @@ function Contenido({
               }}
               className="mt-1 text-xs font-medium underline"
             >
+              {/* **«POTENCIAL» Y NO «CUENTA»**, que es lo que de verdad se crea: entra sin tipo,
+                  o sea como potencial. Un prospecto es un potencial que ya se visitó, y una cuenta
+                  a secas no dice en qué punto del ciclo está. Es la misma corrección de vocabulario
+                  que el usuario hizo el 2 de septiembre de 2026 con «Buscar potenciales». */}
               {!listaId
-                ? "Agregar como cuenta"
+                ? "Agregar como potencial"
                 : elegidos.some((x) => x.placeId === candidato.placeId)
                   ? "Quitar de mi lista"
                   : "Agregar a mi lista"}

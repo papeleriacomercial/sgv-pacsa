@@ -322,7 +322,15 @@ export function CuentasConFiltros({
               className={
                 enMapaPleno
                   ? "relative -mx-4 -mb-4 min-h-0 w-[calc(100%+2rem)] flex-1 overflow-hidden border-y border-borde"
-                  : "relative min-h-0 w-full flex-1 overflow-hidden rounded-lg border border-borde"
+                  : // **EN CUENTAS VUELVE A SER ALTURA FIJA, Y NO ES UN DESCUIDO.** Ahí arriba hay
+                    // varias tarjetas —crear, buscar, los accesos— así que «lo que sobre» es
+                    // MENOS que el 60% que tenía antes: al cambiarlo, el mapa de Cuentas se
+                    // encogió. Lo vio el usuario el 11 de septiembre de 2026.
+                    //
+                    // Crecer con lo que sobra sólo sirve cuando el mapa es el motivo de la
+                    // pantalla y lo de arriba se aparta. Donde el mapa convive con otras cosas,
+                    // una altura declarada le garantiza su sitio.
+                    "relative h-[60vh] w-full overflow-hidden rounded-lg border border-borde"
               }
             >
               <div className="absolute inset-0">
