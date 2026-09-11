@@ -18,6 +18,7 @@ import { COLOR, iconoPin } from "@/lib/marcadores";
 import { haceDias } from "@/lib/fechas";
 import type { Cuenta } from "@/lib/filtros";
 import { MensajeError } from "@/components/ui/estados";
+import { VerLaFachada } from "@/components/ver-la-fachada";
 import { Boton } from "@/components/ui/boton";
 import { crearPotenciales, type PuntoElegido } from "@/lib/potenciales";
 import { clienteNavegador } from "@/lib/supabase/navegador";
@@ -293,6 +294,7 @@ function Contenido({
             >
               Abrir expediente
             </Link>
+            <VerLaFachada lat={abierta.lat!} lng={abierta.lng!} />
           </InfoWindow>
         )}
 
@@ -317,6 +319,7 @@ function Contenido({
               {candidato.nombre || "Este local"}
             </span>
             <span className="block text-xs">Todavía no es cuenta tuya</span>
+            <VerLaFachada lat={candidato.lat} lng={candidato.lng} />
             <button
               type="button"
               onClick={() => {

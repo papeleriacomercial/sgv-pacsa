@@ -45,6 +45,7 @@ import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, MensajeError, Vacio } from "@/components/ui/estados";
 import { ElegirTodos } from "@/components/ui/elegir-todos";
+import { VerLaFachada } from "@/components/ver-la-fachada";
 import { crearPotenciales } from "@/lib/potenciales";
 
 /**
@@ -1288,6 +1289,14 @@ function MapaCandidatos({
                   : "Agregar a mis potenciales"}
             </button>
           )}
+
+          {/* Antes de marcarlo: mirar la fachada dice en un vistazo si es un local de dos
+              metros o una tienda con estacionamiento — que es lo que decide si vale el viaje. */}
+          <VerLaFachada lat={abierto.lat} lng={abierto.lng} />
+
+          {/* Antes de marcarlo: mirar la fachada dice en un vistazo si es un local de dos
+              metros o una tienda con estacionamiento — que es lo que decide si vale el viaje. */}
+          <VerLaFachada lat={abierto.lat} lng={abierto.lng} />
 
           {/* La consulta nacional va aquí y no en la lista: para llegar, el
               vendedor ya miró el mapa y tocó este punto. Es un gesto
