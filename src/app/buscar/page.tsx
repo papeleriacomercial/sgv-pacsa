@@ -21,7 +21,10 @@ export default async function Buscar() {
         <h1 className="text-lg font-semibold text-marca">Buscar potenciales</h1>
       </header>
 
-      <main className="flex flex-col p-4">
+      {/* `flex-1` y no una altura en `vh`: la barra de marca, la cabecera y la navegación de
+          abajo ocupan lo que ocupan según el teléfono, y una cuenta a mano se equivoca en alguno.
+          Así el mapa se queda con lo que sobre, sea cual sea. */}
+      <main className="flex flex-1 flex-col p-4">
         <Suspense fallback={<Cargando />}>
           <BuscadorProspectos />
         </Suspense>

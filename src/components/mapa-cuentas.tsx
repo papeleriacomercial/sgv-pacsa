@@ -13,10 +13,13 @@ import {
   type MapMouseEvent,
 } from "@vis.gl/react-google-maps";
 import { TIPOS_CUENTA, VOLUMENES } from "@/lib/catalogos";
-import { iconoPin } from "@/lib/marcadores";
+import { COLOR, iconoPin } from "@/lib/marcadores";
 import { haceDias } from "@/lib/fechas";
 import type { Cuenta } from "@/lib/filtros";
 import { MensajeError } from "@/components/ui/estados";
+import { Boton } from "@/components/ui/boton";
+import { crearPotenciales, type PuntoElegido } from "@/lib/potenciales";
+import { clienteNavegador } from "@/lib/supabase/navegador";
 
 const CENTRO_POR_OMISION = { lat: 8.9824, lng: -79.5199 };
 
@@ -148,6 +151,57 @@ function Contenido({
   } | null>(null);
 
   /**
+   * Los comercios del mapa que se van marcando para esta lista.
+   *
+   * **ANTES ESTO NO EXISTÍA: el botón decía «Agregar como cuenta» y se iba a la pantalla de**
+   * **Cuentas**, de la que la aplicación no volvía a Listas. Lo reportó el equipo de ventas el
+   * 11 de septiembre de 2026: *«esto está bien si estuviera en el menú de CUENTAS, pero al
+   * estar en el menú de LISTAS ha creado confusión»*.
+   *
+   * Ahora se marcan varios y se confirman de un golpe, igual que en el buscador de potenciales.
+   * Que las dos pantallas se comporten igual es lo que permite ir de una a otra sin reaprender.
+   */
+  const [elegidos, setElegidos] = useState<PuntoElegido[]>([]);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /** Crear de un golpe todo lo marcado, y meterlo en la lista. */
+  async function agregarALaLista() {
+    if (!listaId || elegidos.length === 0) return;
+    setGuardando(true);
+    setError(null);
+
+    const {
+      data: { user },
+    } = await clienteNavegador().auth.getUser();
+
+    if (!user) {
+      setError("Se cerró la sesión. Vuelve a entrar.");
+      setGuardando(false);
+      return;
+    }
+
+    // **LA MISMA FUNCIÓN QUE USA EL BUSCADOR.** Acá se hereda el poblado de la lista, el origen
+    // y el que entren sin `tipo` —o sea como potenciales— sin tener que acordarse de nada.
+    const fallo = await crearPotenciales({
+      puntos: elegidos,
+      vendedorId: user.id,
+      listaId,
+    });
+
+    if (fallo) {
+      setError(fallo);
+      setGuardando(false);
+      return;
+    }
+
+    setElegidos([]);
+    setGuardando(false);
+    router.push(`/listas/${listaId}`);
+    router.refresh();
+  }
+
+  /**
    * Tocar un local de tercero en el mapa y agregarlo.
    *
    * De Google solo se guarda el `place_id` y la ubicación. El nombre viaja
@@ -182,8 +236,9 @@ function Contenido({
   );
 
   return (
-    <MapaGoogle
-      defaultCenter={CENTRO_POR_OMISION}
+    <div className="relative h-full w-full">
+      <MapaGoogle
+        defaultCenter={CENTRO_POR_OMISION}
       defaultZoom={12}
       gestureHandling="greedy"
       disableDefaultUI
@@ -230,6 +285,18 @@ function Contenido({
         </InfoWindow>
       )}
 
+      {/* Los marcados llevan pin propio: sin esto, el vendedor pierde la cuenta de cuáles ya
+          tocó en cuanto el mapa tiene veinte rótulos. */}
+      {core &&
+        elegidos.map((p) => (
+          <Marker
+            key={p.placeId}
+            position={{ lat: p.lat, lng: p.lng }}
+            icon={iconoPin(COLOR.marca)}
+            onClick={() => setCandidato(p)}
+          />
+        ))}
+
       {candidato && (
         <InfoWindow
           position={{ lat: candidato.lat, lng: candidato.lng }}
@@ -242,23 +309,60 @@ function Contenido({
           <button
             type="button"
             onClick={() => {
-              const p = new URLSearchParams({
-                place_id: candidato.placeId,
-                lat: String(candidato.lat),
-                lng: String(candidato.lng),
-                nombre: candidato.nombre,
-              });
-              // Si se está armando una lista, la cuenta entra ahí al crearse.
-              if (listaId) p.set("lista", listaId);
-              router.push(`/cuentas/nuevo?${p}`);
+              if (!listaId) {
+                // Fuera de una lista sigue siendo lo de siempre: se abre la ficha y se llena.
+                const p = new URLSearchParams({
+                  place_id: candidato.placeId,
+                  lat: String(candidato.lat),
+                  lng: String(candidato.lng),
+                  nombre: candidato.nombre,
+                });
+                router.push(`/cuentas/nuevo?${p}`);
+                return;
+              }
+
+              // **MARCA Y SE CIERRA.** Barrer una zona es tocar un comercio tras otro; llevarlo
+              // a otra pantalla en cada uno es lo que hacía imposible armar una lista desde acá.
+              setElegidos((a) =>
+                a.some((x) => x.placeId === candidato.placeId)
+                  ? a.filter((x) => x.placeId !== candidato.placeId)
+                  : [...a, candidato],
+              );
+              setCandidato(null);
             }}
             className="mt-1 text-xs font-medium underline"
           >
-            Agregar como cuenta
+            {!listaId
+              ? "Agregar como cuenta"
+              : elegidos.some((x) => x.placeId === candidato.placeId)
+                ? "Quitar de mi lista"
+                : "Agregar a mi lista"}
           </button>
         </InfoWindow>
       )}
-    </MapaGoogle>
+      </MapaGoogle>
+
+      {/* **FLOTANTE SOBRE EL MAPA, NO DEBAJO.** Debajo obligaría a encoger el mapa para dejarle
+          sitio, y sólo aparece cuando hay algo que agregar: el resto del tiempo no ocupa nada. */}
+      {listaId && elegidos.length > 0 && (
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 flex flex-col gap-2">
+          {error && (
+            <div className="pointer-events-auto">
+              <MensajeError titulo="No se pudo agregar" detalle={error} />
+            </div>
+          )}
+          <div className="pointer-events-auto">
+            <Boton ancho onClick={agregarALaLista} disabled={guardando}>
+              {guardando
+                ? "Agregando"
+                : `Agregar ${elegidos.length} ${
+                    elegidos.length === 1 ? "potencial" : "potenciales"
+                  } a la lista`}
+            </Boton>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

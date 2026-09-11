@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { rutaDeBusqueda } from "@/lib/potenciales";
 import { notFound, redirect } from "next/navigation";
 import { Layers, MapPinned, Search } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
@@ -155,9 +156,7 @@ export default async function DetalleLista({
 
   // A Buscar y no al mapa de la cartera: el mapa muestra lo que ya es suyo, y
   // aquí lo que hace falta es encontrar puntos que todavía no lo son.
-  const destinoBusqueda = lista.poblado
-    ? `/buscar?lista=${id}&q=${encodeURIComponent(lista.poblado)}`
-    : `/buscar?lista=${id}`;
+  const destinoBusqueda = rutaDeBusqueda(id, lista.poblado);
 
   return (
     <>

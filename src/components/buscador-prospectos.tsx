@@ -17,6 +17,8 @@ import {
 import {
   Building2,
   Check,
+  ChevronLeft,
+  Layers,
   List,
   MapPin,
   MessageSquare,
@@ -43,6 +45,7 @@ import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import { Cargando, MensajeError, Vacio } from "@/components/ui/estados";
 import { ElegirTodos } from "@/components/ui/elegir-todos";
+import { crearPotenciales } from "@/lib/potenciales";
 
 /**
  * Búsqueda de prospectos (§7.4).
@@ -280,6 +283,15 @@ function Buscador() {
   const [error, setError] = useState<string | null>(null);
 
   const [elegidos, setElegidos] = useState<string[]>([]);
+
+  /**
+   * Calle o satélite.
+   *
+   * **Es `hybrid` y no `satellite`.** El satélite puro no trae nombres de calle ni rótulos, y un
+   * vendedor mirando techos sin saber qué calle es no puede planificar nada. Lo pidió el equipo
+   * de ventas el 11 de septiembre de 2026 para reconocer el local por el techo y el patio.
+   */
+  const [tipoMapa, setTipoMapa] = useState<"roadmap" | "hybrid">("roadmap");
   const [orden, setOrden] = useState<Orden>("cercania");
   const [vista, setVista] = useState<"lista" | "mapa">("lista");
   const [abierto, setAbierto] = useState<Candidato | null>(null);
@@ -327,6 +339,60 @@ function Buscador() {
     return lista.map((c) => ({ ...c, estado: porId.get(c.placeId) ?? null }));
   }, []);
 
+  /**
+   * Tocar un comercio cualquiera del mapa de Google, no sólo un resultado de la búsqueda.
+   *
+   * Lo pidió el equipo de ventas el 11 de septiembre de 2026: *«que sea posible no solo escoger
+   * los marcadores que aparecieron en la búsqueda, sino también seleccionar los comercios que
+   * aparecen en el mapa»*. Barriendo una calle uno ve el hotel de la esquina que la categoría
+   * buscada no trajo, y hasta hoy no había forma de tomarlo sin salirse a otra pantalla.
+   *
+   * **ENTRA A LOS RESULTADOS COMO UNO MÁS, no por un carril aparte.** Así hereda todo lo que ya
+   * existe: el semáforo que dice si ya es de alguien, el pin de color, la tarjeta en la lista, el
+   * contador y el botón de agregar. Un carril paralelo habría que enseñárselo a cada una de esas
+   * piezas, y la que se olvidara dejaría crear un punto que ya es de otro vendedor.
+   */
+  const tocarComercio = useCallback(
+    async (placeId: string) => {
+      if (!places) return;
+
+      // Ya estaba entre los resultados: no se duplica, se abre.
+      const ya = resultados?.find((c) => c.placeId === placeId);
+      if (ya) {
+        setAbierto(ya);
+        return;
+      }
+
+      try {
+        const lugar = new places.Place({ id: placeId });
+        await lugar.fetchFields({
+          fields: ["displayName", "location", "userRatingCount"],
+        });
+        if (!lugar.location) return;
+
+        const crudo: Candidato = {
+          placeId,
+          nombre: lugar.displayName ?? "Este local",
+          lat: lugar.location.lat(),
+          lng: lugar.location.lng(),
+          distanciaM: ubicacion
+            ? distancia(ubicacion, lugar.location.lat(), lugar.location.lng())
+            : null,
+          resenas: lugar.userRatingCount ?? null,
+          estado: null,
+        };
+
+        // **EL SEMÁFORO ANTES DE MOSTRARLO.** Sin esto, un local que ya es de otro vendedor se
+        // dibujaría como nuevo y el vendedor intentaría levantarlo.
+        const [conEstado] = await marcarEstados([crudo]);
+        setResultados((antes) => (antes ? [...antes, conEstado] : [conEstado]));
+        setAbierto(conEstado);
+      } catch {
+        // Un local que Google no deja leer simplemente no abre nada.
+      }
+    },
+    [places, resultados, ubicacion, marcarEstados],
+  );
   /**
    * @param centro Dónde buscar cuando el modo es "cerca". Sin esto solo se
    *   podía buscar alrededor del GPS — y para armar la lista de un pueblo al
@@ -451,48 +517,19 @@ function Buscador() {
       return;
     }
 
-    const filas = resultados
-      .filter((c) => elegidos.includes(c.placeId))
-      .map((c) => ({
-        id: crypto.randomUUID(),
-        nombre: c.nombre,
-        place_id: c.placeId,
-        lat: c.lat,
-        lng: c.lng,
-        origen: "busqueda",
-        vendedor_id: user.id,
-        // El poblado de la lista se hereda: si no, las cuentas nacen sin zona
-        // y los filtros de la cartera por poblado no encuentran nada — que es
-        // exactamente lo que pasaba al abrir el mapa desde una lista.
-        poblado: pobladoLista,
-        // Sin `tipo`: entran como potenciales. Agregarlas en tanda desde el
-        // directorio no las convierte en prospectos, solo las pone en la cola
-        // de lo que hay que ir a ver (D-015).
-      }));
-
-    const { error: fallo } = await supabase.from("cuentas").insert(filas);
+    // **LA CREACIÓN VIVE EN `lib/listas`**, porque el mapa de una lista hace exactamente lo
+    // mismo. Escrita dos veces es como una de las dos termina olvidando heredar el poblado, o
+    // poniendo `tipo` y convirtiendo en prospecto lo que todavía es un potencial.
+    const fallo = await crearPotenciales({
+      puntos: resultados.filter((c) => elegidos.includes(c.placeId)),
+      vendedorId: user.id,
+      listaId,
+    });
 
     if (fallo) {
-      setError(fallo.message);
+      setError(fallo);
       setGuardando(false);
       return;
-    }
-
-    // Si venía armando una lista, los recién creados entran ahí. Sin esto los
-    // cincuenta puntos del domingo caerían sueltos en la cartera, que es el
-    // problema que las listas existen para resolver.
-    if (listaId) {
-      const { error: falloLista } = await supabase.from("listas_cuentas").insert(
-        filas.map((f) => ({ lista_id: listaId, cuenta_id: f.id })),
-      );
-
-      if (falloLista) {
-        setError(
-          `Las cuentas quedaron creadas, pero no entraron a la lista: ${falloLista.message}`,
-        );
-        setGuardando(false);
-        return;
-      }
     }
 
     router.push(listaId ? `/listas/${listaId}` : "/cuentas");
@@ -573,7 +610,34 @@ function Buscador() {
   const nuevosElegidos = nuevos.filter((c) => elegidos.includes(c.placeId)).length;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {/* **NO HABÍA CÓMO SALIR DE ACÁ**, y el que llega armando una lista lleva encima una
+          selección que todavía no existe en ninguna parte: si se va, se pierde entera y sin
+          avisar. Lo reportó el equipo de ventas el 11 de septiembre de 2026.
+
+          La advertencia sale **sólo cuando hay algo que perder**. Un «¿seguro?» que salta
+          siempre se contesta que sí sin leerlo, y el día que de verdad importa tampoco se lee. */}
+      <button
+        type="button"
+        onClick={() => {
+          if (
+            elegidos.length > 0 &&
+            !confirm(
+              `Tienes ${elegidos.length} ${
+                elegidos.length === 1 ? "punto elegido" : "puntos elegidos"
+              } sin agregar. Si sales, se pierden.`,
+            )
+          ) {
+            return;
+          }
+          router.push(listaId ? `/listas/${listaId}` : "/mapa");
+        }}
+        className="min-h-tactil -mb-2 flex items-center gap-1.5 self-start text-sm text-texto-secundario"
+      >
+        <ChevronLeft size={18} aria-hidden />
+        {listaId ? "Volver a la lista" : "Volver al mapa"}
+      </button>
+
       {/* Sin esto se pierde el hilo: escoge veinte puntos y no sabe a dónde
           van a caer. */}
       {listaId && (
@@ -595,7 +659,17 @@ function Buscador() {
           tarjetas separadas y parecían dos búsquedas distintas — la pregunta
           "¿a cuál le hace caso?" era la respuesta correcta a un diseño malo.
           Las categorías siempre mandan; lo que cambia es desde dónde se mira. */}
-      <Tarjeta className="flex flex-col gap-4">
+      {/* **EL FORMULARIO SE GUARDA MIENTRAS SE MIRA EL MAPA.** Es lo que le devuelve la pantalla
+          al mapa, que era el pedido: ocupaba poco más de la mitad. No se pierde nada — para
+          buscar otra vez está «Buscar en esta zona» encima del propio mapa, y el formulario
+          vuelve entero al pasarse a lista. */}
+      <Tarjeta
+        className={
+          vista === "mapa" && resultados && resultados.length > 0
+            ? "hidden"
+            : "flex flex-col gap-4"
+        }
+      >
         <Opciones
           etiqueta="1 · Qué buscas"
           opciones={ETIQUETAS_CATEGORIA}
@@ -712,11 +786,36 @@ function Buscador() {
 
       {resultados && resultados.length > 0 && (
         <>
+          {/* **ESTA FILA ES TODO EL CROMO QUE QUEDA EN MODO MAPA.** El pedido del equipo de
+              ventas fue que el mapa ocupara la pantalla: ocupaba poco más de la mitad, porque
+              encima llevaba el formulario, el conteo, la leyenda, el «elegir todos» y el orden.
+              En mapa, el conteo y el orden no dicen nada —no hay filas que ordenar— y la leyenda
+              se mudó encima del propio mapa, donde no gasta alto. */}
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-medium text-texto">
+            <p className="truncate text-sm font-medium text-texto">
               {resultados.length} encontrados
             </p>
-            <div className="flex gap-1">
+            <div className="flex shrink-0 gap-1">
+              {/* **EL SATÉLITE SÓLO EN MAPA**, que es donde significa algo. */}
+              {vista === "mapa" && (
+                <button
+                  type="button"
+                  aria-pressed={tipoMapa === "hybrid"}
+                  onClick={() =>
+                    setTipoMapa((a) => (a === "hybrid" ? "roadmap" : "hybrid"))
+                  }
+                  className={`min-h-tactil w-11 rounded-lg border ${
+                    tipoMapa === "hybrid"
+                      ? "border-marca bg-marca text-white"
+                      : "border-borde bg-superficie text-texto"
+                  }`}
+                  aria-label={
+                    tipoMapa === "hybrid" ? "Ver el mapa de calles" : "Ver satélite"
+                  }
+                >
+                  <Layers size={16} className="mx-auto" aria-hidden />
+                </button>
+              )}
               <button
                 type="button"
                 aria-pressed={vista === "lista"}
@@ -746,11 +845,19 @@ function Buscador() {
             </div>
           </div>
 
-          <Leyenda resultados={resultados} elegidos={elegidos.length} />
+          {/* **EN MAPA SE MUDA ENCIMA DEL MAPA, NO DESAPARECE.** Es la que cumple la regla de
+              que un estado nunca dependa sólo del color, y el mapa es justo donde el color va
+              solo: quitarla ahí sería quitarla donde hace falta. */}
+          <div className={vista === "mapa" ? "hidden" : ""}>
+            <Leyenda resultados={resultados} elegidos={elegidos.length} />
+          </div>
 
           {/* DEBAJO DE LA LEYENDA A PROPÓSITO. La leyenda acaba de decir «7 Nuevo»; el control
               dice «Elegir los 7 nuevos». Puesto encima, el número aparecería antes de que se sepa
               de dónde sale. */}
+          {/* En mapa se elige tocando pines, uno por uno; el «elegir los N» vive en la lista,
+              que es donde se ven los N. */}
+          <div className={vista === "mapa" ? "hidden" : ""}>
           <ElegirTodos
             total={nuevos.length}
             elegidos={nuevosElegidos}
@@ -772,10 +879,14 @@ function Buscador() {
               setElegidos((a) => a.filter((id) => !enPantalla.has(id)));
             }}
           />
+          </div>
 
           {/* Ordenar por reseñas es lo que separa un supermercado de 400 de
-              una tienda de 12. Es el proxy de tráfico de §7.5. */}
-          <div className="flex gap-2">
+              una tienda de 12. Es el proxy de tráfico de §7.5.
+
+              **No se dibuja en mapa**: no hay filas que ordenar, y son 44px de alto que el mapa
+              necesita más. */}
+          <div className={vista === "mapa" ? "hidden" : "flex gap-2"}>
             <button
               type="button"
               aria-pressed={orden === "cercania"}
@@ -803,7 +914,12 @@ function Buscador() {
           </div>
 
           {vista === "mapa" ? (
-            <div className="h-[60vh] w-full overflow-hidden rounded-lg border border-borde">
+            // `flex-1` y `min-h-0`: se lleva todo el alto que sobre después del cromo, sin que
+            // nadie tenga que adivinar cuánto mide la barra de abajo en cada teléfono.
+            <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-lg border border-borde">
+              <div className="pointer-events-none absolute left-2 top-2 z-10 max-w-[calc(100%-1rem)]">
+                <Leyenda resultados={resultados} elegidos={elegidos.length} />
+              </div>
               <MapaCandidatos
                 candidatos={ordenados}
                 abierto={abierto}
@@ -815,6 +931,8 @@ function Buscador() {
                 // `Boolean` y no `!== null`: el botón de abajo decide con `listaId ?` a secas, y con
                 // un `?lista=` vacío en la dirección los dos prometerían cosas distintas.
                 enLista={Boolean(listaId)}
+                tipoMapa={tipoMapa}
+                onTocarComercio={tocarComercio}
                 // **SE CIERRA AL ELEGIR.** Barrer una zona es tocar quince marcadores seguidos;
                 // dejar la ventanita abierta obliga a cerrarla a mano cada vez, y son quince
                 // toques que no hacen nada. El pin cambia de color, que es la confirmación.
@@ -959,6 +1077,8 @@ function MapaCandidatos({
   elegidos,
   onElegir,
   enLista,
+  tipoMapa,
+  onTocarComercio,
   sucursales,
   contando,
   onContarSucursales,
@@ -973,6 +1093,10 @@ function MapaCandidatos({
   onElegir: (placeId: string) => void;
   /** Si se llegó armando una lista. Cambia lo que promete el botón de la ventanita. */
   enLista: boolean;
+  /** Calle o satélite con rótulos. Lo decide la barra de arriba. */
+  tipoMapa: "roadmap" | "hybrid";
+  /** Un comercio del mapa de Google que no venía en la búsqueda. */
+  onTocarComercio: (placeId: string) => void;
   sucursales: Record<string, number>;
   contando: boolean;
   onContarSucursales: (c: Candidato) => void;
@@ -993,8 +1117,20 @@ function MapaCandidatos({
       defaultCenter={abierto ? { lat: abierto.lat, lng: abierto.lng } : centro}
       defaultZoom={14}
       gestureHandling="greedy"
+      // Controlado: cambia cuando el vendedor toca el botón de satélite.
+      mapTypeId={tipoMapa}
       disableDefaultUI
       zoomControl
+      // **`clickableIcons` es lo que deja tocar un comercio del mapa.** Sin esto, los rótulos de
+      // Google son dibujo: se ven y no se pueden tomar.
+      clickableIcons
+      onClick={(evento) => {
+        const id = evento.detail.placeId;
+        if (!id) return;
+        // Sin esto Google abre su propia tarjeta encima de la nuestra.
+        evento.stop?.();
+        onTocarComercio(id);
+      }}
       style={{ height: "100%", width: "100%" }}
     >
       <BuscarAqui
