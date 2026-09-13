@@ -51,15 +51,16 @@ const POR_ROL: Record<Rol, Ruta[]> = {
   ],
   // Gerencia no registra nada: es el único rol que solo lee y decide. Su
   // pantalla es el tablero, y arranca ahí.
+  // **Ni gerencia ni administración tienen ya pestaña de Solicitudes** (D-071): los encargos les
+  // llegan por correo, a las direcciones que usaban antes del SGV. La pantalla se quedó del lado
+  // del vendedor, como registro de lo que mandó.
   gerente: [
     { href: "/tablero", etiqueta: "Tablero", Icono: Gauge },
-    { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
     { href: "/mercado", etiqueta: "Mercado", Icono: Radar },
     { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
     { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
   ],
   administracion: [
-    { href: "/solicitudes", etiqueta: "Solicitudes", Icono: Inbox },
     { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },
     { href: "/mapa", etiqueta: "Mapa", Icono: Map },
   ],

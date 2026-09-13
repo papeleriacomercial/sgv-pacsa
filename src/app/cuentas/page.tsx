@@ -131,6 +131,7 @@ export default async function Cuentas() {
             cuentas={cuentas}
             vendedores={vendedores}
             yo={user.id}
+            rol={perfil?.rol}
           />
         )}
       </main>

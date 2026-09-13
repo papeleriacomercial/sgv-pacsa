@@ -10,10 +10,13 @@ import {
   colorizar,
   desdeUrl,
   DIMENSIONES,
+  filtraPorActividad,
+  type Actividad,
   type Cuenta,
   type Dimension,
   type Filtros,
 } from "@/lib/filtros";
+import { clienteNavegador } from "@/lib/supabase/navegador";
 import { haceDias } from "@/lib/fechas";
 import { PanelFiltros } from "@/components/panel-filtros";
 import { FichaPunto } from "@/components/ficha-punto";
@@ -42,6 +45,7 @@ export function CuentasConFiltros({
   cuentaDestacada,
   mapaProtagonista = false,
   yo,
+  rol,
 }: {
   cuentas: Cuenta[];
   vendedores: { id: string; nombre: string }[];
@@ -56,6 +60,13 @@ export function CuentasConFiltros({
    * `/cuentas` es al revés —se filtra y después se mira— y ahí sí tienen que estar.
    */
   mapaProtagonista?: boolean;
+  /**
+   * Quién mira, para decidir si ve el filtro de movimiento.
+   *
+   * **Sin rol se asume que no es gerencia**, que es el lado seguro: una pantalla que no sabe
+   * quién la abre no debería ofrecer el filtro de quién tocó qué.
+   */
+  rol?: string | null;
   /** Quién está mirando. Su cartera es la que sale por omisión. */
   yo?: string;
 }) {
@@ -73,13 +84,32 @@ export function CuentasConFiltros({
   // Solo cuando la dirección viene limpia. Si trae cualquier parámetro es
   // que alguien ya tocó los filtros —o quitó este a propósito— y volver a
   // ponerlo sería pelearse con el usuario.
+  // **El filtro de movimiento es de gerencia y de nadie más** — decisión del usuario, 13 de
+  // septiembre de 2026. Contesta «qué tocó cada quien y cuándo», que es una pregunta de quien
+  // acompaña al equipo, no de quien vende. El líder tampoco: para mirar a los suyos tiene el
+  // tablero y el contrato.
+  const esGerencia = rol === "gerente";
+
   const [filtros, setFiltros] = useState<Filtros>(() => {
     const desde = desdeUrl(parametros);
+
+    // **Se limpia de la dirección, no sólo de la pantalla.** Esconder el control y dejar que
+    // `?desde=…&hasta=…` siguiera funcionando sería una cortina, no una restricción: bastaría
+    // con que alguien copiara un enlace de gerencia.
+    const base = esGerencia
+      ? desde
+      : {
+          ...desde,
+          actividadDesde: null,
+          actividadHasta: null,
+          clasesActividad: [],
+        };
+
     const limpia = parametros.toString() === "";
     if (limpia && yo && vendedores.length > 1) {
-      return { ...desde, vendedores: [yo] };
+      return { ...base, vendedores: [yo] };
     }
-    return desde;
+    return base;
   });
   const [busqueda, setBusqueda] = useState("");
   const [abierto, setAbierto] = useState(false);
@@ -102,8 +132,72 @@ export function CuentasConFiltros({
     router.replace(`${ruta}?${consulta}`, { scroll: false });
   }, [filtros, dimension, vista, ruta, router]);
 
+  /**
+   * Qué se movió en el rango escogido.
+   *
+   * **Se pide al servidor y no se calcula aquí**, porque la respuesta sale de la auditoría y de
+   * los seguimientos, que no viajan con la cartera. Va en el navegador y no en la página porque el
+   * rango lo cambia el usuario sin recargar.
+   */
+  const [actividad, setActividad] = useState<Map<string, Actividad>>();
+  const [cargandoActividad, setCargandoActividad] = useState(false);
+  const [errorActividad, setErrorActividad] = useState<string | null>(null);
+
+  const { actividadDesde, actividadHasta } = filtros;
+
+  useEffect(() => {
+    // Sin rango no hay nada que pedir; y si quien mira no es gerencia, tampoco — la consulta ni
+    // siquiera sale, aunque alguien haya llegado con las fechas en la dirección.
+    if (!esGerencia || !actividadDesde || !actividadHasta) {
+      setActividad(undefined);
+      setErrorActividad(null);
+      return;
+    }
+
+    // **Si la respuesta llega tarde, se descarta.** Mover el rango tres veces seguidas dispara tres
+    // consultas, y sin esto la más lenta pisa a la última y la pantalla enseña otro rango del que
+    // dice el panel.
+    let vigente = true;
+    setCargandoActividad(true);
+    setErrorActividad(null);
+
+    clienteNavegador()
+      .rpc("cuentas_con_actividad", {
+        p_desde: actividadDesde,
+        p_hasta: actividadHasta,
+      })
+      .then(({ data, error }) => {
+        if (!vigente) return;
+        if (error) {
+          setErrorActividad(error.message);
+          setActividad(new Map());
+        } else {
+          setActividad(
+            new Map(
+              (
+                data as {
+                  cuenta_id: string;
+                  nueva: boolean;
+                  modificada: boolean;
+                  visitada: boolean;
+                }[]
+              ).map((f) => [
+                f.cuenta_id,
+                { nueva: f.nueva, modificada: f.modificada, visitada: f.visitada },
+              ]),
+            ),
+          );
+        }
+        setCargandoActividad(false);
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, [esGerencia, actividadDesde, actividadHasta]);
+
   const visibles = useMemo(() => {
-    const filtradas = aplicar(cuentas, filtros);
+    const filtradas = aplicar(cuentas, filtros, actividad);
 
     // **La búsqueda se aplica encima de los filtros, no en vez de ellos.** Se busca por nombre, por
     // pueblo y por tipo de comercio: el vendedor a veces recuerda el rótulo, y a veces sólo que era
@@ -145,7 +239,7 @@ export function CuentasConFiltros({
     }
 
     return lista;
-  }, [cuentas, filtros, busqueda]);
+  }, [cuentas, filtros, busqueda, actividad]);
 
   const nombrePorVendedor = useMemo(
     () => new Map(vendedores.map((v) => [v.id, v.nombre])),
@@ -206,6 +300,7 @@ export function CuentasConFiltros({
 
       <div className={enMapaPleno ? "hidden" : ""}>
       <PanelFiltros
+        esGerencia={esGerencia}
         filtros={filtros}
         onCambio={setFiltros}
         abierto={abierto}
@@ -284,15 +379,32 @@ export function CuentasConFiltros({
         </div>
       )}
 
+      {errorActividad && (
+        <Tarjeta>
+          <p className="text-sm text-texto">No se pudo leer el movimiento del período.</p>
+          <p className="text-xs text-texto-secundario">{errorActividad}</p>
+        </Tarjeta>
+      )}
+
       {/* EL MENSAJE TIENE QUE DECIR POR QUÉ NO HAY NADA. Con la barra de búsqueda, «quita algún
           filtro» manda a mirar el sitio equivocado: lo que esconde las cuentas es lo que se acaba de
-          escribir, no un filtro que quizá ni está puesto. */}
+          escribir, no un filtro que quizá ni está puesto.
+
+          Y con el filtro de período, mientras la respuesta no llega **no hay nada que decir
+          todavía**: un «ninguna cuenta pasa el filtro» que se desmiente medio segundo después es
+          peor que esperar. */}
       {visibles.length === 0 && (
         <Tarjeta>
-          {busqueda.trim() ? (
+          {cargandoActividad ? (
+            <Cargando texto="Buscando lo que se movió" />
+          ) : busqueda.trim() ? (
             <Vacio titulo={`Ninguna cuenta dice «${busqueda.trim()}»`}>
               Se busca por nombre, pueblo y tipo de comercio. Prueba con menos letras, o borra lo
               escrito para volver a verlas todas.
+            </Vacio>
+          ) : filtraPorActividad(filtros) ? (
+            <Vacio titulo="Nadie tocó nada en ese período">
+              Con los demás filtros puestos, ninguna cuenta tuvo movimiento entre esas fechas.
             </Vacio>
           ) : (
             <Vacio titulo="Ninguna cuenta pasa el filtro">

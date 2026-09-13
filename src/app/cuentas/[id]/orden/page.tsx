@@ -33,7 +33,9 @@ export default async function Orden({ params }: PageProps<"/cuentas/[id]/orden">
     await Promise.all([
       supabase
         .from("cuentas")
-        .select("id, nombre, ruc, direccion, poblado, pide_sin_itbms, vendedor_id")
+        .select(
+          "id, nombre, ruc, direccion, poblado, pide_sin_itbms, vendedor_id, contacto_nombre, contacto_telefono",
+        )
         .eq("id", id)
         .is("deleted_at", null)
         .maybeSingle(),

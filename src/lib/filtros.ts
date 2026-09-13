@@ -43,6 +43,16 @@ export type Cuenta = {
   oportunidades_abiertas: number;
 };
 
+/**
+ * Las tres clases de movimiento, y son tres comportamientos distintos.
+ *
+ * **nueva** es caza, **visitada** es cuidado, y **modificada** es mantener el dato al día. El
+ * usuario los pidió separados el 13 de septiembre de 2026 y la primera corrida le dio razón: en
+ * la misma semana un vendedor levantó 105 puntos nuevos y visitó 28, y otro levantó 4 y visitó 15.
+ * Sumados habrían parecido lo mismo.
+ */
+export type ClaseActividad = "nueva" | "modificada" | "visitada";
+
 export type Filtros = {
   texto: string;
   tipos: TipoCuenta[];
@@ -89,7 +99,20 @@ export type Filtros = {
    * alguien los toque — y ahí dejan de ser potenciales.
    */
   incluirPotenciales: boolean;
+  /**
+   * Desde y hasta qué día se busca movimiento. **Van juntos o no van.**
+   *
+   * Con rango puesto, la cartera se reduce a las cuentas que tuvieron algo en esos días. Las
+   * fechas son días de Panamá en `AAAA-MM-DD`, y el último día entra completo.
+   */
+  actividadDesde: string | null;
+  actividadHasta: string | null;
+  /** Qué clase de movimiento. Vacío quiere decir «cualquiera de las tres». */
+  clasesActividad: ClaseActividad[];
 };
+
+/** Lo que devuelve `cuentas_con_actividad` por cada cuenta que se movió. */
+export type Actividad = Record<ClaseActividad, boolean>;
 
 export const FILTROS_VACIOS: Filtros = {
   texto: "",
@@ -107,7 +130,15 @@ export const FILTROS_VACIOS: Filtros = {
   soloFueraDeCadencia: false,
   incluirDescartadas: false,
   incluirPotenciales: false,
+  actividadDesde: null,
+  actividadHasta: null,
+  clasesActividad: [],
 };
+
+/** Con rango puesto, la cartera se reduce a lo que se movió. Sin rango, este filtro no existe. */
+export function filtraPorActividad(f: Filtros): boolean {
+  return f.actividadDesde !== null && f.actividadHasta !== null;
+}
 
 export function contarActivos(f: Filtros): number {
   return (
@@ -125,18 +156,45 @@ export function contarActivos(f: Filtros): number {
     (f.soloSinUbicacion ? 1 : 0) +
     (f.soloFueraDeCadencia ? 1 : 0) +
     (f.incluirDescartadas ? 1 : 0) +
-    (f.incluirPotenciales ? 1 : 0)
+    (f.incluirPotenciales ? 1 : 0) +
+    // El rango cuenta como uno, y las clases aparte: «esta semana» y «esta semana, solo nuevas»
+    // no son el mismo filtro y el contador tiene que notarlo.
+    (filtraPorActividad(f) ? 1 : 0) +
+    f.clasesActividad.length
   );
 }
 
-export function aplicar(cuentas: Cuenta[], f: Filtros): Cuenta[] {
+/**
+ * @param actividad Qué se movió en el rango, por cuenta. Sólo hace falta si hay rango puesto.
+ *   **Mientras no haya llegado va `undefined` y no pasa ninguna cuenta**, que es lo correcto:
+ *   enseñar la cartera entera un instante y recortarla después se lee como un parpadeo raro.
+ */
+export function aplicar(
+  cuentas: Cuenta[],
+  f: Filtros,
+  actividad?: Map<string, Actividad>,
+): Cuenta[] {
   const texto = f.texto.trim().toLowerCase();
+  const porActividad = filtraPorActividad(f);
 
   return cuentas.filter((c) => {
+    // EL FILTRO DE ACTIVIDAD VA PRIMERO, y de él depende lo que sigue.
+    if (porActividad) {
+      const a = actividad?.get(c.id);
+      if (!a) return false;
+      if (f.clasesActividad.length && !f.clasesActividad.some((k) => a[k])) {
+        return false;
+      }
+    }
+
     // Las descartadas salen del conjunto antes que nada, salvo que se pidan
     // expresamente —con el interruptor o eligiéndolas en el filtro de tipo—.
+    //
+    // **PREGUNTAR POR ACTIVIDAD LAS PIDE.** El filtro contesta «qué tocó esta persona en estos
+    // días», y esconder parte de lo que tocó vuelve falsa la respuesta.
     if (
       c.tipo === "descartada" &&
+      !porActividad &&
       !f.incluirDescartadas &&
       !f.tipos.includes("descartada")
     ) {
@@ -144,8 +202,15 @@ export function aplicar(cuentas: Cuenta[], f: Filtros): Cuenta[] {
     }
 
     // Los potenciales, igual. La cartera es de cuentas que alguien ya trabajó.
+    //
+    // **Y AQUÍ EL ESCONDIDO ERA FATAL, no incómodo.** De las 192 cuentas con movimiento en la
+    // semana del 7 de septiembre de 2026, **134 eran potenciales** — el 70%. Con la omisión de la
+    // cartera, preguntar «qué hizo Albert esta semana» habría contestado 54 de 192, y la
+    // herramienta habría parecido que no registra el trabajo de captura, que es justamente el que
+    // más hacen en el arranque.
     if (
       c.tipo === "potencial" &&
+      !porActividad &&
       !f.incluirPotenciales &&
       !f.tipos.includes("potencial")
     ) {
@@ -443,6 +508,7 @@ const LISTAS = [
   "productos",
   "volumenes",
   "vendedores",
+  "clasesActividad",
 ] as const;
 
 const BANDERAS = [
@@ -467,6 +533,15 @@ export function desdeUrl(p: URLSearchParams): Filtros {
   BANDERAS.forEach((clave) => {
     if (p.get(clave) === "1") filtros[clave] = true;
   });
+
+  // Las dos fechas van juntas o no van: media fecha no es un rango, y dejarla entrar haría que
+  // `filtraPorActividad` diera falso mientras la dirección promete un filtro puesto.
+  const desde = p.get("desde");
+  const hasta = p.get("hasta");
+  if (desde && hasta) {
+    filtros.actividadDesde = desde;
+    filtros.actividadHasta = hasta;
+  }
 
   const sin = p.get("sinContacto");
   if (sin) filtros.sinContactoDesde = Number(sin);
@@ -509,6 +584,10 @@ export function aUrl(
   BANDERAS.forEach((clave) => {
     if (f[clave]) p.set(clave, "1");
   });
+  if (filtraPorActividad(f)) {
+    p.set("desde", f.actividadDesde as string);
+    p.set("hasta", f.actividadHasta as string);
+  }
   if (f.sinContactoDesde !== null) p.set("sinContacto", String(f.sinContactoDesde));
   if (f.compromisoEnDias !== null) p.set("compromiso", String(f.compromisoEnDias));
   if (f.porReponerEnDias !== null) p.set("reponer", String(f.porReponerEnDias));

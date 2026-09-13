@@ -13,7 +13,9 @@ import {
 import {
   contarActivos,
   DIMENSIONES,
+  filtraPorActividad,
   FILTROS_VACIOS,
+  type ClaseActividad,
   type Dimension,
   type Filtros,
 } from "@/lib/filtros";
@@ -26,6 +28,44 @@ function alternar<T>(lista: T[], valor: T): T[] {
     ? lista.filter((v) => v !== valor)
     : [...lista, valor];
 }
+
+// ---------------------------------------------------------------------------
+// Fechas para el filtro de movimiento
+//
+// **Se calculan aquí y no se importan de `lib/semana`**, que arrastra el cliente de servidor y no
+// puede viajar a un componente del navegador. Son tres líneas y el mediodía evita el corrimiento
+// de día al convertir.
+// ---------------------------------------------------------------------------
+
+function hoyEnPanama() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Panama" });
+}
+
+function sumarDias(iso: string, n: number) {
+  const d = new Date(`${iso}T12:00:00`);
+  d.setDate(d.getDate() + n);
+  return d.toLocaleDateString("en-CA");
+}
+
+/** El lunes de la semana de esa fecha. En Panamá la semana de trabajo empieza el lunes. */
+function lunesDe(iso: string) {
+  const d = new Date(`${iso}T12:00:00`);
+  return sumarDias(iso, -((d.getDay() + 6) % 7));
+}
+
+/**
+ * Desde cuándo se sabe qué cuenta cambió.
+ *
+ * Antes de esta fecha la auditoría guardaba dos campos y un cambio de teléfono no dejaba rastro,
+ * así que «modificada» no es cero: es «no se sabe». El panel lo advierte en vez de callarlo.
+ */
+const DESDE_QUE_SE_AUDITAN_LAS_FICHAS = "2026-09-03";
+
+const CLASES: [ClaseActividad, string][] = [
+  ["nueva", "Nuevas"],
+  ["modificada", "Modificadas"],
+  ["visitada", "Visitadas"],
+];
 
 function Grupo({
   titulo,
@@ -87,6 +127,7 @@ export function PanelFiltros({
   onDimension,
   yo,
   conColor,
+  esGerencia = false,
 }: {
   filtros: Filtros;
   onCambio: (f: Filtros) => void;
@@ -104,6 +145,12 @@ export function PanelFiltros({
   yo?: string;
   /** La colorización solo existe en el mapa. */
   conColor: boolean;
+  /**
+   * El filtro de movimiento es de gerencia y de nadie más — decisión del usuario del 13 de
+   * septiembre de 2026. Contesta «quién tocó qué y cuándo», que es la pregunta de quien acompaña
+   * al equipo. Ni el vendedor ni el líder lo ven.
+   */
+  esGerencia?: boolean;
 }) {
   const [pestana, setPestana] = useState<"filtrar" | "colorear">("filtrar");
   const activos = contarActivos(filtros);
@@ -194,6 +241,125 @@ export function PanelFiltros({
                     </Pastilla>
                   ))}
                 </Grupo>
+              )}
+
+              {esGerencia && (
+                <>
+              {/* MOVIMIENTO EN UN PERÍODO.
+                  Va pegado al de vendedor porque se usan en pareja: *«filtrar por el señor Albert
+                  Batista, y que en el mapa se me presenten las cuentas, prospectos o potenciales
+                  que él tocó»*. Y los atajos van antes que las fechas porque el caso de todos los
+                  días es «esta semana», no un rango a mano. */}
+              <Grupo titulo="Movimiento en un período">
+                {(
+                  [
+                    [
+                      "Esta semana",
+                      lunesDe(hoyEnPanama()),
+                      hoyEnPanama(),
+                    ],
+                    [
+                      "Semana pasada",
+                      sumarDias(lunesDe(hoyEnPanama()), -7),
+                      sumarDias(lunesDe(hoyEnPanama()), -1),
+                    ],
+                    [
+                      "Este mes",
+                      `${hoyEnPanama().slice(0, 7)}-01`,
+                      hoyEnPanama(),
+                    ],
+                  ] as [string, string, string][]
+                ).map(([rotulo, desde, hasta]) => (
+                  <Pastilla
+                    key={rotulo}
+                    activo={
+                      filtros.actividadDesde === desde &&
+                      filtros.actividadHasta === hasta
+                    }
+                    onClick={() =>
+                      set(
+                        filtros.actividadDesde === desde &&
+                          filtros.actividadHasta === hasta
+                          ? { actividadDesde: null, actividadHasta: null, clasesActividad: [] }
+                          : { actividadDesde: desde, actividadHasta: hasta },
+                      )
+                    }
+                  >
+                    {rotulo}
+                  </Pastilla>
+                ))}
+              </Grupo>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Campo
+                  etiqueta="Desde"
+                  type="date"
+                  value={filtros.actividadDesde ?? ""}
+                  max={filtros.actividadHasta ?? undefined}
+                  onChange={(e) =>
+                    set({
+                      actividadDesde: e.target.value || null,
+                      // Un rango a medias no filtra nada, así que la otra punta se acompaña sola
+                      // hasta hoy. Mejor eso que un filtro que parece puesto y no hace nada.
+                      actividadHasta:
+                        filtros.actividadHasta ??
+                        (e.target.value ? hoyEnPanama() : null),
+                    })
+                  }
+                />
+                <Campo
+                  etiqueta="Hasta"
+                  type="date"
+                  value={filtros.actividadHasta ?? ""}
+                  min={filtros.actividadDesde ?? undefined}
+                  onChange={(e) =>
+                    set({
+                      actividadHasta: e.target.value || null,
+                      actividadDesde:
+                        filtros.actividadDesde ??
+                        (e.target.value ? lunesDe(hoyEnPanama()) : null),
+                    })
+                  }
+                />
+              </div>
+
+              {filtraPorActividad(filtros) && (
+                <>
+                  {/* Las tres clases sólo aparecen con rango puesto: sin fechas no hay movimiento
+                      que clasificar, y ofrecerlas antes promete un filtro que no hace nada. */}
+                  <Grupo titulo="Qué clase de movimiento">
+                    {CLASES.map(([clave, rotulo]) => (
+                      <Pastilla
+                        key={clave}
+                        activo={filtros.clasesActividad.includes(clave)}
+                        onClick={() =>
+                          set({
+                            clasesActividad: alternar(filtros.clasesActividad, clave),
+                          })
+                        }
+                      >
+                        {rotulo}
+                      </Pastilla>
+                    ))}
+                  </Grupo>
+
+                  <p className="text-xs text-texto-secundario">
+                    Sin escoger ninguna entran las tres. Con el período puesto también
+                    salen los potenciales y las descartadas: la pregunta es qué se tocó,
+                    y esconderlas daría una respuesta falsa.
+                  </p>
+
+                  {(filtros.actividadDesde as string) <
+                    DESDE_QUE_SE_AUDITAN_LAS_FICHAS && (
+                    <p className="text-xs text-aviso">
+                      Antes del 3 de septiembre de 2026 no se sabe qué cuentas se
+                      modificaron — ese dato no existía. Para esos días, «modificadas»
+                      sale vacío, y eso no quiere decir que nadie tocó nada.
+                    </p>
+                  )}
+                </>
+              )}
+                </>
               )}
 
               {/* "Potencial" es la cola de trabajo: cuentas puestas en el

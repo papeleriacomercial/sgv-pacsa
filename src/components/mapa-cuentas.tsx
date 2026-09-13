@@ -145,6 +145,51 @@ function Contenido({
   const [abierta, setAbierta] = useState<Cuenta | null>(
     () => cuentas.find((c) => c.id === destacada) ?? null,
   );
+
+  // -------------------------------------------------------------------------
+  // ABRIR LA VENTANITA AL PASAR POR ENCIMA — pedido por los vendedores, 13 de septiembre de 2026
+  //
+  // **Sólo donde hay ratón de verdad, y eso no es un adorno.** En un teléfono el navegador
+  // dispara `mouseover` con el toque y deja el elemento en estado «encima»: la ventanita se
+  // abriría al tocar y se quedaría pegada hasta tocar otra cosa. Sería empeorar la pantalla que
+  // más se usa —la del vendedor en la calle— para mejorar la que se usa sentado. Se pregunta por
+  // el ratón y en el celular no cambia absolutamente nada.
+  //
+  // El usuario lo dijo así: *«para cuando se usa en un laptop, que es el caso mío y del líder»*.
+  //
+  // **Lo que cierra no es salir del marcador, sino salir del marcador Y de la ventana**, con un
+  // respiro de por medio. Sin eso el vendedor nunca podría bajar el ratón hasta «Ver la fachada»:
+  // la ventanita se le cerraría en el camino.
+  //
+  // Los negocios que pinta Google quedan fuera, y no por falta de ganas: la API sólo dice de qué
+  // negocio se trata **al hacer clic** —`IconMouseEvent` viaja en el evento de clic y en ningún
+  // otro—, así que al pasar por encima no hay nada que abrir.
+  const [conRaton, setConRaton] = useState(false);
+
+  useEffect(() => {
+    const consulta = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const mirar = () => setConRaton(consulta.matches);
+    mirar();
+    // Cambia si conectan o quitan un ratón, o si la Surface se pliega en tableta.
+    consulta.addEventListener("change", mirar);
+    return () => consulta.removeEventListener("change", mirar);
+  }, []);
+
+  const cierreEnCurso = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const noCerrar = useCallback(() => {
+    if (cierreEnCurso.current) clearTimeout(cierreEnCurso.current);
+    cierreEnCurso.current = null;
+  }, []);
+
+  /** El respiro para cruzar del marcador a la ventana sin que se cierre en el camino. */
+  const cerrarConCalma = useCallback(() => {
+    noCerrar();
+    cierreEnCurso.current = setTimeout(() => setAbierta(null), 320);
+  }, [noCerrar]);
+
+  // Un temporizador vivo cuando la pantalla se va sería un intento de dibujar sobre nada.
+  useEffect(() => () => noCerrar(), [noCerrar]);
   const [candidato, setCandidato] = useState<{
     placeId: string;
     nombre: string;
@@ -267,7 +312,21 @@ function Contenido({
               key={c.id}
               position={{ lat: c.lat!, lng: c.lng! }}
               icon={iconoPin(color(c))}
-              onClick={() => setAbierta(c)}
+              // El clic se queda para todos: es lo único que existe en un teléfono, y con ratón
+              // sigue sirviendo para el que prefiere apretar.
+              onClick={() => {
+                noCerrar();
+                setAbierta(c);
+              }}
+              onMouseOver={
+                conRaton
+                  ? () => {
+                      noCerrar();
+                      setAbierta(c);
+                    }
+                  : undefined
+              }
+              onMouseOut={conRaton ? cerrarConCalma : undefined}
             />
           ))}
 
@@ -276,25 +335,32 @@ function Contenido({
             position={{ lat: abierta.lat!, lng: abierta.lng! }}
             onCloseClick={() => setAbierta(null)}
           >
-            {/* El color va acompañado siempre del dato escrito: es lo que
-                mantiene la regla de §17 dentro de la excepción de D-013. */}
-            <span className="block text-sm font-semibold">{abierta.nombre}</span>
-            <span className="block text-xs">
-              {TIPOS_CUENTA[abierta.tipo]}
-              {abierta.volumen && ` · Volumen ${VOLUMENES[abierta.volumen]}`}
-            </span>
-            <span className="block text-xs">
-              {abierta.dias_sin_contacto === null
-                ? "Nunca contactada"
-                : `${haceDias(abierta.dias_sin_contacto)} sin contacto`}
-            </span>
-            <Link
-              href={`/cuentas/${abierta.id}`}
-              className="mt-1 block text-xs underline"
+            {/* **La ventana también cuenta como «estar encima».** Sin esto, bajar el ratón hacia
+                «Ver la fachada» sale del marcador y la cierra antes de llegar al botón. */}
+            <div
+              onMouseEnter={conRaton ? noCerrar : undefined}
+              onMouseLeave={conRaton ? cerrarConCalma : undefined}
             >
-              Abrir expediente
-            </Link>
-            <VerLaFachada lat={abierta.lat!} lng={abierta.lng!} />
+              {/* El color va acompañado siempre del dato escrito: es lo que
+                  mantiene la regla de §17 dentro de la excepción de D-013. */}
+              <span className="block text-sm font-semibold">{abierta.nombre}</span>
+              <span className="block text-xs">
+                {TIPOS_CUENTA[abierta.tipo]}
+                {abierta.volumen && ` · Volumen ${VOLUMENES[abierta.volumen]}`}
+              </span>
+              <span className="block text-xs">
+                {abierta.dias_sin_contacto === null
+                  ? "Nunca contactada"
+                  : `${haceDias(abierta.dias_sin_contacto)} sin contacto`}
+              </span>
+              <Link
+                href={`/cuentas/${abierta.id}`}
+                className="mt-1 block text-xs underline"
+              >
+                Abrir expediente
+              </Link>
+              <VerLaFachada lat={abierta.lat!} lng={abierta.lng!} />
+            </div>
           </InfoWindow>
         )}
 

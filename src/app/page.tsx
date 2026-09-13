@@ -116,7 +116,6 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
   const [
     { data: perfil },
     { data: comps },
-    { data: pend },
     { data: cierre },
     { data: anterior },
     semana,
@@ -143,12 +142,9 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
         .is("cumplido_en", null)
         .lte("fecha_compromiso", hoy)
         .order("fecha_compromiso", { ascending: true }),
-      supabase
-        .from("solicitudes_resumen")
-        .select("id, cuenta_id, tipo, detalle, horas, vencida, cuentas(nombre)")
-        .eq("vendedor_id", user.id)
-        .eq("estado", "pendiente")
-        .order("created_at", { ascending: true }),
+      // Aquí se leían los encargos pendientes. Ya no: la oficina responde por correo y nadie los
+      // cierra en el sistema, así que el contador de horas sería una alarma que nunca se apaga
+      // (D-071). Lo pedido queda en `/solicitudes`, como registro.
       supabase
         .from("cierres")
         .select("enviado_en")
@@ -191,7 +187,6 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
   const escritorio = compromisos.filter(
     (c) => !DE_CALLE.includes(c.tipo_accion),
   );
-  const esperando = (pend ?? []) as unknown as Pendiente[];
   const conPotenciales = listas.filter((l) => l.sin_tocar > 0);
   const porReponer = (reponer ?? []) as PorReponer[];
 
@@ -387,9 +382,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
           </>
         ) : (
           <>
-            {compromisos.length === 0 &&
-              esperando.length === 0 &&
-              porReponer.length === 0 && (
+            {compromisos.length === 0 && porReponer.length === 0 && (
               <Tarjeta>
                 <Vacio titulo="Nada pendiente para hoy">
                   Lo que prometas al registrar un seguimiento aparece aquí con su
@@ -436,38 +429,14 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
               </section>
             )}
 
-            {esperando.length > 0 && (
-              <section className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-marca" aria-hidden />
-                  <h2 className="text-sm font-medium text-texto">
-                    Esperando respuesta
-                  </h2>
-                  <Insignia tono="neutro">{String(esperando.length)}</Insignia>
-                </div>
-                {esperando.map((s) => (
-                  <Link key={s.id} href="/solicitudes">
-                    <Tarjeta
-                      className={`flex flex-col gap-1 ${s.vencida ? "border-red-200 bg-red-50" : ""}`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-base font-semibold text-texto">
-                          {nombreDe(s.cuentas) ?? "Cuenta"}
-                        </p>
-                        <span
-                          className={`shrink-0 font-mono text-xs ${s.vencida ? "text-error" : "text-texto-atenuado"}`}
-                        >
-                          {Math.floor(s.horas)} h
-                        </span>
-                      </div>
-                      <p className="text-sm text-texto-secundario">
-                        {TIPOS_SOLICITUD[s.tipo]} · {s.detalle}
-                      </p>
-                    </Tarjeta>
-                  </Link>
-                ))}
-              </section>
-            )}
+            {/* AQUÍ VIVÍA «ESPERANDO RESPUESTA», y se quitó el 13 de septiembre de 2026 (D-071).
+                Contaba las horas de cada encargo y las ponía en rojo pasadas las 24.
+                Quien cerraba un encargo era la oficina desde su bandeja, y la oficina ya no
+                entra al sistema: se entera por correo. Sin nadie que los cierre, ese contador
+                **nunca bajaría** — en un mes serían veinte tarjetas rojas de cosas ya
+                resueltas, y el vendedor aprendería a no mirar esta pantalla.
+                Lo que pidió queda en `/solicitudes`, como registro; la respuesta le llega a su
+                correo, que es de donde salió. */}
 
             {porReponer.length > 0 && (
               <section className="flex flex-col gap-2">

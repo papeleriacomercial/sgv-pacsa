@@ -6,6 +6,11 @@ import { FileText, Inbox, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { actualizar, insertar, subir } from "@/lib/cola";
 import {
+  abrirCorreo,
+  correoDeDocumento,
+  DURACION_DEL_ENLACE,
+} from "@/lib/correo";
+import {
   CONDICIONES,
   generarCotizacion,
   TITULO_DOCUMENTO,
@@ -44,6 +49,9 @@ export type Cuenta = {
   direccion: string | null;
   poblado: string | null;
   pide_sin_itbms: boolean;
+  /** Para el correo a la oficina: si hay que llamar al cliente, que no haya que buscarlo. */
+  contacto_nombre: string | null;
+  contacto_telefono: string | null;
 };
 
 const DINERO = new Intl.NumberFormat("es-PA", {
@@ -467,11 +475,61 @@ export function ArmarCotizacion({
     }
     setGuardando(false);
 
-    // Lo que va a la oficina no se comparte con nadie: Verónica lo abre
-    // desde su bandeja. Abrir aquí la hoja de compartir invitaría a
-    // mandárselo también al cliente, y entonces habría dos documentos
-    // circulando con el mismo número.
-    if (destino === "oficina") return;
+    // ------------------------------------------------------------------
+    // A LA OFICINA: el correo, no la hoja de compartir
+    //
+    // **Desde el 13 de septiembre de 2026 la oficina ya no tiene bandeja** (D-071): se enteran
+    // por correo, como antes del SGV. La aplicación deja el correo escrito en el Gmail del
+    // vendedor y **él lo envía** — así sale de su dirección y Verónica sabe a quién responderle.
+    //
+    // Sigue sin abrirse la hoja de compartir aquí, y por la misma razón de siempre: ofrecería
+    // WhatsApp al lado de Gmail, y el vendedor podría mandarle al cliente el mismo documento que
+    // iba a la oficina. Dos copias con el mismo número. El correo lleva **un enlace al original
+    // guardado**, así que sólo existe un documento.
+    //
+    // El enlace dura un año, para que se pueda reabrir cuando un cliente reclame meses después.
+    // Si no se puede firmar —sin señal, típicamente— el correo sale igual diciendo que el
+    // documento está en el expediente: **es peor no avisarle a la oficina que avisarle sin
+    // enlace**.
+    if (destino === "oficina") {
+      let enlace: string | null = null;
+      try {
+        const { data } = await clienteNavegador()
+          .storage.from("cotizaciones")
+          .createSignedUrl(`${listo.id}/${listo.codigo}.pdf`, DURACION_DEL_ENLACE);
+        enlace = data?.signedUrl ?? null;
+      } catch {
+        enlace = null;
+      }
+
+      abrirCorreo(
+        correoDeDocumento({
+          tipo,
+          rotulo: titulo,
+          codigo: listo.codigo,
+          cuenta: {
+            nombre: cuenta.nombre,
+            ruc: cuenta.ruc,
+            poblado: cuenta.poblado,
+            contactoNombre: cuenta.contacto_nombre,
+            contactoTelefono: cuenta.contacto_telefono,
+            url: `${window.location.origin}/cuentas/${cuenta.id}`,
+          },
+          vendedor: vendedor.nombre,
+          renglones: renglones.map((r) => ({
+            // La cantidad se edita como texto en el formulario; al correo va como número.
+            cantidad: Number(r.cantidad),
+            unidad: r.unidad,
+            nombre: r.nombre,
+          })),
+          total,
+          condicion: CONDICIONES[condicion],
+          notas,
+          enlace,
+        }),
+      );
+      return;
+    }
 
     if (navigator.canShare?.({ files: [listo.archivo] })) {
       try {
