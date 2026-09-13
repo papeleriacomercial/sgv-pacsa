@@ -5,6 +5,11 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { insertar } from "@/lib/cola";
 import {
+  abrirCorreo,
+  correoDeSolicitud,
+  type DatosDeCuenta,
+} from "@/lib/correo";
+import {
   ATIENDE,
   PIDE_A_LA_OFICINA,
   RESUELVE,
@@ -46,6 +51,14 @@ function Formulario() {
   const oportunidadId = useSearchParams().get("oportunidad");
 
   const [nombreCuenta, setNombreCuenta] = useState("");
+  /**
+   * Lo que hace falta para escribir el correo, no para la pantalla.
+   *
+   * Se trae aquí y no al mandar, porque al mandar el vendedor ya está esperando y una consulta
+   * más entre el toque y el correo se siente como que no pasó nada.
+   */
+  const [datosDelCorreo, setDatosDelCorreo] = useState<DatosDeCuenta | null>(null);
+  const [quienSoy, setQuienSoy] = useState("");
   const [cargando, setCargando] = useState(true);
 
   const [tipo, setTipo] = useState<PideALaOficina | null>(null);
@@ -59,18 +72,44 @@ function Formulario() {
 
   useEffect(() => {
     const supabase = clienteNavegador();
-    supabase
-      .from("cuentas")
-      .select("nombre")
-      .eq("id", cuentaId)
-      .is("deleted_at", null)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setNombreCuenta(data.nombre ?? "");
-        }
-        setCargando(false);
-      });
+
+    async function traer() {
+      const { data } = await supabase
+        .from("cuentas")
+        .select("nombre, ruc, poblado, contacto_nombre, contacto_telefono")
+        .eq("id", cuentaId)
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (data) {
+        setNombreCuenta(data.nombre ?? "");
+        setDatosDelCorreo({
+          nombre: data.nombre ?? "",
+          ruc: data.ruc,
+          poblado: data.poblado,
+          contactoNombre: data.contacto_nombre,
+          contactoTelefono: data.contacto_telefono,
+          url: `${window.location.origin}/cuentas/${cuentaId}`,
+        });
+      }
+
+      // Quién firma el correo. El nombre, no el identificador: lo lee una persona.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: perfil } = await supabase
+          .from("perfiles")
+          .select("nombre")
+          .eq("id", user.id)
+          .maybeSingle();
+        setQuienSoy(perfil?.nombre ?? "");
+      }
+
+      setCargando(false);
+    }
+
+    traer();
   }, [cuentaId]);
 
   // El precio y las condiciones las decide gerencia; ahí no hay opción de
@@ -135,6 +174,25 @@ function Formulario() {
       },
       `Contacto con ${nombreCuenta}`,
     );
+
+    // EL CORREO, que desde el 13 de septiembre de 2026 es como la oficina se entera (D-071).
+    //
+    // Va **después** de guardar y no antes: si abriera el correo primero y el guardado fallara,
+    // el vendedor mandaría un encargo que el sistema no tiene. Y sólo cuando lo resuelve la
+    // oficina — lo que él mismo va a hacer no le interesa a nadie más.
+    if (destino === "oficina" && datosDelCorreo) {
+      abrirCorreo(
+        correoDeSolicitud({
+          tipo,
+          rotulo: TIPOS_SOLICITUD[tipo],
+          cuenta: datosDelCorreo,
+          vendedor: quienSoy,
+          detalle: detalle.trim(),
+          monto: monto ? Number(monto) : null,
+          paraCuando: paraCuando || null,
+        }),
+      );
+    }
 
     router.replace(`/cuentas/${cuentaId}`);
     router.refresh();
