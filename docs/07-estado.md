@@ -3663,3 +3663,94 @@ libreta.
 
 Solo la prueba de campo de arriba. La decisión ya está tomada (D-063); el orden era: primero que
 funcione sin señal, después retirarla.
+
+---
+
+## Ubicación y zona — diseño cerrado el 2026-09-13, sin construir
+
+El campo `poblado` se reemplaza por tres columnas derivadas del punto del mapa —provincia,
+distrito, corregimiento—, `direccion` pasa a ser «Cómo llegar», y la zona se queda en el nombre de
+la lista. Diseño en `docs/17-ubicacion-y-zona.md`, decisión en D-067.
+
+**Comprobado antes de decidir:** 551 de las 552 cuentas con coordenadas resuelven los tres niveles,
+con dos archivos de límites distintos (87% y 88% de coincidencia contra lo escrito a mano). No falta
+código todavía; falta construir los seis pasos del final de ese documento.
+
+**Lo que hay que hacer aparte del código:** pedirle al Instituto Geográfico Nacional Tommy Guardia
+el archivo oficial de límites de 2025. Su servidor público entrega los nombres pero no la
+geometría, así que se arranca con la capa del Smithsonian y se cambia después — es una migración.
+
+---
+
+## Monitoreo del arranque — construido el 2026-09-13
+
+Tres cambios pedidos por el usuario para mirar cómo está arrancando el uso de la aplicación.
+Decisiones en D-068 y D-069.
+
+**El tablero de gerencia** (`/tablero`) — las excepciones salieron; entraron los cierres de los
+tres, sus listas de trabajo con nombre y estado, y la tarjeta que abre la subpantalla nueva. La
+tabla `excepciones_silenciadas` se conserva con sus 27 filas.
+
+**`/tablero/planes`** — nueva. El último plan de cada quien, día por día, con el nombre de la lista
+y la cantidad; los ceros en ámbar y una insignia para quien no planificó. Sólo se lee: responder
+sigue siendo del contrato.
+
+**Filtro de movimiento en la cartera** (`/cuentas` y su mapa) — rango de fechas más tres clases
+combinables: nuevas, modificadas y visitadas. Con el rango puesto entran también los potenciales y
+las descartadas (D-069 explica por qué era indispensable).
+
+**Las dos migraciones están aplicadas**, autorizadas por el usuario el mismo día:
+`20260913205802_cuentas_con_actividad` y `20260913210953_cerrar_actividad_a_anonimo`. Comprobado
+contra la base: la función existe, la puede llamar `authenticated` y **ya no `anon`** (ver D-070,
+que es una trampa que va a volver en cada función nueva).
+
+### Lo que falta
+
+**Nada de esto se vio en pantalla.** `npm run listo` pasa completo —pruebas, tipos y compilación—
+pero la sesión guardada de Playwright murió con la reinstalación de la máquina, así que no se pudo
+comprobar cómo se ve. Entrar una vez en ese navegador deja la cookie en `.playwright-perfil` y
+vuelve a habilitar la comprobación visual.
+
+---
+
+## Las solicitudes salen del sistema y entran al correo — 2026-09-13
+
+Decisiones en D-071 y D-072. **Construido, aplicado y desplegado el mismo día.**
+
+| Qué | Dónde quedó |
+|---|---|
+| El armado del correo | `src/lib/correo.ts`, con sus pruebas en `correo.prueba.ts` |
+| Muestras y precios | El formulario abre el correo al guardar, sólo si lo resuelve la oficina |
+| Cotizaciones y órdenes | Al emitir «a la oficina» se firma un enlace al PDF por un año y se abre el correo |
+| La bandeja de oficina y gerencia | **Eliminada**, junto con su pestaña en la navegación |
+| `/solicitudes` | «Lo que has pedido»: registro del vendedor, sin estados |
+| El inicio del vendedor | Sin «Esperando respuesta» |
+| El filtro de movimiento | Sólo gerencia, cerrado en el panel, en la dirección y en la base |
+| La ventanita del mapa | Se abre al pasar el ratón, sólo en aparatos con ratón |
+
+**Migraciones aplicadas ese día:** `cuentas_con_actividad`, `cerrar_actividad_a_anonimo` y
+`movimiento_solo_gerencia`.
+
+### Lo que hay que probar en la calle
+
+**Nadie ha mandado todavía un correo de verdad desde un teléfono.** El armado del mensaje está
+cubierto por pruebas —destinos, contenido, el caso sin enlace y un pedido de veinte renglones que
+no revienta el largo— y las pruebas se comprobaron rompiéndolas a propósito. Pero lo que no se
+puede probar desde aquí es el paso final: que al tocar el botón se abra Gmail con todo puesto.
+
+La prueba son dos minutos, y conviene hacerla en un teléfono de cada clase:
+
+1. Entrar a una cuenta y pedir una muestra.
+2. Debe abrirse Gmail con el destinatario, el asunto y el cuerpo escritos.
+3. Enviar, y confirmar que llegó al buzón de cotizaciones.
+4. Repetir armando una cotización y mandándola a la oficina: ahí el cuerpo lleva el enlace al PDF.
+
+**En iPhone hay que revisar una cosa una sola vez:** si el correo por omisión del teléfono es Apple
+Mail en vez de Gmail, el mensaje saldría de otra dirección. Se arregla en ajustes, por teléfono.
+
+### Lo que quedó sin uso
+
+`esDeMiBandeja()` en `src/lib/catalogos.ts` y sus pruebas en `solicitudes.prueba.ts` describen
+quién atendía cada bandeja. **Ya no hay bandejas.** Las pruebas siguen pasando pero cuidan una
+regla que no existe; el enrutamiento vive ahora en `CORREO_DESTINO`. Queda pendiente decidir si se
+borra.

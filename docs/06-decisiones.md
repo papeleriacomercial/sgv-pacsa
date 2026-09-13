@@ -1669,3 +1669,230 @@ comparaciones de ensayo— viven mezclados con los buenos.
 
 **Decisión del usuario, 2 de septiembre de 2026: queda anotado como pendiente.** No es urgente
 mientras nadie escriba una migración destructiva; el día que se escriba una, esto es lo primero.
+
+## D-067
+
+**2026-09-13 · La ubicación se deriva del punto; la zona vive en el nombre de la lista**
+
+**Decisión.** El campo `poblado` de una cuenta desaparece y lo reemplazan **tres columnas
+derivadas** —provincia, distrito y corregimiento— que se calculan del punto marcado en el mapa
+contra los límites oficiales, cargados como tabla propia. Nadie las escribe. El campo `direccion`
+se conserva pero cambia de oficio: pasa a ser **«Cómo llegar»**, libre y opcional, para la
+referencia que ninguna máquina puede dar. Y la **zona** —el recorrido de un día— se queda en el
+nombre de la lista, que es donde el vendedor ya la pone.
+
+**Alternativas descartadas.** Un catálogo abierto de poblados al estilo de D-012 y D-022: se
+descartó porque si el valor se deriva no puede haber duplicados, y sobra toda la maquinaria de
+depuración. Geocodificación inversa de Google: devuelve barrios —«Obarrio», «El Cangrejo»— y no
+corregimientos oficiales, cuesta por consulta, necesita señal, y choca con la restricción de
+Places de no guardar nada de Google salvo el `place_id`. Un solo campo en vez de tres: no sirve,
+porque el vendedor del interior agrupa por distrito y el de la ciudad por corregimiento. Borrar
+`direccion`: rompe la cotización, que la imprime, y bota las únicas ocho referencias escritas por
+una persona.
+
+**Por qué.** Porque el campo había dejado de significar algo. Dieciséis cuentas decían
+`CALIDONIA Y CENTARL` —el nombre de una lista, con su error de dedo— y están repartidas en diez
+corregimientos y cuatro provincias. El mecanismo estaba en el código: `potenciales.ts` heredaba el
+poblado de la lista a cada cuenta que entraba desde ella, así que el nombre del recorrido se
+convertía en la ubicación.
+
+**Comprobado, no supuesto.** Se calcularon los tres niveles para las 552 cuentas con coordenadas,
+con **dos archivos de límites distintos** para que el resultado no dependiera de uno: 551 de 552
+resolvieron con ambos, y la coincidencia contra lo escrito a mano dio 88% y 87%. Que el archivo más
+nuevo no mejorara es la prueba de que las discrepancias son de los humanos y no de los datos: 16 de
+las 48 vienen del nombre de una lista. Del lado que coincide, **277 habían escrito el distrito y 51
+el corregimiento** — los dos niveles mezclados en una columna, que era el diagnóstico.
+
+Ninguna de las 376 cuentas con poblado escrito carece de coordenadas, así que no se pierde nada al
+rehacerlo.
+
+**El archivo.** Se construye con la capa del Smithsonian —699 corregimientos, CC-BY-SA-4.0, con
+provincia, distrito, corregimiento y el código del censo en la misma fila— y se pide en paralelo la
+oficial del Instituto Geográfico Nacional Tommy Guardia, que es de 2025 y trae 730, pero **cuyo
+servidor entrega los nombres y no la geometría**. La del INEC se descartó: es de 2015 a 1:250.000 y
+a esa escala no distingue Betania de Bella Vista. Cambiar de archivo después es una migración,
+porque el diseño no depende de cuál sea.
+
+La licencia CC-BY-SA obliga a dar crédito; para uso interno basta una línea en la documentación.
+
+**Lo que queda abierto.** Las 207 cuentas sin coordenadas no tienen de dónde sacar la ubicación:
+pasan a ser una tarea con aviso, no un hueco invisible. Y los casos de borde son reales —dos
+cuentas puestas en `Chitré` caen en La Villa de Los Santos, y el polígono tiene razón— así que la
+corrección debe existir, **escogiendo de la lista oficial y nunca escribiendo**, y queda en
+`auditoria`.
+
+El diseño completo está en `docs/17-ubicacion-y-zona.md`.
+
+## D-068
+
+**2026-09-13 · El tablero de gerencia cambia de oficio durante el arranque, y las excepciones salen**
+
+**Decisión.** Se quita del tablero la sección de excepciones —con su lógica y su componente— y en su
+lugar entran tres cosas: **los cierres de los tres** en vez de sólo el del líder, **sus listas de
+trabajo** con nombre y estado, y una tarjeta que abre **`/tablero/planes`**, donde se lee cómo
+reparten la semana día por día.
+
+**Alternativas descartadas.** Dejar las excepciones y agregar lo nuevo debajo: el usuario las
+llamó invasivas, y no era sólo el largo — un aviso por cada cosa fuera de lo normal, de tres
+personas, cada lunes, se lee como una lista de acusaciones. Poner los planes dentro del tablero:
+*«no quiero ver los planes de golpe»*, y el plan de tres personas en cinco días son quince
+renglones. Duplicar el plan que ya muestra `/contrato`: dos pantallas que hay que mantener iguales
+y que se van a separar.
+
+**Por qué.** Porque el tablero nació para una pregunta —¿qué se salió de lo normal?— y hoy tiene
+otra. El usuario dijo cuál: *«estoy monitoreando cómo está iniciando el uso de la aplicación»* y
+*«necesito ver este monitoreo para ver el desarrollo y el éxito de la aplicación»*. En el arranque
+lo que hay que ver no es lo que falla, es **si la están usando**.
+
+**Es temporal y está anotado como tal**, igual que el arreglo de `/contrato` que le muestra a
+gerencia los cierres de todos: el diseño dice que gerencia lee al líder y el líder a su equipo,
+porque el puesto de líder existe para que gerencia no tenga tres frentes. Se devuelve cuando la
+adopción esté sana.
+
+**Lo que no cambió, y es lo que sostiene el diseño:** el tablero sigue **sin tener dónde escribirle
+a un vendedor**. Responder es el gesto del contrato. Si el tablero ofreciera la caja, en un mes el
+vendedor escribiría para gerencia.
+
+**Lo que se conserva de las excepciones.** La tabla `excepciones_silenciadas` se queda con sus 27
+filas: borrarla no se puede deshacer, no le estorba a nadie, y si las excepciones vuelven algún
+día, lo que cada quien ya había leído sigue ahí.
+
+## D-069
+
+**2026-09-13 · La cartera se puede filtrar por movimiento en un período, en tres clases**
+
+**Decisión.** Nueva función `cuentas_con_actividad(desde, hasta)` y un filtro en la cartera —y por
+lo tanto en su mapa— que reduce las cuentas a las que tuvieron movimiento entre dos fechas, con
+tres banderas que se pueden combinar: **nuevas**, **modificadas** y **visitadas**. Con atajos para
+«esta semana», «semana pasada» y «este mes», que es como se va a usar.
+
+**Alternativas descartadas.** Una sola bandera de «tuvo actividad»: el usuario pidió expresamente
+distinguir *«si es un potencial nuevo o un prospecto nuevo o una cuenta nueva, o si son cuentas
+modificadas»*. Calcularlo en el navegador: sale de la auditoría y de los seguimientos, que no
+viajan con la cartera. Acreditar el movimiento a quien lo hizo en vez de al dueño de la cuenta: ya
+se decidió lo contrario para el reporte de actividad, y tener dos criterios daría dos respuestas
+distintas a la misma pregunta.
+
+**Por qué separar las tres.** Porque son tres comportamientos y sumarlos los esconde. La primera
+corrida, sobre la semana del 7 de septiembre de 2026, lo mostró sin discusión: un vendedor levantó
+**105 puntos nuevos y visitó 28**; otro levantó **4 y visitó 15**. Uno está cazando y el otro
+cuidando, y el total los habría hecho parecer lo mismo.
+
+**El hallazgo que obligó a tocar otra regla.** De las 192 cuentas con movimiento esa semana,
+**134 eran potenciales** — el 70%. La cartera esconde los potenciales por omisión, y con esa
+omisión puesta la pregunta «qué hizo Albert esta semana» habría contestado 54 de 192: la
+herramienta habría parecido no registrar el trabajo de captura, que es el que más hacen en el
+arranque. **Con el filtro de período puesto entran los potenciales y las descartadas**, porque la
+pregunta es qué se tocó y esconder parte vuelve falsa la respuesta.
+
+**El límite, dicho en la pantalla y no sólo aquí.** «Modificada» sólo existe **desde el 3 de
+septiembre de 2026**, cuando la auditoría empezó a guardar todos los campos. Para un rango
+anterior la bandera viene vacía, y eso significa «no se sabe», no «no pasó nada». El panel avisa
+cuando el rango empieza antes de esa fecha.
+
+**Un detalle que se separa a propósito del reporte de actividad del día.** Aquél cuenta los
+seguimientos por `created_at`, porque mide si usan la herramienta. Éste los cuenta por `fecha`,
+porque contesta a quién fue a ver: el que sale toda la semana y captura el viernes visitó cinco
+días.
+
+## D-070
+
+**2026-09-13 · `revoke from public` no le quita el permiso a `anon`, y eso hay que saberlo en cada función nueva**
+
+**La trampa.** Supabase trae `alter default privileges` que concede `execute` a `anon`,
+`authenticated` y `service_role` en **toda función nueva** del esquema `public`. Ese permiso queda
+otorgado **explícitamente a `anon`**, no heredado de `public`. Así que el par de líneas que uno
+escribe al final de una migración creyendo que elige quién entra:
+
+```sql
+revoke all on function ... from public;
+grant execute on function ... to authenticated;
+```
+
+…no hace ninguna de las dos cosas que parece hacer: el `revoke` no toca a `anon`, y el `grant` es
+redundante porque ya lo tenía. **Y la llave anónima viaja en el navegador de cualquiera.**
+
+**Cómo se encontró.** Comprobando la migración de `cuentas_con_actividad` recién aplicada:
+`has_function_privilege('anon', …)` daba verdadero justo después de haberla revocado de `public`.
+No se buscaba — se estaba verificando que la función quedara bien.
+
+**No había fuga, y eso es lo que salvó el asunto.** Las dos funciones de reporte se cierran por
+dentro: `actividad_por_vendedor` levanta excepción si quien pregunta no es gerencia, y
+`cuentas_con_actividad` filtra por `es_gerente()` o ser el dueño de la cuenta o su líder, así que a
+un anónimo le devuelve cero filas. **La defensa de adentro no se quita**: son dos capas, no una en
+vez de la otra. Lo que se cerró es superficie que no hacía falta tener abierta.
+
+**Decisión.** Toda función de reporte lleva además `revoke all ... from anon`. Se aplicó a las dos
+que existen. Y el `grant ... to authenticated` se conserva aunque sea redundante: dice en el
+repositorio quién tiene que poder llamarla, y eso vale más que la línea que ahorra.
+
+## D-071
+
+**2026-09-13 · La oficina sale del sistema: las solicitudes viajan por correo**
+
+**Decisión.** Administración y gerencia dejan de tener bandeja de solicitudes. Al mandar un
+encargo, la aplicación **abre el Gmail del propio vendedor con el correo ya escrito**, dirigido a
+las direcciones que la oficina usaba antes del SGV: cotizaciones y muestras a
+`papeleria.comercial.cotizaciones@gmail.com`, órdenes a `papeleria.comercial.ordenes@gmail.com`,
+precios y condiciones a `papeleria.comercial@gmail.com`. Lo marcado «lo resuelvo yo» no manda nada.
+
+**Alternativas descartadas.** *Que la aplicación mande el correo desde un servidor*: da constancia
+de envío y permite adjuntar el PDF, pero exige una contraseña de aplicación guardada, una ruta que
+mantener, y el correo llegaría de un remitente nuevo. *La hoja de compartir del teléfono*: lleva el
+archivo de verdad, **pero no deja fijar el destinatario y ni siquiera dice qué escogió el
+vendedor** — podría mandarle al cliente lo que iba a la oficina, y con el tope de $500 encima eso
+no es un detalle.
+
+**Por qué ésta.** La razón la dio el usuario y decide todo lo demás: *«Verónica no tendrá confusión
+de a quién responderle»*. El correo sale de la dirección del vendedor, así que responder es apretar
+«Responder». Ninguna de las otras dos formas da eso. Y no se le cambia el hábito a nadie: los
+vendedores ya mandan correos desde su Gmail; lo que se les quita es escribirlos.
+
+**El PDF viaja como enlace firmado de un año, no como adjunto**, porque `mailto` no admite
+archivos. Verónica lo abre, lo imprime, y puede reabrirlo meses después si el cliente reclama, sin
+tener cuenta en el sistema. El enlace apunta **al original guardado**, así que sigue habiendo un
+solo documento con cada número — que era la razón por la que emitir a la oficina nunca abrió la
+hoja de compartir.
+
+**El precio, aceptado como política y no por descuido.** La aplicación no puede saber si el correo
+salió: *«el vendedor deberá asegurarse a través de su aplicación de Gmail que el correo fue enviado
+o no; no queda en manos de la aplicación»*.
+
+**Lo que muere con la bandeja, y por qué no se sustituye.** Quien cerraba una solicitud era la
+oficina. Sin ella, «pendiente» no envejece: en dos meses un vendedor tendría cuarenta pendientes de
+las que treinta y ocho ya le llegaron. Por eso **`/solicitudes` se queda del lado del vendedor como
+registro sin estados** y el inicio deja de mostrar «Esperando respuesta». **No se le pide al
+vendedor que las cierre él**: sería reportar avance, y el principio del sistema dice que el avance
+es consecuencia de hechos registrados, no de un toque de mantenimiento.
+
+El registro se sigue escribiendo, aunque nadie lo mire: quitarlo obligaría a tocar tres pantallas
+más, y conservarlo deja medir cuántos encargos genera cada quien.
+
+## D-072
+
+**2026-09-13 · El movimiento por período es de gerencia; y la ventanita del mapa se abre al pasar por encima**
+
+**Dos cambios pequeños con la misma raíz: quién usa cada cosa y en qué aparato.**
+
+**El filtro de movimiento se restringe a gerencia.** *«Solamente sea para uso del usuario gerencia,
+no para uso de los vendedores ni del líder.»* Contesta «quién tocó qué y cuándo», que es la
+pregunta de quien acompaña al equipo; el líder tiene el tablero y el contrato para mirar a los
+suyos. Se cierra en tres sitios y no en uno: el panel no ofrece el control, la pantalla **limpia
+las fechas de la dirección** —esconder el control y dejar que un enlace copiado siguiera
+funcionando sería una cortina, no una restricción— y la función de la base levanta excepción con
+cualquier rol que no sea `gerente`.
+
+**La ventanita del mapa se abre al pasar el ratón por encima.** Lo pidieron los vendedores para
+cuando planifican en la laptop. **Sólo donde hay ratón de verdad** (`hover: hover` y
+`pointer: fine`): en un teléfono el navegador dispara `mouseover` con el toque y la ventanita se
+quedaría pegada, empeorando justo la pantalla que más se usa. En el celular no cambia nada.
+
+Cierra al salir **del marcador y de la ventana**, con un respiro de 320 ms para cruzar de uno a
+otra: sin eso nadie podría bajar el ratón hasta «Ver la fachada» sin que se le cerrara en el
+camino. El clic se conserva para todos.
+
+**Los negocios que pinta Google quedan fuera, y no por falta de ganas.** La API sólo dice de qué
+negocio se trata **al hacer clic** —`IconMouseEvent` viaja en el evento de clic y en ningún otro—,
+así que al pasar por encima no hay nada que abrir. Se evaluó adivinarlo consultando qué hay cerca
+del cursor en cada movimiento: serían cientos de consultas pagadas por minuto y respuestas
+aproximadas.
