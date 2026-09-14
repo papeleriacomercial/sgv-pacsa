@@ -3907,3 +3907,15 @@ cuenta —«mini centro gloria» ya está estrenada— para que lo que haya que 
 **Lo que costaría montarlo**, el día que se quiera: correr las 74 migraciones desde cero en el
 proyecto `yzztxbumcyhcogoiwryv`, que está vacío, y cambiar las variables de Preview y Development
 en Vercel. Y decidir qué datos lleva desarrollo: ninguno, una copia, o unos pocos hechos a mano.
+
+---
+
+## Gmail ya abre, y el botón de Guardar corregido — 2026-09-14
+
+**Confirmado por el usuario en su iPhone: el correo ya abre Gmail**, después del ajuste del
+teléfono y del cambio de D-077. La cadena completa —solicitud, correo, destinatario y ubicación de
+tres niveles— funciona en producción.
+
+Y corregido el gancho del botón «Guardar» de editar listas, que se apilaba sobre el texto (D-080).
+**Ese no se vio en pantalla**: la sesión del navegador de pruebas se cayó con la compilación. Queda
+pendiente de confirmar en el teléfono.

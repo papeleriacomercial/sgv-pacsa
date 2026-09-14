@@ -2124,3 +2124,27 @@ propios.
 - **Las de los vendedores** salen de `auth.users.email`, unidas a `perfiles`. Son sus credenciales;
   nadie las escribe en el código y `DesdeQueCuenta` las pide a la sesión en el momento.
 - **Las de destino** están escritas a mano en `CORREO_DESTINO`.
+
+## D-080
+
+**2026-09-14 · El gancho del botón «Guardar» quedaba encima del texto**
+
+**Lo vio el usuario en su teléfono**, en la pantalla de editar una lista: el ✓ aparecía sobre la
+palabra «Guardar» en vez de a su lado, y el botón crecía al doble de alto.
+
+**La causa es una trampa del componente compartido:** `Boton` **no aplica flex a sus hijos**. La
+convención del proyecto es envolver icono y texto en un `<span className="flex items-center
+justify-center gap-2">`, y así lo hacen todos los botones con icono de la aplicación. Al escribir
+`EditarLista` no lo hice, y sin el `span` los dos hijos se apilan.
+
+**Lo delata la propia foto:** el botón de «Cancelar», que es un `<button>` propio con su flex
+puesto, se ve correcto justo al lado.
+
+**Queda una observación para más adelante, no un cambio:** que `Boton` no ponga el flex es un pie
+de banco — la convención existe sólo en la memoria de quien escribe, y ya tropezó una vez.
+Ponérselo al componente lo arreglaría de raíz para siempre, pero toca decenas de usos y ninguno
+está roto hoy. Si vuelve a pasar, ése es el arreglo.
+
+**No se verificó en pantalla:** la sesión del navegador de pruebas se cayó con la compilación y no
+se pudo entrar. Se subió con el patrón idéntico al de los botones que sí se ven bien en la foto
+del usuario, y queda pendiente su confirmación en el teléfono.
