@@ -191,3 +191,48 @@ test('el correo se puede abrir en Gmail o en el de omisión, y los dos llevan lo
     assert.ok(d.includes('Almacen La Fiesta'), 'cliente distinto')
   }
 })
+
+test('el correo dice los tres niveles, no sólo el corregimiento', () => {
+  // EL CASO REAL QUE LO DESTAPÓ: el correo decía «Dónde: Carlos Santana Ávila» y nada más.
+  // Es un corregimiento de Santiago con nombre de persona, así que a quien lo recibe no le ubica
+  // nada — y el expediente sí mostraba los tres niveles. Lo cazó el usuario leyendo un correo
+  // que ya había llegado a la oficina.
+  const lejos = correoDeSolicitud({
+    tipo: 'muestra',
+    rotulo: 'Muestra',
+    cuenta: {
+      nombre: 'mini centro gloria',
+      corregimiento: 'Carlos Santana Ávila',
+      distrito: 'Santiago',
+      provincia: 'Veraguas',
+    },
+    vendedor: 'Albert Batista',
+    detalle: 'Una caja de rollos.',
+  })
+
+  assert.ok(
+    cuerpoDe(lejos).includes('Dónde: Carlos Santana Ávila · Santiago, Veraguas'),
+    'el cuerpo no lleva el distrito y la provincia',
+  )
+
+  // **El asunto lleva el distrito y no el corregimiento**, porque se lee de reojo en la bandeja:
+  // «Santiago» lo ubica cualquiera.
+  assert.ok(lejos.asunto.includes('(Santiago)'), 'el asunto no ayuda a ubicar de un vistazo')
+
+  // Y cuando el corregimiento se llama igual que su distrito, no se repite.
+  const cerca = correoDeSolicitud({
+    tipo: 'muestra',
+    rotulo: 'Muestra',
+    cuenta: {
+      nombre: 'Almacen La Fiesta',
+      corregimiento: 'Aguadulce',
+      distrito: 'Aguadulce',
+      provincia: 'Coclé',
+    },
+    vendedor: 'Albert Batista',
+    detalle: 'Dos resmas.',
+  })
+
+  assert.ok(cuerpoDe(cerca).includes('Dónde: Aguadulce, Coclé'))
+  assert.ok(!cuerpoDe(cerca).includes('Aguadulce · Aguadulce'), 'repitió el nombre')
+})

@@ -109,11 +109,44 @@ export type DatosDeCuenta = {
   nombre: string;
   ruc?: string | null;
   corregimiento?: string | null;
+  distrito?: string | null;
+  provincia?: string | null;
   contactoNombre?: string | null;
   contactoTelefono?: string | null;
   /** Para que la oficina pueda saltar del correo al expediente. */
   url?: string;
 };
+
+/**
+ * Dónde queda, escrito para alguien que no conoce el sitio.
+ *
+ * **Los tres niveles, y no sólo el corregimiento.** Al principio el correo llevaba únicamente el
+ * fino, y el usuario lo cazó leyendo uno real: decía «Carlos Santana Ávila» —que es un
+ * corregimiento de Santiago, con nombre de persona— y a quien lo recibe eso no le ubica nada. El
+ * expediente ya mostraba los tres; el correo se había quedado corto.
+ *
+ * Cuando el corregimiento se llama igual que su distrito no se repite: «Aguadulce, Coclé» y no
+ * «Aguadulce · Aguadulce, Coclé».
+ */
+function dondeQueda(c: DatosDeCuenta): string | null {
+  if (!c.distrito) return c.corregimiento ?? null;
+
+  const grueso = c.provincia ? `${c.distrito}, ${c.provincia}` : c.distrito;
+  return c.corregimiento && c.corregimiento !== c.distrito
+    ? `${c.corregimiento} · ${grueso}`
+    : grueso;
+}
+
+/**
+ * Lo que va en el asunto, que es lo que se lee de reojo en la bandeja.
+ *
+ * **El distrito y no el corregimiento**, porque el asunto se escanea: «Santiago» lo ubica
+ * cualquiera, «Carlos Santana Ávila» no. El detalle completo va en el cuerpo.
+ */
+function dondeCorto(c: DatosDeCuenta): string {
+  const sitio = c.distrito ?? c.corregimiento;
+  return sitio ? ` (${sitio})` : "";
+}
 
 /**
  * El correo de una muestra o de un precio especial — lo que se pide con el formulario.
@@ -139,7 +172,7 @@ export function correoDeSolicitud({
   monto?: number | null;
   paraCuando?: string | null;
 }) {
-  const donde = cuenta.corregimiento ? ` (${cuenta.corregimiento})` : "";
+  const donde = dondeCorto(cuenta);
   const asunto = `${rotulo} — ${cuenta.nombre}${donde} — ${vendedor}`;
 
   const contacto = [cuenta.contactoNombre, cuenta.contactoTelefono]
@@ -151,7 +184,7 @@ export function correoDeSolicitud({
     renglon("Cliente", cuenta.nombre) +
     renglon("RUC", cuenta.ruc) +
     renglon("Contacto", contacto || null) +
-    renglon("Dónde", cuenta.corregimiento) +
+    renglon("Dónde", dondeQueda(cuenta)) +
     renglon("Vendedor", vendedor) +
     `\nLo que pide:\n${detalle.trim()}\n` +
     (monto ? `\nMonto estimado: ${DINERO.format(monto)}\n` : "") +
@@ -194,7 +227,7 @@ export function correoDeDocumento({
   /** Enlace firmado al PDF. Si no se pudo generar va vacío y el cuerpo lo dice. */
   enlace: string | null;
 }) {
-  const donde = cuenta.corregimiento ? ` (${cuenta.corregimiento})` : "";
+  const donde = dondeCorto(cuenta);
   const asunto = `${rotulo} ${codigo} — ${cuenta.nombre}${donde} — ${vendedor}`;
 
   const contacto = [cuenta.contactoNombre, cuenta.contactoTelefono]
@@ -213,7 +246,7 @@ export function correoDeDocumento({
     renglon("Cliente", cuenta.nombre) +
     renglon("RUC", cuenta.ruc) +
     renglon("Contacto", contacto || null) +
-    renglon("Dónde", cuenta.corregimiento) +
+    renglon("Dónde", dondeQueda(cuenta)) +
     renglon("Vendedor", vendedor) +
     renglon("Condición", condicion);
 

@@ -34,7 +34,7 @@ export default async function Orden({ params }: PageProps<"/cuentas/[id]/orden">
       supabase
         .from("cuentas")
         .select(
-          "id, nombre, ruc, direccion, corregimiento, pide_sin_itbms, vendedor_id, contacto_nombre, contacto_telefono",
+          "id, nombre, ruc, direccion, corregimiento, distrito, provincia, pide_sin_itbms, vendedor_id, contacto_nombre, contacto_telefono",
         )
         .eq("id", id)
         .is("deleted_at", null)
