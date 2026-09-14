@@ -119,7 +119,7 @@ export function PanelFiltros({
   abierto,
   onAbrir,
   categorias,
-  poblados,
+  corregimientos,
   provincias,
   distritos,
   vendedores,
@@ -136,7 +136,7 @@ export function PanelFiltros({
   abierto: boolean;
   onAbrir: (v: boolean) => void;
   categorias: string[];
-  poblados: string[];
+  corregimientos: string[];
   provincias: string[];
   /** La llave lleva la provincia; el rótulo sólo la dice cuando el nombre se repite. */
   distritos: { llave: string; rotulo: string }[];
@@ -438,13 +438,13 @@ export function PanelFiltros({
                   distrito en el interior. La palabra «zona» se reservó para el recorrido, que es
                   el nombre de la lista. */}
               <Grupo titulo="Dónde queda">
-                {poblados.length > 0 ? (
-                  poblados.map((p) => (
+                {corregimientos.length > 0 ? (
+                  corregimientos.map((p) => (
                     <Pastilla
                       key={p}
-                      activo={filtros.poblados.includes(p)}
+                      activo={filtros.corregimientos.includes(p)}
                       onClick={() =>
-                        set({ poblados: alternar(filtros.poblados, p) })
+                        set({ corregimientos: alternar(filtros.corregimientos, p) })
                       }
                     >
                       {p}

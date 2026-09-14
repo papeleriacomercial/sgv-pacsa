@@ -81,7 +81,7 @@ type PorReponer = {
   nombre: string;
   dias_para_reponer: number;
   cadencia_observada: number;
-  poblado: string | null;
+  corregimiento: string | null;
 };
 
 export default async function Agenda({ searchParams }: PageProps<"/">) {
@@ -174,7 +174,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
       // trabajan desde Cuentas con su filtro.
       supabase
         .from("cuentas_resumen")
-        .select("id, nombre, dias_para_reponer, cadencia_observada, poblado")
+        .select("id, nombre, dias_para_reponer, cadencia_observada, corregimiento")
         .eq("vendedor_id", user.id)
         .eq("tipo", "cliente")
         .gte("dias_para_reponer", 0)
@@ -461,7 +461,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
                         </p>
                         <p className="text-xs text-texto-secundario">
                           Compra cada {c.cadencia_observada} días
-                          {c.poblado && ` · ${c.poblado}`}
+                          {c.corregimiento && ` · ${c.corregimiento}`}
                         </p>
                       </div>
                       {/* Ámbar y no rojo: todavía no pasó nada malo. El rojo

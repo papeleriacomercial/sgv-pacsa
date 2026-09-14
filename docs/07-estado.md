@@ -3836,3 +3836,23 @@ en las dos.
 - **Las 207 cuentas sin coordenadas.** Sólo se arreglan marcando el punto.
 - **El archivo oficial del IGN Tommy Guardia**, que hay que pedir.
 - **Borrar `poblado`** cuando las pantallas lean `corregimiento` y `distrito` directo.
+
+---
+
+## Fuera la columna `poblado` — 2026-09-14
+
+D-076. Cierra la última limpieza que quedaba de la ubicación derivada.
+
+Veintidós archivos leían `poblado`; ahora leen `corregimiento`. La columna se borró de la tabla y
+de `cuentas_resumen`, el disparador dejó de llenarla, y con ella murió la regla de la cabecera —ya
+no hace falta elegir entre distrito y corregimiento para un solo campo, porque están los dos.
+
+**Comprobado antes de borrar:** era igual a `corregimiento` en 756 de 759, ninguna cuenta la tenía
+sin respaldo, y las 207 sin coordenadas no tenían nada escrito.
+
+**Comprobado después, contra la base y no sólo con el compilador:** las seis consultas modificadas
+responden 200 —incluidos los dos embebidos, que son los que más fácil se rompen— y `poblado`
+devuelve 400. En pantalla: la cartera lista El Rincón, Aguadulce y Parita; el expediente dice
+«Dónde queda: Penonomé, Coclé».
+
+Las tres cuentas del distrito de Los Santos pasan a decir «La Villa de Los Santos».

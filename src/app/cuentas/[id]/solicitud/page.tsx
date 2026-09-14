@@ -76,7 +76,7 @@ function Formulario() {
     async function traer() {
       const { data } = await supabase
         .from("cuentas")
-        .select("nombre, ruc, poblado, contacto_nombre, contacto_telefono")
+        .select("nombre, ruc, corregimiento, contacto_nombre, contacto_telefono")
         .eq("id", cuentaId)
         .is("deleted_at", null)
         .maybeSingle();
@@ -86,7 +86,7 @@ function Formulario() {
         setDatosDelCorreo({
           nombre: data.nombre ?? "",
           ruc: data.ruc,
-          poblado: data.poblado,
+          corregimiento: data.corregimiento,
           contactoNombre: data.contacto_nombre,
           contactoTelefono: data.contacto_telefono,
           url: `${window.location.origin}/cuentas/${cuentaId}`,

@@ -15,7 +15,7 @@ export type Candidato = {
   id: string;
   nombre: string;
   tipoComercio: string | null;
-  poblado: string | null;
+  corregimiento: string | null;
   /** Lo que ya te compra al mes. Ordena la lista: el que más compra, primero. */
   compraAlMes: number;
   faltan: { linea: string; deCada10: number; gastoTipico: number }[];
@@ -122,7 +122,7 @@ export function ElegirParaCruzar({
 
               <p className="truncate text-xs text-texto-atenuado">
                 {c.tipoComercio}
-                {c.poblado && ` · ${c.poblado}`}
+                {c.corregimiento && ` · ${c.corregimiento}`}
               </p>
 
               {/* Qué ofrecerle, con la fuerza del argumento al lado. Sin eso el

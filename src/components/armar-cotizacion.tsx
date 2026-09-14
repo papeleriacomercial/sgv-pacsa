@@ -47,7 +47,7 @@ export type Cuenta = {
   nombre: string;
   ruc: string | null;
   direccion: string | null;
-  poblado: string | null;
+  corregimiento: string | null;
   pide_sin_itbms: boolean;
   /** Para el correo a la oficina: si hay que llamar al cliente, que no haya que buscarlo. */
   contacto_nombre: string | null;
@@ -356,7 +356,7 @@ export function ArmarCotizacion({
           cliente: {
             nombre: cuenta.nombre,
             ruc: cuenta.ruc,
-            direccion: [cuenta.direccion, cuenta.poblado]
+            direccion: [cuenta.direccion, cuenta.corregimiento]
               .filter(Boolean)
               .join(", ") || null,
           },
@@ -510,7 +510,7 @@ export function ArmarCotizacion({
           cuenta: {
             nombre: cuenta.nombre,
             ruc: cuenta.ruc,
-            poblado: cuenta.poblado,
+            corregimiento: cuenta.corregimiento,
             contactoNombre: cuenta.contacto_nombre,
             contactoTelefono: cuenta.contacto_telefono,
             url: `${window.location.origin}/cuentas/${cuenta.id}`,

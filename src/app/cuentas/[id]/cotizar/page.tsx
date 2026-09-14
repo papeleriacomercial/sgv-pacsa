@@ -30,7 +30,7 @@ export default async function Cotizar({ params }: PageProps<"/cuentas/[id]/cotiz
       supabase
         .from("cuentas")
         .select(
-          "id, nombre, ruc, direccion, poblado, pide_sin_itbms, vendedor_id, contacto_nombre, contacto_telefono",
+          "id, nombre, ruc, direccion, corregimiento, pide_sin_itbms, vendedor_id, contacto_nombre, contacto_telefono",
         )
         .eq("id", id)
         .is("deleted_at", null)

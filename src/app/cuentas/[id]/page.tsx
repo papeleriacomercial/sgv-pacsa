@@ -76,7 +76,7 @@ export default async function Expediente({
   const { data: prospecto } = await supabase
     .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, provincia, distrito, corregimiento, lat, lng, vendedor_id, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
+      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, provincia, distrito, corregimiento, lat, lng, vendedor_id, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -218,7 +218,7 @@ export default async function Expediente({
           nombre={prospecto.nombre}
           tipoComercio={prospecto.tipo_comercio}
           tipo={prospecto.tipo as TipoCuenta}
-          zona={prospecto.poblado}
+          zona={prospecto.corregimiento}
           ultimaInteraccion={ultima ? fecha(ultima.fecha) : null}
           enlazada={false}
         />

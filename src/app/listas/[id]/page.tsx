@@ -35,7 +35,7 @@ type Miembro = {
     nombre: string;
     tipo: TipoCuenta;
     tipo_comercio: string | null;
-    poblado: string | null;
+    corregimiento: string | null;
     direccion: string | null;
     contacto_nombre: string | null;
     contacto_telefono: string | null;
@@ -99,7 +99,7 @@ export default async function DetalleLista({
   const { data: filas } = await supabase
     .from("listas_cuentas")
     .select(
-      "cuenta_id, agregada_en, cuentas(id, nombre, tipo, tipo_comercio, poblado, direccion, contacto_nombre, contacto_telefono, contacto_correo)",
+      "cuenta_id, agregada_en, cuentas(id, nombre, tipo, tipo_comercio, corregimiento, direccion, contacto_nombre, contacto_telefono, contacto_correo)",
     )
     .eq("lista_id", id)
     .order("agregada_en", { ascending: true });
@@ -292,7 +292,7 @@ export default async function DetalleLista({
                       nombre={m.cuentas.nombre}
                       tipoComercio={m.cuentas.tipo_comercio}
                       tipo={m.cuentas.tipo}
-                      zona={m.cuentas.poblado}
+                      zona={m.cuentas.corregimiento}
                       falta={esObjetivo ? queFalta(m.cuentas) : null}
                       ultimaInteraccion={null}
                       esperaDias={diasDesde(m.agregada_en)}
@@ -325,7 +325,7 @@ export default async function DetalleLista({
                     nombre={m.cuentas.nombre}
                     tipoComercio={m.cuentas.tipo_comercio}
                     tipo={m.cuentas.tipo}
-                    zona={m.cuentas.poblado}
+                    zona={m.cuentas.corregimiento}
                     ultimaInteraccion={FECHA.format(
                       new Date(ultimaPorCuenta.get(m.cuenta_id)!),
                     )}
