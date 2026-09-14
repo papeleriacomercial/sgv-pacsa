@@ -3876,3 +3876,14 @@ papeleriacomercial.abatista@gmail.com».
 En cada iPhone, una sola vez: **Ajustes › Aplicaciones › Mail › Aplicación de correo por omisión ›
 Gmail**. Sin eso, un vendedor sin la aplicación de Gmail seguirá mandando desde la cuenta que Apple
 Mail tenga configurada, y eso no se puede arreglar desde la web.
+
+---
+
+## El correo lleva la ubicación completa — 2026-09-14
+
+D-078. Corrige un descuido de D-071: el cuerpo llevaba sólo el corregimiento.
+
+Ahora dice «Carlos Santana Ávila · Santiago, Veraguas», sin repetir cuando el corregimiento se
+llama igual que su distrito. El asunto lleva el distrito, que es lo que se lee de reojo.
+
+Son 35 pruebas, y la nueva se comprobó rompiéndola.

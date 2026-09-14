@@ -2064,3 +2064,23 @@ la aplicación, y pide sesión si no la tiene.
   persona. Tiene 4 cuentas.
 - **«Contacto: 65033081»** sin nombre es correcto: esa cuenta no tiene `contacto_nombre`. Cuando
   lo hay sale «María Pérez · 65033081». Lo que falta es el dato en la ficha, no el formato.
+
+## D-078
+
+**2026-09-14 · El correo a la oficina lleva los tres niveles de la ubicación**
+
+**Lo cazó el usuario leyendo un correo que ya había llegado a la oficina.** Decía
+**«Dónde: Carlos Santana Ávila»** y nada más. Ese es un corregimiento de Santiago, Veraguas, con
+nombre de persona: a quien lo recibe no le ubica nada, y encima parece el nombre del contacto.
+
+**El descuido fue mío y estaba a la vista:** el expediente ya mostraba los tres niveles desde
+D-067, y al correo sólo le pasé el fino.
+
+**Cómo queda.** El cuerpo lleva **«Carlos Santana Ávila · Santiago, Veraguas»**, y cuando el
+corregimiento se llama igual que su distrito no se repite: «Aguadulce, Coclé».
+
+**El asunto lleva el distrito, no el corregimiento**, y esa parte sí es decisión y no corrección:
+el asunto se lee de reojo en una bandeja con veinte correos. «Santiago» lo ubica cualquiera;
+«Carlos Santana Ávila» obliga a abrir el correo para saber de dónde es.
+
+**La prueba se comprobó rompiéndola**: devolviendo sólo el corregimiento, falla.
