@@ -3748,9 +3748,30 @@ La prueba son dos minutos, y conviene hacerla en un teléfono de cada clase:
 **En iPhone hay que revisar una cosa una sola vez:** si el correo por omisión del teléfono es Apple
 Mail en vez de Gmail, el mensaje saldría de otra dirección. Se arregla en ajustes, por teléfono.
 
-### Lo que quedó sin uso
+### Lo que quedó sin uso — borrado el mismo día
 
-`esDeMiBandeja()` en `src/lib/catalogos.ts` y sus pruebas en `solicitudes.prueba.ts` describen
-quién atendía cada bandeja. **Ya no hay bandejas.** Las pruebas siguen pasando pero cuidan una
-regla que no existe; el enrutamiento vive ahora en `CORREO_DESTINO`. Queda pendiente decidir si se
-borra.
+`esDeMiBandeja()` repartía las solicitudes entre la bandeja de administración y la de gerencia.
+Sin bandejas quedó sin llamar, y sus cuatro pruebas seguían en verde cuidando una regla que ya no
+pasa por ninguna pantalla. **Una prueba verde sobre una regla muerta es peor que ninguna**: dice
+que algo está protegido. Se borró con ellas, por decisión del usuario.
+
+`ATIENDE` y `ROL_QUE_ATIENDE` se quedan: el formulario le sigue diciendo al vendedor quién va a
+atenderlo, y eso sigue siendo verdad — es quien recibe el correo. También se queda la prueba que
+impide que el rótulo se separe de la regla, porque ése fue el defecto original.
+
+### Los documentos de referencia, puestos al día
+
+Se había actualizado lo vivo —`06-decisiones.md`, `07-estado.md` y el índice— pero **los de
+referencia se quedaron atrás medio día**, que es justo lo que `CLAUDE.md` llama peor que no
+tenerlos. Corregidos el mismo 13 de septiembre, al preguntarlo el usuario:
+
+- **`05-modulos/7.2-oficina-y-administracion.md`** — describía la bandeja de Verónica con su botón
+  «Ya lo hice». Reescrito al flujo de correo; la sección del 3 de septiembre se conserva marcada
+  como historia, porque su lección —el enrutamiento tiene que ser un dato— sobrevivió al mecanismo.
+- **`03-seguridad-rls.md`** — no mencionaba las dos funciones de reporte ni su candado de rol.
+  Agregadas, con la trampa de `anon` (D-070).
+- **`14-flujo-gerencia.html`** — la maqueta del tablero enseñaba las excepciones. Actualizada, y la
+  pregunta abierta del umbral queda en pausa.
+- **`12-flujo-vendedor.html`** — decía que el pedido va «al carril de Solicitudes» para que la
+  oficina se entere, y que hacía falta ponerle reloj a la bandeja. Corregido: hoy no hay reloj, y
+  se dice por qué.
