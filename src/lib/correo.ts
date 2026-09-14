@@ -72,11 +72,35 @@ function renglon(etiqueta: string, valor: string | null | undefined) {
   return valor ? `${etiqueta}: ${valor}\n` : "";
 }
 
-/** Arma la dirección `mailto:` con todo puesto. Abrirla es cosa de quien la llame. */
-function mailto(para: string, asunto: string, cuerpo: string) {
+/** Un correo listo, sin decidir todavía con qué aplicación se abre. */
+export type Correo = { para: string; asunto: string; cuerpo: string };
+
+function armar(para: string, asunto: string, cuerpo: string): Correo {
+  return { para, asunto, cuerpo };
+}
+
+/** El camino de siempre: se lo lleva la aplicación de correo por omisión del teléfono. */
+export function enlaceMailto({ para, asunto, cuerpo }: Correo) {
   return (
     `mailto:${para}` +
     `?subject=${encodeURIComponent(asunto)}` +
+    `&body=${encodeURIComponent(cuerpo)}`
+  );
+}
+
+/**
+ * El camino que **salta la aplicación por omisión y abre Gmail**.
+ *
+ * Hizo falta porque pasó: un iPhone con Apple Mail por omisión mandó una cotización desde una
+ * cuenta de iCloud personal. El sistema nunca vio esa dirección ni pudo elegirla — `mailto:` le
+ * entrega el correo al teléfono y el teléfono usa **su** cuenta configurada.
+ *
+ * Con este esquema el correo se abre en Gmail aunque Apple Mail siga siendo el de omisión.
+ */
+export function enlaceGmail({ para, asunto, cuerpo }: Correo) {
+  return (
+    `googlegmail:///co?to=${encodeURIComponent(para)}` +
+    `&subject=${encodeURIComponent(asunto)}` +
     `&body=${encodeURIComponent(cuerpo)}`
   );
 }
@@ -137,7 +161,7 @@ export function correoDeSolicitud({
     (cuenta.url ? `\nExpediente: ${cuenta.url}\n` : "") +
     `\n— Generado por el SGV. Revisa que el correo salga de tu bandeja.`;
 
-  return mailto(CORREO_DESTINO[tipo], asunto, cuerpo);
+  return armar(CORREO_DESTINO[tipo], asunto, cuerpo);
 }
 
 /**
@@ -211,15 +235,47 @@ export function correoDeDocumento({
       ? `\nLo que lleva:\n${lista}\n`
       : `\nLo que lleva: ${renglones.length} renglones — el detalle completo va en el documento.\n`;
 
-  return mailto(CORREO_DESTINO[tipo], asunto, encabezado + detalle + pie);
+  return armar(CORREO_DESTINO[tipo], asunto, encabezado + detalle + pie);
 }
 
 /**
- * Abre el correo en la aplicación del teléfono.
+ * Cuánto se espera a que Gmail responda antes de rendirse.
  *
- * Se usa `location.href` y no una ventana nueva: `window.open` con `mailto` deja una pestaña en
- * blanco abierta en algunos navegadores, y el vendedor vuelve del correo a una pantalla vacía.
+ * Si el teléfono abre Gmail, esta pestaña se oculta y el reloj se cancela. Si Gmail no está
+ * instalada, no pasa nada de nada —ni error ni aviso— así que la única señal de que falló es que
+ * **seguimos aquí**. Segundo y medio: suficiente para que un teléfono lento alcance a cambiar de
+ * aplicación, y poco para que el vendedor no crea que el botón no hizo nada.
  */
-export function abrirCorreo(direccion: string) {
-  window.location.href = direccion;
+const ESPERA_POR_GMAIL = 1500;
+
+/**
+ * Abre el correo, prefiriendo Gmail.
+ *
+ * **Intenta Gmail y cae al correo por omisión si no está.** Se usa `location.href` y no una
+ * ventana nueva: `window.open` con `mailto` deja una pestaña en blanco abierta en algunos
+ * navegadores, y el vendedor vuelve del correo a una pantalla vacía.
+ *
+ * **Lo que esto NO puede hacer, y conviene saberlo:** si el vendedor no tiene la aplicación de
+ * Gmail y lee su Gmail desde Apple Mail, el correo saldrá de la cuenta que Apple Mail tenga por
+ * omisión. Desde la web no hay forma de elegir la cuenta remitente. El arreglo definitivo es del
+ * teléfono —Ajustes › Aplicaciones › Mail › Aplicación de correo por omisión› Gmail— y por eso la
+ * pantalla dice desde qué cuenta debería salir: para que la discrepancia se vea en el acto.
+ */
+export function abrirCorreo(correo: Correo) {
+  const porOmision = enlaceMailto(correo);
+
+  const reloj = setTimeout(() => {
+    window.location.href = porOmision;
+  }, ESPERA_POR_GMAIL);
+
+  // Si el teléfono se fue a Gmail, esta pestaña pasa a segundo plano: se cancela la caída.
+  const alOcultarse = () => {
+    if (document.hidden) {
+      clearTimeout(reloj);
+      document.removeEventListener("visibilitychange", alOcultarse);
+    }
+  };
+  document.addEventListener("visibilitychange", alOcultarse);
+
+  window.location.href = enlaceGmail(correo);
 }

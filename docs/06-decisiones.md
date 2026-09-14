@@ -2028,3 +2028,39 @@ consulta compila; lo que este cambio podía romper es que PostgREST no encontrar
 sale en pantalla y no en el compilador. Se lanzaron **las seis consultas modificadas contra la base
 real** —incluidos los dos embebidos— y se comprobó que `poblado` ahora devuelve 400. Es la lección
 de `cuentas_resumen` en D-073, aplicada a tiempo esta vez.
+
+## D-077
+
+**2026-09-14 · El correo intenta Gmail primero, y la pantalla dice desde qué cuenta debe salir**
+
+**El defecto, reportado por el usuario con la prueba en la mano.** Una cotización llegó a la
+oficina **desde `gburnes04@icloud.com`**, una cuenta personal que el sistema nunca vio. La causa:
+`mailto:` le entrega el correo a la aplicación de correo **por omisión** del teléfono, y en ese
+iPhone era Apple Mail con una cuenta de iCloud. El SGV no eligió esa dirección — no puede elegir
+ninguna.
+
+**Dos cosas, porque ninguna sola alcanza.**
+
+**1. Se intenta Gmail primero.** Con `googlegmail:///co?…`, que abre la aplicación de Gmail
+saltándose la de omisión. Si Gmail no está instalada no pasa nada de nada —ni error ni aviso— así
+que la única señal es que la página sigue ahí: se espera segundo y medio y se cae a `mailto:`. Si
+el teléfono sí cambió de aplicación, la pestaña se oculta y la caída se cancela.
+
+**2. La pantalla dice desde qué cuenta debería salir.** La aplicación **no puede** elegir el
+remitente desde la web, así que hace lo único que sí puede: decirlo en voz alta, con la dirección
+con la que el vendedor entró al sistema. Si al abrirse aparece otra, lo nota en el acto — en vez
+de que se descubra semanas después porque Verónica respondió a una dirección que nadie lee.
+
+**El límite que queda, dicho para que nadie lo descubra a los golpes:** si el vendedor no tiene la
+aplicación de Gmail y lee su Gmail desde Apple Mail, el correo saldrá de la cuenta que Apple Mail
+tenga por omisión. El arreglo definitivo es del teléfono, y el aviso lo explica.
+
+**Se descartó** el esquema web de Gmail con `authuser=`: en el teléfono abre el navegador en vez de
+la aplicación, y pide sesión si no la tiene.
+
+### De paso, dos cosas que el usuario creyó errores y no lo eran
+
+- **«Dónde: Carlos Santana Ávila»** es un **corregimiento de Santiago, Veraguas** — con nombre de
+  persona. Tiene 4 cuentas.
+- **«Contacto: 65033081»** sin nombre es correcto: esa cuenta no tiene `contacto_nombre`. Cuando
+  lo hay sale «María Pérez · 65033081». Lo que falta es el dato en la ficha, no el formato.

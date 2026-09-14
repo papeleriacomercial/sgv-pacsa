@@ -3856,3 +3856,23 @@ devuelve 400. En pantalla: la cartera lista El Rincón, Aguadulce y Parita; el e
 «Dónde queda: Penonomé, Coclé».
 
 Las tres cuentas del distrito de Los Santos pasan a decir «La Villa de Los Santos».
+
+---
+
+## El correo intenta Gmail, y se dice desde qué cuenta sale — 2026-09-14
+
+D-077, a raíz de un correo real que llegó a la oficina desde una cuenta de iCloud personal.
+
+`abrirCorreo()` intenta `googlegmail:///co?…` y cae a `mailto:` a segundo y medio si Gmail no
+está. Y las dos pantallas que mandan correo —el formulario de solicitud y el armado de
+cotizaciones— muestran `DesdeQueCuenta`, que dice la dirección con la que el vendedor entró.
+
+**Comprobado:** 34 pruebas, incluida una nueva que verifica que los dos caminos —Gmail y el de
+omisión— llevan el mismo destinatario y el mismo cuerpo. En pantalla dice «El correo debe salir de
+papeleriacomercial.abatista@gmail.com».
+
+### Lo que hay que hacer en los teléfonos
+
+En cada iPhone, una sola vez: **Ajustes › Aplicaciones › Mail › Aplicación de correo por omisión ›
+Gmail**. Sin eso, un vendedor sin la aplicación de Gmail seguirá mandando desde la cuenta que Apple
+Mail tenga configurada, y eso no se puede arreglar desde la web.

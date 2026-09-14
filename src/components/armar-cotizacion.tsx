@@ -19,6 +19,7 @@ import {
   type TipoDocumento,
 } from "@/lib/cotizacion-pdf";
 import { Boton } from "@/components/ui/boton";
+import { DesdeQueCuenta } from "@/components/desde-que-cuenta";
 import { Campo } from "@/components/ui/campo";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError, Vacio } from "@/components/ui/estados";
@@ -626,6 +627,10 @@ export function ArmarCotizacion({
                 {guardando ? "Mandando" : "Mandarlo a la oficina"}
               </span>
             </Boton>
+
+            {/* Va debajo del botón y no arriba: se lee justo cuando importa, que es al volver
+                del correo a comprobar que salió de donde debía. */}
+            <DesdeQueCuenta />
           </>
         )}
 
