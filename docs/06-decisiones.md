@@ -1896,3 +1896,61 @@ negocio se trata **al hacer clic** —`IconMouseEvent` viaja en el evento de cli
 así que al pasar por encima no hay nada que abrir. Se evaluó adivinarlo consultando qué hay cerca
 del cursor en cada movimiento: serían cientos de consultas pagadas por minuto y respuestas
 aproximadas.
+
+## D-073
+
+**2026-09-14 · La ubicación derivada, construida — y lo que se decidió construyéndola**
+
+D-067 quedó construido. Lo que sigue son las decisiones que sólo aparecieron al hacerlo.
+
+**El `poblado` no se borró: pasó a derivarse.** Veintidós archivos lo leen —cartera, mapa, ficha de
+punto, cotizaciones, el correo a la oficina, mercado— y cambiarlos todos de un golpe era más riesgo
+que beneficio, con el riesgo mal repartido: **una pantalla que se queda a medias no da error,
+muestra menos**. Así que sobrevive como espejo llenado por el mismo disparador. No hay dos
+verdades, porque las cuatro columnas salen del mismo punto y del mismo cálculo. Se borrará cuando
+las pantallas lean `corregimiento` y `distrito` directo.
+
+**Y muestra el corregimiento, salvo cuando es cabecera, donde muestra el distrito.** Es la
+traducción exacta de cómo hablan los dos vendedores, y por eso se cargó la marca de cabecera: en
+el interior el corregimiento cabecera se llama igual que el distrito y viene con un «(Cab.)»
+pegado —«Aguadulce (Cab.)» es Aguadulce y nadie dice lo primero—; en la ciudad el distrito es
+«Panamá» para todos y lo que ubica es «Betania». **Un campo no podía servir a los dos mientras lo
+escribiera una persona; derivado sí**, porque la regla la aplica la base.
+
+**La dirección pasó a llamarse «Cómo llegar»**, y el nombre es el cambio de oficio: de 240
+direcciones escritas, 232 eran un pegado de Google y 112 de ellas ni traían calle, sólo un código
+plus. Se le pedía al vendedor teclear lo que la máquina sabe. Ahora se le pide lo único que sólo
+él sabe.
+
+### Tres cosas que sólo se vieron construyendo
+
+**Un corregimiento venía partido en dos, y la primera carga perdió la mitad.** El archivo trae 699
+rasgos y la tabla quedó con 698: `041008`, Santa Clara de Renacimiento, aparece dos veces. El
+`on conflict do update set geom = excluded.geom` **se quedaba con la última pieza y tiraba la
+primera** — un punto en la mitad perdida habría resuelto al vecino, sin aviso. Ahora las piezas se
+unen. **Se encontró contando lo que entró contra lo que se mandó**, no leyendo el código: el guion
+decía «699 en la base» porque contaba sus propias llamadas.
+
+**La simplificación va en el servidor y respeta los bordes.** Simplificar cada polígono por su
+cuenta abre huecos y solapes entre vecinos, y un punto en la frontera caería en dos corregimientos
+o en ninguno. Con `ST_SimplifyPreserveTopology` a 20 metros —menos de lo que se mueve un GPS de
+teléfono— la geometría bajó de 53 MB a 4 MB sin romper una sola frontera.
+
+**`cuentas_resumen` enumera sus columnas, así que las tres nuevas no le llegaron solas.** Todo
+compilaba en verde y el expediente habría reventado al abrirlo: `tsc` ve una cadena de texto,
+PostgREST ve una columna que no existe. **Es el mismo defecto que el mapa invisible y que los doce
+días de «todavía no hay cierres».** Se encontró preguntándole a la base si las tenía, después de
+que todo pasaba.
+
+### Lo que queda abierto
+
+- **Las 207 cuentas sin coordenadas siguen sin ubicación**, y su `poblado` escrito a mano se
+  conserva porque es lo único que hay. Se arreglan marcando el punto, una por una.
+- **Un punto de 552 cae fuera de Panamá.** O está mal marcado o está en el mar.
+- **Los filtros siguen siendo por `poblado`**, que ahora trae el valor correcto. Filtrar por
+  provincia o por distrito por separado es el siguiente paso.
+- **Falta el archivo oficial del IGN** (2025, 730 corregimientos). Con el del Smithsonian hay 699:
+  faltan los creados últimamente, y ahí el distrito queda bien pero el corregimiento puede quedar
+  desactualizado.
+- **Dos distritos se llaman «Santa Fe»**, en Darién y en Veraguas. Agrupar por nombre de distrito
+  sin la provincia los juntaría.

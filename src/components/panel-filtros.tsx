@@ -428,7 +428,11 @@ export function PanelFiltros({
               {/* El poblado se muestra siempre, aunque esté vacío. Esconderlo
               cuando ninguna cuenta lo tiene hace que el filtro parezca no
               existir, y el vendedor no descubre que puede llenarlo. */}
-              <Grupo titulo="Poblado o zona">
+              {/* **«Dónde queda», no «Poblado o zona».** Desde D-067 esto ya no es lo que alguien
+                  escribió: sale del punto en el mapa, y trae el corregimiento en la ciudad y el
+                  distrito en el interior. La palabra «zona» se reservó para el recorrido, que es
+                  el nombre de la lista. */}
+              <Grupo titulo="Dónde queda">
                 {poblados.length > 0 ? (
                   poblados.map((p) => (
                     <Pastilla
