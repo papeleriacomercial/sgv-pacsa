@@ -56,7 +56,7 @@ export default async function ClientesPorCruzar({
 
   const { data: lista } = await supabase
     .from("listas")
-    .select("id, nombre, poblado, vendedor_id")
+    .select("id, nombre, vendedor_id")
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -73,19 +73,22 @@ export default async function ClientesPorCruzar({
 
   // **La cartera del dueño de la lista, no la de quien mira.** Un líder puede
   // abrir la lista de Albert; lo que se ofrece agregar sigue siendo de Albert.
-  let consulta = supabase
+  // **AQUÍ SE FILTRABA POR EL POBLADO DE LA LISTA, con igualdad exacta de texto**, y era el
+  // acoplamiento más peligroso de los tres: limpiar los datos sin tocar esto habría dejado la
+  // pantalla vacía **sin dar ningún error** — el filtro buscaría «CALIDONIA Y CENTARL» y ya nadie
+  // se llamaría así.
+  //
+  // El campo se eliminó el 13 de septiembre de 2026 (D-067), así que ahora se ofrece toda la
+  // cartera del dueño y el vendedor escoge, que es como ya se comportaban las listas de objetivo.
+  // Cuando la ubicación derivada esté construida, esto vuelve a acotarse: por los corregimientos
+  // de los puntos que la lista ya tiene, que es un hecho y no una etiqueta.
+  const { data: crudas } = await supabase
     .from("cuentas_resumen")
     .select("id, nombre, tipo_comercio, poblado, total_12m")
     .eq("vendedor_id", lista.vendedor_id)
     .eq("tipo", "cliente")
     .not("tipo_comercio", "is", null)
     .is("deleted_at", null);
-
-  // Una lista de zona ofrece la zona. Una de objetivo no tiene poblado, así
-  // que ofrece toda la cartera y el vendedor escoge.
-  if (lista.poblado) consulta = consulta.eq("poblado", lista.poblado);
-
-  const { data: crudas } = await consulta;
   const cuentas = (crudas ?? []) as Cuenta[];
 
   const [{ data: compras }, { data: props }] = await Promise.all([
@@ -166,7 +169,6 @@ export default async function ClientesPorCruzar({
           </h1>
           <p className="truncate text-xs text-texto-atenuado">
             {lista.nombre}
-            {lista.poblado && ` · ${lista.poblado}`}
           </p>
         </div>
       </header>
@@ -175,9 +177,7 @@ export default async function ClientesPorCruzar({
         {candidatos.length === 0 ? (
           <Tarjeta>
             <Vacio titulo="No hay clientes por cruzar aquí">
-              {lista.poblado
-                ? `Los clientes de ${lista.poblado} ya compran lo mismo que sus iguales, o todavía no tienen tipo de comercio para compararlos.`
-                : "Los clientes de esta cartera ya compran lo mismo que sus iguales, o todavía no tienen tipo de comercio para compararlos."}
+              Los clientes de esta cartera ya compran lo mismo que sus iguales, o todavía no tienen tipo de comercio para compararlos.
             </Vacio>
           </Tarjeta>
         ) : (

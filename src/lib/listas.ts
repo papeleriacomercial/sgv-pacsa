@@ -14,7 +14,6 @@ export type Lista = {
   nombre: string;
   tipo: TipoLista;
   clase: ClaseVenta | null;
-  poblado: string | null;
   archivada: boolean;
   total: number;
   sin_tocar: number;
@@ -50,7 +49,7 @@ async function consultar(vendedorId?: string): Promise<Lista[]> {
   let consulta = supabase
     .from("listas_resumen")
     .select(
-      "id, nombre, tipo, clase, poblado, archivada, total, sin_tocar, trabajadas, sin_tocar_hace_mucho, vendedor_id",
+      "id, nombre, tipo, clase, archivada, total, sin_tocar, trabajadas, sin_tocar_hace_mucho, vendedor_id",
     )
     .eq("archivada", false);
 
