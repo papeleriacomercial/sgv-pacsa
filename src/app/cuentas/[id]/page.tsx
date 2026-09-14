@@ -76,7 +76,7 @@ export default async function Expediente({
   const { data: prospecto } = await supabase
     .from("cuentas_resumen")
     .select(
-      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, lat, lng, vendedor_id, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
+      "id, nombre, tipo_comercio, tipo, motivo_descarte, cuenta_madre_id, tipo_punto, volumen, productos_interes, contacto_nombre, contacto_telefono, ruc, notas, direccion, poblado, provincia, distrito, corregimiento, lat, lng, vendedor_id, dias_cadencia, dias_sin_contacto, dias_hasta_compromiso, fuera_de_cadencia, sin_ubicacion, ultima_compra, dias_sin_comprar, compras_12m, total_12m, cadencia_observada, dejo_de_comprar",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -461,9 +461,18 @@ export default async function Expediente({
               </dd>
             </div>
             <div className="flex justify-between gap-2">
-              <dt className="text-texto-secundario">Poblado o zona</dt>
-              <dd className={prospecto.poblado ? "" : "text-texto-atenuado"}>
-                {prospecto.poblado ?? "Sin registrar"}
+              {/* **Dónde queda, derivado del punto y no escrito** (D-067). Se enseñan los dos
+                  niveles porque el del interior piensa en distrito y el de la ciudad en
+                  corregimiento, y esta pantalla la abren los dos. */}
+              <dt className="text-texto-secundario">Dónde queda</dt>
+              <dd className={prospecto.distrito ? "" : "text-texto-atenuado"}>
+                {prospecto.distrito
+                  ? prospecto.corregimiento === prospecto.distrito
+                    ? `${prospecto.distrito}, ${prospecto.provincia}`
+                    : `${prospecto.corregimiento} · ${prospecto.distrito}, ${prospecto.provincia}`
+                  : prospecto.lat === null
+                    ? "Marca el punto en el mapa"
+                    : "El punto no cae dentro de Panamá"}
               </dd>
             </div>
             <div className="flex justify-between gap-2">

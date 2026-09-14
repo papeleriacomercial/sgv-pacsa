@@ -13,6 +13,7 @@ import {
 } from "@/lib/catalogos";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campo";
+import { UbicacionDerivada } from "@/components/ubicacion-derivada";
 import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Cargando, MensajeError } from "@/components/ui/estados";
@@ -48,7 +49,10 @@ export default function EditarProspecto() {
   const [notas, setNotas] = useState("");
   const [volumen, setVolumen] = useState<Volumen | null>(null);
   const [direccion, setDireccion] = useState("");
-  const [poblado, setPoblado] = useState("");
+  // Derivados del punto: se muestran, no se editan.
+  const [provincia, setProvincia] = useState<string | null>(null);
+  const [distrito, setDistrito] = useState<string | null>(null);
+  const [corregimiento, setCorregimiento] = useState<string | null>(null);
   const [tipoPunto, setTipoPunto] = useState<TipoPunto>("local");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
@@ -59,7 +63,7 @@ export default function EditarProspecto() {
     supabase
       .from("cuentas")
       .select(
-        "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas, volumen, tipo_punto, direccion, poblado, lat, lng, dias_cadencia",
+        "nombre, ruc, tipo_comercio, productos_interes, contacto_nombre, contacto_telefono, contacto_whatsapp, contacto_correo, notas, volumen, tipo_punto, direccion, provincia, distrito, corregimiento, lat, lng, dias_cadencia",
       )
       .eq("id", id)
       .is("deleted_at", null)
@@ -78,7 +82,9 @@ export default function EditarProspecto() {
           setNotas(data.notas ?? "");
           setVolumen((data.volumen as Volumen) ?? null);
           setDireccion(data.direccion ?? "");
-          setPoblado(data.poblado ?? "");
+          setProvincia(data.provincia ?? null);
+          setDistrito(data.distrito ?? null);
+          setCorregimiento(data.corregimiento ?? null);
           setTipoPunto((data.tipo_punto as TipoPunto) ?? "local");
           setLat(data.lat === null ? "" : String(data.lat));
           setLng(data.lng === null ? "" : String(data.lng));
@@ -134,7 +140,6 @@ export default function EditarProspecto() {
         volumen,
         tipo_punto: tipoPunto,
         direccion: direccion.trim() || null,
-        poblado: poblado.trim() || null,
         lat: numLat,
         lng: numLng,
         dias_cadencia: cadencia ? Number(cadencia) : null,
@@ -206,8 +211,9 @@ export default function EditarProspecto() {
               />
             </Tarjeta>
 
-            {/* Dónde queda la cuenta, las tres formas juntas: para el mapa las
-                coordenadas, para llegar la dirección, para agrupar el poblado. */}
+            {/* Dónde queda la cuenta. **Una sola cosa que hacer: marcar el punto.** De ahí salen
+                el mapa y la ubicación oficial; lo único que se escribe es la referencia para
+                llegar, que es lo que ningún mapa sabe. */}
             <Tarjeta className="flex flex-col gap-4">
               <CampoCoordenadas
                 cuentaId={id}
@@ -218,17 +224,27 @@ export default function EditarProspecto() {
                   setLng(nuevaLng);
                 }}
               />
+              {/* **«Cómo llegar», no «Dirección», y el cambio de nombre es el cambio de oficio.**
+                  De 240 direcciones escritas, 232 eran un pegado de Google —y 112 de ellas ni
+                  siquiera traían calle, sólo un código plus—. O sea que se le pedía al vendedor
+                  teclear lo que la máquina ya sabe. Lo único que sólo él sabe es la referencia:
+                  «frente al estadio Rico Cedeño». Eso es lo que se le pide ahora. */}
               <Campo
-                etiqueta="Dirección"
+                etiqueta="Cómo llegar"
                 value={direccion}
                 onChange={(e) => setDireccion(e.target.value)}
-                ayuda="Cómo se llega. Las coordenadas sirven al mapa, esto a la gente."
+                ayuda="La referencia que te dio el cliente: «frente al estadio», «al lado de la farmacia». Opcional."
               />
-              <Campo
-                etiqueta="Poblado o zona"
-                value={poblado}
-                onChange={(e) => setPoblado(e.target.value)}
-                ayuda="Aguadulce, La Chorrera, David. Permite agrupar la cartera por zona."
+
+              {/* AQUÍ SE ESCRIBÍA EL POBLADO, y era por donde entraba la contaminación (D-067).
+                  Ahora la ubicación sale del punto: se calcula contra los límites oficiales al
+                  guardar, y se muestra abajo sin poder tocarla. Marcar el punto es la única
+                  acción, y ya se hacía. */}
+              <UbicacionDerivada
+                provincia={provincia}
+                distrito={distrito}
+                corregimiento={corregimiento}
+                tienePunto={lat !== "" && lng !== ""}
               />
             </Tarjeta>
 

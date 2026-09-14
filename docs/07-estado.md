@@ -3775,3 +3775,45 @@ tenerlos. Corregidos el mismo 13 de septiembre, al preguntarlo el usuario:
 - **`12-flujo-vendedor.html`** — decía que el pedido va «al carril de Solicitudes» para que la
   oficina se entere, y que hacía falta ponerle reloj a la bandeja. Corregido: hoy no hay reloj, y
   se dice por qué.
+
+---
+
+## La ubicación sale del punto — construido el 2026-09-14
+
+D-067 diseñado el 13, construido el 14. Las decisiones que aparecieron construyendo están en D-073.
+
+| Pieza | Dónde |
+|---|---|
+| PostGIS y la tabla de límites | `20260914005637_ubicacion_derivada_del_punto.sql` |
+| La puerta de carga, tipada | `20260914005828_cargar_corregimientos.sql` |
+| Unir corregimientos partidos | `20260914010307_limites_en_piezas_se_unen.sql` |
+| Ubicar las 552 que ya estaban | `20260914010653_ubicar_las_cuentas_que_ya_estaban.sql` |
+| `poblado` pasa a derivarse | `20260914010845_poblado_pasa_a_ser_derivado.sql` |
+| Las tres columnas en la cartera | `20260914011242_la_cartera_ve_la_ubicacion.sql` |
+| El guion de carga | `scripts/corregimientos-cargar.mjs` |
+
+**Comprobado contra la base:** 698 corregimientos, 13 provincias, 82 nombres de distrito. De 552
+cuentas con punto, **551 ubicadas**; la que falta cae fuera de Panamá. 308 coinciden al pie de la
+letra con lo que el vendedor había escrito.
+
+**Comprobado en pantalla**, que es lo que el compilador no dice: la cartera lista El Rincón,
+Aguadulce, Parita, Las Tablas, Penonomé y Chitré en vez de `CALIDONIA Y CENTARL` y `WJ4V+7W2`; el
+expediente dice «Dónde queda: Penonomé, Coclé»; y la pantalla de editar muestra «Cómo llegar»
+editable y «Dónde queda» de solo lectura, sin ningún campo de poblado.
+
+### Cómo se ve la cartera ahora
+
+```
+Interior (distrito):    Aguadulce 41 · Las Tablas 39 · Penonomé 34 · Chitré 26 · Santiago 25
+Ciudad (corregimiento): San Francisco 38 · Ancón 16 · Omar Torrijos 16 · Betania 12 · Juan Díaz 11
+```
+
+### Lo que falta
+
+- **Filtrar por provincia y por distrito por separado.** Hoy el filtro es el de siempre, con el
+  valor ya correcto.
+- **Las 207 sin coordenadas.** Se arreglan marcando el punto; nadie más puede.
+- **El archivo oficial del IGN Tommy Guardia**, que hay que pedir. Con el del Smithsonian faltan
+  31 corregimientos creados últimamente: el distrito siempre queda bien, el corregimiento puede
+  quedar viejo en esos casos.
+- **Borrar `poblado`** cuando las pantallas lean `corregimiento` y `distrito` directo.
