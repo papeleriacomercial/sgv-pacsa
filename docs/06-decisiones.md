@@ -1979,3 +1979,24 @@ ruido para resolver un caso entre ochenta y dos.
 
 **Comprobado contra la base, no de memoria:** filtrar por Coclé da 53 de 355 en la pantalla y 53
 en la consulta; `Coclé|Aguadulce` da 27 y 27.
+
+## D-075
+
+**2026-09-14 · La cartera muestra el corregimiento aunque parta un distrito conocido**
+
+**Decisión del usuario, con la alternativa sobre la mesa.** Al derivar la ubicación, lo que decía
+`Chitré` pasó a decir `San Juan Bautista` y `La Arena` (24 cuentas), y lo que decía `Chorrera`
+pasó a decir `Barrio Colón` (12). No es un error: son los corregimientos reales de esos distritos.
+Pero para un vendedor que piensa «Chitré», su cartera de Chitré aparece repartida en cuatro
+nombres.
+
+**Se ofreció la alternativa** —mostrar el distrito siempre, salvo en la ciudad de Panamá y San
+Miguelito, donde el corregimiento es lo único que ubica— y el usuario escogió dejarlo como está.
+
+**Por qué es defendible.** El filtro de distrito, construido el mismo día (D-074), ya resuelve el
+caso de «todo Chitré». Y separar La Arena es información real que antes no existía: el texto
+escrito a mano decía «Chitré» para las dos cosas.
+
+**El costo de cambiar de opinión es bajo y conviene que quede escrito:** es una línea en
+`ubicar_punto()` y su migración. Y los 359 valores anteriores están en `auditoria`, así que
+cualquier vuelta atrás es reconstruible.
