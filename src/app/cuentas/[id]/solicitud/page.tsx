@@ -18,6 +18,7 @@ import {
   type ResuelveSolicitud,
 } from "@/lib/catalogos";
 import { Boton } from "@/components/ui/boton";
+import { DesdeQueCuenta } from "@/components/desde-que-cuenta";
 import { Campo } from "@/components/ui/campo";
 import { Opciones } from "@/components/ui/opciones";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -296,6 +297,10 @@ function Formulario() {
 
 
             {error && <MensajeError titulo="No se pudo guardar" detalle={error} />}
+
+            {/* Sólo cuando de verdad va a salir un correo: lo que resuelve él mismo no le manda
+                nada a nadie, y avisar ahí sería ruido. */}
+            {(esDecisionDeArriba || resuelve === "oficina") && <DesdeQueCuenta />}
 
             <Boton type="submit" ancho disabled={guardando || !listo}>
               {guardando

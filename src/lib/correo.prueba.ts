@@ -16,26 +16,22 @@ import {
   CORREO_DESTINO,
   correoDeDocumento,
   correoDeSolicitud,
+  enlaceGmail,
+  enlaceMailto,
   type DestinoCorreo,
 } from './correo.ts'
 
 const CUENTA = {
   nombre: 'Almacen La Fiesta',
   ruc: '8-123-4567',
-  poblado: 'Aguadulce',
+  corregimiento: 'Aguadulce',
   contactoNombre: 'María Pérez',
   contactoTelefono: '6123-4567',
   url: 'https://sgv-pacsa.vercel.app/cuentas/abc',
 }
 
-/** Lo que de verdad viaja: `mailto` guarda el cuerpo codificado. */
-function cuerpoDe(direccion: string) {
-  return decodeURIComponent(direccion.split('&body=')[1] ?? '')
-}
-
-function paraDe(direccion: string) {
-  return direccion.slice('mailto:'.length).split('?')[0]
-}
+const cuerpoDe = (c: { cuerpo: string }) => c.cuerpo
+const paraDe = (c: { para: string }) => c.para
 
 test('cada clase de encargo tiene su dirección, y ninguna se repite por error', () => {
   const tipos: DestinoCorreo[] = [
@@ -165,4 +161,33 @@ test('un pedido de veinte renglones no revienta el largo del correo', () => {
   // Lo que jamás puede perderse al recortar.
   assert.ok(cuerpo.includes('COT-0200.pdf'), 'se perdió el enlace al recortar')
   assert.ok(cuerpo.includes('3,200') || cuerpo.includes('3200'), 'se perdió el total')
+})
+
+test('el correo se puede abrir en Gmail o en el de omisión, y los dos llevan lo mismo', () => {
+  // EL DEFECTO QUE ESTO CUIDA es el que pasó de verdad: un iPhone con Apple Mail por omisión
+  // mandó una cotización desde una cuenta de iCloud personal. Ahora se intenta Gmail primero, y
+  // si esa dirección saliera mal construida el vendedor no vería nada al tocar el botón —ni
+  // error ni correo— porque un esquema desconocido falla en silencio.
+  const c = correoDeSolicitud({
+    tipo: 'muestra',
+    rotulo: 'Muestra',
+    cuenta: CUENTA,
+    vendedor: 'Albert Batista',
+    detalle: 'Dos resmas, a ver si le sirven.',
+  })
+
+  const gmail = enlaceGmail(c)
+  const omision = enlaceMailto(c)
+
+  assert.ok(gmail.startsWith('googlegmail:///co?to='), 'el esquema de Gmail está mal formado')
+  assert.ok(omision.startsWith('mailto:papeleria.comercial.cotizaciones@gmail.com?'))
+
+  // Los dos caminos tienen que llevar al mismo sitio y decir lo mismo. Si se separan, el correo
+  // dependería de qué aplicación abrió el teléfono, que es exactamente lo que no puede pasar.
+  for (const enlace of [gmail, omision]) {
+    const d = decodeURIComponent(enlace)
+    assert.ok(d.includes('papeleria.comercial.cotizaciones@gmail.com'), 'destinatario distinto')
+    assert.ok(d.includes('Dos resmas'), 'cuerpo distinto')
+    assert.ok(d.includes('Almacen La Fiesta'), 'cliente distinto')
+  }
 })
