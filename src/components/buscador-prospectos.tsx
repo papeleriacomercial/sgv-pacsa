@@ -268,11 +268,11 @@ function Buscador() {
   const [ubicacion, setUbicacion] = useState<Ubicacion | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [radio, setRadio] = useState(3000);
-  // Cuando se llega desde una lista de zona, el poblado viene prellenado: es
-  // lo único que iba a escribir de todos modos.
+  // **Ya no llega prellenado desde la lista.** Lo estaba desde su poblado, y ese campo se
+  // eliminó el 13 de septiembre de 2026 porque guardaba el nombre del recorrido y no un lugar
+  // (D-067): prellenar con «CALIDONIA Y CENTARL» mandaba a buscar un pueblo que no existe.
   const [texto, setTexto] = useState(() => parametros.get("q") ?? "");
   const [nombreLista, setNombreLista] = useState<string | null>(null);
-  const [pobladoLista, setPobladoLista] = useState<string | null>(null);
   // Armando una lista se arranca por área: casi siempre es un pueblo al que
   // todavía no ha ido, y "cerca de mí" no sirve de nada desde la oficina.
   const [donde, setDonde] = useState<"area" | "cerca">(
@@ -341,12 +341,11 @@ function Buscador() {
     const supabase = clienteNavegador();
     supabase
       .from("listas")
-      .select("nombre, poblado")
+      .select("nombre")
       .eq("id", listaId)
       .maybeSingle()
       .then(({ data }) => {
         setNombreLista(data?.nombre ?? null);
-        setPobladoLista(data?.poblado ?? null);
       });
   }, [listaId]);
 

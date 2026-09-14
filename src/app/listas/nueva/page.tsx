@@ -24,7 +24,6 @@ export default function NuevaLista() {
   const [nombre, setNombre] = useState("");
   const [tipo, setTipo] = useState<TipoLista>("zona");
   const [clase, setClase] = useState<ClaseVenta | null>(null);
-  const [poblado, setPoblado] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +52,6 @@ export default function NuevaLista() {
       nombre: nombre.trim(),
       tipo,
       clase,
-      poblado: tipo === "zona" ? poblado.trim() || null : null,
     });
 
     if (fallo) {
@@ -94,14 +92,6 @@ export default function NuevaLista() {
               ayuda="Zona: se arma barriendo el mapa. Objetivos: se arma por nombre, uno ya sabe cuáles son."
             />
 
-            {tipo === "zona" && (
-              <Campo
-                etiqueta="Poblado o zona"
-                value={poblado}
-                onChange={(e) => setPoblado(e.target.value)}
-                ayuda="Opcional. Sirve para ordenar la ruta por cercanía."
-              />
-            )}
           </Tarjeta>
 
           {/* Lo que espera al armarla, no lo que resultó. Es lo que le permite

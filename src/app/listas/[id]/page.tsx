@@ -11,6 +11,7 @@ import {
   type TipoLista,
 } from "@/lib/catalogos";
 import { AgregarObjetivo } from "@/components/agregar-objetivo";
+import { EditarLista } from "@/components/editar-lista";
 import { FichaPunto } from "@/components/ficha-punto";
 import { QuitarDeLista } from "@/components/quitar-de-lista";
 import { ArchivarLista } from "@/components/archivar-lista";
@@ -84,7 +85,7 @@ export default async function DetalleLista({
 
   const { data: lista } = await supabase
     .from("listas_resumen")
-    .select("id, nombre, tipo, clase, poblado, archivada, vendedor_id, total, sin_tocar, trabajadas, sin_tocar_hace_mucho, sin_tocar_potenciales, sin_tocar_clientes")
+    .select("id, nombre, tipo, clase, archivada, vendedor_id, total, sin_tocar, trabajadas, sin_tocar_hace_mucho, sin_tocar_potenciales, sin_tocar_clientes")
     .eq("id", id)
     .maybeSingle();
 
@@ -156,7 +157,7 @@ export default async function DetalleLista({
 
   // A Buscar y no al mapa de la cartera: el mapa muestra lo que ya es suyo, y
   // aquí lo que hace falta es encontrar puntos que todavía no lo son.
-  const destinoBusqueda = rutaDeBusqueda(id, lista.poblado);
+  const destinoBusqueda = rutaDeBusqueda(id);
 
   return (
     <>
@@ -176,17 +177,12 @@ export default async function DetalleLista({
       </header>
 
       <main className="flex flex-col gap-4 p-4">
-        <Tarjeta className="flex flex-wrap items-center gap-2">
-          <Insignia tono="neutro">{TIPOS_LISTA[lista.tipo as TipoLista]}</Insignia>
-          {lista.clase && (
-            <Insignia tono={lista.clase === "grande" ? "info" : "neutro"}>
-              {CLASES_VENTA[lista.clase as ClaseVenta]}
-            </Insignia>
-          )}
-          {lista.poblado && (
-            <span className="text-sm text-texto-secundario">{lista.poblado}</span>
-          )}
-        </Tarjeta>
+        <EditarLista
+          id={id}
+          nombre={lista.nombre}
+          tipo={lista.tipo as TipoLista}
+          clase={(lista.clase as ClaseVenta | null) ?? null}
+        />
 
         {esObjetivo ? (
           <AgregarObjetivo
@@ -199,10 +195,12 @@ export default async function DetalleLista({
           />
         ) : (
           <>
-            {/* Agregar puntos abre el mapa con la lista preseleccionada,
-                centrado en su poblado. El semáforo de la búsqueda evita
-                reescoger lo que ya es suyo, lo que descartó o lo que es de
-                un compañero. */}
+            {/* Agregar puntos abre el mapa con la lista preseleccionada. **Ya no lo centra en
+                un poblado**: ese campo se eliminó de las listas el 13 de septiembre de 2026
+                porque guardaba el nombre del recorrido —«CALIDONIA Y CENTARL»— y se lo estampaba
+                como ubicación a cada cuenta que entraba (D-067). El mapa abre donde el vendedor
+                esté. El semáforo de la búsqueda sigue evitando reescoger lo que ya es suyo, lo
+                que descartó o lo que es de un compañero. */}
             <Link
               href={destinoBusqueda}
               className="min-h-tactil flex items-center justify-center gap-2 rounded-lg bg-marca px-3 text-base font-medium text-white"

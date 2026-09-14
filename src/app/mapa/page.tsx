@@ -29,20 +29,16 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
   // y meterla al motor de filtros obligaría a cargarla siempre.
   let visibles = cuentas;
   let nombreLista: string | null = null;
-  let pobladoLista: string | null = null;
 
   if (typeof lista === "string") {
     const [{ data: miembros }, { data: fila }] = await Promise.all([
       supabase.from("listas_cuentas").select("cuenta_id").eq("lista_id", lista),
-      supabase.from("listas").select("nombre, poblado").eq("id", lista).maybeSingle(),
+      supabase.from("listas").select("nombre").eq("id", lista).maybeSingle(),
     ]);
 
     const ids = new Set((miembros ?? []).map((m) => m.cuenta_id as string));
     visibles = cuentas.filter((c) => ids.has(c.id));
     nombreLista = fila?.nombre ?? null;
-    // EL POBLADO VIAJA A LA BÚSQUEDA. Sin él, llegar por acá abría el buscador con el campo del
-    // área en blanco, y había que volver a escribir el nombre del pueblo de la lista.
-    pobladoLista = fila?.poblado ?? null;
   }
 
   // Los que llegaron sin coordenadas no se pueden dibujar, y decirlo es mejor
@@ -88,7 +84,7 @@ export default async function Mapa({ searchParams }: PageProps<"/mapa">) {
             encuentre cae dentro en vez de soltarse en la cartera. No hubo que construir nada — el
             mapa ya sabe qué lista muestra y la búsqueda ya sabe recibirla. */}
         <Link
-          href={typeof lista === "string" ? rutaDeBusqueda(lista, pobladoLista) : "/buscar"}
+          href={typeof lista === "string" ? rutaDeBusqueda(lista) : "/buscar"}
           className="min-h-tactil flex items-center justify-center gap-2 rounded-lg border border-borde bg-superficie px-4 text-base font-medium text-texto"
         >
           <Search size={18} aria-hidden />

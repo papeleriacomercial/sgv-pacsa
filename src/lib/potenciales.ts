@@ -11,19 +11,15 @@
  * A dónde lleva «buscar puntos para esta lista».
  *
  * **Vive acá porque son dos pantallas las que ofrecen esa puerta** —el expediente de la lista y el
- * mapa— y estaban armando la dirección cada una por su lado. La del expediente mandaba el poblado
- * en `q`, la del mapa no, así que llegar por el mapa abría la búsqueda **con el campo del área en
- * blanco**: el vendedor tenía que volver a escribir «Aguadulce» para la lista que se llama
- * Aguadulce. Lo reportó el equipo de ventas el 11 de septiembre de 2026.
+ * mapa— y estaban armando la dirección cada una por su lado.
  *
- * Dos pantallas que construyen la misma dirección por separado se separan; una sola no puede.
+ * **Ya no lleva el área escrita, y es a propósito.** La llevaba desde el poblado de la lista, y
+ * ese campo se eliminó el 13 de septiembre de 2026: guardaba el nombre del recorrido —«CALIDONIA
+ * Y CENTARL»— y no un lugar, así que prellenar la búsqueda con él mandaba al vendedor a buscar un
+ * pueblo que no existe (D-067).
  */
-export function rutaDeBusqueda(
-  listaId: string,
-  poblado: string | null | undefined,
-): string {
-  const base = `/buscar?lista=${listaId}`;
-  return poblado ? `${base}&q=${encodeURIComponent(poblado)}` : base;
+export function rutaDeBusqueda(listaId: string): string {
+  return `/buscar?lista=${listaId}`;
 }
 
 /** Un punto del directorio de Google, listo para volverse potencial. */
@@ -57,19 +53,13 @@ export async function crearPotenciales({
   const { clienteNavegador } = await import("@/lib/supabase/navegador");
   const supabase = clienteNavegador();
 
-  // **EL POBLADO SE LEE ACÁ Y NO LLEGA COMO PARÁMETRO.** Es un dato de la lista, y que cada
-  // pantalla lo traiga por su cuenta es exactamente cómo una de las dos termina creando
-  // cuentas sin zona — que fue lo que pasó al abrir el mapa desde una lista.
-  const poblado = listaId
-    ? ((
-        await supabase
-          .from("listas")
-          .select("poblado")
-          .eq("id", listaId)
-          .maybeSingle()
-      ).data?.poblado ?? null)
-    : null;
-
+  // **AQUÍ SE HEREDABA EL POBLADO DE LA LISTA, Y ERA EL DEFECTO.** Cada punto que entraba desde
+  // una lista se llevaba su nombre como ubicación, así que dieciséis cuentas quedaron diciendo
+  // que vivían en un pueblo llamado «CALIDONIA Y CENTARL» — repartidas, en la realidad, por diez
+  // corregimientos y cuatro provincias.
+  //
+  // Se eliminó el 13 de septiembre de 2026 (D-067). La ubicación sale del punto marcado en el
+  // mapa, que es un hecho, y no del nombre de la lista por la que entró, que es una etiqueta.
   const filas = puntos.map((p) => ({
     id: crypto.randomUUID(),
     nombre: p.nombre,
@@ -78,9 +68,6 @@ export async function crearPotenciales({
     lng: p.lng,
     origen: "busqueda",
     vendedor_id: vendedorId,
-    // El poblado de la lista se hereda: si no, las cuentas nacen sin zona y los filtros de la
-    // cartera por poblado no encuentran nada.
-    poblado,
     // **Sin `tipo`: entran como potenciales.** Levantarlas en tanda desde el directorio no las
     // convierte en prospectos — un prospecto es un potencial que ya se visitó (D-015).
   }));
