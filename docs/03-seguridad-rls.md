@@ -345,3 +345,41 @@ mañana, y tiene que escribir cuentas de los tres vendedores a la vez.
 Se eliminó el índice único `cuentas_ruc_unico`. **No es una relajación de seguridad**: era una
 regla de negocio equivocada —que un RUC identifica un local— y las cadenas la desmienten.
 Ver D-028.
+
+## Las funciones de reporte — agregado 2026-09-13
+
+Dos funciones no obedecen al RLS, y por eso llevan su propio candado adentro. Son `security
+definer` porque **necesitan leer `auditoria`, que sólo gerencia puede ver**; sin ese permiso
+elevado no podrían contestar nada.
+
+| Función | Quién puede usarla | Qué hace si no |
+|---|---|---|
+| `actividad_por_vendedor(dia)` | Sólo `gerente` | Levanta excepción |
+| `cuentas_con_actividad(desde, hasta)` | Sólo `gerente` | Levanta excepción |
+
+La segunda nació el 13 de septiembre abierta también al dueño de la cuenta y a su líder, y **se
+cerró a gerencia el mismo día** por decisión del usuario (D-072): *«solamente sea para uso del
+usuario gerencia, no para uso de los vendedores ni del líder»*.
+
+**El candado va adentro y no en la pantalla**, porque esconder el control no restringe nada: la
+función se puede llamar desde cualquier sitio con una sesión válida. La pantalla además limpia las
+fechas de la dirección, pero eso es comodidad, no seguridad.
+
+### La trampa que costó encontrar — D-070
+
+**`revoke all ... from public` NO le quita el permiso a `anon`.**
+
+Supabase trae `alter default privileges` que concede `execute` a `anon`, `authenticated` y
+`service_role` en **toda función nueva** del esquema `public`. Ese permiso queda otorgado
+**explícitamente a `anon`**, no heredado de `public`, así que revocarle a `public` lo deja intacto
+— y el `grant execute ... to authenticated` que uno escribe al lado es redundante.
+
+Y la llave anónima viaja en el navegador de cualquiera.
+
+Se descubrió comprobando una migración recién aplicada: `has_function_privilege('anon', …)` daba
+verdadero justo después de haberla revocado de `public`. **No hubo fuga** —las dos funciones se
+cierran por dentro— pero el permiso sobraba.
+
+**Regla desde ahora: toda función de reporte lleva además `revoke all ... from anon`.** El `grant`
+a `authenticated` se conserva aunque sea redundante, porque dice en el repositorio quién tiene que
+poder llamarla.
