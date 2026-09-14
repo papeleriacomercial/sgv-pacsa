@@ -20,7 +20,13 @@ export type Cuenta = {
   nombre: string;
   tipo: TipoCuenta;
   tipo_comercio: string | null;
+  /**
+   * El nombre con el que se le llama al sitio: el corregimiento, o el distrito cuando el
+   * corregimiento es su cabecera. **Derivado del punto, nadie lo escribe** (D-067).
+   */
   poblado: string | null;
+  provincia: string | null;
+  distrito: string | null;
   /** Nombres de las listas a las que pertenece. Las llena `cargarCartera`. */
   listas?: string[];
   volumen: Volumen | null;
@@ -57,7 +63,23 @@ export type Filtros = {
   texto: string;
   tipos: TipoCuenta[];
   categorias: string[];
+  /**
+   * El sitio, tal como se muestra: corregimiento o distrito según el caso.
+   *
+   * Sigue existiendo porque es con lo que se busca a diario —«los de Aguadulce»— y no obliga a
+   * saber si Aguadulce es distrito o corregimiento.
+   */
   poblados: string[];
+  provincias: string[];
+  /**
+   * **Cada distrito viaja con su provincia**, como `«Veraguas|Santa Fe»`.
+   *
+   * No es manía: hay **dos distritos llamados Santa Fe**, uno en Darién y otro en Veraguas.
+   * Filtrar por el nombre solo los juntaría, y hoy no se notaría —una sola tiene cuentas— pero se
+   * notaría el día que la otra las tenga, y ese día nadie se acordaría de por qué. La pantalla
+   * enseña el nombre limpio; la provincia va por dentro.
+   */
+  distritos: string[];
   productos: LineaProducto[];
   volumenes: Volumen[];
   vendedores: string[];
@@ -119,6 +141,8 @@ export const FILTROS_VACIOS: Filtros = {
   tipos: [],
   categorias: [],
   poblados: [],
+  provincias: [],
+  distritos: [],
   productos: [],
   volumenes: [],
   vendedores: [],
@@ -146,6 +170,8 @@ export function contarActivos(f: Filtros): number {
     f.tipos.length +
     f.categorias.length +
     f.poblados.length +
+    f.provincias.length +
+    f.distritos.length +
     f.productos.length +
     f.volumenes.length +
     f.vendedores.length +
@@ -225,6 +251,18 @@ export function aplicar(
       return false;
 
     if (f.poblados.length && !f.poblados.includes(c.poblado ?? "")) return false;
+
+    if (f.provincias.length && !f.provincias.includes(c.provincia ?? "")) {
+      return false;
+    }
+
+    // La llave lleva la provincia por delante: ver el comentario de `distritos` en `Filtros`.
+    if (
+      f.distritos.length &&
+      !f.distritos.includes(`${c.provincia ?? ""}|${c.distrito ?? ""}`)
+    ) {
+      return false;
+    }
 
     if (f.volumenes.length && (!c.volumen || !f.volumenes.includes(c.volumen)))
       return false;
@@ -505,6 +543,8 @@ const LISTAS = [
   "tipos",
   "categorias",
   "poblados",
+  "provincias",
+  "distritos",
   "productos",
   "volumenes",
   "vendedores",

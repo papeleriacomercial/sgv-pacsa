@@ -120,6 +120,8 @@ export function PanelFiltros({
   onAbrir,
   categorias,
   poblados,
+  provincias,
+  distritos,
   vendedores,
   visibles,
   total,
@@ -135,6 +137,9 @@ export function PanelFiltros({
   onAbrir: (v: boolean) => void;
   categorias: string[];
   poblados: string[];
+  provincias: string[];
+  /** La llave lleva la provincia; el rótulo sólo la dice cuando el nombre se repite. */
+  distritos: { llave: string; rotulo: string }[];
   /** Solo llega con contenido si el usuario ve a más de una persona. */
   vendedores: { id: string; nombre: string }[];
   visibles: number;
@@ -447,12 +452,49 @@ export function PanelFiltros({
                   ))
                 ) : (
                   <p className="text-xs text-texto-atenuado">
-                    Ninguna cuenta tiene poblado todavía. Se llena en Editar
-                    datos, y a partir de ahí se puede filtrar por zona.
+                    Ninguna cuenta está ubicada todavía. Se resuelve marcando el punto en el
+                    mapa: la ubicación aparece sola.
                   </p>
                 )}
               </Grupo>
 
+              {/* **LOS TRES NIVELES SON TRES FILTROS, no uno con tres formas.**
+                  «Dónde queda» es para el día a día —«los de Aguadulce»— sin tener que saber si
+                  Aguadulce es distrito o corregimiento. Provincia y distrito son para mirar la
+                  cartera desde arriba, que es la pregunta de gerencia y del líder.
+                  Se ofrecen sólo cuando hay más de uno: un filtro con una sola opción no filtra
+                  nada y ocupa una fila. */}
+              {provincias.length > 1 && (
+                <Grupo titulo="Provincia">
+                  {provincias.map((p) => (
+                    <Pastilla
+                      key={p}
+                      activo={filtros.provincias.includes(p)}
+                      onClick={() =>
+                        set({ provincias: alternar(filtros.provincias, p) })
+                      }
+                    >
+                      {p}
+                    </Pastilla>
+                  ))}
+                </Grupo>
+              )}
+
+              {distritos.length > 1 && (
+                <Grupo titulo="Distrito">
+                  {distritos.map((d) => (
+                    <Pastilla
+                      key={d.llave}
+                      activo={filtros.distritos.includes(d.llave)}
+                      onClick={() =>
+                        set({ distritos: alternar(filtros.distritos, d.llave) })
+                      }
+                    >
+                      {d.rotulo}
+                    </Pastilla>
+                  ))}
+                </Grupo>
+              )}
 
               <Grupo titulo="Sin contacto hace más de">
                 {[15, 30, 60, 90].map((d) => (

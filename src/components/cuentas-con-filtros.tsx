@@ -259,6 +259,48 @@ export function CuentasConFiltros({
     [cuentas],
   );
 
+  const provincias = useMemo(
+    () => [...new Set(cuentas.map((c) => c.provincia).filter(Boolean))].sort() as string[],
+    [cuentas],
+  );
+
+  /**
+   * Los distritos con su provincia por dentro y su nombre por fuera.
+   *
+   * La llave es `«provincia|distrito»` porque hay dos distritos llamados Santa Fe —Darién y
+   * Veraguas— y filtrar por el nombre solo los juntaría. **El rótulo sólo dice la provincia
+   * cuando hace falta**: poner «Aguadulce (Coclé)» en los ochenta que no se repiten sería
+   * ruido para resolver un caso entre ochenta y dos.
+   */
+  const distritos = useMemo(() => {
+    const cuantas = new Map<string, number>();
+    for (const c of cuentas) {
+      if (c.distrito) cuantas.set(c.distrito, (cuantas.get(c.distrito) ?? 0) + 1);
+    }
+
+    const llaves = new Set<string>();
+    const repetidos = new Set<string>();
+    const vistoEn = new Map<string, string>();
+
+    for (const c of cuentas) {
+      if (!c.distrito) continue;
+      llaves.add(`${c.provincia ?? ""}|${c.distrito}`);
+      const antes = vistoEn.get(c.distrito);
+      if (antes !== undefined && antes !== (c.provincia ?? "")) repetidos.add(c.distrito);
+      vistoEn.set(c.distrito, c.provincia ?? "");
+    }
+
+    return [...llaves]
+      .map((llave) => {
+        const [provincia, distrito] = llave.split("|");
+        return {
+          llave,
+          rotulo: repetidos.has(distrito) ? `${distrito} (${provincia})` : distrito,
+        };
+      })
+      .sort((a, b) => a.rotulo.localeCompare(b.rotulo, "es"));
+  }, [cuentas]);
+
   const nombreVendedor = (id: string) =>
     vendedores.find((v) => v.id === id)?.nombre ?? "Otro vendedor";
 
@@ -307,6 +349,8 @@ export function CuentasConFiltros({
         onAbrir={setAbierto}
         categorias={categorias}
         poblados={poblados}
+        provincias={provincias}
+        distritos={distritos}
         vendedores={vendedores}
         visibles={visibles.length}
         total={cuentas.length}
