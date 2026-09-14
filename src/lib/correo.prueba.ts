@@ -71,7 +71,7 @@ test('una muestra viaja al buzón de cotizaciones, con lo que la oficina necesit
     paraCuando: null,
   })
 
-  assert.equal(paraDe(d), 'papeleria.comercial.cotizaciones@gmail.com')
+  assert.equal(paraDe(d), 'papeleriacomercial.cotizaciones@gmail.com')
 
   const cuerpo = cuerpoDe(d)
   for (const dato of ['Almacen La Fiesta', '8-123-4567', 'María Pérez', 'Albert Batista']) {
@@ -89,7 +89,7 @@ test('un precio especial va a gerencia, no a la oficina', () => {
     detalle: 'Pide 10% por volumen.',
   })
 
-  assert.equal(paraDe(d), 'papeleria.comercial@gmail.com')
+  assert.equal(paraDe(d), 'papeleriacomercial@gmail.com')
   assert.notEqual(paraDe(d), CORREO_DESTINO.cotizacion)
 })
 
@@ -111,7 +111,7 @@ test('el documento lleva el enlace al PDF, que es lo único que no puede faltar'
   })
 
   const cuerpo = cuerpoDe(d)
-  assert.equal(paraDe(d), 'papeleria.comercial.cotizaciones@gmail.com')
+  assert.equal(paraDe(d), 'papeleriacomercial.cotizaciones@gmail.com')
   assert.ok(cuerpo.includes('https://ejemplo.supabase.co/firmado/COT-0142.pdf'))
   assert.ok(cuerpo.includes('Papel bond'), 'no viajaron los renglones')
   assert.ok(cuerpo.includes('descuento por volumen'), 'no viajó la nota del vendedor')
@@ -130,7 +130,7 @@ test('sin enlace el correo sale igual, diciendo dónde está el documento', () =
     enlace: null,
   })
 
-  assert.equal(paraDe(d), 'papeleria.comercial.ordenes@gmail.com')
+  assert.equal(paraDe(d), 'papeleriacomercial.ordenes@gmail.com')
   assert.ok(cuerpoDe(d).includes('expediente'), 'no dice dónde encontrar el documento')
 })
 
@@ -180,13 +180,13 @@ test('el correo se puede abrir en Gmail o en el de omisión, y los dos llevan lo
   const omision = enlaceMailto(c)
 
   assert.ok(gmail.startsWith('googlegmail:///co?to='), 'el esquema de Gmail está mal formado')
-  assert.ok(omision.startsWith('mailto:papeleria.comercial.cotizaciones@gmail.com?'))
+  assert.ok(omision.startsWith('mailto:papeleriacomercial.cotizaciones@gmail.com?'))
 
   // Los dos caminos tienen que llevar al mismo sitio y decir lo mismo. Si se separan, el correo
   // dependería de qué aplicación abrió el teléfono, que es exactamente lo que no puede pasar.
   for (const enlace of [gmail, omision]) {
     const d = decodeURIComponent(enlace)
-    assert.ok(d.includes('papeleria.comercial.cotizaciones@gmail.com'), 'destinatario distinto')
+    assert.ok(d.includes('papeleriacomercial.cotizaciones@gmail.com'), 'destinatario distinto')
     assert.ok(d.includes('Dos resmas'), 'cuerpo distinto')
     assert.ok(d.includes('Almacen La Fiesta'), 'cliente distinto')
   }
