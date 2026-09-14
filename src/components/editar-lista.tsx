@@ -156,9 +156,15 @@ export function EditarLista({
       {error && <p className="text-sm text-error">{error}</p>}
 
       <div className="flex gap-2">
+        {/* **El icono y el texto van dentro de un `span` con flex**, que es como lo hace el
+            resto de la aplicación. `Boton` no lo pone por su cuenta: sin el `span` se apilan, el
+            gancho queda encima de la palabra y el botón crece al doble. Lo vio el usuario en su
+            teléfono. */}
         <Boton ancho onClick={guardar} disabled={guardando}>
-          <Check size={18} aria-hidden />
-          {guardando ? "Guardando…" : "Guardar"}
+          <span className="flex items-center justify-center gap-2">
+            <Check size={18} aria-hidden />
+            {guardando ? "Guardando…" : "Guardar"}
+          </span>
         </Boton>
         <button
           type="button"
