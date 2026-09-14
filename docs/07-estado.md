@@ -3919,3 +3919,32 @@ tres niveles— funciona en producción.
 Y corregido el gancho del botón «Guardar» de editar listas, que se apilaba sobre el texto (D-080).
 **Ese no se vio en pantalla**: la sesión del navegador de pruebas se cayó con la compilación. Queda
 pendiente de confirmar en el teléfono.
+
+---
+
+## Limpieza de las cotizaciones de prueba — 2026-09-14
+
+El usuario emitió dos cotizaciones reales probando el envío por correo, sobre «mini centro
+gloria», y pidió quitarlas para no dejarle esa basura al vendedor: `COT-260914-6EF6` ($16.05) y
+`COT-260914-8EA2` ($19.26).
+
+**Las cotizaciones y sus dos solicitudes quedaron borradas lógicamente** —`deleted_at`, como manda
+§16— así que desaparecieron de todas las pantallas pero siguen recuperables. Comprobado: 0
+visibles, 2 ocultas.
+
+**Los dos PDF se borraron de verdad**, a pedido del usuario, y eso no se deshace: en Storage no
+hay borrado lógico. Se aceptó a sabiendas, y con una razón de peso — el enlace firmado de un año
+viajó en un correo que está en la bandeja de la oficina, y dejar el archivo vivo habría dejado ese
+enlace abriendo un documento que ya no debería existir. Comprobado: 0 archivos.
+
+Queda `scripts/borrar-pdf.mjs`, que **exige que la cotización esté borrada antes de tocar su
+archivo**: sin ese seguro, un código mal tecleado dejaría un expediente vivo mostrando un
+documento que no se puede abrir.
+
+**Esto va a repetirse mientras no haya ambiente de pruebas**, que es la deuda anotada más arriba:
+probar el envío de documentos crea documentos reales, con número, PDF y solicitud.
+
+### Lo que no se puede limpiar desde aquí
+
+Los dos correos ya están en la bandeja de la oficina. Borrarlos del sistema no los saca de ahí; hay
+que avisarle a Verónica que los ignore.
