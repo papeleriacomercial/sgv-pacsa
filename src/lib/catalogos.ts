@@ -281,16 +281,12 @@ export const ATIENDE: Record<TipoSolicitud, string> = Object.fromEntries(
   (Object.keys(ROL_QUE_ATIENDE) as TipoSolicitud[]).map((t) => [t, NOMBRE_DEL_ROL[ROL_QUE_ATIENDE[t]]]),
 ) as Record<TipoSolicitud, string>;
 
-/**
- * ¿Esta solicitud es de la bandeja de quien está mirando?
- *
- * **El líder y el vendedor no tienen bandeja propia**: ven lo suyo por otras reglas, y para ellos
- * esta separación no aplica. Devuelve `true` para que la pantalla no les esconda nada.
- */
-export function esDeMiBandeja(tipo: TipoSolicitud, rol: string | null | undefined): boolean {
-  if (rol !== "gerente" && rol !== "administracion") return true;
-  return ROL_QUE_ATIENDE[tipo] === rol;
-}
+// Aquí vivía `esDeMiBandeja()`, que decidía qué solicitudes veía cada bandeja. **Se borró el 13 de
+// septiembre de 2026 porque ya no hay bandejas** (D-071): la oficina y gerencia reciben los
+// encargos por correo, y el enrutamiento vive en `CORREO_DESTINO`.
+//
+// `ROL_QUE_ATIENDE` y `ATIENDE` se quedan, y no por inercia: el formulario le sigue diciendo al
+// vendedor quién va a atenderlo, y eso sigue siendo verdad — es la persona que recibe el correo.
 
 /**
  * Quién lo resuelve.
