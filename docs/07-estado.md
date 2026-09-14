@@ -3948,3 +3948,14 @@ probar el envío de documentos crea documentos reales, con número, PDF y solici
 
 Los dos correos ya están en la bandeja de la oficina. Borrarlos del sistema no los saca de ahí; hay
 que avisarle a Verónica que los ignore.
+
+---
+
+## La pantalla vieja deja de sobrevivir al despliegue — 2026-09-14
+
+D-081. `Cache-Control: no-store` sobre el documento, con `_next/static` fuera para no perder la
+carga rápida con mala señal.
+
+Comprobado contra una compilación de producción —en desarrollo Next fuerza `no-cache` en todo y la
+medición no dice nada—: la página sale `no-store, must-revalidate`, los archivos versionados
+`public, max-age=31536000, immutable`.

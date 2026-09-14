@@ -2148,3 +2148,36 @@ está roto hoy. Si vuelve a pasar, ése es el arreglo.
 **No se verificó en pantalla:** la sesión del navegador de pruebas se cayó con la compilación y no
 se pudo entrar. Se subió con el patrón idéntico al de los botones que sí se ven bien en la foto
 del usuario, y queda pendiente su confirmación en el teléfono.
+
+## D-081
+
+**2026-09-14 · El teléfono deja de quedarse con la pantalla vieja después de un despliegue**
+
+**Pasó y costó una confusión.** Se corrigió un botón, se desplegó, y en el iPhone del usuario
+seguía saliendo torcido. El código estaba bien —se comprobó en el paquete compilado y en la rama
+desplegada— pero el teléfono seguía sirviendo la página guardada. Sólo se arregló **cerrando la
+aplicación por completo**.
+
+**El problema real no es ése, sino el que no se ve.** El usuario lo notó porque sabía que había un
+cambio y lo estaba buscando. Los vendedores no van a saber: un despliegue puede quedarse sin
+llegarles durante días y nadie reporta nada, simplemente no ven la mejora. En el peor caso, una
+pantalla vieja hablándole a una base ya cambiada.
+
+**Decisión.** `Cache-Control: no-store, must-revalidate` sobre el documento, en `next.config.ts`.
+
+**No cuesta rendimiento, y por eso fue fácil de decidir:** todas las pantallas ya se generan en el
+servidor en cada visita —salen marcadas como dinámicas en la compilación—, así que ya necesitaban
+red. Lo único que cambia es que el teléfono deja de reutilizar la copia vieja.
+
+**Lo que queda fuera es lo importante:** `_next/static` y `_next/image`. Esos archivos llevan un
+nombre distinto en cada compilación, así que guardarlos es seguro **y es lo que hace que la
+aplicación abra rápido con mala señal en el interior**. Meterlos habría vuelto a bajar todo el
+JavaScript en cada apertura — el remedio habría sido peor que la enfermedad.
+
+**Comprobado contra una compilación de producción y no en desarrollo**, que era la trampa: en modo
+desarrollo Next fuerza `no-cache` en todo, así que la primera medición no decía nada. Con
+`next build && next start`: la página sale `no-store, must-revalidate` y los archivos versionados
+`public, max-age=31536000, immutable`.
+
+**No es garantía absoluta**, y queda escrito: iOS en modo aplicación es terco y en algún caso raro
+puede seguir haciendo falta cerrarla del todo. Es el remedio estándar, no una promesa.
