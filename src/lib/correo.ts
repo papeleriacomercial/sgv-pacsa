@@ -34,11 +34,11 @@
  * atiende la misma persona.
  */
 export const CORREO_DESTINO = {
-  cotizacion: "papeleria.comercial.cotizaciones@gmail.com",
-  muestra: "papeleria.comercial.cotizaciones@gmail.com",
-  pedido: "papeleria.comercial.ordenes@gmail.com",
-  orden_venta: "papeleria.comercial.ordenes@gmail.com",
-  precio: "papeleria.comercial@gmail.com",
+  cotizacion: "papeleriacomercial.cotizaciones@gmail.com",
+  muestra: "papeleriacomercial.cotizaciones@gmail.com",
+  pedido: "papeleriacomercial.ordenes@gmail.com",
+  orden_venta: "papeleriacomercial.ordenes@gmail.com",
+  precio: "papeleriacomercial@gmail.com",
 } as const;
 
 export type DestinoCorreo = keyof typeof CORREO_DESTINO;

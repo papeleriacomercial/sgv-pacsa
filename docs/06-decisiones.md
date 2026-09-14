@@ -1833,8 +1833,8 @@ repositorio quién tiene que poder llamarla, y eso vale más que la línea que a
 **Decisión.** Administración y gerencia dejan de tener bandeja de solicitudes. Al mandar un
 encargo, la aplicación **abre el Gmail del propio vendedor con el correo ya escrito**, dirigido a
 las direcciones que la oficina usaba antes del SGV: cotizaciones y muestras a
-`papeleria.comercial.cotizaciones@gmail.com`, órdenes a `papeleria.comercial.ordenes@gmail.com`,
-precios y condiciones a `papeleria.comercial@gmail.com`. Lo marcado «lo resuelvo yo» no manda nada.
+`papeleriacomercial.cotizaciones@gmail.com`, órdenes a `papeleriacomercial.ordenes@gmail.com`,
+precios y condiciones a `papeleriacomercial@gmail.com`. Lo marcado «lo resuelvo yo» no manda nada.
 
 **Alternativas descartadas.** *Que la aplicación mande el correo desde un servidor*: da constancia
 de envío y permite adjuntar el PDF, pero exige una contraseña de aplicación guardada, una ruta que
@@ -2084,3 +2084,43 @@ el asunto se lee de reojo en una bandeja con veinte correos. «Santiago» lo ubi
 «Carlos Santana Ávila» obliga a abrir el correo para saber de dónde es.
 
 **La prueba se comprobó rompiéndola**: devolviendo sólo el corregimiento, falla.
+
+## D-079
+
+**2026-09-14 · Las direcciones de la oficina se escriben con el punto donde va, y se quedan en el código**
+
+**La corrección.** Las tres direcciones de destino llevaban un punto de más: se escribieron de un
+dictado por voz —*«papelería comercial punto cotizaciones arroba Gmail punto com»*— y ese «punto»
+se tomó como separador. Quedan así:
+
+```
+cotizacion, muestra  →  papeleriacomercial.cotizaciones@gmail.com
+pedido, orden_venta  →  papeleriacomercial.ordenes@gmail.com
+precio               →  papeleriacomercial@gmail.com
+```
+
+**Nunca falló, y ahí está lo interesante:** Gmail ignora los puntos, así que
+`papeleria.comercial.cotizaciones@` y `papeleriacomercial.cotizaciones@` caen en el mismo buzón. El
+correo de prueba llegó bien con la grafía equivocada. **Habría fallado en silencio el día que uno
+de esos buzones se mudara a un dominio propio**, donde el punto sí importa.
+
+Se detectó comparando las direcciones escritas contra las de `auth.users`, que son las que usan
+para entrar y no llevan el punto. Lo levantó el usuario preguntando de dónde había salido su
+dirección.
+
+**Y la decisión: se quedan en el código**, no en `parametros`.
+
+**Alternativa considerada.** Moverlas a `parametros` —donde ya vive el tope de los $500— dejaría
+que gerencia las cambiara sin tocar código y con el cambio en `auditoria`. **Descartada por ahora:**
+cambian casi nunca, y agregaría una pantalla de configuración más por un problema que todavía no
+existe. Se reconsidera si esos buzones empiezan a moverse o si entran vendedores con destinos
+propios.
+
+**La consecuencia, escrita para que nadie la descubra tarde:** cambiar un buzón exige tocar
+`src/lib/correo.ts` y desplegar. No es un ajuste que la oficina pueda hacer sola.
+
+### De dónde sale cada dirección — para no volver a preguntarlo
+
+- **Las de los vendedores** salen de `auth.users.email`, unidas a `perfiles`. Son sus credenciales;
+  nadie las escribe en el código y `DesdeQueCuenta` las pide a la sesión en el momento.
+- **Las de destino** están escritas a mano en `CORREO_DESTINO`.
