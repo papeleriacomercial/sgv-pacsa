@@ -12,7 +12,7 @@ type Fila = {
   proveedor_actual: string | null;
   motivos_competencia: MotivoCompetencia[] | null;
   precio_referencia: string | number | null;
-  cuentas: { poblado: string | null; tipo_comercio: string | null } | null;
+  cuentas: { corregimiento: string | null; tipo_comercio: string | null } | null;
 };
 
 /** Cuenta cuántas veces aparece cada clave y devuelve el conteo ordenado. */
@@ -83,7 +83,7 @@ export default async function Mercado() {
   const { data } = await supabase
     .from("seguimientos")
     .select(
-      "proveedor_actual, motivos_competencia, precio_referencia, cuentas(poblado, tipo_comercio)",
+      "proveedor_actual, motivos_competencia, precio_referencia, cuentas(corregimiento, tipo_comercio)",
     )
     .not("motivos_competencia", "eq", "{}")
     .is("deleted_at", null)
@@ -98,9 +98,9 @@ export default async function Mercado() {
       .map((f) => f.proveedor_actual?.trim())
       .filter((x): x is string => !!x),
   );
-  const poblados = contar(
+  const corregimientos = contar(
     filas
-      .map((f) => f.cuentas?.poblado?.trim())
+      .map((f) => f.cuentas?.corregimiento?.trim())
       .filter((x): x is string => !!x),
   );
   const categorias = contar(
@@ -195,10 +195,10 @@ export default async function Mercado() {
               </Tarjeta>
             )}
 
-            {poblados.length > 0 && (
+            {corregimientos.length > 0 && (
               <Tarjeta className="flex flex-col gap-3">
                 <p className="text-sm font-medium text-texto">Dónde duele</p>
-                {poblados.slice(0, 8).map(([p, n]) => (
+                {corregimientos.slice(0, 8).map(([p, n]) => (
                   <Barra key={p} etiqueta={p} cuantos={n} total={total} />
                 ))}
               </Tarjeta>

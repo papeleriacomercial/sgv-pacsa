@@ -84,7 +84,7 @@ function mailto(para: string, asunto: string, cuerpo: string) {
 export type DatosDeCuenta = {
   nombre: string;
   ruc?: string | null;
-  poblado?: string | null;
+  corregimiento?: string | null;
   contactoNombre?: string | null;
   contactoTelefono?: string | null;
   /** Para que la oficina pueda saltar del correo al expediente. */
@@ -115,7 +115,7 @@ export function correoDeSolicitud({
   monto?: number | null;
   paraCuando?: string | null;
 }) {
-  const donde = cuenta.poblado ? ` (${cuenta.poblado})` : "";
+  const donde = cuenta.corregimiento ? ` (${cuenta.corregimiento})` : "";
   const asunto = `${rotulo} — ${cuenta.nombre}${donde} — ${vendedor}`;
 
   const contacto = [cuenta.contactoNombre, cuenta.contactoTelefono]
@@ -127,7 +127,7 @@ export function correoDeSolicitud({
     renglon("Cliente", cuenta.nombre) +
     renglon("RUC", cuenta.ruc) +
     renglon("Contacto", contacto || null) +
-    renglon("Dónde", cuenta.poblado) +
+    renglon("Dónde", cuenta.corregimiento) +
     renglon("Vendedor", vendedor) +
     `\nLo que pide:\n${detalle.trim()}\n` +
     (monto ? `\nMonto estimado: ${DINERO.format(monto)}\n` : "") +
@@ -170,7 +170,7 @@ export function correoDeDocumento({
   /** Enlace firmado al PDF. Si no se pudo generar va vacío y el cuerpo lo dice. */
   enlace: string | null;
 }) {
-  const donde = cuenta.poblado ? ` (${cuenta.poblado})` : "";
+  const donde = cuenta.corregimiento ? ` (${cuenta.corregimiento})` : "";
   const asunto = `${rotulo} ${codigo} — ${cuenta.nombre}${donde} — ${vendedor}`;
 
   const contacto = [cuenta.contactoNombre, cuenta.contactoTelefono]
@@ -189,7 +189,7 @@ export function correoDeDocumento({
     renglon("Cliente", cuenta.nombre) +
     renglon("RUC", cuenta.ruc) +
     renglon("Contacto", contacto || null) +
-    renglon("Dónde", cuenta.poblado) +
+    renglon("Dónde", cuenta.corregimiento) +
     renglon("Vendedor", vendedor) +
     renglon("Condición", condicion);
 

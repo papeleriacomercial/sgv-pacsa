@@ -208,7 +208,7 @@ export function CuentasConFiltros({
       ? filtradas.filter(
           (c) =>
             contiene(c.nombre, escrito) ||
-            contiene(c.poblado ?? "", escrito) ||
+            contiene(c.corregimiento ?? "", escrito) ||
             contiene(c.tipo_comercio ?? "", escrito),
         )
       : filtradas;
@@ -254,8 +254,9 @@ export function CuentasConFiltros({
     [cuentas],
   );
 
-  const poblados = useMemo(
-    () => [...new Set(cuentas.map((c) => c.poblado).filter(Boolean))].sort() as string[],
+  const corregimientos = useMemo(
+    () =>
+      [...new Set(cuentas.map((c) => c.corregimiento).filter(Boolean))].sort() as string[],
     [cuentas],
   );
 
@@ -348,7 +349,7 @@ export function CuentasConFiltros({
         abierto={abierto}
         onAbrir={setAbierto}
         categorias={categorias}
-        poblados={poblados}
+        corregimientos={corregimientos}
         provincias={provincias}
         distritos={distritos}
         vendedores={vendedores}
@@ -517,7 +518,7 @@ export function CuentasConFiltros({
             tipoComercio={c.tipo_comercio}
             tipo={c.tipo}
             color={color(c)}
-            zona={c.poblado}
+            zona={c.corregimiento}
             // Una cuenta puede estar en varias listas. Se muestra la primera
             // y se dice cuántas más: caben mal dos nombres en esa línea.
             lista={

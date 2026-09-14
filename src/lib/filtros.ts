@@ -21,10 +21,12 @@ export type Cuenta = {
   tipo: TipoCuenta;
   tipo_comercio: string | null;
   /**
-   * El nombre con el que se le llama al sitio: el corregimiento, o el distrito cuando el
-   * corregimiento es su cabecera. **Derivado del punto, nadie lo escribe** (D-067).
+   * Dónde queda, derivado del punto. **Nadie lo escribe** (D-067).
+   *
+   * Es el nivel fino, el que ubica dentro de una ciudad. Para agrupar el interior está
+   * `distrito`, y para mirar desde arriba `provincia`.
    */
-  poblado: string | null;
+  corregimiento: string | null;
   provincia: string | null;
   distrito: string | null;
   /** Nombres de las listas a las que pertenece. Las llena `cargarCartera`. */
@@ -69,7 +71,7 @@ export type Filtros = {
    * Sigue existiendo porque es con lo que se busca a diario —«los de Aguadulce»— y no obliga a
    * saber si Aguadulce es distrito o corregimiento.
    */
-  poblados: string[];
+  corregimientos: string[];
   provincias: string[];
   /**
    * **Cada distrito viaja con su provincia**, como `«Veraguas|Santa Fe»`.
@@ -140,7 +142,7 @@ export const FILTROS_VACIOS: Filtros = {
   texto: "",
   tipos: [],
   categorias: [],
-  poblados: [],
+  corregimientos: [],
   provincias: [],
   distritos: [],
   productos: [],
@@ -169,7 +171,7 @@ export function contarActivos(f: Filtros): number {
     (f.texto.trim() ? 1 : 0) +
     f.tipos.length +
     f.categorias.length +
-    f.poblados.length +
+    f.corregimientos.length +
     f.provincias.length +
     f.distritos.length +
     f.productos.length +
@@ -250,7 +252,9 @@ export function aplicar(
     if (f.categorias.length && !f.categorias.includes(c.tipo_comercio ?? ""))
       return false;
 
-    if (f.poblados.length && !f.poblados.includes(c.poblado ?? "")) return false;
+    if (f.corregimientos.length && !f.corregimientos.includes(c.corregimiento ?? "")) {
+      return false;
+    }
 
     if (f.provincias.length && !f.provincias.includes(c.provincia ?? "")) {
       return false;
@@ -319,7 +323,7 @@ export type Dimension =
   | "volumen"
   | "producto"
   | "categoria"
-  | "poblado"
+  | "corregimiento"
   | "sin_contacto"
   | "reponer"
   | "vendedor";
@@ -329,7 +333,7 @@ export const DIMENSIONES: Record<Dimension, string> = {
   volumen: "Volumen",
   producto: "Producto de interés",
   categoria: "Tipo de comercio",
-  poblado: "Poblado",
+  corregimiento: "Dónde queda",
   sin_contacto: "Días sin contacto",
   reponer: "Cuánto producto le queda",
   vendedor: "Vendedor",
@@ -419,13 +423,13 @@ export function colorizar(
   if (
     dimension === "vendedor" ||
     dimension === "categoria" ||
-    dimension === "poblado" ||
+    dimension === "corregimiento" ||
     dimension === "producto"
   ) {
     const claveDe = (c: Cuenta): string | null => {
       if (dimension === "vendedor") return c.vendedor_id;
       if (dimension === "categoria") return c.tipo_comercio;
-      if (dimension === "poblado") return c.poblado;
+      if (dimension === "corregimiento") return c.corregimiento;
       // Una cuenta puede interesarse en varias líneas. Se colorea por la
       // primera, y la leyenda lo dice para que nadie lea de más.
       return c.productos_interes?.[0] ?? null;
@@ -542,7 +546,7 @@ export function colorizar(
 const LISTAS = [
   "tipos",
   "categorias",
-  "poblados",
+  "corregimientos",
   "provincias",
   "distritos",
   "productos",

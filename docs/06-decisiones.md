@@ -2000,3 +2000,31 @@ escrito a mano decía «Chitré» para las dos cosas.
 **El costo de cambiar de opinión es bajo y conviene que quede escrito:** es una línea en
 `ubicar_punto()` y su migración. Y los 359 valores anteriores están en `auditoria`, así que
 cualquier vuelta atrás es reconstruible.
+
+## D-076
+
+**2026-09-14 · Fuera `cuentas.poblado`: el sitio se llama corregimiento**
+
+**Decisión.** Se borra la columna. Sobrevivía como espejo para no tocar veintidós archivos de un
+golpe (D-073); ya se tocaron, y cada pantalla lee `corregimiento` directo.
+
+**Se comprobó que no se perdía nada antes de borrar, con consultas y no de memoria:**
+
+- `poblado` era igual a `corregimiento` en **756 de 759** cuentas.
+- Las 3 que diferían son del distrito de Los Santos, cuya cabecera se llama «La Villa de Los
+  Santos». **Pasan a mostrar ese nombre** — el mismo criterio que el usuario escogió en D-075.
+- **Ninguna cuenta tenía `poblado` sin `corregimiento` detrás**, y las 207 sin coordenadas no
+  tenían nada escrito. El único dato que podía perderse no existía.
+- Y los 359 valores sobreescritos anoche siguen en `auditoria`.
+
+**Muere con ella la regla de la cabecera**, que elegía entre distrito y corregimiento para llenar
+un solo campo. Ya no hace falta: las dos columnas están, y cada pantalla escoge la que le toca.
+
+**El filtro pasó de `poblados` a `corregimientos`** también en la dirección. Los enlaces guardados
+con `?poblados=` dejan de filtrar — no rompen la pantalla, muestran de más.
+
+**Cómo se verificó, que es la parte que importa.** `npm run listo` sólo prueba que el texto de una
+consulta compila; lo que este cambio podía romper es que PostgREST no encontrara una columna, y eso
+sale en pantalla y no en el compilador. Se lanzaron **las seis consultas modificadas contra la base
+real** —incluidos los dos embebidos— y se comprobó que `poblado` ahora devuelve 400. Es la lección
+de `cuentas_resumen` en D-073, aplicada a tiempo esta vez.

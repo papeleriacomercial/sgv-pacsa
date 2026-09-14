@@ -17,7 +17,7 @@ type Cuenta = {
   id: string;
   nombre: string;
   tipo_comercio: string | null;
-  poblado: string | null;
+  corregimiento: string | null;
   total_12m: string | number | null;
 };
 
@@ -84,7 +84,7 @@ export default async function ClientesPorCruzar({
   // de los puntos que la lista ya tiene, que es un hecho y no una etiqueta.
   const { data: crudas } = await supabase
     .from("cuentas_resumen")
-    .select("id, nombre, tipo_comercio, poblado, total_12m")
+    .select("id, nombre, tipo_comercio, corregimiento, total_12m")
     .eq("vendedor_id", lista.vendedor_id)
     .eq("tipo", "cliente")
     .not("tipo_comercio", "is", null)
@@ -148,7 +148,7 @@ export default async function ClientesPorCruzar({
       id: c.id,
       nombre: c.nombre,
       tipoComercio: c.tipo_comercio,
-      poblado: c.poblado,
+      corregimiento: c.corregimiento,
       compraAlMes: c.total_12m === null ? 0 : Number(c.total_12m) / 12,
       faltan,
     });
