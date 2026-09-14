@@ -3887,3 +3887,23 @@ Ahora dice «Carlos Santana Ávila · Santiago, Veraguas», sin repetir cuando e
 llama igual que su distrito. El asunto lleva el distrito, que es lo que se lee de reojo.
 
 Son 35 pruebas, y la nueva se comprobó rompiéndola.
+
+---
+
+## Pendiente: un ambiente donde poder romper cosas — anotado el 2026-09-14
+
+**No hay ambiente de pruebas.** La previsualización de `dev`
+(`sgv-pacsa-git-dev-papeleria-comercial.vercel.app`) responde y sirve, pero **escribe en la misma
+base que producción**: es la deuda de D-066, que sigue abierta.
+
+Se comprobó hoy con un caso real, no con la nota vieja: la cotización `COT-260914-6EF6` que el
+usuario emitió probando desde el teléfono **está en la base de producción**, emitida a la oficina,
+con su PDF y su solicitud. Una prueba crea documentos reales con número real.
+
+**Por qué se deja para después, decisión del usuario:** mientras nadie escriba una migración
+destructiva, el costo es basura en los datos y no pérdida. Las pruebas se hacen sobre la misma
+cuenta —«mini centro gloria» ya está estrenada— para que lo que haya que limpiar quede junto.
+
+**Lo que costaría montarlo**, el día que se quiera: correr las 74 migraciones desde cero en el
+proyecto `yzztxbumcyhcogoiwryv`, que está vacío, y cambiar las variables de Preview y Development
+en Vercel. Y decidir qué datos lleva desarrollo: ninguno, una copia, o unos pocos hechos a mano.
