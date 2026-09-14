@@ -3817,3 +3817,22 @@ Ciudad (corregimiento): San Francisco 38 · Ancón 16 · Omar Torrijos 16 · Bet
   31 corregimientos creados últimamente: el distrito siempre queda bien, el corregimiento puede
   quedar viejo en esos casos.
 - **Borrar `poblado`** cuando las pantallas lean `corregimiento` y `distrito` directo.
+
+---
+
+## Filtrar por provincia y distrito — 2026-09-14
+
+Construido y comprobado. D-074. Cierra el pendiente que quedó al construir la ubicación derivada.
+
+La cartera y su mapa filtran ahora por **provincia**, por **distrito** y por **dónde queda**, que
+son tres preguntas distintas y no tres formas de la misma. El distrito lleva su provincia por
+dentro para que los dos «Santa Fe» —Darién y Veraguas— no se confundan nunca.
+
+**Comprobado en pantalla contra la base:** Coclé da 53 de 355 en las dos; `Coclé|Aguadulce` da 27
+en las dos.
+
+### Lo que sigue faltando de la ubicación
+
+- **Las 207 cuentas sin coordenadas.** Sólo se arreglan marcando el punto.
+- **El archivo oficial del IGN Tommy Guardia**, que hay que pedir.
+- **Borrar `poblado`** cuando las pantallas lean `corregimiento` y `distrito` directo.

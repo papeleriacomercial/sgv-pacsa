@@ -1954,3 +1954,28 @@ que todo pasaba.
   desactualizado.
 - **Dos distritos se llaman «Santa Fe»**, en Darién y en Veraguas. Agrupar por nombre de distrito
   sin la provincia los juntaría.
+
+## D-074
+
+**2026-09-14 · Tres filtros de ubicación, y el distrito viaja con su provincia**
+
+**Decisión.** A la cartera entran dos filtros más: **provincia** y **distrito**, junto al que ya
+existía. No sustituyen a «Dónde queda» — son tres preguntas distintas:
+
+- **Dónde queda** es la del día a día: «los de Aguadulce», sin tener que saber si Aguadulce es
+  distrito o corregimiento.
+- **Provincia** y **distrito** son para mirar la cartera desde arriba, que es lo que preguntan
+  gerencia y el líder.
+
+Se ofrecen sólo cuando hay más de una opción: un filtro con un solo valor no filtra nada y ocupa
+una fila en una pantalla que se usa con una mano.
+
+**El distrito viaja como `«provincia|distrito»`, no como nombre.** Hay **dos distritos llamados
+Santa Fe** —Darién y Veraguas— y filtrar por el nombre solo los juntaría. Hoy no se notaría:
+sólo el de Veraguas tiene una cuenta. **Se notaría el día que Darién tenga la suya, y ese día
+nadie se acordaría de por qué.** El rótulo dice la provincia **sólo cuando el nombre se repite**
+entre las cuentas cargadas: poner «Aguadulce (Coclé)» en los ochenta que no se repiten sería
+ruido para resolver un caso entre ochenta y dos.
+
+**Comprobado contra la base, no de memoria:** filtrar por Coclé da 53 de 355 en la pantalla y 53
+en la consulta; `Coclé|Aguadulce` da 27 y 27.
