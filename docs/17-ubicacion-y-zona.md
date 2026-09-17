@@ -1,6 +1,6 @@
 # Ubicación y zona
 
-**Fecha:** 2026-09-13 · **Estado:** diseño acordado, sin construir
+**Fecha:** 2026-09-13 · **Estado:** construido el 2026-09-14 (D-073 a D-076)
 
 Este documento separa dos cosas que hoy comparten un solo campo: **dónde está una cuenta** y
 **por dónde pasa el vendedor**. Se escribió porque la confusión ya llegó a una reunión y a los
