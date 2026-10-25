@@ -55,6 +55,13 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { jsPDF } from "jspdf";
 import { entorno } from "./entorno.mjs";
 import { mandarCorreo, DE_CORREO } from "./correo-enviar.mjs";
+import {
+  conexion,
+  MES_CORTO,
+  MES_LARGO,
+  DINERO,
+  CENTAVOS,
+} from "./base-de-datos.mjs";
 
 const SECO = process.argv.includes("--seco");
 const MES_PEDIDO = (process.argv.find((a) => /^--mes=/.test(a)) ?? "").split("=")[1];
@@ -65,69 +72,12 @@ const MESES = 13;
 const env = entorno(["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]);
 
 // ---------------------------------------------------------------------------
-// La base
+// La base y el formato salen de `base-de-datos.mjs`, compartidos con el reporte
+// semanal. Estaban escritos dos veces, que es la receta de que una corrección
+// entre en uno de los dos y nadie lo note.
 // ---------------------------------------------------------------------------
 
-async function sb(ruta, opciones = {}) {
-  const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1${ruta}`, {
-    ...opciones,
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      "Content-Type": "application/json",
-      ...(opciones.headers ?? {}),
-    },
-  });
-  if (!r.ok) throw new Error(`${ruta} → ${r.status} ${await r.text()}`);
-  return r.json();
-}
-
-/**
- * Trae una tabla entera, de mil en mil.
- *
- * **PostgREST corta en mil filas y no avisa.** Sin esto el conteo de clientes
- * distintos saldría bien en las pruebas —pocos datos— y mal en producción, que
- * es la peor forma de equivocarse: un número más chico que el real, sin error.
- */
-async function todas(ruta) {
-  const filas = [];
-  const PAGINA = 1000;
-  for (let desde = 0; ; desde += PAGINA) {
-    const trozo = await sb(ruta, {
-      headers: { Range: `${desde}-${desde + PAGINA - 1}`, "Range-Unit": "items" },
-    });
-    filas.push(...trozo);
-    if (trozo.length < PAGINA) break;
-  }
-  return filas;
-}
-
-/** Los correos de verdad de cada perfil, que viven en Auth y no en `perfiles`. */
-async function correosDeAuth() {
-  const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users?per_page=200`, {
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-    },
-  });
-  if (!r.ok) {
-    // No poder leer los correos no justifica no generar el reporte.
-    console.log(`  No se pudieron leer los correos de Auth (${r.status}).`);
-    return new Map();
-  }
-  const { users } = await r.json();
-  return new Map((users ?? []).map((u) => [u.id, u.email]));
-}
-
-// ---------------------------------------------------------------------------
-// Fechas y formato
-// ---------------------------------------------------------------------------
-
-const MES_CORTO = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-const MES_LARGO = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-];
+const { sb, todas, correosDeAuth } = conexion(env);
 
 /** Clave AAAA-MM-01, que es como `ventas_del_mes` devuelve el mes. */
 function clave(anio, mes0) {
@@ -150,19 +100,6 @@ function mesDeCierre() {
   const anterior = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
   return { anio: anterior.getFullYear(), mes0: anterior.getMonth() };
 }
-
-const DINERO = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-const CENTAVOS = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 
 /** Un guion y no un cero cuando el dato no existe. */
 function oNada(v, formato = DINERO) {
