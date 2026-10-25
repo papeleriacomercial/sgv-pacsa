@@ -235,6 +235,17 @@ async function reunir() {
 
   const anio = Number(viernes.slice(0, 4));
 
+  // Lo declarado por el vendedor esa semana, al lado de lo facturado. **La
+  // vista los devuelve en columnas separadas a propósito** y acá se mantienen
+  // así: que no coincidan no es un error — un cierre declarado el viernes se
+  // factura el lunes, y una venta que entró por la oficina nunca se declaró.
+  const declarados = await sb(
+    `/declarado_contra_facturado?select=perfil_id,declarado,cierres&semana=eq.${lunes}`,
+  );
+  const declaradoDe = new Map(
+    declarados.map((d) => [d.perfil_id, { monto: Number(d.declarado), cierres: d.cierres }]),
+  );
+
   const filas = [];
   for (const v of vendedores) {
     // Disciplina
@@ -393,6 +404,7 @@ async function reunir() {
       motivoMasRepetido,
       facturado,
       documentos: deLaSemana.length,
+      declarado: declaradoDe.get(v.id) ?? { monto: 0, cierres: 0 },
       nuevos,
       nuevosDelMes,
       nuevosDelAnio: nuevosDelAnio.length,
@@ -541,7 +553,47 @@ function paginaDeVendedor(doc, semana, f) {
     MARGEN,
     y,
   );
-  y += 9;
+  y += 5.4;
+
+  // -------------------------------------------------------------------------
+  // **DOS RENGLONES, NUNCA UNA SUMA.** Lo declarado es lo que el vendedor dijo
+  // al cerrar su día; lo facturado es lo que Books emitió. Sumarlos sería el
+  // caso de los dos números ciertos que juntos engañan, y la comisión sale
+  // siempre del segundo.
+  //
+  // Y que no coincidan **no se presenta como un error**: un cierre del viernes
+  // se factura el lunes, y una venta que entró por la oficina nunca se declaró.
+  // -------------------------------------------------------------------------
+  if (f.declarado.cierres > 0) {
+    doc.setTextColor(...SUAVE);
+    doc.text(
+      `Declarados por ti al cerrar el día: ${DINERO.format(f.declarado.monto)} en ` +
+        `${f.declarado.cierres} ${f.declarado.cierres === 1 ? "cierre" : "cierres"}.`,
+      MARGEN,
+      y,
+    );
+    y += 4.5;
+    doc.setFontSize(8);
+    doc.text(
+      "Los dos números van aparte a propósito: lo declarado es lo que contaste, lo facturado es lo que " +
+        "Books emitió. Un cierre del viernes se factura el lunes.",
+      MARGEN,
+      y,
+    );
+    y += 5;
+    doc.setFontSize(9.5);
+  } else if (f.disciplina.cerrados > 0) {
+    doc.setTextColor(...SUAVE);
+    doc.setFontSize(8.5);
+    doc.text(
+      "No declaraste ningún cierre esta semana al cerrar tus días.",
+      MARGEN,
+      y,
+    );
+    y += 5;
+    doc.setFontSize(9.5);
+  }
+  y += 4;
 
   // --- Clientes nuevos ----------------------------------------------------
   y = rotulo(doc, "clientes nuevos", y);
