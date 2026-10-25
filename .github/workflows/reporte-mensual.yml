@@ -53,6 +53,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # **Para poder abrir la nota que hace de correo.** Es el permiso de la propia
+    # tarea: no hay credencial que guardar ni que renovar.
+    permissions:
+      contents: read
+      issues: write
+
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -75,10 +81,47 @@ jobs:
         run: npm ci
 
       - name: Armar y mandar el reporte
+        env:
+          # Para que el enlace al PDF dentro de la nota apunte a esta corrida.
+          ENLACE_DE_LA_CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           node scripts/reporte-mensual.mjs \
             ${{ inputs.seco && '--seco' || '' }} \
             ${{ inputs.mes && format('--mes={0}', inputs.mes) || '' }}
+
+      # ---------------------------------------------------------------------
+      # LA NOTA QUE HACE DE CORREO
+      #
+      # **Es el camino que el usuario escogió el 25 de octubre de 2026**, al
+      # encontrarse con que Google no da contraseñas de aplicación sin
+      # verificación en dos pasos: *«que GitHub te lo mande»*. GitHub avisa por
+      # correo al dueño del repositorio cuando se abre una nota, y para eso no
+      # hace falta ninguna credencial — basta el permiso de arriba.
+      #
+      # **Los números van en el cuerpo, no sólo el enlace.** Un correo que dice
+      # «tu reporte está listo, entra a verlo» es un correo que no se abre.
+      #
+      # `if: always()` no: si el reporte falló no hay resumen que mandar, y una
+      # nota vacía cada día 1 es ruido que enseña a ignorar la notificación.
+      # ---------------------------------------------------------------------
+      - name: Avisar por correo, abriendo la nota
+        if: success() && !inputs.seco
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RESUMEN=$(ls -1 reportes/resumen-*.md | head -1)
+          MES=$(basename "$RESUMEN" .md | sed 's/resumen-//')
+
+          # La etiqueta se crea si no está. `|| true` porque el segundo mes ya
+          # existe, y eso no es un fallo.
+          gh label create reporte \
+            --color 0E8A16 \
+            --description "Reportes que la tarea programada deja para gerencia" || true
+
+          gh issue create \
+            --title "Histórico de ventas por vendedor · cerrado a $MES" \
+            --body-file "$RESUMEN" \
+            --label reporte
 
       # **El PDF queda descargable aunque el correo no haya salido.** Es la red
       # que hace que una credencial vencida no cueste el reporte del mes.

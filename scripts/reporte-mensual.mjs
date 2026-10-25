@@ -614,6 +614,96 @@ function armarPdf(datos) {
 }
 
 // ---------------------------------------------------------------------------
+// EL RESUMEN EN TEXTO, QUE ES LO QUE DE VERDAD LLEGA A LA BANDEJA
+//
+// **Por qué existe esto y no sólo el PDF.** El correo con el adjunto necesita una
+// contraseña de aplicación de Gmail, y Google no la da sin verificación en dos
+// pasos — que en la cuenta de la empresa está apagada. Decisión del usuario el
+// 25 de octubre de 2026, al verse frente a ese muro: *«que GitHub te lo mande»*.
+//
+// Así que el día 1 la tarea abre una nota en el repositorio con estos números en
+// el cuerpo, y GitHub se la envía por correo al dueño **sin credencial ninguna**:
+// el permiso de la propia tarea alcanza. El PDF queda colgando de la corrida.
+//
+// **Los números van en el cuerpo y no sólo el enlace.** Un correo que dice «tu
+// reporte está listo, entra a verlo» es un correo que no se abre. Lo que cabe en
+// la pantalla del teléfono tiene que ser lo que se quería saber.
+// ---------------------------------------------------------------------------
+
+function resumenMarkdown(datos, enlaceDeLaCorrida) {
+  const { cierre, filas, sinVendedor, meses } = datos;
+  const periodo = `enero a ${MES_LARGO[cierre.mes0]}`;
+  const ultimos = meses.slice(-3);
+
+  const lineas = [];
+  lineas.push(
+    `**${periodo} de ${cierre.anio}**, contra el mismo período de ${cierre.anio - 1}.`,
+  );
+  lineas.push("");
+  lineas.push("| | Facturado | Docs | Clientes | Ticket | vs. año ant. |");
+  lineas.push("|---|---:|---:|---:|---:|---:|");
+
+  for (const v of filas) {
+    const c = v.enCurso;
+    const a = v.mismoPeriodoAntes;
+    const delta =
+      c && a && a.facturado > 0
+        ? `${c.facturado >= a.facturado ? "+" : ""}${((c.facturado / a.facturado - 1) * 100).toFixed(0)} %`
+        : "—";
+    lineas.push(
+      `| **${v.nombre}** | ${c ? DINERO.format(c.facturado) : "—"} | ${c?.documentos ?? 0} | ` +
+        `${c?.clientes ?? 0} | ${c ? CENTAVOS.format(c.facturado / Math.max(c.documentos, 1)) : "—"} | ${delta} |`,
+    );
+  }
+
+  lineas.push("");
+  lineas.push(`### Los últimos tres meses`);
+  lineas.push("");
+  lineas.push(
+    `| | ${ultimos.map((m) => `${MES_CORTO[m.mes0]} ${String(m.anio).slice(2)}`).join(" | ")} |`,
+  );
+  lineas.push(`|---|${ultimos.map(() => "---:").join("|")}|`);
+
+  for (const v of filas) {
+    const celdas = ultimos.map((m) => {
+      const f = v.meses.find((x) => x.clave === m.clave);
+      if (!f || f.sinDatos) return "—";
+      return DINERO.format(f.facturado);
+    });
+    lineas.push(`| **${v.nombre}** | ${celdas.join(" | ")} |`);
+  }
+
+  lineas.push("");
+  lineas.push("### Lo que este resumen no cuenta");
+  lineas.push("");
+  lineas.push(
+    `En el mismo período Books facturó **${DINERO.format(sinVendedor.facturado)}** en ` +
+      `${sinVendedor.documentos} documentos **sin ningún vendedor de calle asignado** — mostrador, ` +
+      "oficina y clientes que compran directo. No es de ninguno de los tres, así que no se suma acá; " +
+      "pero tampoco es cero.",
+  );
+  lineas.push("");
+  lineas.push(
+    "La comisión va en el PDF, calculada por la base con la regla vigente (1,5 % sobre el neto sin ITBMS).",
+  );
+  lineas.push("");
+  lineas.push(
+    "**Es para conversar la meta de cada uno, no para medirla:** la meta todavía no está puesta, " +
+      "y el orden acordado es mirar primero el histórico, después conversar, y recién entonces ponerla.",
+  );
+
+  if (enlaceDeLaCorrida) {
+    lineas.push("");
+    lineas.push(
+      `El detalle mes por mes, una página por vendedor, está en el PDF: [bajarlo de esta corrida](${enlaceDeLaCorrida}) ` +
+        "(abajo, en *Artifacts*).",
+    );
+  }
+
+  return lineas.join("\n");
+}
+
+// ---------------------------------------------------------------------------
 // Correr
 // ---------------------------------------------------------------------------
 
@@ -625,7 +715,18 @@ const pdf = armarPdf(datos);
 mkdirSync("reportes", { recursive: true });
 const ruta = `reportes/historico-vendedores-${etiqueta}.pdf`;
 writeFileSync(ruta, pdf);
+
+// El resumen en texto va siempre, aunque nadie lo use: cuesta nada y es lo que
+// la tarea convierte en nota del repositorio.
+const rutaResumen = `reportes/resumen-${etiqueta}.md`;
+writeFileSync(
+  rutaResumen,
+  resumenMarkdown(datos, env.ENLACE_DE_LA_CORRIDA ?? null),
+  "utf8",
+);
+
 console.log(`\n  ${ruta} · ${(pdf.length / 1024).toFixed(0)} kB`);
+console.log(`  ${rutaResumen}`);
 for (const v of datos.filas) {
   console.log(
     `    ${v.nombre.padEnd(22)} ${(v.enCurso ? DINERO.format(v.enCurso.facturado) : "—").padStart(10)}` +
