@@ -11,6 +11,8 @@ import {
   Users,
 } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
+import { cargarAvanceDeHoy, cargarPlanDeHoy } from "@/lib/plan-diario";
+import { PlanDelDia } from "@/components/plan-del-dia";
 import { cargarSemana, hoyEnPanama, lunesDeEstaSemana } from "@/lib/semana";
 import { cargarListas } from "@/lib/listas";
 import {
@@ -121,6 +123,8 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
     semana,
     listas,
     { data: reponer },
+    plan,
+    avance,
   ] = await Promise.all([
       supabase
         .from("perfiles")
@@ -180,6 +184,13 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
         .gte("dias_para_reponer", 0)
         .lte("dias_para_reponer", 7)
         .order("dias_para_reponer", { ascending: true }),
+
+      // **El plan del día** (docs/18-plan-diario.md). Van en el mismo
+      // `Promise.all` y no en una consulta aparte porque se dibujan en el
+      // mismo primer pantallazo: pedirlas después sólo agregaría una espera
+      // visible justo arriba de todo.
+      cargarPlanDeHoy(user.id, hoy),
+      cargarAvanceDeHoy(user.id, hoy),
     ]);
 
   const compromisos = (comps ?? []) as unknown as Compromiso[];
@@ -382,6 +393,17 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
           </>
         ) : (
           <>
+            {/* **El plan del día va primero, y la Agenda sigue debajo igual.**
+                No se reemplaza nada: sus secciones —Paradas, Llamadas y
+                correos, Se les acaba el producto y Tus listas— se quedan donde
+                estaban. Lo que faltaba no era información, era el acto de
+                comprometerse. */}
+            <PlanDelDia
+              plan={plan.plan}
+              fallo={plan.fallo}
+              avance={avance}
+            />
+
             {compromisos.length === 0 && porReponer.length === 0 && (
               <Tarjeta>
                 <Vacio titulo="Nada pendiente para hoy">

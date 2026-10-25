@@ -501,3 +501,64 @@ export const INICIO_POR_ROL: Record<string, string> = {
   gerente: "/tablero",
   administracion: "/solicitudes",
 };
+
+// ===========================================================================
+// EL PLAN DIARIO — docs/18-plan-diario.md
+// ===========================================================================
+
+/**
+ * Qué clase de trabajo se compromete el vendedor a hacer hoy.
+ *
+ * **Se escoge de esta lista y no se escribe.** Es la regla de fondo del
+ * rediseño: con texto libre, el cierre del viernes se llenaba de frases
+ * —*«yo estaba agarrando eso de poner cualquier frase ahí»*, el usuario— y
+ * nada de eso se puede contar dos meses después.
+ *
+ * Los seguimientos del día **no están acá**: ésos los impone el sistema a
+ * partir de los compromisos que vencen, y no se escogen.
+ */
+export const TIPOS_ACCION_PLAN = {
+  llamar_frio: "Llamar en frío",
+  visitar: "Visitar",
+  reparto: "Reparto",
+  cobrar: "Cobrar",
+  entregar_cotizacion: "Entregar cotización",
+} as const;
+
+export type TipoAccionPlan = keyof typeof TIPOS_ACCION_PLAN;
+
+/** Cómo se cuenta cada tipo, para que la meta diga en qué unidad está. */
+export const UNIDAD_DE_ACCION: Record<TipoAccionPlan, string> = {
+  llamar_frio: "llamadas",
+  visitar: "visitas",
+  reparto: "entregas",
+  cobrar: "cobros",
+  entregar_cotizacion: "cotizaciones",
+};
+
+/**
+ * Por qué no se cumplió una meta del día.
+ *
+ * **Lista corta, no caja de texto.** Una lista se puede contar al cabo de dos
+ * meses; «el tráfico» escrito cuarenta veces, no. Y si «Otra cosa» empieza a
+ * salir seguido, la respuesta no es resignarse: es que falta un motivo acá.
+ */
+export const MOTIVOS_INCUMPLIDO = {
+  falto_tiempo: "Me faltó tiempo",
+  cliente_cambio_el_dia: "Un cliente cambió el día",
+  cliente_no_estaba: "No estaba el encargado",
+  se_alargo_una_visita: "Se alargó una visita",
+  problema_de_vehiculo: "Problema con el vehículo",
+  otra_cosa: "Otra cosa",
+} as const;
+
+export type MotivoIncumplido = keyof typeof MOTIVOS_INCUMPLIDO;
+
+/**
+ * Cuántas acciones propias caben en un día.
+ *
+ * **La restricción es la que obliga a elegir**, y elegir es justamente lo que
+ * gerencia quiere ver: una lista de doce es una lista de cero. La base lo topa
+ * también, porque dejarlo a la pantalla es dejar que un día pase.
+ */
+export const TOPE_ACCIONES = 3;

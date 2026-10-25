@@ -1,7 +1,26 @@
 # 18 · El plan diario
 
-**Estado: PROPUESTA — 2026-10-25.** Reemplaza el contrato semanal como mecánica de
-planificación. Se construye cuando el usuario lo apruebe.
+**Estado: ACORDADO Y EN CONSTRUCCIÓN — 2026-10-25.** Reemplaza el contrato semanal como mecánica
+de planificación.
+
+> **Lo aprobado, y en qué orden va.** El usuario aprobó ir directo a producción el 25 de octubre de
+> 2026 —*«los vendedores ahora mismo no están haciendo uso full time de la herramienta y podemos
+> aventurarnos»*— con una condición que se comprobó pieza por pieza antes de escribir código: *«lo
+> importante es que no se les borre sus listas, sus cuentas, sus mapas»*. **No se altera ninguna
+> tabla existente**; todo entra en tablas nuevas.
+>
+> | | |
+> |---|---|
+> | **Capa 1 · el plan diario** | Escrita, compila y con pruebas. **Falta aplicar la migración**: hasta entonces no se publica en `main`, porque la pantalla ofrecería un botón que no puede guardar |
+> | **Capa 2 · los cierres declarados** (§5) | Sin empezar |
+> | **Capa 3 · el tablero de gerencia** (§4.4) | Sin empezar |
+> | **Capa 4 · el reporte semanal por correo** (§4.5) | Sin empezar. El envío ya existe: `scripts/correo-enviar.mjs` |
+> | **El histórico mensual** (§5.8) | **Construido y corriendo.** No dependía de nada de acá |
+
+> **Y hoy no hay ambiente de prueba.** Está comprobado y escrito en
+> [16-paso-a-produccion.md](16-paso-a-produccion.md): Vercel sirve una sola base para `production`,
+> `preview` y `development`, así que la rama `dev` escribe en producción. El usuario decidió salir
+> así a propósito, para poder avisarles a los vendedores y recoger su reacción.
 
 > **De qué se trata, en una frase.** El vendedor arma su día antes de empezarlo y lo cierra antes de
 > irse —con lo que vendió, en cantidad y en plata—; la semana deja de ser el plan y pasa a ser la
