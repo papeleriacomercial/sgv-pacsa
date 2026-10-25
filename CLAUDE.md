@@ -37,6 +37,7 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 | [docs/15-zoho.md](docs/15-zoho.md) | Conexión con Zoho Books: qué se trae, en qué orden y por qué; el paso a paso de credenciales y el diagnóstico del RUC. | En preparación |
 | [docs/16-paso-a-produccion.md](docs/16-paso-a-produccion.md) | La corrida de salida al piloto: qué se aplica, en qué orden, y cómo se corta con Badger. | Vigente |
 | [docs/17-ubicacion-y-zona.md](docs/17-ubicacion-y-zona.md) | Por qué la ubicación se deriva del punto y la zona vive en el nombre de la lista: los cuatro campos, de dónde salen los límites, y qué hay que desmontar. | Construido (D-073 a D-076) |
+| [docs/18-plan-diario.md](docs/18-plan-diario.md) | **El plan diario:** por qué el contrato semanal no se cumplió, el ciclo abrir/trabajar/cerrar, las cuatro reglas, las cinco pantallas con bocetos y quién ve qué. Reemplaza la planificación semanal. | Propuesta |
 
 `docs/sgv-preview.html` es una maqueta visual de referencia, no especificación.
 

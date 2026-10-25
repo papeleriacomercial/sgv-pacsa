@@ -53,3 +53,6 @@ datos/*
 
 # Salidas de Playwright MCP (capturas, trazas): son de una corrida, no del proyecto.
 .playwright-mcp/
+
+# Los PDF que generan los reportes programados. Se vuelven a generar cuando haga falta.
+/reportes
