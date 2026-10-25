@@ -9,6 +9,47 @@
 Qué hay que hacer, en qué orden y qué se puede romper. Es una lista para seguir con el proyecto
 abierto delante, no una explicación.
 
+---
+
+## ESTADO DE LOS AMBIENTES, verificado el 25 de octubre de 2026
+
+**Hoy no hay ambiente de prueba utilizable.** Lo preguntó el usuario antes de aprobar el plan diario
+—*«es un cambio radical y habría primero que presentárselo a los vendedores antes de poner cualquier
+cosa en producción»*— y la respuesta hay que darla con lo que se comprobó, no con lo que dicen las
+entradas de agosto de `07-estado.md`, que quedaron viejas tras el intercambio de D-055.
+
+**Lo que se comprobó en Vercel:** el proyecto `sgv-pacsa` tiene **una sola** variable
+`NEXT_PUBLIC_SUPABASE_URL`, y su destino son los tres a la vez — `production`, `preview` y
+`development`. Lo mismo la llave anónima.
+
+**Qué significa:** la rama `dev` despliega a una URL de previsualización propia, **pero lee y
+escribe la misma base que producción.** La separación que describía `07-estado.md` el 20 de agosto
+—«Production a prod, Preview y Development a dev»— dejó de ser cierta al consolidarse las variables
+después del intercambio. **Una previsualización que escribe en producción no es un ambiente de
+prueba: es producción con otra dirección.**
+
+### Lo que falta para tener uno
+
+| | |
+|---|---|
+| **1** | Aplicar las migraciones del repositorio al proyecto vacío. **Es exactamente lo que describe este documento de aquí abajo** — por eso se conservó |
+| **2** | Crear los usuarios ahí, con su rol y su líder |
+| **3** | **Partir la variable de Vercel en dos:** dejar el valor de producción sólo en `production`, y poner el del proyecto de pruebas en `preview` y `development`. Mientras esto no se haga, los pasos 1 y 2 no cambian nada |
+| **4** | Sembrar datos. **Copiando de producción, no recargando Zoho:** recargar costaría unas 2 300 llamadas de cuota para reponer lo que ya está bien, y es la misma razón por la que D-055 decidió intercambiar en vez de cargar de cero |
+
+> **Para enseñarle algo a los vendedores, los datos copiados son mejores que datos inventados.** Un
+> vendedor que ve sus propios números del mes pasado entiende la herramienta en treinta segundos;
+> uno que ve «Restaurante Waikiki» pregunta de qué le están hablando. Lo que sí hay que decirles es
+> que lo que toquen ahí no cuenta.
+
+### Mientras no exista
+
+**Lo que se puede construir sin riesgo** es lo que sólo lee: el reporte mensual del histórico
+(`npm run reporte-mensual`) no escribe ni una fila en la base. **Lo que no** es nada del plan
+diario, porque crea tablas y las llena con lo que los vendedores capturen.
+
+---
+
 **El piloto corre en producción, no en desarrollo.** `sgv-pacsa-dev` es donde se prueban las
 migraciones antes de aplicarlas, y una migración que se prueba es una migración que a veces
 falla. Un vendedor en la calle no puede estar del otro lado de esa prueba.

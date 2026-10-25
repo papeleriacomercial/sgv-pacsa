@@ -1,0 +1,92 @@
+# El histórico de ventas por vendedor, el día 1 de cada mes.
+#
+# Lo pidió el usuario el 25 de octubre de 2026: «necesito un reporte histórico
+# que me llegue al correo todos los meses el día uno de cada mes». Ver
+# docs/18-plan-diario.md §5.8.
+#
+# **Por qué aquí y no en Vercel**, igual que la pasada de Zoho: es Node pelado
+# contra la base, el registro de cada corrida queda guardado y a la vista —que
+# es lo que permite darse cuenta de que algo dejó de correr— y no hay prisa.
+#
+# ---------------------------------------------------------------------------
+# Los secretos
+# ---------------------------------------------------------------------------
+#
+#   NEXT_PUBLIC_SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY   los de siempre
+#   CORREO_USUARIO · CORREO_CLAVE_APP                      para poder mandarlo
+#   CORREO_GERENCIA                                        opcional
+#
+# `CORREO_CLAVE_APP` es una **contraseña de aplicación** de Google, no la
+# contraseña de la cuenta: se genera en myaccount.google.com → Seguridad →
+# Contraseñas de aplicaciones, son 16 caracteres y se revoca sola desde ahí.
+#
+# **Sin las de correo el reporte se genera igual** y queda como artefacto de la
+# corrida, descargable por un mes. Se decidió así para que una credencial que
+# falta no deje al usuario sin el reporte y sin saber por qué.
+#
+# `CORREO_GERENCIA` sólo hace falta si el correo tiene que ir a una dirección
+# distinta de la del perfil de Gerencia en Auth, que es de donde se saca.
+
+name: Histórico mensual de vendedores
+
+on:
+  schedule:
+    # 12:00 UTC del día 1 son las 7:00 de la mañana en Panamá. Está antes de
+    # que nadie abra la oficina, así que el correo ya está en la bandeja cuando
+    # el usuario se sienta.
+    #
+    # **El día 1 cae donde caiga.** Si es domingo sale igual: el mes ya cerró y
+    # el dato no cambia por esperar al lunes.
+    - cron: "0 12 1 * *"
+  workflow_dispatch:
+    inputs:
+      mes:
+        description: "Mes a cerrar, AAAA-MM. Vacío = el mes anterior al de hoy."
+        required: false
+      seco:
+        description: "Generar sin mandar el correo"
+        type: boolean
+        default: false
+
+jobs:
+  reporte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_REF_ESPERADO: ${{ vars.SUPABASE_REF_ESPERADO || secrets.SUPABASE_REF_ESPERADO }}
+      CORREO_USUARIO: ${{ secrets.CORREO_USUARIO }}
+      CORREO_CLAVE_APP: ${{ secrets.CORREO_CLAVE_APP }}
+      CORREO_GERENCIA: ${{ secrets.CORREO_GERENCIA || vars.CORREO_GERENCIA }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      # Sólo lo necesario para correr el script: jspdf y nodemailer vienen en
+      # las dependencias del proyecto.
+      - name: Dependencias
+        run: npm ci
+
+      - name: Armar y mandar el reporte
+        run: |
+          node scripts/reporte-mensual.mjs \
+            ${{ inputs.seco && '--seco' || '' }} \
+            ${{ inputs.mes && format('--mes={0}', inputs.mes) || '' }}
+
+      # **El PDF queda descargable aunque el correo no haya salido.** Es la red
+      # que hace que una credencial vencida no cueste el reporte del mes.
+      - name: Guardar el PDF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historico-vendedores
+          path: reportes/*.pdf
+          if-no-files-found: warn
+          retention-days: 90
