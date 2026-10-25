@@ -103,12 +103,21 @@ jobs:
       #
       # `if: always()` no: si el reporte falló no hay resumen que mandar, y una
       # nota vacía cada día 1 es ruido que enseña a ignorar la notificación.
+      #
+      # **Y si el correo SÍ salió, la nota no se abre.** Dos avisos del mismo
+      # reporte enseñan a ignorar los dos. El paso de arriba deja la marca
+      # `reportes/.correo-enviado` sólo cuando el envío se completó.
       # ---------------------------------------------------------------------
       - name: Avisar por correo, abriendo la nota
         if: success() && !inputs.seco
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if [ -f reportes/.correo-enviado ]; then
+            echo "El correo salió con el PDF adjunto; no hace falta la nota."
+            exit 0
+          fi
+
           RESUMEN=$(ls -1 reportes/resumen-*.md | head -1)
           MES=$(basename "$RESUMEN" .md | sed 's/resumen-//')
 
