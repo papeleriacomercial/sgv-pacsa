@@ -662,12 +662,31 @@ discute con datos y no con carácter, y **no se puede contestar con el tráfico 
 | **Cuánto espera un cierre declarado** | **5 días hábiles**, para que la excepción caiga en el reporte de la semana siguiente, cuando todavía se puede llamar al cliente |
 | **La meta del mes** | **No se pone todavía.** Primero el reporte mensual del histórico (§5.8), después la conversación con cada uno, y la meta acordada entra a mano |
 
-### Lo que sigue abierto
+### Cómo manda correos el sistema — **resuelto el 25 de octubre de 2026**
+
+**El sistema ya manda correos.** Probado de punta a punta ese mismo día: el histórico de octubre llegó
+a la bandeja con su PDF adjunto.
 
 | | |
 |---|---|
-| **Cómo manda correos el sistema** | **Hoy no sabe.** `correo.ts` sólo arma enlaces `mailto:` que abre el teléfono del vendedor; no hay envío desde el servidor, ni rutas de API, ni más cron que el de Zoho. Hace falta una cuenta de envío — lo más directo es una **contraseña de aplicación** del Gmail de la empresa, que el usuario genera y se guarda como secreto del repositorio |
-| **A qué dirección llegan** | El mensual y el semanal van a gerencia. Falta decidir si el vendedor recibe también el suyo |
+| **Remitente** | `papeleria.comercial@gmail.com`, por decisión del usuario. Se le advirtió que es la cuenta de la que cuelgan GitHub, Supabase y Vercel, y la escogió igual |
+| **Cómo** | Una **contraseña de aplicación** de Google, guardada como secreto del repositorio (`CORREO_USUARIO`, `CORREO_CLAVE_APP`). No es la contraseña de la cuenta, no da acceso a leer el correo y se revoca desde la misma página |
+| **Quién lo envía** | `scripts/correo-enviar.mjs`, con `nodemailer`. Lo usan el histórico mensual y lo usará el reporte semanal |
+| **A quién llega** | El mensual a gerencia. **El semanal a gerencia y también a cada vendedor** — lo pidió el usuario: *«debes enviárselo también al correo para que lo vean forzosamente en su bandeja de entrada y hagan su propio análisis»* |
+
+> **Lo que costó, para no repetirlo.** Google **esconde** la página de contraseñas de aplicación: no
+> está en ningún menú de Seguridad y sólo se llega por `myaccount.google.com/apppasswords`. Y ahí
+> responde *«la opción que buscas no está disponible para tu cuenta»* **cuando la verificación en dos
+> pasos está apagada** — que es el caso real y no lo dice. Primero se enciende la verificación en dos
+> pasos; recién entonces la página existe.
+
+> **Y la alternativa que se descartó, con su razón.** Antes de resolverlo se construyó un camino sin
+> credenciales: la tarea abría una nota en el repositorio y GitHub la enviaba por correo. **Sirve para
+> gerencia y no sirve para los vendedores**, porque GitHub sólo avisa a quien tiene cuenta en el
+> repositorio — y ellos no la tienen ni deben tenerla. El usuario lo cortó al entenderlo: *«entonces no
+> es la opción que estaba buscando»*. **Se conserva como respaldo**: si un día la credencial vence, el
+> mensual sigue avisando por ahí en vez de morir en silencio, y la nota sólo se abre cuando el correo
+> no salió.
 
 ---
 
