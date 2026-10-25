@@ -82,6 +82,17 @@ const SEMANA_PEDIDA = (process.argv.find((a) => /^--semana=/.test(a)) ?? "").spl
  */
 const CON_DATOS = process.argv.includes("--datos");
 
+/**
+ * `--sin-correo` guarda los reportes pero no le manda nada a nadie.
+ *
+ * **Existe para poder mirar la pantalla antes de avisarle al equipo.** `--seco`
+ * no sirve para eso —no guarda nada, así que no hay nada que abrir— y correrlo
+ * de verdad le manda el correo a los tres vendedores antes de que gerencia haya
+ * visto cómo se ve. Este es el punto medio: las filas existen, la pantalla se
+ * puede revisar, y el correo se manda cuando se decida.
+ */
+const SIN_CORREO = process.argv.includes("--sin-correo");
+
 const env = entorno(["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]);
 const { sb, todas, correosDeAuth } = conexion(env);
 
@@ -1007,7 +1018,7 @@ for (const f of filas) {
   if (f.vendedor.correo) destinos.push(f.vendedor.correo);
 
   let salio = false;
-  if (!SECO && destinos.length > 0) {
+  if (!SECO && !SIN_CORREO && destinos.length > 0) {
     salio = await mandarCorreo(env, {
       para: destinos,
       asunto: `Tu semana · ${fechaLarga(lunes)} al ${fechaLarga(viernes)}`,
@@ -1058,7 +1069,7 @@ if (paraGerencia.length > 0) {
   writeFileSync(ruta, pdf);
   console.log(`\n  ${ruta}`);
 
-  if (!SECO) {
+  if (!SECO && !SIN_CORREO) {
     const gerencia = env.CORREO_GERENCIA ? [env.CORREO_GERENCIA] : [];
     if (gerencia.length === 0) {
       const perfiles = await sb("/perfiles?select=id&rol=eq.gerente&deleted_at=is.null");
