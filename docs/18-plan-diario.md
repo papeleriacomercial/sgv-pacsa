@@ -77,8 +77,9 @@ Sin estas cuatro, esto vuelve a ser teatro en un mes. No son detalles de pantall
 
 ### 3.1 · Hora de corte
 
-**El plan se abre antes de las 9:00.** Un plan que se puede hacer a las 3 de la tarde no es
-un plan: es un reporte de lo que ya pasó.
+**El plan se abre antes de las 9:00** —decidido por el usuario el 25 de octubre de 2026, y queda
+como parámetro para poder moverlo sin desplegar—. Un plan que se puede hacer a las 3 de la tarde no
+es un plan: es un reporte de lo que ya pasó.
 
 Pasada la hora, el día **sigue funcionando** —se puede trabajar— pero queda marcado como
 *«arrancó sin plan»*, y eso es lo que se ve y lo que cuenta.
@@ -493,6 +494,70 @@ martes de $4 000 y un miércoles de nada no dicen nada del miércoles—, así q
 del **mes** y las metas del día son de actividad. Mezclarlas enseñaría a inflar lo declarado para que
 el día se vea bien.
 
+### 5.8 · El reporte mensual del histórico — **y es lo primero que se construye**
+
+**No sale del plan diario: sale de lo que Books ya trajo**, así que no depende de nada de este
+documento y se puede tener andando antes que todo lo demás. Lo pidió el usuario el 25 de octubre de
+2026, al contestar la pregunta de la meta:
+
+> *«Colocar metas es una conversación personal con cada uno, ya que son circunstancias diferentes.
+> Lo que necesito ahora mismo es el reporte mensual del histórico de los vendedores con información
+> por cada uno, lo que ha logrado por mes, y luego con esa información tener una conversación y
+> establecer una meta acordada… Por el momento necesito un reporte histórico que me llegue al correo
+> todos los meses el día uno de cada mes.»*
+
+**El orden importa y es el correcto:** primero se mira lo que cada uno ha logrado, después se
+conversa, y recién entonces se pone una meta. Una meta puesta antes de mirar el histórico es un
+número inventado, y se descubre a la tercera semana.
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│  HISTÓRICO DE VENTAS POR VENDEDOR          al 1 de noviembre  │
+│                                                               │
+│  EDUARDO PÉREZ                                                │
+│            facturado   docs   clientes   ticket   comisión    │
+│   may        $9 840     41       22       $240     $147,60    │
+│   jun       $11 200     47       25       $238     $168,00    │
+│   jul        $8 900     38       19       $234     $133,50    │
+│   ago       $18 260     62       31       $295     $273,90    │
+│   sep       $12 400     51       27       $243     $186,00    │
+│   oct       $14 050     55       29       $255     $210,75    │
+│            ─────────────────────────────────────────────      │
+│   12 meses $142 300    518      —         $275   $2 134,50    │
+│   promedio  $11 858     43                                    │
+│   mejor        ago                                            │
+│                                                               │
+│  [ una página por vendedor, el mismo cuadro ]                 │
+│                                                               │
+│  ── EL EQUIPO ──                                              │
+│   Eduardo   $142 300   ▇▇▇▇▇▇▇▇▇▇                             │
+│   Marcos     $98 450   ▇▇▇▇▇▇▇                                │
+│   Líder     $210 900   ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇                        │
+└───────────────────────────────────────────────────────────────┘
+```
+
+**Las cinco columnas son las que sostienen una conversación de meta**, y cada una contesta algo
+distinto:
+
+| | Qué dice que las otras no |
+|---|---|
+| **Facturado** | El resultado. Es el único que se compara contra una meta |
+| **Documentos** | Cuántas veces vendió. Separa al que hace una venta grande del que hace cuarenta |
+| **Clientes distintos** | Si vive de dos cuentas o de treinta. **Es el número de riesgo** |
+| **Ticket promedio** | Dónde está la palanca: subir el ticket o subir la frecuencia son conversaciones opuestas |
+| **Comisión** | Lo que ya cobró. Es lo que hace la conversación concreta |
+
+**Sale de lo que ya existe:** `ventas_del_mes` da facturado, documentos y neto; `transacciones_zoho`
+da los clientes distintos; `comision_del_mes()` da la comisión con la regla vigente. **No hay tabla
+nueva.**
+
+**Doce meses y no tres.** Un trimestre no distingue un mes flojo de una temporada: esta casa vende
+distinto en agosto que en enero, y una meta puesta sobre tres meses castiga a quien le tocaron los
+malos.
+
+> **El día 1 cae donde caiga.** Si es domingo, el correo sale igual: el mes ya cerró y el dato no
+> cambia por esperar al lunes.
+
 ---
 
 ## 6 · Quién ve qué
@@ -533,8 +598,13 @@ es una falta.
 | **No cerrar el día** | Falta — y además el día siguiente arranca sin arrastre |
 | **No cumplir una meta** | **No es falta.** Es lo que el reporte explica |
 
-**Lo que la falta *cuesta* es una decisión del usuario, no del sistema**, y está abierta — ver
-§9. El sistema puede dejar la constancia; no paga comisiones.
+**Decidido el 25 de octubre de 2026: el sistema cuenta las faltas, el usuario decide el monto.**
+Textual: *«cuenta las faltas, tú decides el monto»*. No hay fórmula de descuento, y es lo correcto —
+una fórmula automática hay que defenderla caso por caso el día que alguien tuvo una razón.
+
+**Lo que eso obliga a construir:** el reporte mensual trae **las faltas contadas por persona**, para
+que el número llegue a quien paga sin que nadie tenga que pedirlo. Una falta que hay que ir a buscar
+es una falta que no se descuenta.
 
 ---
 
@@ -562,14 +632,23 @@ discute con datos y no con carácter, y **no se puede contestar con el tráfico 
 
 ## 9 · Lo que falta decidir
 
+### Contestadas el 25 de octubre de 2026
+
 | | |
 |---|---|
-| **¿La falta cuesta dinero?** | Si entra en la comisión, hay que decidir **cómo se entera quien paga**: un reporte, un correo, una marca en la semana. El sistema muestra la comisión que la venta ya ganó (§5.7), pero **no sabe descontar una falta**: eso es una decisión de quien paga |
-| **¿Cuál es la hora de corte?** | Se propone **9:00**. Depende de a qué hora arranca la ruta |
-| **¿El reporte se envía por correo o se consulta?** | El usuario mencionó las dos. El correo llega; la pantalla no se olvida |
-| **¿La oficina va a escribir el código del SGV en la factura?** | Es lo que hace el cuadre exacto en vez de aproximado — §5.4. Si la respuesta es no, se construye igual con los otros dos intentos |
-| **¿Cuántos días espera un cierre declarado antes de volverse excepción?** | Se propone **10 días hábiles**: suficiente para una orden que pasó por la oficina, corto para que todavía se pueda preguntar |
-| **¿Hay meta de venta por vendedor y por mes?** | Sin ella el reporte compara contra el mejor mes del año —mejor que nada, pero no es un compromiso— y §8 no tiene contra qué calcular el ritmo que hace falta |
+| **Hora de corte** | **9:00.** Como parámetro, para moverla sin desplegar |
+| **La falta** | **El sistema la cuenta, el usuario decide el monto.** Sin fórmula de descuento. Obliga a que el reporte mensual traiga las faltas por persona |
+| **El reporte semanal** | **Correo con el PDF adjunto**, además de quedar guardado en la herramienta — ahí es donde vive la observación como histórico |
+| **El código del SGV en la factura** | **Sólo en lo que pasa por la oficina.** La venta directa del vendedor se empareja por cuenta, monto y ventana de días |
+| **Cuánto espera un cierre declarado** | **5 días hábiles**, para que la excepción caiga en el reporte de la semana siguiente, cuando todavía se puede llamar al cliente |
+| **La meta del mes** | **No se pone todavía.** Primero el reporte mensual del histórico (§5.8), después la conversación con cada uno, y la meta acordada entra a mano |
+
+### Lo que sigue abierto
+
+| | |
+|---|---|
+| **Cómo manda correos el sistema** | **Hoy no sabe.** `correo.ts` sólo arma enlaces `mailto:` que abre el teléfono del vendedor; no hay envío desde el servidor, ni rutas de API, ni más cron que el de Zoho. Hace falta una cuenta de envío — lo más directo es una **contraseña de aplicación** del Gmail de la empresa, que el usuario genera y se guarda como secreto del repositorio |
+| **A qué dirección llegan** | El mensual y el semanal van a gerencia. Falta decidir si el vendedor recibe también el suyo |
 
 ---
 
