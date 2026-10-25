@@ -38,6 +38,7 @@ verdad del alcance**: ante cualquier duda de qué construir, se consulta ahí an
 | [docs/16-paso-a-produccion.md](docs/16-paso-a-produccion.md) | La corrida de salida al piloto: qué se aplica, en qué orden, y cómo se corta con Badger. | Vigente |
 | [docs/17-ubicacion-y-zona.md](docs/17-ubicacion-y-zona.md) | Por qué la ubicación se deriva del punto y la zona vive en el nombre de la lista: los cuatro campos, de dónde salen los límites, y qué hay que desmontar. | Construido (D-073 a D-076) |
 | [docs/18-plan-diario.md](docs/18-plan-diario.md) | **El plan diario:** por qué el contrato semanal no se cumplió, el ciclo abrir/trabajar/cerrar, las cuatro reglas, las cinco pantallas con bocetos y quién ve qué. Reemplaza la planificación semanal. | Propuesta |
+| [docs/19-el-giro-de-la-cuenta.md](docs/19-el-giro-de-la-cuenta.md) | **El giro de la cuenta:** el 65 % del dinero va a cuentas sin clasificar, por qué pedirlo al registrar una visita no alcanza, y la lista ordenada por plata que sí. Es lo que falta para el reporte por sector. | Propuesta |
 
 `docs/sgv-preview.html` es una maqueta visual de referencia, no especificación.
 
