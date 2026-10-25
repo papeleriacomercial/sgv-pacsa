@@ -1,6 +1,12 @@
 # 19 · El giro de la cuenta
 
-**Estado: PROPUESTA — 2026-10-25.** Se construye cuando el usuario lo apruebe.
+**Estado: APARCADA — 2026-10-25.** Diseñada y medida, sin construir. **La aparcó el usuario el mismo
+día**, y con razón: *«creo que estamos divagando sobre detalles del reporte… todo lo relacionado a
+clasificar cuentas y poder categorizar, podemos verlo más adelante»*.
+
+> **Lo que se retoma el día que se retome.** La medición de §1 es el trabajo que no hay que repetir:
+> 180 de 232 cuentas que facturan sin giro, el 65 % del dinero, y la razón por la que el anzuelo
+> obvio no sirve. Lo que sigue abierto es sólo la decisión de §7, no el análisis.
 
 > **De qué se trata, en una frase.** El 65 % del dinero que facturamos va a cuentas de las que no
 > sabemos a qué se dedican, y eso es lo único que falta para poder decir a qué sectores le estamos
