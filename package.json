@@ -14,7 +14,8 @@
     "reporte-semanal": "node scripts/reporte-semanal.mjs",
     "reporte-semanal:seco": "node scripts/reporte-semanal.mjs --seco",
     "prueba": "node --test \"src/lib/*.prueba.ts\"",
-    "listo": "npm run prueba && npx tsc --noEmit && npx tsc -p tsconfig.pruebas.json && next build"
+    "listo": "npm run prueba && npx tsc --noEmit && npx tsc -p tsconfig.pruebas.json && next build",
+    "reporte-semanal:datos": "node scripts/reporte-semanal.mjs --seco --datos"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
