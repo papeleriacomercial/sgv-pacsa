@@ -1,0 +1,84 @@
+# El reporte de la semana, el viernes por la noche.
+#
+# Sale a gerencia y **a cada vendedor el suyo**. Lo segundo lo pidió el usuario:
+# «debes enviárselo también al correo para que lo vean forzosamente en su bandeja
+# de entrada y hagan su propio análisis». Ver docs/18-plan-diario.md §4.5.
+#
+# ---------------------------------------------------------------------------
+# POR QUÉ A LAS NUEVE DE LA NOCHE Y NO A LAS CINCO
+# ---------------------------------------------------------------------------
+#
+# El vendedor cierra su día cuando termina la ruta, y eso puede ser a las seis o
+# a las siete. Un reporte que sale a las cinco mediría una semana que todavía no
+# acabó, y el viernes —el día que más se mueve— saldría sistemáticamente corto.
+#
+# **Y el espejo de Zoho se rehace a las dos de la madrugada**, así que lo
+# facturado del viernes todavía no está. Es deliberado: el reporte del viernes
+# por la noche trae lo facturado hasta el jueves y lo del viernes entra en el
+# siguiente. La alternativa —esperar al sábado— pondría el reporte en el fin de
+# semana de la gente, y lo que se quiere es que lo lean el viernes.
+#
+# Si algún día se decide que esa diferencia molesta, se mueve a las 09:00 del
+# sábado y el espejo ya tendrá el viernes completo.
+
+name: Reporte semanal
+
+on:
+  schedule:
+    # 02:00 UTC del sábado son las 21:00 del viernes en Panamá.
+    - cron: "0 2 * * 6"
+  workflow_dispatch:
+    inputs:
+      semana:
+        description: "Cualquier fecha de la semana a cerrar, AAAA-MM-DD. Vacío = esta semana."
+        required: false
+      seco:
+        description: "Generar sin mandar correos y sin guardar nada"
+        type: boolean
+        default: false
+
+concurrency:
+  group: reporte-semanal
+  cancel-in-progress: false
+
+jobs:
+  reporte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_REF_ESPERADO: ${{ vars.SUPABASE_REF_ESPERADO || secrets.SUPABASE_REF_ESPERADO }}
+      CORREO_USUARIO: ${{ secrets.CORREO_USUARIO }}
+      CORREO_CLAVE_APP: ${{ secrets.CORREO_CLAVE_APP }}
+      CORREO_GERENCIA: ${{ secrets.CORREO_GERENCIA || vars.CORREO_GERENCIA }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Dependencias
+        run: npm ci
+
+      - name: Armar y mandar los reportes
+        run: |
+          node scripts/reporte-semanal.mjs \
+            ${{ inputs.seco && '--seco' || '' }} \
+            ${{ inputs.semana && format('--semana={0}', inputs.semana) || '' }}
+
+      # **Los PDF quedan descargables aunque un correo no haya salido.** Es la
+      # misma red que el reporte mensual: una credencial vencida no puede costar
+      # el reporte de la semana.
+      - name: Guardar los PDF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-semanal
+          path: reportes/semana-*.pdf
+          if-no-files-found: warn
+          retention-days: 90

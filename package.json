@@ -11,6 +11,8 @@
     "zoho:seco": "node scripts/zoho-sincronizar.mjs && node scripts/zoho-historial.mjs",
     "reporte-mensual": "node scripts/reporte-mensual.mjs",
     "reporte-mensual:seco": "node scripts/reporte-mensual.mjs --seco",
+    "reporte-semanal": "node scripts/reporte-semanal.mjs",
+    "reporte-semanal:seco": "node scripts/reporte-semanal.mjs --seco",
     "prueba": "node --test \"src/lib/*.prueba.ts\"",
     "listo": "npm run prueba && npx tsc --noEmit && npx tsc -p tsconfig.pruebas.json && next build"
   },
