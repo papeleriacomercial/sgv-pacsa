@@ -20,6 +20,11 @@ import { Insignia } from "@/components/ui/insignia";
 import { Cargando, MensajeError } from "@/components/ui/estados";
 import { AvisoSinConexion } from "@/components/ui/aviso-sin-conexion";
 import { BotonVolver } from "@/components/boton-volver";
+import {
+  CierresDelDia,
+  guardarCierres,
+  type CierreListo,
+} from "@/components/cierres-del-dia";
 import { faltaDeLaRendicion, loQueQuedaDebiendo } from "@/lib/plan";
 
 /**
@@ -75,6 +80,12 @@ export default function CerrarElDia() {
     pendientes: 0,
     despachados: 0,
   });
+
+  // Lo que cerró hoy, que sube desde el bloque de cierres. **No se guarda ahí
+  // sino en el mismo botón de cerrar el día**: dos botones de guardar en la
+  // misma pantalla es la receta de que alguien apriete el segundo y pierda el
+  // primero.
+  const [cierres, setCierres] = useState<CierreListo[]>([]);
 
   const hoy = useMemo(() => hoyEnPanama(), []);
 
@@ -233,6 +244,16 @@ export default function CerrarElDia() {
     setGuardando(true);
     setError(null);
 
+    // **Los cierres van primero**, antes de marcar el día cerrado. Si algo
+    // falla, el día queda abierto y el vendedor puede volver a intentarlo; al
+    // revés, el día quedaría cerrado y su venta perdida.
+    const falloCierre = await guardarCierres(yoId, hoy, cierres);
+    if (falloCierre) {
+      setError(falloCierre);
+      setGuardando(false);
+      return;
+    }
+
     for (const a of acciones) {
       const r = rendiciones[a.id];
       const hizo = Number(r.hizo);
@@ -310,6 +331,17 @@ export default function CerrarElDia() {
             )}
           </span>
         </Tarjeta>
+      ) : null}
+
+      {/* **Lo que vendió, antes de lo que prometió.** Es lo que el vendedor
+          quiere contar al final del día, y ponerlo primero hace que el cierre
+          se sienta como rendir una venta y no como rendir un examen. */}
+      {yoId ? (
+        <CierresDelDia
+          vendedorId={yoId}
+          hoy={hoy}
+          onCambio={(listos) => setCierres(listos)}
+        />
       ) : null}
 
       {acciones.map((a) => {
