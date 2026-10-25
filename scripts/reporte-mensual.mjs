@@ -734,6 +734,17 @@ for (const v of datos.filas) {
   );
 }
 
+/**
+ * Si el correo salió de verdad.
+ *
+ * **La tarea lee este archivo para decidir si abre la nota de GitHub.** Cuando
+ * el correo llega con su PDF adjunto, la nota sobra: dos avisos del mismo
+ * reporte enseñan a ignorar los dos. Y cuando el correo no sale —porque falta
+ * la credencial o porque Google la rechazó— la nota es lo único que avisa, así
+ * que tiene que abrirse.
+ */
+const MARCA_DE_ENVIO = "reportes/.correo-enviado";
+
 if (SECO) {
   console.log("\n  --seco: no se mandó correo.\n");
 } else {
@@ -746,7 +757,7 @@ if (SECO) {
     for (const p of perfiles) if (correos.get(p.id)) gerencia.push(correos.get(p.id));
   }
 
-  await mandarCorreo(env, {
+  const salio = await mandarCorreo(env, {
     para: gerencia,
     asunto: `Histórico de ventas por vendedor · cerrado a ${MES_LARGO[cierre.mes0]} ${cierre.anio}`,
     cuerpo:
@@ -765,6 +776,8 @@ if (SECO) {
       "SGV · Papelería Comercial\n",
     adjuntos: [{ nombre: `historico-vendedores-${etiqueta}.pdf`, contenido: pdf }],
   });
+
+  if (salio) writeFileSync(MARCA_DE_ENVIO, etiqueta, "utf8");
 }
 
 console.log(`  Credenciales de correo: ${DE_CORREO.map((k) => `${k}=${env[k] ? "sí" : "NO"}`).join(" · ")}\n`);
