@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CalendarCheck,
   CalendarDays,
   Gauge,
   Inbox,
@@ -54,8 +55,12 @@ const POR_ROL: Record<Rol, Ruta[]> = {
   // **Ni gerencia ni administración tienen ya pestaña de Solicitudes** (D-071): los encargos les
   // llegan por correo, a las direcciones que usaban antes del SGV. La pantalla se quedó del lado
   // del vendedor, como registro de lo que mandó.
+  // **«Semanas» es la pantalla del lunes** (docs/18-plan-diario.md §4.5): el
+  // usuario no interviene en el día, su intervención es semanal y escrita, así
+  // que lo que necesita ver es qué reportes esperan su observación.
   gerente: [
     { href: "/tablero", etiqueta: "Tablero", Icono: Gauge },
+    { href: "/semanas", etiqueta: "Semanas", Icono: CalendarCheck },
     { href: "/mercado", etiqueta: "Mercado", Icono: Radar },
     { href: "/oportunidades", etiqueta: "Ventas", Icono: TrendingUp },
     { href: "/cuentas", etiqueta: "Cuentas", Icono: Store },

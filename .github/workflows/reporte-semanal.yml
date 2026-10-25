@@ -36,6 +36,13 @@ on:
         description: "Generar sin mandar correos y sin guardar nada"
         type: boolean
         default: false
+      # **El punto medio que hace falta para mirar antes de avisar.** Con `seco`
+      # no queda nada que abrir en pantalla; sin nada, el correo le llega a los
+      # tres vendedores antes de que gerencia haya visto cómo se ve.
+      sin_correo:
+        description: "Guardar los reportes para verlos en pantalla, sin mandar correos"
+        type: boolean
+        default: false
 
 concurrency:
   group: reporte-semanal
@@ -69,6 +76,7 @@ jobs:
         run: |
           node scripts/reporte-semanal.mjs \
             ${{ inputs.seco && '--seco' || '' }} \
+            ${{ inputs.sin_correo && '--sin-correo' || '' }} \
             ${{ inputs.semana && format('--semana={0}', inputs.semana) || '' }}
 
       # **Los PDF quedan descargables aunque un correo no haya salido.** Es la

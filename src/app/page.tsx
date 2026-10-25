@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   CalendarClock,
+  ChevronRight,
   ClipboardCheck,
   Clock,
   MapPin,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { cargarAvanceDeHoy, cargarPlanDeHoy } from "@/lib/plan-diario";
+import { ultimoReporteDe, semanaLegible } from "@/lib/semanas";
 import { PlanDelDia } from "@/components/plan-del-dia";
 import { cargarSemana, hoyEnPanama, lunesDeEstaSemana } from "@/lib/semana";
 import { cargarListas } from "@/lib/listas";
@@ -125,6 +127,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
     { data: reponer },
     plan,
     avance,
+    reporte,
   ] = await Promise.all([
       supabase
         .from("perfiles")
@@ -191,6 +194,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
       // visible justo arriba de todo.
       cargarPlanDeHoy(user.id, hoy),
       cargarAvanceDeHoy(user.id, hoy),
+      ultimoReporteDe(user.id),
     ]);
 
   const compromisos = (comps ?? []) as unknown as Compromiso[];
@@ -279,6 +283,31 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
       <main className="flex flex-1 flex-col gap-4 p-4">
         {enSemana ? (
           <>
+            {/* **Su reporte del viernes, donde ya mira cómo le fue.** Si nadie
+                lo ha comentado todavía se dice, porque un espacio en blanco sin
+                explicación se lee como que su semana no se miró. */}
+            {reporte ? (
+              <Link href={`/semanas/${reporte.id}`} className="block">
+                <Tarjeta className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-texto">
+                      Tu reporte {semanaLegible(reporte.semana)}
+                    </p>
+                    <p className="text-xs text-texto-secundario">
+                      {reporte.observacion
+                        ? "Gerencia ya lo comentó."
+                        : "Esperando el comentario de gerencia."}
+                    </p>
+                  </div>
+                  <ChevronRight
+                    size={18}
+                    className="shrink-0 text-texto-atenuado"
+                    aria-hidden
+                  />
+                </Tarjeta>
+              </Link>
+            ) : null}
+
             {/* **LO PRIMERO ES LO QUE TODAVÍA SE PUEDE ARREGLAR.** Desde que el plan se traba
                 cuando alguien lo lee y no cuando cambia la semana, un cierre viejo sin revisar
                 sigue siendo corregible — pero nadie va a adivinar la dirección. Sin este aviso, la
