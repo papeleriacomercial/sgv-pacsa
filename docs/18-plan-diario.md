@@ -12,7 +12,7 @@ de planificación.
 > | | |
 > |---|---|
 > | **Capa 1 · el plan diario** | Escrita, compila y con pruebas. **Falta aplicar la migración**: hasta entonces no se publica en `main`, porque la pantalla ofrecería un botón que no puede guardar |
-> | **Capa 2 · los cierres declarados** (§5) | Sin empezar |
+> | **Capa 2 · los cierres declarados** (§5) | **Construida y en producción el 25 de octubre.** Al cerrar el día se reporta lo vendido; la comisión sigue saliendo sólo de lo facturado |
 > | **Capa 3 · el tablero de gerencia** (§4.4) | Sin empezar |
 > | **Capa 4 · el reporte semanal por correo** (§4.5) | Sin empezar. El envío ya existe: `scripts/correo-enviar.mjs` |
 > | **El histórico mensual** (§5.8) | **Construido y corriendo.** No dependía de nada de acá |
