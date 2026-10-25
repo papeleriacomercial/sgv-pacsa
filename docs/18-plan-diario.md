@@ -3,8 +3,9 @@
 **Estado: PROPUESTA — 2026-10-25.** Reemplaza el contrato semanal como mecánica de
 planificación. Se construye cuando el usuario lo apruebe.
 
-> **De qué se trata, en una frase.** El vendedor arma su día antes de empezarlo y lo cierra
-> antes de irse; la semana deja de ser el plan y pasa a ser la rendición.
+> **De qué se trata, en una frase.** El vendedor arma su día antes de empezarlo y lo cierra antes de
+> irse —con lo que vendió, en cantidad y en plata—; la semana deja de ser el plan y pasa a ser la
+> rendición.
 
 ---
 
@@ -195,7 +196,7 @@ Tres pasos, sin texto libre hasta el final.
 
 > **El renglón gris bajo la meta es lo que evita que se fije en lo que ya cumple.** Sin
 > referencia, todo el mundo promete lo que sabe que puede. Más adelante ese renglón se vuelve
-> una propuesta de verdad — ver §7.
+> una propuesta de verdad — ver §8.
 
 ### 4.3 · Cerrar el día
 
@@ -216,11 +217,25 @@ Un toque por línea. **Si toma diez minutos, muere en una semana.**
 │       ☑ Pasar las 3 que faltan a mañana  │
 │  3 · Reparto           3 de 3        ✓   │
 │                                          │
+│  ¿CERRASTE ALGO HOY?                     │
+│  ─────────────────────────────────────   │
+│  Súper Rey, S.A.                         │
+│     Cotización C-0412       $1 240,00 ✓  │
+│     ya la marcaste ganada hoy            │
+│                                          │
+│  [ + Agregar un cierre sin documento ]   │
+│                                          │
+│  Hoy declarado:            $1 240,00     │
+│                                          │
 │  Nota: ¿cerró Súper Rey?  [sí] [todavía] │
 │                                          │
 │            [ Cerrar el día ]             │
 └─────────────────────────────────────────┘
 ```
+
+**Lo que ya marcó ganado durante el día aparece solo.** No se teclea dos veces: la cotización
+cerrada trae su cuenta, su monto y sus renglones. Lo único que se captura a mano es la venta que no
+pasó por documento — y de eso trata §5.
 
 **Lo no cumplido cae solo en el plan de mañana.** Ahí está la secuencia que el usuario pedía
 —*«qué van a hacer con aquellas metas que no se cumplieron, cómo la van a rescatar»*— pero
@@ -242,9 +257,10 @@ meses; *«el tráfico»* escrito cuarenta veces, no.
 │  Líder      SIN PLAN ← segundo día seguido         ▸         │
 │                                                              │
 │  ── esta semana ──                                           │
-│  Eduardo    5 de 5 días con plan    ·  4 cerrados            │
-│  Marcos     5 de 5                  ·  5 cerrados            │
-│  Líder      3 de 5                  ·  2 cerrados            │
+│  Eduardo    5 de 5 días con plan  ·  4 cerrados  ·  $12 400  │
+│  Marcos     5 de 5                ·  5 cerrados  ·  $8 150   │
+│  Líder      3 de 5                ·  2 cerrados  ·  $21 900  │
+│             con plan / cerrados / facturado del mes          │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -288,7 +304,18 @@ de hechos. Una página, 8½ × 11, para imprimir.
 │         Visitas Azuero · 7 pendientes                       │
 │         Motivo más repetido: cambió el día del cliente (3)  │
 │                                                             │
-│  RESULTADO         3 cotizaciones · 1 cierre · $4 280       │
+│  LO QUE CERRÓ      3 cotizaciones emitidas                  │
+│         Súper Rey, S.A.      25 fardos      $1 240          │
+│         Mini Max           1 000 bolsas       $890          │
+│         Farmacia Lux       venta directa    $2 150          │
+│                            ─────────────────────────        │
+│         Declarado en la semana              $4 280          │
+│         Facturado de esa semana             $4 280   ✓      │
+│                                                             │
+│  EL MES            octubre, al viernes 30                   │
+│         Facturado                          $12 400          │
+│         Comisión ganada (1,5 % sin ITBMS)     $186,00       │
+│         Mejor mes del año: agosto          $18 260          │
 │                                                             │
 │  ─────────────────────────────────────────────────────────  │
 │  OBSERVACIÓN DE GERENCIA                                    │
@@ -302,7 +329,173 @@ tiene `respuesta`, `respondido_por` y `respondido_en`. No hace falta inventar na
 
 ---
 
-## 5 · Quién ve qué
+## 5 · Los cierres: lo que se vendió
+
+**Es la mitad que faltaba.** Un plan diario que sólo cuenta llamadas y visitas mide el esfuerzo y no
+el resultado, y el usuario lo cortó al leerlo: *«falta lo principal, enganchar los cierres, que
+diariamente también pueda reportar qué cerró y por qué cantidad»*.
+
+### 5.1 · Casi nada de esto hay que construir
+
+**Lo primero es decir qué ya existe**, porque la respuesta cambia el diseño entero:
+
+| | |
+|---|---|
+| `transacciones_zoho` | Cada factura y cada entrega, con su fecha, su total y su vendedor. La trae la pasada de noche |
+| `renglones_zoho` | Qué se vendió en cada una: producto, **cantidad** y precio |
+| `ventas_del_mes` | Lo vendido por vendedor y por **mes calendario**, con y sin ITBMS |
+| `comision_del_mes()` | La comisión ya ganada: **1,5 % sobre el neto**, calculada al leer y nunca guardada |
+| `cotizaciones` → ganada | El vendedor ya puede cerrar una cotización como ganada, con su monto y sus renglones |
+
+**Entonces el cierre no es un dato nuevo que haya que capturar: es un dato que ya llega.** Lo que
+falta es que llegue *el mismo día*, que el vendedor lo vea, y que lo que él dice cuadre con lo que la
+contabilidad factura.
+
+### 5.2 · Dos números, y nunca se mezclan
+
+```
+   DECLARADO                          FACTURADO
+   lo que el vendedor dice que cerró  lo que Books emitió
+   el mismo día, de memoria           de noche, con número de documento
+
+   Sirve para: el pulso del día       Sirve para: el mes, la comisión,
+   y la conversación del viernes      y cualquier cifra que alguien cobre
+                      ╲                  ╱
+                       ╲                ╱
+                  LA DIFERENCIA ENTRE LOS DOS
+                  es el número que de verdad informa
+```
+
+**La comisión se calcula sólo sobre lo facturado. Nunca sobre lo declarado.** Es la regla más
+importante del capítulo: en el momento en que un número que el vendedor teclea pueda mover lo que
+cobra, deja de ser información y pasa a ser una negociación. Hoy ya es así —`comision_del_mes` lee
+`transacciones_zoho`— y **esto lo deja escrito para que no se afloje después**.
+
+**Y no se suman.** Un tablero que mostrara «vendido: $5 520» mezclando los dos sería el caso de los
+dos números ciertos que juntos engañan. Van en renglones separados, con su nombre.
+
+### 5.3 · Por dónde entra un cierre
+
+Tres caminos, y sólo uno se teclea:
+
+**a · La cotización o la orden de venta que se gana.** Ya está construido: el vendedor la marca
+`ganada` desde la cuenta y el sistema guarda cuándo y quién. **Trae la cantidad gratis**, porque los
+renglones del documento ya existen. En el cierre del día aparece sola.
+
+**b · La venta sin documento** — la del mostrador, la de la libreta, la que se despachó del camión.
+Es la única captura manual, y se diseña para que tome veinte segundos:
+
+```
+┌─────────────────────────────────────────┐
+│  Agregar un cierre                      │
+│                                         │
+│  Cliente   [ buscar en mis cuentas ▾ ]  │
+│                                         │
+│  Monto     [ $ .......... ]             │
+│            sin ITBMS                    │
+│                                         │
+│  ¿Qué le vendiste? (opcional)           │
+│  [ + producto del catálogo ]            │
+│      Bolsa kraft #8   [ 25 ] fardos     │
+│                                         │
+│            [ Guardar ]                  │
+└─────────────────────────────────────────┘
+```
+
+**El cliente se escoge, no se escribe** —de sus cuentas, como todo lo demás del plan—, y **los
+renglones son opcionales a propósito**: la factura los va a traer igual, y obligarlo a teclear
+veinticinco fardos en un teléfono para que mañana lleguen solos es trabajo doble, y el trabajo doble
+termina inventándose.
+
+**c · La factura que nadie declaró.** Llega de noche y se le acredita al vendedor por
+`vendedores_zoho`, que ya funciona. **No es un error**: un cliente puede llamar a la oficina y
+comprar sin que el vendedor lo sepa ese día. Pero si pasa seguido, es información — ver §5.5.
+
+### 5.4 · Cómo se empareja con la factura
+
+Lo pidió el usuario: *«hay que entender cómo se puede capturar esta información y que coincida con
+las facturas que pueda estar emitiendo el sistema»*.
+
+**Hoy no hay forma exacta de amarrarlos.** `transacciones_zoho` guarda el número del documento de
+Books, pero **nada apunta de vuelta a la cotización del SGV**. Así que el emparejamiento va en tres
+intentos, del más seguro al más barato:
+
+| | Cómo | Qué tan firme |
+|---|---|---|
+| **1** | **Que la factura lleve escrito el código del SGV** en su campo de referencia — `C-0412`, `OV-0133` | Exacto. **Pero depende de una persona:** quien factura en la oficina tiene que teclearlo |
+| **2** | Misma cuenta + mismo monto ± tolerancia + dentro de una ventana de días | Firme en la práctica. Es lo que va a resolver la mayoría |
+| **3** | Misma cuenta + hay facturas de esos días que nadie reclamó | Aproximado. **Se propone y alguien confirma** |
+
+**El paso 1 se propone y no se da por hecho**, porque es la trampa conocida: un segundo paso que
+alguien tiene que apretar es un paso que se olvida. Si la oficina lo teclea, el cuadre es perfecto;
+**si un día no lo teclea, el paso 2 tiene que alcanzar solo.** Por eso se construyen los tres y no
+nada más el primero.
+
+**Y nada se empareja en silencio cuando dudó.** Un emparejamiento automático que se equivoca le
+quita una venta a un vendedor y se la da a otro, y eso se descubre el día del pago.
+
+### 5.5 · Las tres excepciones que esto destapa
+
+Son el verdadero rendimiento del capítulo. Ninguna existe hoy:
+
+| | Qué significa |
+|---|---|
+| **Declaró y no se facturó** (pasados N días) | O el cliente se echó para atrás, o la orden se quedó trabada en la oficina. **Las dos cosas hay que saberlas**, y hoy no se sabe ninguna |
+| **Se facturó y no lo declaró** | Vendió y no lo reportó, o la venta entró por la oficina sin que él se enterara. Si es lo segundo y pasa seguido, ese cliente ya no es de calle |
+| **El monto no coincide** | Declaró $1 240 y la factura dice $980. Puede ser un descuento que dio la oficina — **y eso el vendedor tiene que verlo** |
+
+### 5.6 · El mes y la semana: cada uno con su calendario
+
+El usuario planteó el problema exacto: *«si el día 30 cae a media semana, cierra su número de la
+semana y al día siguiente inicia su conteo del mes siguiente, pero el reporte de la semana mantiene
+su integridad de lunes a viernes»*.
+
+**Es correcto, y es lo que ya hace la base.** `ventas_del_mes` agrupa por `date_trunc('month')`, así
+que el mes es calendario y no se negocia. La semana es de lunes a viernes y tampoco.
+
+**La regla que lo resuelve sin excepciones: un cierre pertenece al mes de la fecha de su factura.**
+No del día en que el vendedor lo declaró, ni de la semana en que lo trabajó. Es lo que hace que su
+número cuadre con el de contabilidad — que es todo el punto.
+
+Y entonces la semana partida no es un problema de datos, sino de cómo se imprime:
+
+```
+   SEMANA DEL 28 DE OCTUBRE AL 1 DE NOVIEMBRE
+
+   L28   M29   X30  │  J31   V1
+   ─────────────────┼──────────────
+       octubre      │   noviembre
+
+   Declarado en la semana                        $4 280
+   ──────────────────────────────────────────────────────
+   OCTUBRE    cerró con                         $12 400
+              comisión del mes                     $186,00
+   NOVIEMBRE  lleva                              $1 950
+```
+
+**La semana no se parte: se cuenta entera.** Lo que se parte es el acumulado del mes, y se dice en
+dos renglones con el nombre del mes en cada uno. Dos meses a medias sumados en la misma línea es
+precisamente el número que nadie entiende tres semanas después.
+
+### 5.7 · Resaltar lo positivo
+
+Pedido textual: *«también hay que resaltar lo positivo»*. El reporte semanal abre con lo que va bien
+y no con lo que falta: lo facturado del mes, la comisión ya ganada, y contra qué se compara.
+
+> **Y esto no contradice una decisión ya tomada: la respeta.** El componente `MiMes` dice en su
+> propio código que *«va en Ventas y no en la Agenda a propósito. Un número de comisión delante todo
+> el día motiva cuando el mes va bien y desmoraliza cuando va mal»*. Sigue siendo cierto. **Una vez
+> por semana, en un reporte que se abre, no es tenerlo delante todo el día** — es justo el momento en
+> que el número ayuda.
+
+**Lo que no se hace: una meta diaria de plata.** Los cierres son irregulares por naturaleza —un
+martes de $4 000 y un miércoles de nada no dicen nada del miércoles—, así que la meta de dinero es
+del **mes** y las metas del día son de actividad. Mezclarlas enseñaría a inflar lo declarado para que
+el día se vea bien.
+
+---
+
+## 6 · Quién ve qué
 
 | | El vendedor | El líder | Gerencia |
 |---|---|---|---|
@@ -328,7 +521,7 @@ cerrar. El razonamiento:
 
 ---
 
-## 6 · Qué cuenta como falta
+## 7 · Qué cuenta como falta
 
 **Se sanciona la disciplina, no el resultado.** Un día malo es información; un día sin plan
 es una falta.
@@ -341,11 +534,11 @@ es una falta.
 | **No cumplir una meta** | **No es falta.** Es lo que el reporte explica |
 
 **Lo que la falta *cuesta* es una decisión del usuario, no del sistema**, y está abierta — ver
-§8. El sistema puede dejar la constancia; no paga comisiones.
+§9. El sistema puede dejar la constancia; no paga comisiones.
 
 ---
 
-## 7 · Lo que esto habilita dentro de dos meses
+## 8 · Lo que esto habilita dentro de dos meses
 
 **Hay que capturar los hechos en bruto desde el primer día**, aunque no se usen todavía. Es
 la decisión de diseño más importante de este documento, y la única que no se puede tomar
@@ -367,18 +560,20 @@ discute con datos y no con carácter, y **no se puede contestar con el tráfico 
 
 ---
 
-## 8 · Lo que falta decidir
+## 9 · Lo que falta decidir
 
 | | |
 |---|---|
-| **¿La falta cuesta dinero?** | Si entra en la comisión, hay que decidir **cómo se entera quien paga**: un reporte, un correo, una marca en la semana. El sistema deja constancia; no calcula comisiones |
+| **¿La falta cuesta dinero?** | Si entra en la comisión, hay que decidir **cómo se entera quien paga**: un reporte, un correo, una marca en la semana. El sistema muestra la comisión que la venta ya ganó (§5.7), pero **no sabe descontar una falta**: eso es una decisión de quien paga |
 | **¿Cuál es la hora de corte?** | Se propone **9:00**. Depende de a qué hora arranca la ruta |
-| **¿La meta del mes de dónde sale?** | Sin un número de arriba, §7 no tiene contra qué calcular |
 | **¿El reporte se envía por correo o se consulta?** | El usuario mencionó las dos. El correo llega; la pantalla no se olvida |
+| **¿La oficina va a escribir el código del SGV en la factura?** | Es lo que hace el cuadre exacto en vez de aproximado — §5.4. Si la respuesta es no, se construye igual con los otros dos intentos |
+| **¿Cuántos días espera un cierre declarado antes de volverse excepción?** | Se propone **10 días hábiles**: suficiente para una orden que pasó por la oficina, corto para que todavía se pueda preguntar |
+| **¿Hay meta de venta por vendedor y por mes?** | Sin ella el reporte compara contra el mejor mes del año —mejor que nada, pero no es un compromiso— y §8 no tiene contra qué calcular el ritmo que hace falta |
 
 ---
 
-## 9 · Lo que esto deja atrás
+## 10 · Lo que esto deja atrás
 
 - **El contrato semanal como mecánica de planificación.** La tabla `cierres` se conserva: su
   histórico es real y la observación de gerencia sigue viviendo ahí.
