@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { CalendarCheck, CheckCircle2, Circle, Clock } from "lucide-react";
+import {
+  CalendarCheck,
+  CalendarOff,
+  CheckCircle2,
+  Circle,
+  Clock,
+} from "lucide-react";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { Insignia } from "@/components/ui/insignia";
 import {
@@ -8,6 +14,7 @@ import {
   MOTIVOS_INCUMPLIDO,
 } from "@/lib/catalogos";
 import { avanceDe, type AvanceDeHoy } from "@/lib/plan";
+import { COMO_SE_DICE, type MotivoAusencia } from "@/lib/catalogos";
 import type { PlanDelDia } from "@/lib/plan-diario";
 
 /**
@@ -34,11 +41,40 @@ export function PlanDelDia({
   plan,
   fallo,
   avance,
+  ausencia,
 }: {
   plan: PlanDelDia | null;
   fallo: string | null;
   avance: AvanceDeHoy;
+  /** La ausencia que cubre hoy, si hay. Manda sobre todo lo demás. */
+  ausencia: { motivo: MotivoAusencia; desde: string; hasta: string } | null;
 }) {
+  // -------------------------------------------------------------------------
+  // HOY NO TRABAJA, Y ESO VA PRIMERO QUE TODO
+  //
+  // **Ofrecerle «Armar mi día» a alguien de vacaciones es el reclamo injusto
+  // que descalifica el esquema entero.** Si el sistema sabe que no trabaja, lo
+  // dice y no le pide nada; el día tampoco se le cuenta como falta.
+  // -------------------------------------------------------------------------
+  if (ausencia) {
+    return (
+      <Tarjeta className="flex flex-col items-center gap-2 border-borde bg-fondo py-6 text-center">
+        <CalendarOff size={26} className="text-texto-atenuado" aria-hidden />
+        <p className="text-base font-semibold text-texto">
+          {COMO_SE_DICE[ausencia.motivo]}
+        </p>
+        <p className="text-sm text-texto-secundario">
+          {ausencia.desde === ausencia.hasta
+            ? "Hoy no tienes que armar el plan."
+            : `Del ${ausencia.desde} al ${ausencia.hasta}. No tienes que armar el plan estos días.`}
+        </p>
+        <p className="text-xs text-texto-atenuado">
+          Estos días no se cuentan como falta.
+        </p>
+      </Tarjeta>
+    );
+  }
+
   // -------------------------------------------------------------------------
   // La consulta falló.
   //
@@ -100,6 +136,17 @@ export function PlanDelDia({
             </>
           ) : null}
         </p>
+
+        {/* **La salida honesta, a la vista y en segundo plano.** Quien amanece
+            indispuesto necesita decirlo en un toque; esconderlo haría que no lo
+            marcara y que el día le saliera como falta. Va discreto para que no
+            compita con armar el día, pero visible para que exista. */}
+        <Link
+          href="/plan/ausencia"
+          className="min-h-tactil flex items-center text-sm text-texto-secundario underline"
+        >
+          Hoy no voy a trabajar
+        </Link>
       </Tarjeta>
     );
   }
