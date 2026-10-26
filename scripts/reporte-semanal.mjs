@@ -105,6 +105,14 @@ const TIPOS = {
 };
 
 /** El catálogo cerrado de por qué se pierde una cotización. Es el de `motivo_perdida`. */
+/** Como se lee cada motivo de ausencia en el papel. Es el enum `motivo_ausencia`. */
+const MOTIVOS_AUSENCIA = {
+  vacaciones: "Vacaciones",
+  incapacidad: "Incapacidad",
+  permiso: "Permiso",
+  otro: "No trabajó",
+};
+
 const MOTIVOS_PERDIDA = {
   precio: "precio",
   espera_licitacion: "espera una licitación",
@@ -148,6 +156,10 @@ async function reunir() {
     `/planes_diarios?select=id,vendedor_id,fecha,a_tiempo,cerrado_en,` +
       `plan_acciones(tipo,lista_id,meta,logrado,motivo,motivo_otro)` +
       `&fecha=gte.${lunes}&fecha=lte.${domingo}&deleted_at=is.null`,
+  );
+
+  const ausencias = await todas(
+    `/ausencias?select=vendedor_id,desde,hasta,motivo&desde=lte.${domingo}&hasta=gte.${lunes}&deleted_at=is.null`,
   );
 
   // --- Lo facturado, y de ahí los clientes nuevos ------------------------
@@ -253,6 +265,27 @@ async function reunir() {
     const diasConPlan = suyos.length;
     const cerrados = suyos.filter((p) => p.cerrado_en).length;
     const tarde = suyos.filter((p) => !p.a_tiempo).length;
+
+    // -----------------------------------------------------------------------
+    // **CUÁNTOS DÍAS SE DEBÍAN DE VERDAD, QUE NO SIEMPRE SON CINCO.**
+    //
+    // «3 de 5 días con plan» es un reclamo si dos de esos cinco fueron
+    // vacaciones; «3 de 3» es un cumplimiento perfecto. Es la diferencia entre
+    // un reporte que se cree y uno que el equipo aprende a descartar.
+    //
+    // Lo calcula la base —`dias_que_se_debian`— y no este script, porque la
+    // misma cuenta la necesitan la vista de faltas y la pantalla. Escrita dos
+    // veces, una de las dos quedaría vieja.
+    // -----------------------------------------------------------------------
+    const debidos = await sb("/rpc/dias_que_se_debian", {
+      method: "POST",
+      body: JSON.stringify({ p_vendedor: v.id, p_desde: lunes, p_hasta: viernes }),
+    });
+    const diasDebidos = Number(debidos) || 0;
+
+    const ausenciasDeLaSemana = ausencias.filter(
+      (a) => a.vendedor_id === v.id && a.desde <= viernes && a.hasta >= lunes,
+    );
 
     // Lo prometido contra lo hecho
     const porTipo = new Map();
@@ -395,7 +428,17 @@ async function reunir() {
 
     filas.push({
       vendedor: v,
-      disciplina: { diasConPlan, cerrados, tarde },
+      disciplina: {
+        diasConPlan,
+        cerrados,
+        tarde,
+        debidos: diasDebidos,
+        ausencias: ausenciasDeLaSemana.map((a) => ({
+          desde: a.desde,
+          hasta: a.hasta,
+          motivo: a.motivo,
+        })),
+      },
       acciones: [...porTipo.entries()].map(([tipo, x]) => ({
         tipo,
         ...x,
@@ -650,14 +693,38 @@ function paginaDeVendedor(doc, semana, f) {
   doc.setFontSize(9.5);
   doc.setTextColor(...TINTA);
   doc.text(
-    `${f.disciplina.diasConPlan} de 5 días con plan · ${f.disciplina.cerrados} cerrados` +
+    `${f.disciplina.diasConPlan} de ${f.disciplina.debidos} días con plan · ${f.disciplina.cerrados} cerrados` +
       (f.disciplina.tarde > 0
         ? ` · ${f.disciplina.tarde} ${f.disciplina.tarde === 1 ? "arrancó" : "arrancaron"} sin plan`
         : ""),
     MARGEN,
     y,
   );
-  y += 8;
+  y += 5.4;
+
+  // **Y si la semana no fue de cinco días, se dice por qué.** El denominador
+  // que cambia sin explicación es el que hace dudar del reporte entero: alguien
+  // ve «3 de 3» una semana y «4 de 5» la otra y no entiende la cuenta.
+  if ((f.disciplina.ausencias ?? []).length > 0) {
+    doc.setTextColor(...SUAVE);
+    doc.setFontSize(8.5);
+    doc.text(
+      "La semana no fue de cinco días: " +
+        f.disciplina.ausencias
+          .map(
+            (a) =>
+              `${MOTIVOS_AUSENCIA[a.motivo] ?? a.motivo}` +
+              (a.desde === a.hasta ? ` el ${a.desde}` : ` del ${a.desde} al ${a.hasta}`),
+          )
+          .join("; ") +
+        ".",
+      MARGEN,
+      y,
+    );
+    y += 5;
+    doc.setFontSize(9.5);
+  }
+  y += 3;
 
   if (f.acciones.length === 0) {
     doc.setTextColor(...SUAVE);
@@ -1024,7 +1091,7 @@ for (const f of filas) {
 
   console.log(
     `  ${f.vendedor.nombre.padEnd(22)} ${DINERO.format(f.facturado).padStart(9)}` +
-      `  ${f.disciplina.diasConPlan}/5 días con plan` +
+      `  ${f.disciplina.diasConPlan}/${f.disciplina.debidos} días con plan` +
       `  ${f.nuevos.length} ${f.nuevos.length === 1 ? "nuevo" : "nuevos"}` +
       (f.vendedor.correo ? "" : "  · SIN CORREO"),
   );

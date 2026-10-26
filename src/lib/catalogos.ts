@@ -562,3 +562,35 @@ export type MotivoIncumplido = keyof typeof MOTIVOS_INCUMPLIDO;
  * también, porque dejarlo a la pantalla es dejar que un día pase.
  */
 export const TOPE_ACCIONES = 3;
+
+/**
+ * Por qué alguien no trabaja un día — docs/18-plan-diario.md §6.
+ *
+ * **Cerrado para poder contarlo.** «Cuántos días de incapacidad llevamos este
+ * año» no se puede responder sobre texto libre.
+ *
+ * El feriado no está acá porque no es de una persona: afecta a todos, y el SGV
+ * todavía no tiene calendario de feriados.
+ */
+export const MOTIVOS_AUSENCIA = {
+  vacaciones: "Vacaciones",
+  incapacidad: "Incapacidad",
+  permiso: "Permiso",
+  otro: "Otra razón",
+} as const;
+
+export type MotivoAusencia = keyof typeof MOTIVOS_AUSENCIA;
+
+/**
+ * Cómo se le dice al propio vendedor, en segunda persona.
+ *
+ * **No es lo mismo que la etiqueta del catálogo.** En una lista se escoge
+ * «Vacaciones»; en su pantalla se le dice «Estás de vacaciones», que es lo que
+ * suena a que el sistema sabe dónde está y no a un rótulo pegado encima.
+ */
+export const COMO_SE_DICE: Record<MotivoAusencia, string> = {
+  vacaciones: "Estás de vacaciones",
+  incapacidad: "Estás incapacitado",
+  permiso: "Tienes permiso",
+  otro: "Hoy no trabajas",
+};

@@ -14,6 +14,7 @@ import {
 import { clienteServidor } from "@/lib/supabase/servidor";
 import { cargarAvanceDeHoy, cargarPlanDeHoy } from "@/lib/plan-diario";
 import { ultimoReporteDe, semanaLegible } from "@/lib/semanas";
+import { ausenciaDe } from "@/lib/ausencias";
 import { PlanDelDia } from "@/components/plan-del-dia";
 import { cargarSemana, hoyEnPanama, lunesDeEstaSemana } from "@/lib/semana";
 import { cargarListas } from "@/lib/listas";
@@ -128,6 +129,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
     plan,
     avance,
     reporte,
+    ausencia,
   ] = await Promise.all([
       supabase
         .from("perfiles")
@@ -195,6 +197,7 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
       cargarPlanDeHoy(user.id, hoy),
       cargarAvanceDeHoy(user.id, hoy),
       ultimoReporteDe(user.id),
+      ausenciaDe(user.id, hoy),
     ]);
 
   const compromisos = (comps ?? []) as unknown as Compromiso[];
@@ -429,8 +432,9 @@ export default async function Agenda({ searchParams }: PageProps<"/">) {
                 comprometerse. */}
             <PlanDelDia
               plan={plan.plan}
-              fallo={plan.fallo}
+              fallo={plan.fallo ?? ausencia.fallo}
               avance={avance}
+              ausencia={ausencia.ausencia}
             />
 
             {compromisos.length === 0 && porReponer.length === 0 && (
